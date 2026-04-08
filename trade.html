@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TradeArena — War Room</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cinzel+Decorative:wght@700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --navy:    #060e1c;
+      --navy2:   #091528;
+      --navy3:   #0d1e3a;
+      --navy4:   #122248;
+      --gold:    #c9a030;
+      --gold2:   #e8c060;
+      --gold3:   #f5d980;
+      --golddim: #8a6a1a;
+      --cream:   #f2e8cc;
+      --muted:   #7a8aaa;
+      --border:  rgba(201,160,48,0.20);
+      --borderl: rgba(201,160,48,0.08);
+      --green:   #4ade80;
+      --red:     #f87171;
+    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+
+    body {
+      background: var(--navy);
+      color: var(--cream);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      min-height: 100vh;
+    }
+    body::before {
+      content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+      background-image: repeating-linear-gradient(-55deg, transparent, transparent 80px, rgba(201,160,48,0.02) 80px, rgba(201,160,48,0.02) 81px);
+    }
+
+    /* ── TICKER ── */
+    .ticker-bar {
+      height:36px; background:var(--navy2);
+      border-bottom:1px solid var(--border);
+      overflow:hidden; display:flex; align-items:center;
+      position:sticky; top:0; z-index:200;
+    }
+    .ticker-label {
+      background:var(--gold); color:var(--navy);
+      font-family:'Cinzel',serif; font-size:9px;
+      font-weight:600; letter-spacing:.12em;
+      padding:0 14px; height:100%;
+      display:flex; align-items:center;
+      white-space:nowrap; flex-shrink:0;
+    }
+    .ticker-track {
+      display:flex; gap:48px; white-space:nowrap;
+      animation:ticker 25s linear infinite;
+      padding-left:28px; font-size:11px; letter-spacing:.04em; color:var(--muted);
+    }
+    .tick .up { color:var(--green); margin-left:5px; }
+    .tick .dn { color:var(--red); margin-left:5px; }
+    @keyframes ticker { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+    /* ── HEADER ── */
+    .app-header {
+      background:rgba(9,21,40,0.95);
+      border-bottom:1px solid var(--border);
+      backdrop-filter:blur(20px);
+      position:sticky; top:36px; z-index:100;
+    }
+    .app-nav {
+      max-width:1280px; margin:0 auto; padding:0 24px;
+      display:flex; align-items:center; justify-content:space-between;
+      height:64px;
+    }
+    .logo-mark {
+      display:flex; align-items:center; gap:10px;
+      text-decoration:none;
+    }
+    .logo-text {
+      font-family:'Cinzel Decorative',serif;
+      font-size:1rem; font-weight:700;
+      letter-spacing:.05em; color:var(--gold2);
+    }
+    .logo-text span { color:var(--cream); }
+
+    .nav-right {
+      display:flex; align-items:center; gap:20px;
+    }
+    .user-pill {
+      display:flex; align-items:center; gap:10px;
+      padding:6px 14px; border:1px solid var(--border);
+      font-family:'Cinzel',serif; font-size:10px;
+      letter-spacing:.1em; color:var(--muted);
+    }
+    .live-dot {
+      width:6px; height:6px; border-radius:50%;
+      background:var(--green);
+      box-shadow:0 0 0 0 rgba(74,222,128,.6);
+      animation:pulse 2s ease-out infinite;
+    }
+    @keyframes pulse {
+      0%{box-shadow:0 0 0 0 rgba(74,222,128,.5)}
+      70%{box-shadow:0 0 0 7px rgba(74,222,128,0)}
+      100%{box-shadow:0 0 0 0 rgba(74,222,128,0)}
+    }
+    .btn-logout {
+      font-family:'Cinzel',serif; font-size:10px;
+      letter-spacing:.1em; text-transform:uppercase;
+      color:var(--muted); border:1px solid var(--borderl);
+      padding:8px 16px; background:none; cursor:pointer;
+      transition:color .2s, border-color .2s;
+    }
+    .btn-logout:hover { color:var(--red); border-color:var(--red); }
+
+    /* ── LAYOUT ── */
+    .layout {
+      max-width:1280px; margin:0 auto; padding:28px 24px;
+      display:grid;
+      grid-template-columns: 1fr 340px;
+      grid-template-rows: auto;
+      gap:20px;
+      position:relative; z-index:1;
+    }
+
+    /* ── PANELS ── */
+    .panel {
+      background:var(--navy2);
+      border:1px solid var(--border);
+      padding:24px 28px;
+    }
+    .panel-title {
+      font-family:'Cinzel',serif;
+      font-size:10px; letter-spacing:.2em;
+      text-transform:uppercase; color:var(--gold);
+      margin-bottom:20px;
+      display:flex; align-items:center; gap:10px;
+    }
+    .panel-title::before {
+      content:''; display:block; width:20px; height:1px; background:var(--gold);
+    }
+
+    /* ── PORTFOLIO VALUE ── */
+    .portfolio-header {
+      grid-column:1/-1;
+      display:grid; grid-template-columns: repeat(4, 1fr);
+      gap:1px; background:var(--border);
+      border:1px solid var(--border);
+    }
+    .pstat {
+      background:var(--navy2);
+      padding:20px 24px;
+    }
+    .pstat-label {
+      font-family:'Cinzel',serif; font-size:9px;
+      letter-spacing:.18em; text-transform:uppercase;
+      color:var(--muted); margin-bottom:8px;
+    }
+    .pstat-val {
+      font-family:'Cinzel',serif; font-size:1.8rem;
+      font-weight:600; color:var(--cream);
+      line-height:1;
+    }
+    .pstat-val.up { color:var(--green); }
+    .pstat-val.dn { color:var(--red); }
+    .pstat-sub {
+      font-size:11px; color:var(--muted); margin-top:4px;
+    }
+
+    /* ── MARKET PRICES ── */
+    .market-grid {
+      display:grid; grid-template-columns: repeat(3, 1fr);
+      gap:10px; margin-bottom:20px;
+    }
+    .mcard {
+      padding:14px 16px;
+      background:var(--navy3); border:1px solid var(--borderl);
+      cursor:pointer; transition:border-color .2s, background .2s;
+    }
+    .mcard:hover, .mcard.active { border-color:var(--gold); background:var(--navy4); }
+    .mcard-sym {
+      font-family:'Cinzel',serif; font-size:11px;
+      font-weight:600; letter-spacing:.08em;
+      color:var(--cream); margin-bottom:4px;
+    }
+    .mcard-price {
+      font-family:'Cinzel',serif; font-size:1.15rem;
+      font-weight:500; color:var(--cream);
+    }
+    .mcard-chg {
+      font-size:11px; margin-top:2px;
+    }
+    .mcard-chg.up { color:var(--green); }
+    .mcard-chg.dn { color:var(--red); }
+
+    /* ── TRADE PANEL ── */
+    .trade-panel { grid-column:2; grid-row:2/5; }
+
+    .tab-row {
+      display:grid; grid-template-columns:1fr 1fr;
+      border-bottom:1px solid var(--borderl);
+      margin-bottom:24px; margin-top:-4px;
+    }
+    .tab {
+      padding:10px; text-align:center;
+      font-family:'Cinzel',serif; font-size:11px;
+      letter-spacing:.12em; text-transform:uppercase;
+      color:var(--muted); cursor:pointer;
+      border-bottom:2px solid transparent;
+      transition:color .2s, border-color .2s;
+    }
+    .tab.active.buy { color:var(--green); border-color:var(--green); }
+    .tab.active.sell { color:var(--red); border-color:var(--red); }
+
+    .trade-field { margin-bottom:14px; }
+    .trade-field label {
+      display:block;
+      font-family:'Cinzel',serif; font-size:9px;
+      letter-spacing:.16em; text-transform:uppercase;
+      color:var(--muted); margin-bottom:6px;
+    }
+    .trade-field select,
+    .trade-field input {
+      width:100%; padding:11px 14px;
+      background:var(--navy3); border:1px solid var(--borderl);
+      color:var(--cream); font-family:'DM Sans',sans-serif;
+      font-size:13px; outline:none;
+      transition:border-color .2s;
+      clip-path: polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%);
+    }
+    .trade-field select option { background:var(--navy3); }
+    .trade-field input:focus,
+    .trade-field select:focus { border-color:var(--gold); }
+
+    .trade-summary {
+      background:var(--navy3); border:1px solid var(--borderl);
+      padding:14px; margin-bottom:16px;
+      font-size:12px; color:var(--muted);
+      line-height:2;
+    }
+    .trade-summary span { color:var(--cream); float:right; }
+
+    .btn-trade {
+      width:100%; padding:14px;
+      font-family:'Cinzel',serif; font-size:12px;
+      font-weight:600; letter-spacing:.14em; text-transform:uppercase;
+      border:none; cursor:pointer;
+      clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+      transition:opacity .2s;
+    }
+    .btn-trade:disabled { opacity:.4; cursor:not-allowed; }
+    .btn-trade.buy { background:var(--green); color:var(--navy); }
+    .btn-trade.sell { background:var(--red); color:white; }
+
+    .trade-msg {
+      margin-top:10px; font-size:12px; text-align:center;
+      font-family:'Cinzel',serif; letter-spacing:.04em;
+      min-height:18px;
+    }
+    .trade-msg.ok { color:var(--green); }
+    .trade-msg.err { color:var(--red); }
+
+    /* ── HOLDINGS ── */
+    .holdings-section { grid-column:1; }
+
+    .h-table { width:100%; border-collapse:collapse; }
+    .h-table th {
+      font-family:'Cinzel',serif; font-size:9px;
+      letter-spacing:.16em; text-transform:uppercase;
+      color:var(--muted); text-align:left;
+      padding:0 0 12px; border-bottom:1px solid var(--borderl);
+    }
+    .h-table td {
+      padding:14px 0; border-bottom:1px solid var(--borderl);
+      font-size:13px; vertical-align:middle;
+    }
+    .h-table tr:last-child td { border-bottom:none; }
+    .h-sym {
+      font-family:'Cinzel',serif; font-weight:600;
+      font-size:14px; color:var(--cream);
+    }
+    .h-name { font-size:11px; color:var(--muted); margin-top:2px; }
+    .h-pnl { font-family:'Cinzel',serif; font-size:13px; }
+    .h-pnl.up { color:var(--green); }
+    .h-pnl.dn { color:var(--red); }
+
+    .empty-state {
+      text-align:center; padding:40px 0;
+      color:var(--muted); font-size:.88rem; line-height:1.8;
+    }
+    .empty-state .eg {
+      font-family:'Cinzel',serif; font-size:9px;
+      letter-spacing:.14em; color:var(--gold);
+      margin-top:8px; display:block;
+    }
+
+    /* ── TRADE HISTORY ── */
+    .history-section { grid-column:1; }
+
+    .hist-row {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:12px 0; border-bottom:1px solid var(--borderl);
+      font-size:12px;
+    }
+    .hist-row:last-child { border-bottom:none; }
+    .hist-type {
+      font-family:'Cinzel',serif; font-size:10px;
+      letter-spacing:.1em; text-transform:uppercase;
+      padding:3px 10px; border:1px solid; display:inline-block;
+      clip-path: polygon(3px 0%, 100% 0%, calc(100% - 3px) 100%, 0% 100%);
+      margin-right:10px;
+    }
+    .hist-type.buy { border-color:var(--green); color:var(--green); }
+    .hist-type.sell { border-color:var(--red); color:var(--red); }
+    .hist-sym {
+      font-family:'Cinzel',serif; font-weight:600;
+      font-size:13px; color:var(--cream);
+    }
+    .hist-detail { color:var(--muted); font-size:11px; margin-top:2px; }
+    .hist-total {
+      font-family:'Cinzel',serif; font-size:13px;
+      text-align:right;
+    }
+    .hist-time { font-size:10px; color:var(--muted); margin-top:2px; text-align:right; }
+
+    /* ── AUTH GATE ── */
+    .auth-gate {
+      position:fixed; inset:0; z-index:999;
+      background:var(--navy);
+      display:flex; align-items:center; justify-content:center;
+      flex-direction:column; gap:20px;
+    }
+    .auth-gate.hidden { display:none; }
+    .auth-gate p {
+      font-family:'Cinzel',serif; font-size:12px;
+      letter-spacing:.1em; color:var(--muted);
+    }
+    .auth-gate a {
+      font-family:'Cinzel',serif; font-size:12px;
+      letter-spacing:.12em; text-transform:uppercase;
+      color:var(--gold); text-decoration:none;
+      border:1px solid var(--gold); padding:12px 28px;
+      transition:background .2s, color .2s;
+    }
+    .auth-gate a:hover { background:var(--gold); color:var(--navy); }
+
+    /* ── TOAST ── */
+    .toast {
+      position:fixed; bottom:28px; right:28px; z-index:500;
+      background:var(--navy2); border:1px solid var(--border);
+      padding:14px 22px; font-size:13px;
+      font-family:'Cinzel',serif; letter-spacing:.06em;
+      transform:translateX(120%); transition:transform .3s;
+      max-width:300px;
+    }
+    .toast.show { transform:translateX(0); }
+    .toast.ok { border-color:var(--green); color:var(--green); }
+    .toast.err { border-color:var(--red); color:var(--red); }
+
+    @media(max-width:900px) {
+      .layout { grid-template-columns:1fr; }
+      .trade-panel { grid-column:1; grid-row:auto; }
+      .portfolio-header { grid-template-columns:repeat(2,1fr); }
+      .market-grid { grid-template-columns:repeat(3,1fr); }
+      .holdings-section, .history-section { grid-column:1; }
+    }
+    @media(max-width:600px) {
+      .market-grid { grid-template-columns:repeat(2,1fr); }
+      .portfolio-header { grid-template-columns:1fr 1fr; }
+      .pstat-val { font-size:1.4rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- AUTH GATE -->
+<div class="auth-gate" id="authGate">
+  <svg width="40" height="46" viewBox="0 0 40 46" fill="none">
+    <path d="M20 2L36 9V22C36 31 29 39 20 43C11 39 4 31 4 22V9L20 2Z" fill="#091528" stroke="#c9a030" stroke-width="1"/>
+    <text x="20" y="27" text-anchor="middle" font-family="serif" font-size="12" font-weight="bold" fill="#e8c060">₿</text>
+    <polyline points="12,24 17,19 20,22 28,13" fill="none" stroke="#c9a030" stroke-width="1.5" stroke-linecap="round"/>
+  </svg>
+  <p>Authentication required to enter the Arena</p>
+  <a href="auth.html">Sign In →</a>
+</div>
+
+<!-- TICKER -->
+<div class="ticker-bar">
+  <div class="ticker-label">Live Markets</div>
+  <div class="ticker-track" id="tickerTrack">
+    <span class="tick">AAPL <span class="up" id="t-AAPL">$182.50</span></span>
+    <span class="tick">BTC <span class="up" id="t-BTC">$64,200</span></span>
+    <span class="tick">NVDA <span class="up" id="t-NVDA">$875.20</span></span>
+    <span class="tick">ETH <span class="dn" id="t-ETH">$3,420</span></span>
+    <span class="tick">TSLA <span class="up" id="t-TSLA">$248.90</span></span>
+    <span class="tick">MSFT <span class="up" id="t-MSFT">$415.30</span></span>
+    <span class="tick">AMZN <span class="up" id="t-AMZN">$192.40</span></span>
+    <span class="tick">SOL <span class="up" id="t-SOL">$148.60</span></span>
+    <span class="tick">AAPL <span class="up">$182.50</span></span>
+    <span class="tick">BTC <span class="up">$64,200</span></span>
+    <span class="tick">NVDA <span class="up">$875.20</span></span>
+    <span class="tick">ETH <span class="dn">$3,420</span></span>
+    <span class="tick">TSLA <span class="up">$248.90</span></span>
+    <span class="tick">MSFT <span class="up">$415.30</span></span>
+    <span class="tick">AMZN <span class="up">$192.40</span></span>
+    <span class="tick">SOL <span class="up">$148.60</span></span>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header class="app-header">
+  <div class="app-nav">
+    <a href="index.html" class="logo-mark">
+      <svg width="28" height="32" viewBox="0 0 40 46" fill="none">
+        <path d="M20 2L36 9V22C36 31 29 39 20 43C11 39 4 31 4 22V9L20 2Z" fill="#091528" stroke="#c9a030" stroke-width="1"/>
+        <text x="20" y="27" text-anchor="middle" font-family="serif" font-size="12" font-weight="bold" fill="#e8c060">₿</text>
+        <polyline points="12,24 17,19 20,22 28,13" fill="none" stroke="#c9a030" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <div class="logo-text">Trade<span>Arena</span></div>
+    </a>
+
+    <div class="nav-right">
+      <div class="user-pill">
+        <div class="live-dot"></div>
+        <span id="userEmail">Loading…</span>
+      </div>
+      <button class="btn-logout" onclick="logout()">Sign Out</button>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN LAYOUT -->
+<div class="layout" id="mainLayout" style="display:none">
+
+  <!-- PORTFOLIO STATS -->
+  <div class="portfolio-header">
+    <div class="pstat">
+      <div class="pstat-label">Total Portfolio</div>
+      <div class="pstat-val" id="statTotal">$10,000.00</div>
+      <div class="pstat-sub">Paper money</div>
+    </div>
+    <div class="pstat">
+      <div class="pstat-label">Cash Available</div>
+      <div class="pstat-val" id="statCash">$10,000.00</div>
+      <div class="pstat-sub">Ready to deploy</div>
+    </div>
+    <div class="pstat">
+      <div class="pstat-label">Invested Value</div>
+      <div class="pstat-val" id="statInvested">$0.00</div>
+      <div class="pstat-sub">Market value</div>
+    </div>
+    <div class="pstat">
+      <div class="pstat-label">Total P&L</div>
+      <div class="pstat-val" id="statPnl">$0.00</div>
+      <div class="pstat-sub" id="statPnlPct">0.00%</div>
+    </div>
+  </div>
+
+  <!-- MARKET PRICES (left col) -->
+  <div class="panel" style="grid-column:1">
+    <div class="panel-title">Market Prices</div>
+    <div class="market-grid" id="marketGrid">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+
+  <!-- TRADE PANEL (right col, spans rows) -->
+  <div class="panel trade-panel">
+    <div class="panel-title">Execute Trade</div>
+    <div class="tab-row">
+      <div class="tab active buy" id="tabBuy" onclick="setMode('buy')">Buy</div>
+      <div class="tab sell" id="tabSell" onclick="setMode('sell')">Sell</div>
+    </div>
+
+    <div class="trade-field">
+      <label>Asset</label>
+      <select id="tradeSymbol" onchange="updateTradeSummary()">
+        <option value="AAPL">AAPL — Apple Inc.</option>
+        <option value="TSLA">TSLA — Tesla</option>
+        <option value="NVDA">NVDA — NVIDIA</option>
+        <option value="MSFT">MSFT — Microsoft</option>
+        <option value="AMZN">AMZN — Amazon</option>
+        <option value="BTC">BTC — Bitcoin</option>
+        <option value="ETH">ETH — Ethereum</option>
+        <option value="SOL">SOL — Solana</option>
+      </select>
+    </div>
+
+    <div class="trade-field">
+      <label>Amount (AUD $)</label>
+      <input type="number" id="tradeAmount" placeholder="10.00" min="1" step="0.01" oninput="updateTradeSummary()"/>
+    </div>
+
+    <div class="trade-summary" id="tradeSummary">
+      Select an asset and enter an amount
+    </div>
+
+    <button class="btn-trade buy" id="tradeBtn" onclick="executeTrade()">
+      Buy
+    </button>
+    <div class="trade-msg" id="tradeMsg"></div>
+
+    <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--borderl)">
+      <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Quick amounts</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="setAmount(10)" style="flex:1;padding:8px;background:var(--navy3);border:1px solid var(--borderl);color:var(--muted);font-family:'Cinzel',serif;font-size:10px;letter-spacing:.08em;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--borderl)'">$10</button>
+        <button onclick="setAmount(50)" style="flex:1;padding:8px;background:var(--navy3);border:1px solid var(--borderl);color:var(--muted);font-family:'Cinzel',serif;font-size:10px;letter-spacing:.08em;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--borderl)'">$50</button>
+        <button onclick="setAmount(100)" style="flex:1;padding:8px;background:var(--navy3);border:1px solid var(--borderl);color:var(--muted);font-family:'Cinzel',serif;font-size:10px;letter-spacing:.08em;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--borderl)'">$100</button>
+        <button onclick="setAmount(500)" style="flex:1;padding:8px;background:var(--navy3);border:1px solid var(--borderl);color:var(--muted);font-family:'Cinzel',serif;font-size:10px;letter-spacing:.08em;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--borderl)'">$500</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOLDINGS -->
+  <div class="panel holdings-section">
+    <div class="panel-title">My Holdings</div>
+    <div id="holdingsContent">
+      <div class="empty-state">
+        No positions yet.<br>
+        Make your first trade to start building your portfolio.
+        <span class="eg">Start with BTC or AAPL →</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRADE HISTORY -->
+  <div class="panel history-section">
+    <div class="panel-title">Trade History</div>
+    <div id="historyContent">
+      <div class="empty-state">No trades yet.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ─── SUPABASE CONFIG ────────────────────────────────────────────────────
+  const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // ────────────────────────────────────────────────────────────────────────
+
+  // ─── MARKET DATA (simulated realistic prices with random walk) ──────────
+  const ASSETS = {
+    AAPL: { name:'Apple Inc.', price:182.50, sector:'Tech' },
+    TSLA: { name:'Tesla', price:248.90, sector:'Auto/Tech' },
+    NVDA: { name:'NVIDIA', price:875.20, sector:'Semis' },
+    MSFT: { name:'Microsoft', price:415.30, sector:'Tech' },
+    AMZN: { name:'Amazon', price:192.40, sector:'E-Commerce' },
+    BTC:  { name:'Bitcoin', price:64200, sector:'Crypto' },
+    ETH:  { name:'Ethereum', price:3420, sector:'Crypto' },
+    SOL:  { name:'Solana', price:148.60, sector:'Crypto' },
+  };
+
+  const changes = {}; // store day % change
+  Object.keys(ASSETS).forEach(sym => {
+    changes[sym] = (Math.random() * 8 - 3); // -3% to +5%
+  });
+
+  function getPrice(sym) { return ASSETS[sym].price; }
+  function formatPrice(sym) {
+    const p = ASSETS[sym].price;
+    return sym === 'BTC' ? '$' + p.toLocaleString('en-AU', {maximumFractionDigits:0})
+      : '$' + p.toFixed(2);
+  }
+
+  // Simulate price drift every 5s
+  function driftPrices() {
+    Object.keys(ASSETS).forEach(sym => {
+      const volatility = ['BTC','ETH','SOL'].includes(sym) ? 0.004 : 0.002;
+      const drift = (Math.random() - 0.49) * volatility;
+      ASSETS[sym].price *= (1 + drift);
+      changes[sym] += drift * 100;
+    });
+    renderMarket();
+    updatePortfolioStats();
+  }
+
+  function renderMarket() {
+    const grid = document.getElementById('marketGrid');
+    if (!grid) return;
+    grid.innerHTML = Object.entries(ASSETS).map(([sym, asset]) => {
+      const chg = changes[sym];
+      const isUp = chg >= 0;
+      return `
+        <div class="mcard ${selectedSymbol === sym ? 'active' : ''}" onclick="selectAsset('${sym}')">
+          <div class="mcard-sym">${sym}</div>
+          <div class="mcard-price">${formatPrice(sym)}</div>
+          <div class="mcard-chg ${isUp ? 'up' : 'dn'}">${isUp ? '+' : ''}${chg.toFixed(2)}%</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ─── STATE ───────────────────────────────────────────────────────────────
+  let currentUser = null;
+  let portfolio = { cash_balance: 10000 };
+  let holdings = [];
+  let trades = [];
+  let tradeMode = 'buy';
+  let selectedSymbol = 'AAPL';
+
+  // ─── AUTH ─────────────────────────────────────────────────────────────────
+  async function init() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) {
+      document.getElementById('authGate').classList.remove('hidden');
+      return;
+    }
+    currentUser = session.user;
+    document.getElementById('authGate').classList.add('hidden');
+    document.getElementById('mainLayout').style.display = 'grid';
+    document.getElementById('userEmail').textContent = currentUser.email.split('@')[0];
+
+    await loadPortfolio();
+    await loadHoldings();
+    await loadTrades();
+    renderMarket();
+    updatePortfolioStats();
+    renderHoldings();
+    renderHistory();
+
+    // Start price simulation
+    setInterval(driftPrices, 5000);
+  }
+
+  async function logout() {
+    await sb.auth.signOut();
+    window.location.href = 'auth.html';
+  }
+
+  // ─── DATABASE ─────────────────────────────────────────────────────────────
+  async function loadPortfolio() {
+    const { data, error } = await sb.from('portfolios').select('*').eq('user_id', currentUser.id).single();
+    if (error || !data) {
+      // Create portfolio
+      const { data: newPort } = await sb.from('portfolios').insert({
+        user_id: currentUser.id,
+        cash_balance: 10000
+      }).select().single();
+      portfolio = newPort || { cash_balance: 10000 };
+    } else {
+      portfolio = data;
+    }
+  }
+
+  async function loadHoldings() {
+    const { data } = await sb.from('holdings').select('*').eq('user_id', currentUser.id);
+    holdings = data || [];
+  }
+
+  async function loadTrades() {
+    const { data } = await sb.from('trades').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(20);
+    trades = data || [];
+  }
+
+  // ─── UI ───────────────────────────────────────────────────────────────────
+  function selectAsset(sym) {
+    selectedSymbol = sym;
+    document.getElementById('tradeSymbol').value = sym;
+    renderMarket();
+    updateTradeSummary();
+  }
+
+  function setMode(mode) {
+    tradeMode = mode;
+    const buyTab = document.getElementById('tabBuy');
+    const sellTab = document.getElementById('tabSell');
+    const btn = document.getElementById('tradeBtn');
+    buyTab.className = 'tab' + (mode === 'buy' ? ' active buy' : '');
+    sellTab.className = 'tab' + (mode === 'sell' ? ' active sell' : '');
+    btn.className = 'btn-trade ' + mode;
+    btn.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
+    updateTradeSummary();
+  }
+
+  function setAmount(amt) {
+    document.getElementById('tradeAmount').value = amt;
+    updateTradeSummary();
+  }
+
+  function updateTradeSummary() {
+    const sym = document.getElementById('tradeSymbol').value;
+    selectedSymbol = sym;
+    const amount = parseFloat(document.getElementById('tradeAmount').value) || 0;
+    const price = getPrice(sym);
+    const shares = amount / price;
+    const summaryEl = document.getElementById('tradeSummary');
+
+    if (amount <= 0) {
+      summaryEl.innerHTML = 'Enter an amount to see order details';
+      return;
+    }
+
+    summaryEl.innerHTML = `
+      Asset: <span>${sym} — ${ASSETS[sym].name}</span>
+      <br>Price: <span>${formatPrice(sym)}</span>
+      <br>Shares: <span>${shares < 1 ? shares.toFixed(6) : shares.toFixed(4)}</span>
+      <br>Total: <span>$${amount.toFixed(2)}</span>
+    `;
+  }
+
+  function updatePortfolioStats() {
+    let investedValue = 0;
+    let costBasis = 0;
+
+    holdings.forEach(h => {
+      if (ASSETS[h.symbol]) {
+        investedValue += h.shares * getPrice(h.symbol);
+        costBasis += h.shares * h.avg_price;
+      }
+    });
+
+    const cash = portfolio.cash_balance || 0;
+    const total = cash + investedValue;
+    const pnl = investedValue - costBasis;
+    const pnlPct = costBasis > 0 ? (pnl / costBasis * 100) : 0;
+    const isUp = pnl >= 0;
+
+    document.getElementById('statTotal').textContent = '$' + total.toFixed(2);
+    document.getElementById('statCash').textContent = '$' + cash.toFixed(2);
+    document.getElementById('statInvested').textContent = '$' + investedValue.toFixed(2);
+    const pnlEl = document.getElementById('statPnl');
+    pnlEl.textContent = (isUp ? '+' : '') + '$' + pnl.toFixed(2);
+    pnlEl.className = 'pstat-val ' + (isUp ? 'up' : 'dn');
+    document.getElementById('statPnlPct').textContent = (isUp ? '+' : '') + pnlPct.toFixed(2) + '%';
+  }
+
+  function renderHoldings() {
+    const el = document.getElementById('holdingsContent');
+    if (!holdings.length) {
+      el.innerHTML = `<div class="empty-state">No positions yet.<br>Make your first trade to start building your portfolio.<span class="eg">Start with BTC or AAPL →</span></div>`;
+      return;
+    }
+    el.innerHTML = `
+      <table class="h-table">
+        <thead><tr>
+          <th>Asset</th>
+          <th>Shares</th>
+          <th>Avg Price</th>
+          <th>Value</th>
+          <th>P&L</th>
+        </tr></thead>
+        <tbody>
+          ${holdings.map(h => {
+            const price = ASSETS[h.symbol] ? getPrice(h.symbol) : h.avg_price;
+            const value = h.shares * price;
+            const cost = h.shares * h.avg_price;
+            const pnl = value - cost;
+            const isUp = pnl >= 0;
+            return `
+              <tr>
+                <td>
+                  <div class="h-sym">${h.symbol}</div>
+                  <div class="h-name">${ASSETS[h.symbol]?.name || ''}</div>
+                </td>
+                <td>${h.shares < 1 ? h.shares.toFixed(6) : h.shares.toFixed(4)}</td>
+                <td>$${h.avg_price.toFixed(2)}</td>
+                <td>$${value.toFixed(2)}</td>
+                <td class="h-pnl ${isUp ? 'up' : 'dn'}">${isUp ? '+' : ''}$${pnl.toFixed(2)}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  function renderHistory() {
+    const el = document.getElementById('historyContent');
+    if (!trades.length) {
+      el.innerHTML = `<div class="empty-state">No trades yet.</div>`;
+      return;
+    }
+    el.innerHTML = trades.map(t => {
+      const date = new Date(t.created_at);
+      const timeStr = date.toLocaleDateString('en-AU', {day:'2-digit',month:'short'}) + ' ' + date.toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'});
+      return `
+        <div class="hist-row">
+          <div>
+            <span class="hist-type ${t.type}">${t.type}</span>
+            <span class="hist-sym">${t.symbol}</span>
+            <div class="hist-detail">${t.shares.toFixed(4)} shares @ $${t.price.toFixed(2)}</div>
+          </div>
+          <div>
+            <div class="hist-total">$${t.total.toFixed(2)}</div>
+            <div class="hist-time">${timeStr}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ─── TRADING ──────────────────────────────────────────────────────────────
+  async function executeTrade() {
+    const sym = document.getElementById('tradeSymbol').value;
+    const amount = parseFloat(document.getElementById('tradeAmount').value);
+    const msgEl = document.getElementById('tradeMsg');
+    const btn = document.getElementById('tradeBtn');
+
+    msgEl.className = 'trade-msg';
+    msgEl.textContent = '';
+
+    if (!amount || amount < 1) {
+      msgEl.className = 'trade-msg err';
+      msgEl.textContent = 'Minimum trade is $1';
+      return;
+    }
+
+    const price = getPrice(sym);
+    const shares = amount / price;
+
+    if (tradeMode === 'buy') {
+      if (amount > portfolio.cash_balance) {
+        msgEl.className = 'trade-msg err';
+        msgEl.textContent = 'Insufficient cash balance';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Processing…';
+
+      // Update cash
+      const newCash = portfolio.cash_balance - amount;
+      await sb.from('portfolios').update({ cash_balance: newCash }).eq('user_id', currentUser.id);
+      portfolio.cash_balance = newCash;
+
+      // Upsert holding
+      const existing = holdings.find(h => h.symbol === sym);
+      if (existing) {
+        const totalShares = existing.shares + shares;
+        const newAvg = ((existing.shares * existing.avg_price) + amount) / totalShares;
+        await sb.from('holdings').update({ shares: totalShares, avg_price: newAvg }).eq('user_id', currentUser.id).eq('symbol', sym);
+        existing.shares = totalShares;
+        existing.avg_price = newAvg;
+      } else {
+        const { data: newHolding } = await sb.from('holdings').insert({ user_id: currentUser.id, symbol: sym, shares, avg_price: price }).select().single();
+        if (newHolding) holdings.push(newHolding);
+      }
+
+      // Log trade
+      const { data: trade } = await sb.from('trades').insert({ user_id: currentUser.id, symbol: sym, type: 'buy', shares, price, total: amount }).select().single();
+      if (trade) trades.unshift(trade);
+
+      showToast(`Bought ${shares.toFixed(4)} ${sym} for $${amount.toFixed(2)}`, 'ok');
+
+    } else { // sell
+      const holding = holdings.find(h => h.symbol === sym);
+      if (!holding || holding.shares <= 0) {
+        msgEl.className = 'trade-msg err';
+        msgEl.textContent = `You don't hold any ${sym}`;
+        return;
+      }
+      const sellShares = amount / price;
+      if (sellShares > holding.shares) {
+        msgEl.className = 'trade-msg err';
+        msgEl.textContent = `You only hold ${holding.shares.toFixed(4)} ${sym}`;
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Processing…';
+
+      const proceeds = sellShares * price;
+      const newCash = portfolio.cash_balance + proceeds;
+      await sb.from('portfolios').update({ cash_balance: newCash }).eq('user_id', currentUser.id);
+      portfolio.cash_balance = newCash;
+
+      const newShares = holding.shares - sellShares;
+      if (newShares < 0.0001) {
+        await sb.from('holdings').delete().eq('user_id', currentUser.id).eq('symbol', sym);
+        holdings = holdings.filter(h => h.symbol !== sym);
+      } else {
+        await sb.from('holdings').update({ shares: newShares }).eq('user_id', currentUser.id).eq('symbol', sym);
+        holding.shares = newShares;
+      }
+
+      const { data: trade } = await sb.from('trades').insert({ user_id: currentUser.id, symbol: sym, type: 'sell', shares: sellShares, price, total: proceeds }).select().single();
+      if (trade) trades.unshift(trade);
+
+      showToast(`Sold ${sellShares.toFixed(4)} ${sym} for $${proceeds.toFixed(2)}`, 'ok');
+    }
+
+    btn.disabled = false;
+    btn.textContent = tradeMode.charAt(0).toUpperCase() + tradeMode.slice(1);
+    document.getElementById('tradeAmount').value = '';
+    updateTradeSummary();
+    updatePortfolioStats();
+    renderHoldings();
+    renderHistory();
+  }
+
+  function showToast(msg, type='ok') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + type + ' show';
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
+
+  init();
+</script>
+</body>
+</html>
