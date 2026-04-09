@@ -255,7 +255,7 @@
       <div class="stat fi"><div class="stat-num">$<span id="c4">0</span></div><div class="stat-lbl">Weekly prize pool</div></div>
     </div>
   </div>
-</div>
+  </div>
 
 <div class="gold-sep"><div class="gold-sep-line"></div><div class="gold-sep-diamond"></div><div class="gold-sep-line"></div></div>
 
@@ -466,12 +466,14 @@
   }, { threshold: 0.3 });
   statObs.observe(document.querySelector('.stats-section'));
 
-  function handleJoin() {
-    const val = document.getElementById('email-in').value;
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
-      document.getElementById('email-in').style.borderLeft = '2px solid #f87171';
-      return;
-    }
+function handleJoin() {
+  const val = document.getElementById('email-in').value.trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+    document.getElementById('email-in').style.borderLeft = '2px solid #f87171';
+    return;
+  }
+  window.location.href = 'auth.html?email=' + encodeURIComponent(val);
+}
     const btn = document.querySelector('.email-form button');
     btn.textContent = 'Welcome, Warrior \u2713';
     btn.style.background = '#4ade80';
