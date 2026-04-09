@@ -255,7 +255,7 @@
       <div class="stat fi"><div class="stat-num">$<span id="c4">0</span></div><div class="stat-lbl">Weekly prize pool</div></div>
     </div>
   </div>
-  </div>
+</div>
 
 <div class="gold-sep"><div class="gold-sep-line"></div><div class="gold-sep-diamond"></div><div class="gold-sep-line"></div></div>
 
@@ -413,7 +413,7 @@
         <li><a href="#features">Features</a></li>
         <li><a href="#leaderboard">Arena</a></li>
         <li><a href="https://discord.gg/tradearena_">Discord</a></li>
-        <li><a href="mailto:tradearena07@gmail.com">Contact</a></li>
+        <li><a href="/cdn-cgi/l/email-protection#4f3b3d2e2b2a2e3d2a212e7f780f28222e2623612c2022">Contact</a></li>
       </ul>
     </div>
     <p class="footer-legal">
@@ -424,7 +424,7 @@
   </div>
 </footer>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
   const hdr = document.getElementById('hdr');
   window.addEventListener('scroll', () => {
     hdr.classList.toggle('scrolled', window.scrollY > 20);
@@ -466,27 +466,15 @@
   }, { threshold: 0.3 });
   statObs.observe(document.querySelector('.stats-section'));
 
-function handleJoin() {
-  const val = document.getElementById('email-in').value.trim();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
-    document.getElementById('email-in').style.borderLeft = '2px solid #f87171';
-    return;
-  }
-  window.location.href = 'auth.html?email=' + encodeURIComponent(val);
-}
-    const btn = document.querySelector('.email-form button');
-    btn.textContent = 'Welcome, Warrior \u2713';
-    btn.style.background = '#4ade80';
-    btn.style.color = '#060e1c';
-    document.getElementById('email-in').value = '';
+  function handleJoin() {
+    const val = document.getElementById('email-in').value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+      document.getElementById('email-in').style.borderLeft = '2px solid #f87171';
+      return;
+    }
+    window.location.href = 'auth.html?email=' + encodeURIComponent(val);
   }
 
   document.querySelectorAll('a[href^="#"]').forEach(a => {
     a.addEventListener('click', e => {
-      const t = document.querySelector(a.getAttribute('href'));
-      if (t) { e.preventDefault(); t.scrollIntoView({ behavior:'smooth', block:'start' }); }
-    });
-  });
-</script>
-</body>
-</html>
+      const t = document.querySelector(a.get
