@@ -88,7 +88,7 @@
 </head>
 <body>
 <div class="card">
-
+ 
   <a href="index.html" class="logo">
     <svg width="30" height="34" viewBox="0 0 40 46" fill="none">
       <path d="M20 2L36 9V22C36 31 29 39 20 43C11 39 4 31 4 22V9L20 2Z" fill="#091528" stroke="#c9a030" stroke-width="1"/>
@@ -97,27 +97,27 @@
     </svg>
     <div class="logo-text">Trade<span>Arena</span></div>
   </a>
-
+ 
   <div id="redirectPanel" style="display:none;text-align:center;padding:20px 0;">
     <p style="color:var(--muted);font-size:.9rem;">Already signed in. Redirecting…</p>
   </div>
-
+ 
   <div class="form-area" id="formArea">
     <div class="divider"><span>Student Access</span></div>
     <h1>Enter the<br>Arena</h1>
     <p class="subtitle">Sign in with your university email. We'll send a one-click magic link — no password needed.</p>
-
+ 
     <div class="error-box" id="errorBox"></div>
-
+ 
     <div class="field">
       <label>University Email</label>
       <input type="email" id="emailInput" placeholder="you@student.unsw.edu.au" autocomplete="email"/>
     </div>
-
+ 
     <button class="btn" id="submitBtn" onclick="handleLogin()">Send Magic Link</button>
-
+ 
     <p class="note">Must be a university email (.edu.au) &nbsp;·&nbsp; <a href="index.html">← Back</a></p>
-
+ 
     <div class="uni-strip">
       <div class="uni-label">Accepted institutions</div>
       <div class="uni-badges">
@@ -132,7 +132,7 @@
       </div>
     </div>
   </div>
-
+ 
   <div class="success" id="successPanel">
     <div class="check-circle">
       <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
@@ -143,32 +143,32 @@
     <p style="margin-top:8px;font-size:11px;">Check <strong style="color:var(--cream)">spam / junk</strong> if it doesn't arrive.</p>
     <p class="retry">Didn't get it? <a onclick="resetForm()">Try again</a></p>
   </div>
-
+ 
 </div>
 <script>
   const SUPABASE_URL      = 'https://chncykagtzotdtflkhim.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_C-IOFz5ZvT_-yJ4aGvZ1YA_zlSVCY9z';
   const REDIRECT_URL      = 'https://www.tradearena.com.au/trade.html';
-
+ 
   const { createClient } = supabase;
   const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+ 
   const emailInput = document.getElementById('emailInput');
   const submitBtn  = document.getElementById('submitBtn');
   const errorBox   = document.getElementById('errorBox');
-
+ 
   function isEduEmail(e) {
     const d = e.toLowerCase();
     return d.endsWith('.edu.au') || d.endsWith('.ac.nz') || d.endsWith('monash.edu');
   }
-
+ 
   function showError(msg) {
     errorBox.innerHTML = msg;
     errorBox.classList.add('show');
     submitBtn.disabled = false;
     submitBtn.textContent = 'Send Magic Link';
   }
-
+ 
   function resetForm() {
     document.getElementById('formArea').classList.remove('hide');
     document.getElementById('successPanel').classList.remove('show');
@@ -176,12 +176,12 @@
     errorBox.classList.remove('show');
     submitBtn.disabled = false; submitBtn.textContent = 'Send Magic Link';
   }
-
+ 
   async function handleLogin() {
     const email = emailInput.value.trim().toLowerCase();
     errorBox.classList.remove('show');
     emailInput.classList.remove('err');
-
+ 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       emailInput.classList.add('err');
       showError('Please enter a valid email address.');
@@ -192,16 +192,16 @@
       showError('Must be a university email (e.g. <strong>you@student.unsw.edu.au</strong>). Gmail and personal emails are not accepted.');
       return;
     }
-
+ 
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="spinner"></span>Sending…';
-
+ 
     try {
       const { error } = await sb.auth.signInWithOtp({
         email,
         options: { emailRedirectTo: REDIRECT_URL, shouldCreateUser: true }
       });
-
+ 
       if (error) {
         let msg = error.message || 'Unknown error. Please try again.';
         if (msg.toLowerCase().includes('rate limit') || msg.toLowerCase().includes('too many')) {
@@ -220,7 +220,7 @@
       showError('Connection error: ' + (err.message || 'Please check your internet and try again.'));
       return;
     }
-
+ 
     // Save to registrations table (best effort)
     try {
       const uniMap = {
@@ -239,18 +239,18 @@
         { onConflict: 'email', ignoreDuplicates: true }
       );
     } catch(e) { /* non-critical */ }
-
+ 
     document.getElementById('sentTo').textContent = email;
     document.getElementById('formArea').classList.add('hide');
     document.getElementById('successPanel').classList.add('show');
   }
-
+ 
   emailInput.addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
-
+ 
   // Pre-fill from landing page
   const prefill = new URLSearchParams(window.location.search).get('email');
   if (prefill) emailInput.value = prefill;
-
+ 
   // Check existing session
   (async () => {
     try {
