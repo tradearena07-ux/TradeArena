@@ -157,8 +157,9 @@
       .email-form button { padding:18px; }
       .hero h1 { font-size:2.8rem; }
     }
-    .fi { opacity:0; transform:translateY(28px); transition:opacity 0.75s ease, transform 0.75s ease; }
-    .fi.vis { opacity:1; transform:none; }
+    .fi { opacity:1; transform:none; transition:opacity 0.75s ease, transform 0.75s ease; }
+    .fi.hidden { opacity:0; transform:translateY(28px); }
+    .fi.hidden.vis { opacity:1; transform:none; }
   </style>
 </head>
 <body>
@@ -430,15 +431,18 @@
     hdr.classList.toggle('scrolled', window.scrollY > 20);
   });
 
-  const obs = new IntersectionObserver((entries) => {
-    entries.forEach((e, i) => {
-      if (e.isIntersecting) {
-        setTimeout(() => e.target.classList.add('vis'), i * 90);
-        obs.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.08 });
-  document.querySelectorAll('.fi').forEach(el => obs.observe(el));
+  // Scroll animations — content visible by default, animation is a bonus
+  try {
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach((e, i) => {
+        if (e.isIntersecting) {
+          setTimeout(() => e.target.classList.add('vis'), i * 90);
+          obs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.fi').forEach(el => obs.observe(el));
+  } catch(err) { /* animations skipped, content still visible */ }
 
   function counter(id, target) {
     const el = document.getElementById(id);
@@ -464,7 +468,7 @@
       statObs.disconnect();
     }
   }, { threshold: 0.3 });
-  statObs.observe(document.querySelector('.stats-section'));
+  try { statObs.observe(document.querySelector('.stats-section')); } catch(e) {}
 
   function handleJoin() {
     const val = document.getElementById('email-in').value.trim();
