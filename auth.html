@@ -4,149 +4,264 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TradeArena — Enter the Arena</title>
-
-  <!-- Supabase -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <style>
-    body {
-      background:#060e1c;
-      color:#f2e8cc;
-      font-family: Arial, sans-serif;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      height:100vh;
+    :root {
+      --navy:#060e1c; --navy2:#091528; --navy3:#0d1e3a;
+      --gold:#c9a030; --gold2:#e8c060; --cream:#f2e8cc;
+      --muted:#7a8aaa; --border:rgba(201,160,48,0.22);
+      --green:#4ade80; --red:#f87171;
     }
-    .card {
-      background:#091528;
-      padding:40px;
-      border:1px solid rgba(201,160,48,0.2);
-      width:320px;
-      text-align:center;
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+    body{
+      min-height:100vh; background:var(--navy); color:var(--cream);
+      font-family:'DM Sans',sans-serif; font-weight:300;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center; padding:40px 20px;
     }
-    input {
-      width:100%;
-      padding:12px;
-      margin:12px 0;
-      background:#0d1e3a;
-      border:1px solid rgba(201,160,48,0.2);
-      color:#fff;
+    body::before{
+      content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+      background-image:repeating-linear-gradient(-55deg,transparent,transparent 80px,rgba(201,160,48,0.025) 80px,rgba(201,160,48,0.025) 81px);
     }
-    button {
-      width:100%;
-      padding:12px;
-      background:#c9a030;
-      border:none;
-      cursor:pointer;
+    body::after{
+      content:''; position:fixed; top:0; left:50%; transform:translateX(-50%);
+      width:700px; height:500px;
+      background:radial-gradient(ellipse at top,rgba(201,160,48,0.09) 0%,transparent 65%);
+      pointer-events:none; z-index:0;
     }
-    .error { border-color:#f87171; }
-    .spinner {
-      display:inline-block;
-      width:14px;height:14px;
-      border:2px solid rgba(0,0,0,0.2);
-      border-top-color:black;
-      border-radius:50%;
-      animation:spin 1s linear infinite;
+    .card{position:relative;z-index:1;width:100%;max-width:440px;background:var(--navy2);border:1px solid var(--border);padding:48px 44px;}
+    .logo{display:flex;align-items:center;gap:10px;text-decoration:none;margin-bottom:36px;}
+    .logo-text{font-family:'Cinzel Decorative',serif;font-size:1.05rem;font-weight:700;letter-spacing:.05em;color:var(--gold2);}
+    .logo-text span{color:var(--cream);}
+    .divider{display:flex;align-items:center;gap:12px;margin-bottom:28px;}
+    .divider::before,.divider::after{content:'';flex:1;height:1px;background:linear-gradient(to right,transparent,rgba(201,160,48,0.4));}
+    .divider::after{background:linear-gradient(to left,transparent,rgba(201,160,48,0.4));}
+    .divider span{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.26em;text-transform:uppercase;color:var(--gold);}
+    h1{font-family:'Cinzel',serif;font-size:1.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;line-height:1.2;margin-bottom:10px;}
+    .subtitle{font-size:.87rem;color:var(--muted);line-height:1.75;margin-bottom:28px;}
+    .error-box{
+      display:none; background:rgba(248,113,113,0.1);
+      border:1px solid rgba(248,113,113,0.5); border-left:3px solid var(--red);
+      padding:12px 14px; margin-bottom:14px;
+      font-size:12.5px; color:#fca5a5; line-height:1.65;
     }
-    @keyframes spin { to { transform: rotate(360deg);} }
+    .error-box.show{display:block;}
+    .field{margin-bottom:14px;}
+    .field label{display:block;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+    .field input{width:100%;padding:13px 16px;background:var(--navy3);border:1px solid var(--border);color:var(--cream);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .2s;}
+    .field input::placeholder{color:var(--muted);}
+    .field input:focus{border-color:var(--gold);}
+    .field input.err{border-color:var(--red);}
+    .btn{
+      width:100%; padding:15px;
+      background:linear-gradient(135deg,var(--gold),var(--gold2),var(--gold));
+      background-size:200% auto; color:var(--navy); border:none; cursor:pointer;
+      font-family:'Cinzel',serif; font-size:11px; font-weight:700;
+      letter-spacing:.16em; text-transform:uppercase;
+      transition:background-position .4s,opacity .2s;
+      clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);
+    }
+    .btn:hover{background-position:right center;}
+    .btn:disabled{opacity:.5;cursor:not-allowed;}
+    .note{margin-top:18px;font-size:11px;color:var(--muted);text-align:center;line-height:1.7;font-family:'Cinzel',serif;letter-spacing:.04em;}
+    .note a{color:var(--gold);text-decoration:none;}
+    .success{display:none;text-align:center;}
+    .success.show{display:block;}
+    .form-area.hide{display:none;}
+    .check-circle{width:58px;height:58px;margin:0 auto 20px;border:1px solid var(--green);display:flex;align-items:center;justify-content:center;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);}
+    .check-circle svg{width:24px;height:24px;stroke:var(--green);fill:none;stroke-width:2.5;}
+    .success h2{font-family:'Cinzel',serif;font-size:1.2rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;}
+    .success p{font-size:.87rem;color:var(--muted);line-height:1.8;}
+    .success .em{color:var(--gold2);font-weight:500;}
+    .retry{margin-top:18px;font-size:11px;font-family:'Cinzel',serif;letter-spacing:.05em;color:var(--muted);}
+    .retry a{color:var(--gold);text-decoration:none;cursor:pointer;}
+    .spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(6,14,28,0.3);border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:7px;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .uni-strip{margin-top:22px;padding-top:18px;border-top:1px solid rgba(201,160,48,0.08);}
+    .uni-label{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;text-align:center;}
+    .uni-badges{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;}
+    .uni-badge{font-size:9px;font-family:'Cinzel',serif;letter-spacing:.05em;padding:3px 9px;border:1px solid rgba(201,160,48,0.12);color:var(--muted);}
+    @media(max-width:480px){.card{padding:36px 22px;}h1{font-size:1.3rem;}}
   </style>
 </head>
 <body>
-
 <div class="card">
-  <h2>Enter the Arena</h2>
 
-  <div id="redirectPanel" style="display:none;">
-    <p>You're already signed in. Redirecting...</p>
+  <a href="index.html" class="logo">
+    <svg width="30" height="34" viewBox="0 0 40 46" fill="none">
+      <path d="M20 2L36 9V22C36 31 29 39 20 43C11 39 4 31 4 22V9L20 2Z" fill="#091528" stroke="#c9a030" stroke-width="1"/>
+      <text x="20" y="27" text-anchor="middle" font-family="serif" font-size="12" font-weight="bold" fill="#e8c060">&#8383;</text>
+      <polyline points="12,24 17,19 20,22 28,13" fill="none" stroke="#c9a030" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <div class="logo-text">Trade<span>Arena</span></div>
+  </a>
+
+  <div id="redirectPanel" style="display:none;text-align:center;padding:20px 0;">
+    <p style="color:var(--muted);font-size:.9rem;">Already signed in. Redirecting…</p>
   </div>
 
-  <div id="formPanel">
-    <input type="email" id="emailInput" placeholder="you@student.edu.au"/>
-    <div id="emailError" style="display:none;color:#f87171;">Invalid email</div>
-    <button id="submitBtn" onclick="handleLogin()">Send Magic Link</button>
+  <div class="form-area" id="formArea">
+    <div class="divider"><span>Student Access</span></div>
+    <h1>Enter the<br>Arena</h1>
+    <p class="subtitle">Sign in with your university email. We'll send a one-click magic link — no password needed.</p>
+
+    <div class="error-box" id="errorBox"></div>
+
+    <div class="field">
+      <label>University Email</label>
+      <input type="email" id="emailInput" placeholder="you@student.unsw.edu.au" autocomplete="email"/>
+    </div>
+
+    <button class="btn" id="submitBtn" onclick="handleLogin()">Send Magic Link</button>
+
+    <p class="note">Must be a university email (.edu.au) &nbsp;·&nbsp; <a href="index.html">← Back</a></p>
+
+    <div class="uni-strip">
+      <div class="uni-label">Accepted institutions</div>
+      <div class="uni-badges">
+        <span class="uni-badge">unsw.edu.au</span>
+        <span class="uni-badge">usyd.edu.au</span>
+        <span class="uni-badge">uts.edu.au</span>
+        <span class="uni-badge">mq.edu.au</span>
+        <span class="uni-badge">unimelb.edu.au</span>
+        <span class="uni-badge">monash.edu</span>
+        <span class="uni-badge">anu.edu.au</span>
+        <span class="uni-badge">+ all .edu.au</span>
+      </div>
+    </div>
   </div>
 
-  <div id="successPanel" style="display:none;">
-    <p>Check your inbox:</p>
-    <strong id="sentEmail"></strong>
+  <div class="success" id="successPanel">
+    <div class="check-circle">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h2>Check your inbox</h2>
+    <p>Magic link sent to<br><span class="em" id="sentTo"></span></p>
+    <p style="margin-top:10px;">Click the link to enter the Arena. Expires in 10 minutes.</p>
+    <p style="margin-top:8px;font-size:11px;">Check <strong style="color:var(--cream)">spam / junk</strong> if it doesn't arrive.</p>
+    <p class="retry">Didn't get it? <a onclick="resetForm()">Try again</a></p>
   </div>
+
 </div>
-
 <script>
-  const SUPABASE_URL = 'https://chncykagtzotdtflkhim.supabase.co';
+  const SUPABASE_URL      = 'https://chncykagtzotdtflkhim.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_C-IOFz5ZvT_-yJ4aGvZ1YA_zlSVCY9z';
+  const REDIRECT_URL      = 'https://www.tradearena.com.au/trade.html';
 
   const { createClient } = supabase;
   const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  const submitBtn = document.getElementById('submitBtn');
   const emailInput = document.getElementById('emailInput');
-  const emailError = document.getElementById('emailError');
+  const submitBtn  = document.getElementById('submitBtn');
+  const errorBox   = document.getElementById('errorBox');
 
-  function isValidEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  function isEduEmail(e) {
+    const d = e.toLowerCase();
+    return d.endsWith('.edu.au') || d.endsWith('.ac.nz') || d.endsWith('monash.edu');
   }
 
-  async function handleLogin(auto=false) {
-    const email = emailInput.value.trim();
+  function showError(msg) {
+    errorBox.innerHTML = msg;
+    errorBox.classList.add('show');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Send Magic Link';
+  }
 
-    if (!isValidEmail(email)) {
-      emailInput.classList.add('error');
-      emailError.style.display = 'block';
+  function resetForm() {
+    document.getElementById('formArea').classList.remove('hide');
+    document.getElementById('successPanel').classList.remove('show');
+    emailInput.value = ''; emailInput.classList.remove('err');
+    errorBox.classList.remove('show');
+    submitBtn.disabled = false; submitBtn.textContent = 'Send Magic Link';
+  }
+
+  async function handleLogin() {
+    const email = emailInput.value.trim().toLowerCase();
+    errorBox.classList.remove('show');
+    emailInput.classList.remove('err');
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      emailInput.classList.add('err');
+      showError('Please enter a valid email address.');
       return;
     }
-
-    emailInput.classList.remove('error');
-    emailError.style.display = 'none';
+    if (!isEduEmail(email)) {
+      emailInput.classList.add('err');
+      showError('Must be a university email (e.g. <strong>you@student.unsw.edu.au</strong>). Gmail and personal emails are not accepted.');
+      return;
+    }
 
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner"></span> Sending...';
+    submitBtn.innerHTML = '<span class="spinner"></span>Sending…';
 
-    const { error } = await sb.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: window.location.origin + '/trade.html'
+    try {
+      const { error } = await sb.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: REDIRECT_URL, shouldCreateUser: true }
+      });
+
+      if (error) {
+        let msg = error.message || 'Unknown error. Please try again.';
+        if (msg.toLowerCase().includes('rate limit') || msg.toLowerCase().includes('too many')) {
+          msg = 'Too many attempts. Wait a minute then try again.';
+        } else if (msg.toLowerCase().includes('email logins are disabled')) {
+          msg = '⚠️ Email sign-in is disabled in Supabase. Go to Supabase → Authentication → Providers → Email → toggle ON.';
+        } else if (msg.toLowerCase().includes('invalid api') || msg.toLowerCase().includes('no api key')) {
+          msg = '⚠️ API key error. Please check Supabase configuration.';
+        } else if (msg.toLowerCase().includes('redirect')) {
+          msg = '⚠️ Redirect URL not whitelisted. Add <strong>https://www.tradearena.com.au/trade.html</strong> to Supabase → Auth → URL Configuration → Redirect URLs.';
+        }
+        showError(msg);
+        return;
       }
-    });
-
-    if (error) {
-      console.error(error);
-      submitBtn.disabled = false;
-      submitBtn.innerText = 'Send Magic Link';
+    } catch(err) {
+      showError('Connection error: ' + (err.message || 'Please check your internet and try again.'));
       return;
     }
 
-    document.getElementById('formPanel').style.display = 'none';
-    document.getElementById('successPanel').style.display = 'block';
-    document.getElementById('sentEmail').textContent = email;
+    // Save to registrations table (best effort)
+    try {
+      const uniMap = {
+        'student.unsw.edu.au':'UNSW Sydney','unsw.edu.au':'UNSW Sydney',
+        'usyd.edu.au':'University of Sydney','student.usyd.edu.au':'University of Sydney',
+        'uts.edu.au':'UTS Sydney','student.uts.edu.au':'UTS Sydney',
+        'mq.edu.au':'Macquarie University','unimelb.edu.au':'University of Melbourne',
+        'monash.edu':'Monash University','anu.edu.au':'ANU','uq.edu.au':'UQ',
+        'qut.edu.au':'QUT','curtin.edu.au':'Curtin','uwa.edu.au':'UWA',
+        'adelaide.edu.au':'University of Adelaide',
+      };
+      const domain = email.split('@')[1] || '';
+      const university = uniMap[domain] || domain;
+      await sb.from('registrations').upsert(
+        { email, university, updated_at: new Date().toISOString() },
+        { onConflict: 'email', ignoreDuplicates: true }
+      );
+    } catch(e) { /* non-critical */ }
+
+    document.getElementById('sentTo').textContent = email;
+    document.getElementById('formArea').classList.add('hide');
+    document.getElementById('successPanel').classList.add('show');
   }
 
-  document.addEventListener('DOMContentLoaded', async () => {
+  emailInput.addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
 
-    const { data: { session } } = await sb.auth.getSession();
-    if (session) {
-      document.getElementById('formPanel').style.display = 'none';
-      document.getElementById('redirectPanel').style.display = 'block';
-      setTimeout(() => window.location.href = 'trade.html', 1500);
-      return;
-    }
+  // Pre-fill from landing page
+  const prefill = new URLSearchParams(window.location.search).get('email');
+  if (prefill) emailInput.value = prefill;
 
-    const params = new URLSearchParams(window.location.search);
-    const prefill = params.get('email');
-
-    if (prefill) {
-      emailInput.value = prefill;
-      emailInput.focus();
-
-      setTimeout(() => {
-        handleLogin(true);
-      }, 600);
-    } else {
-      emailInput.focus();
-    }
-  });
+  // Check existing session
+  (async () => {
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) {
+        document.getElementById('redirectPanel').style.display = 'block';
+        document.getElementById('formArea').style.display = 'none';
+        setTimeout(() => window.location.href = 'trade.html', 1200);
+      }
+    } catch(e) {}
+  })();
 </script>
-
 </body>
 </html>
