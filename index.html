@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="description" content="TradeArena — Sydney student brokerage. Campus battles. $1 trades. Paper trading launching 20 April."/>
+  <meta name="description" content="TradeArena — Sydney student brokerage. Campus battles. $1 trades. Paper trading live now."/>
   <title>TradeArena — Trade. Battle. Grow.</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cinzel+Decorative:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
@@ -164,21 +164,226 @@
 </head>
 <body>
 
-<!-- All your original sections (ticker, header, hero, stats, features, leaderboard, how, join, footer) remain exactly as you had them before. -->
+<div class="ticker-bar">
+  <div class="ticker-label">Live Markets</div>
+  <div class="ticker-track">
+    <span class="tick">AAPL <span class="up">+1.24%</span></span>
+    <span class="tick">BTC <span class="up">+3.87%</span></span>
+    <span class="tick">NVDA <span class="up">+2.41%</span></span>
+    <span class="tick">ETH <span class="down">−0.93%</span></span>
+    <span class="tick">TSLA <span class="up">+4.10%</span></span>
+    <span class="tick">ASX:CBA <span class="up">+0.66%</span></span>
+    <span class="tick">SOL <span class="up">+5.21%</span></span>
+    <span class="tick">MSFT <span class="up">+0.98%</span></span>
+    <span class="tick">ASX:BHP <span class="down">−1.02%</span></span>
+    <span class="tick">AMZN <span class="up">+1.77%</span></span>
+    <span class="tick">AAPL <span class="up">+1.24%</span></span>
+    <span class="tick">BTC <span class="up">+3.87%</span></span>
+    <span class="tick">NVDA <span class="up">+2.41%</span></span>
+    <span class="tick">ETH <span class="down">−0.93%</span></span>
+    <span class="tick">TSLA <span class="up">+4.10%</span></span>
+    <span class="tick">ASX:CBA <span class="up">+0.66%</span></span>
+    <span class="tick">SOL <span class="up">+5.21%</span></span>
+    <span class="tick">MSFT <span class="up">+0.98%</span></span>
+    <span class="tick">ASX:BHP <span class="down">−1.02%</span></span>
+    <span class="tick">AMZN <span class="up">+1.77%</span></span>
+  </div>
+</div>
 
-<!-- JOIN SECTION (updated) -->
+<header id="hdr">
+  <nav class="container">
+    <a href="#" class="logo-mark">
+      <svg class="logo-shield" viewBox="0 0 40 46" fill="none">
+        <defs>
+          <linearGradient id="sg" x1="20" y1="2" x2="20" y2="43" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#1a2a48"/>
+            <stop offset="100%" stop-color="#0a1220"/>
+          </linearGradient>
+          <linearGradient id="ag" x1="12" y1="13" x2="31" y2="13" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#c9a030"/>
+            <stop offset="100%" stop-color="#f5d980"/>
+          </linearGradient>
+        </defs>
+        <path d="M20 2L36 9V22C36 31 29 39 20 43C11 39 4 31 4 22V9L20 2Z" fill="url(#sg)" stroke="#c9a030" stroke-width="1"/>
+        <path d="M20 8L30 12.5V21C30 26.5 25.5 31.5 20 34C14.5 31.5 10 26.5 10 21V12.5L20 8Z" fill="none" stroke="#e8c060" stroke-width="0.75" opacity="0.6"/>
+        <text x="20" y="27" text-anchor="middle" font-family="serif" font-size="12" font-weight="bold" fill="#e8c060">&#8383;</text>
+        <polyline points="12,24 17,19 20,22 28,13" fill="none" stroke="url(#ag)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="26" y1="10" x2="31" y2="10" stroke="url(#ag)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="31" y1="10" x2="31" y2="15" stroke="url(#ag)" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <div class="logo-text">Trade<span>Arena</span></div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#leaderboard">Arena</a></li>
+      <li><a href="#how">Battle Plan</a></li>
+    </ul>
+    <a href="#join" class="nav-cta">Enter the Arena</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <div class="hero-divider fi"><span>Sydney Beta — Limited Access</span></div>
+    <h1 class="fi">
+      <span class="line-gold">Enter The</span>
+      Trade Arena
+      <span class="line-dim">Where Student Portfolios Battle</span>
+    </h1>
+    <p class="hero-sub fi">Real stocks. Real crypto. Campus leaderboards that separate the traders from the tourists. Start with $1 and claim your position at the top.</p>
+    <div class="hero-ctas fi">
+      <a href="#join" class="btn-arena">Claim Your Spot</a>
+      <a href="#how" class="btn-ghost">
+        See how it works
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M8 3l5 5-5 5"/></svg>
+      </a>
+    </div>
+    <div class="hero-badge fi">
+      <div class="live-dot"></div>
+      Paper trading live now &nbsp;·&nbsp; Real money launching soon
+    </div>
+  </div>
+</section>
+
+<div class="gold-sep"><div class="gold-sep-line"></div><div class="gold-sep-diamond"></div><div class="gold-sep-line"></div></div>
+
+<div class="stats-section">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat fi"><div class="stat-num"><span id="c1">0</span></div><div class="stat-lbl">Students on waitlist</div></div>
+      <div class="stat fi"><div class="stat-num">$<span id="c2">0</span></div><div class="stat-lbl">Minimum trade</div></div>
+      <div class="stat fi"><div class="stat-num"><span id="c3">0</span></div><div class="stat-lbl">Universities in battle</div></div>
+      <div class="stat fi"><div class="stat-num">$<span id="c4">0</span></div><div class="stat-lbl">Weekly prize pool</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="gold-sep"><div class="gold-sep-line"></div><div class="gold-sep-diamond"></div><div class="gold-sep-line"></div></div>
+
+<section class="features-section" id="features">
+  <div class="container">
+    <div class="section-divider fi"><span>Your Weapons</span></div>
+    <h2 class="section-title fi">Built for traders<br>who are <em>serious.</em></h2>
+    <div class="features-grid">
+      <div class="feat fi">
+        <div class="feat-icon"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+        <h3>$1 Fractional Trading</h3>
+        <p>Own real shares of Apple, Tesla, NVDA or Bitcoin from your coffee budget. No locked minimums, no waiting. Every dollar is a weapon.</p>
+      </div>
+      <div class="feat fi">
+        <div class="feat-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div>
+        <h3>Social Portfolios</h3>
+        <p>Follow the top traders at your campus. Copy their moves. See what USyd's best are buying this week. Strategy is social in the Arena.</p>
+      </div>
+      <div class="feat fi">
+        <div class="feat-icon"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/><path d="M12 3v6M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+        <h3>Campus Battle Leagues</h3>
+        <p>USyd vs UNSW. UTS vs Macquarie. Your portfolio performance is your score. Every Monday, one trader wins $100 cash. No luck — pure skill.</p>
+      </div>
+      <div class="feat fi">
+        <div class="feat-icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+        <h3>30-Second Intel Briefs</h3>
+        <p>Every morning: why NVDA moved 4%. What crypto did overnight. Delivered in plain language — no Bloomberg subscription required.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="gold-sep"><div class="gold-sep-line"></div><div class="gold-sep-diamond"></div><div class="gold-sep-line"></div></div>
+
+<section class="lb-section" id="leaderboard">
+  <div class="container">
+    <div class="section-divider fi"><span>The Arena Rankings</span></div>
+    <h2 class="section-title fi">Campus leaderboard.<br><em>Where does your uni rank?</em></h2>
+    <div class="lb-wrap fi">
+      <div class="lb-head">
+        <span>Rank</span><span>University</span><span>Return</span><span>Avg. Portfolio</span><span>Status</span>
+      </div>
+      <div class="lb-row">
+        <div class="lb-rank first">01</div>
+        <div><div class="lb-uni">University of Sydney</div><div class="lb-trader">Top trader: Alex P.</div></div>
+        <div class="lb-pct up">+12.4%</div>
+        <div class="lb-avg">$247 avg.</div>
+        <div><span class="lb-badge live">Live</span></div>
+      </div>
+      <div class="lb-row">
+        <div class="lb-rank">02</div>
+        <div><div class="lb-uni">UNSW Sydney</div><div class="lb-trader">Top trader: Sarah K.</div></div>
+        <div class="lb-pct up">+8.7%</div>
+        <div class="lb-avg">$193 avg.</div>
+        <div><span class="lb-badge live">Live</span></div>
+      </div>
+      <div class="lb-row">
+        <div class="lb-rank">03</div>
+        <div><div class="lb-uni">University of Technology Sydney</div><div class="lb-trader">Top trader: Mike L.</div></div>
+        <div class="lb-pct up">+6.2%</div>
+        <div class="lb-avg">$156 avg.</div>
+        <div><span class="lb-badge beta">Beta</span></div>
+      </div>
+      <div class="lb-row">
+        <div class="lb-rank">04</div>
+        <div><div class="lb-uni">Macquarie University</div><div class="lb-trader">Top trader: —</div></div>
+        <div class="lb-pct flat">Joining soon</div>
+        <div class="lb-avg">—</div>
+        <div><span class="lb-badge soon">Soon</span></div>
+      </div>
+      <div class="lb-row" style="background:rgba(201,160,48,0.02);">
+        <div class="lb-rank" style="color:var(--golddim);font-size:1rem;letter-spacing:0.06em;">+8</div>
+        <div>
+          <div class="lb-uni" style="color:var(--muted);font-size:0.85rem;">More universities entering the arena</div>
+          <div class="lb-more">UniMelb &nbsp;·&nbsp; Monash &nbsp;·&nbsp; ANU &nbsp;·&nbsp; UQ &nbsp;·&nbsp; QUT &nbsp;·&nbsp; RMIT &nbsp;·&nbsp; Curtin &nbsp;·&nbsp; Adelaide</div>
+        </div>
+        <div class="lb-pct flat">—</div>
+        <div class="lb-avg">—</div>
+        <div><span class="lb-badge coming">Coming</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="how-section" id="how">
+  <div class="container">
+    <div class="section-divider fi"><span>Your Battle Plan</span></div>
+    <h2 class="section-title fi">From zero to<br><em>invested in three steps.</em></h2>
+    <div class="steps">
+      <div class="step fi">
+        <div class="step-num">01</div>
+        <div>
+          <span class="step-tag">Today</span>
+          <h3>Enter with your student email</h3>
+          <p>Sign up with your .edu.au address. University verification is instant. No bank account needed to start — paper trading is live right now with $10,000 in virtual funds to sharpen your strategy.</p>
+        </div>
+      </div>
+      <div class="step fi">
+        <div class="step-num">02</div>
+        <div>
+          <span class="step-tag">Train</span>
+          <h3>Master the arena with zero risk</h3>
+          <p>Paper trade real stocks and crypto at live market prices. Build your playbook, follow the top traders, climb the leaderboard — all with virtual money until you're ready to go live.</p>
+        </div>
+      </div>
+      <div class="step fi">
+        <div class="step-num">03</div>
+        <div>
+          <span class="step-tag">Conquer</span>
+          <h3>Deploy your first real dollar</h3>
+          <p>When live trading launches, deposit from $1 and buy fractional shares of your chosen stocks and crypto. Early access warriors pay zero brokerage — forever. No exceptions.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="join-section" id="join">
   <div class="container">
     <div class="section-divider fi" style="justify-content:center;"><span>Limited Spots Remaining</span></div>
     <h2 class="join-title fi">The first 500 warriors<br>trade <em>free. Forever.</em></h2>
     <p class="join-sub fi">Plus a $10 bonus credit when live trading launches.<br>No credit card. No catch. Just your student email.</p>
-    
     <div class="email-form fi">
       <input type="email" placeholder="your@student.edu.au" id="email-in"/>
       <button onclick="handleJoin()">Enter the Arena</button>
     </div>
-    
-    <p class="join-note fi">Paper trading launching 20 April &nbsp;·&nbsp; Live trading coming soon &nbsp;·&nbsp; ASIC-regulated partners</p>
+    <p class="join-note fi">Paper trading available now &nbsp;·&nbsp; Live trading coming soon &nbsp;·&nbsp; ASIC regulated partners</p>
     <div class="perks fi">
       <div><span class="perk-val">$0</span><span class="perk-lbl">Brokerage fees</span></div>
       <div><span class="perk-val">$10</span><span class="perk-lbl">Signup bonus</span></div>
@@ -188,12 +393,21 @@
   </div>
 </section>
 
-<!-- FOOTER (updated) -->
 <footer>
   <div class="container">
     <div class="footer-inner">
       <a href="#" class="logo-mark">
-        <!-- your logo svg here - keep the same as before -->
+        <svg class="logo-shield" viewBox="0 0 40 46" fill="none">
+          <defs>
+            <linearGradient id="sg2" x1="20" y1="2" x2="20" y2="43" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#1a2a48"/>
+              <stop offset="100%" stop-color="#0a1220"/>
+            </linearGradient>
+          </defs>
+          <path d="M20 2L36 9V22C36 31 29 39 20 43C11 39 4 31 4 22V9L20 2Z" fill="url(#sg2)" stroke="#c9a030" stroke-width="1"/>
+          <text x="20" y="27" text-anchor="middle" font-family="serif" font-size="12" font-weight="bold" fill="#c9a030">&#8383;</text>
+          <polyline points="12,24 17,19 20,22 28,13" fill="none" stroke="#c9a030" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
         <div class="logo-text">Trade<span>Arena</span></div>
       </a>
       <ul class="footer-links">
@@ -204,8 +418,8 @@
       </ul>
     </div>
     <p class="footer-legal">
-      TradeArena is pre-launch. Paper trading demo launching 20 April. Live trading will be facilitated through ASIC-regulated broker partners.<br>
-      TradeArena Pty Ltd is not a financial adviser. All investments carry risk.<br>
+      TradeArena is currently in beta. Paper trading does not involve real money. Live trading will be facilitated through ASIC-regulated broker partners.
+      TradeArena Pty Ltd is not a financial adviser. All investments carry risk. Past performance is not indicative of future results.
       © 2026 TradeArena Pty Ltd · Sydney, Australia
     </p>
   </div>
@@ -217,15 +431,62 @@
     hdr.classList.toggle('scrolled', window.scrollY > 20);
   });
 
-  // Intersection observer and counter script (keep your original ones)
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('vis'), i * 90);
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.fi').forEach(el => obs.observe(el));
+
+  function counter(id, target) {
+    const el = document.getElementById(id);
+    let start = null;
+    const dur = 2000;
+    const step = ts => {
+      if (!start) start = ts;
+      const p = Math.min((ts - start) / dur, 1);
+      const e = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.floor(e * target);
+      if (p < 1) requestAnimationFrame(step);
+      else el.textContent = target;
+    };
+    requestAnimationFrame(step);
+  }
+
+  const statObs = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) {
+      counter('c1', 347);
+      counter('c2', 1);
+      counter('c3', 4);
+      counter('c4', 100);
+      statObs.disconnect();
+    }
+  }, { threshold: 0.3 });
+  statObs.observe(document.querySelector('.stats-section'));
+
   function handleJoin() {
-    const val = document.getElementById('email-in').value.trim();
+    const val = document.getElementById('email-in').value;
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
       document.getElementById('email-in').style.borderLeft = '2px solid #f87171';
       return;
     }
-    window.location.href = 'auth.html?email=' + encodeURIComponent(val);
+    const btn = document.querySelector('.email-form button');
+    btn.textContent = 'Welcome, Warrior \u2713';
+    btn.style.background = '#4ade80';
+    btn.style.color = '#060e1c';
+    document.getElementById('email-in').value = '';
   }
+
+
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const t = document.querySelector(a.getAttribute('href'));
+      if (t) { e.preventDefault(); t.scrollIntoView({ behavior: 'smooth' }); }
+    });
+  });
 </script>
 </body>
 </html>
