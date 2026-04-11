@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="description" content="TradeArena — Sydney student brokerage. Campus battles. $1 trades. Paper trading live now."/>
   <title>TradeArena — Trade. Battle. Grow.</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cinzel+Decorative:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
@@ -420,7 +419,7 @@
     <p class="footer-legal">
       TradeArena is currently in beta. Paper trading does not involve real money. Live trading will be facilitated through ASIC-regulated broker partners.
       TradeArena Pty Ltd is not a financial adviser. All investments carry risk. Past performance is not indicative of future results.
-      © 2026 TradeArena Pty Ltd · Sydney, Australia
+      © 2025 TradeArena Pty Ltd · Sydney, Australia
     </p>
   </div>
 </footer>
@@ -468,18 +467,19 @@
   statObs.observe(document.querySelector('.stats-section'));
 
   function handleJoin() {
-    const val = document.getElementById('email-in').value;
+    const val = document.getElementById('email-in').value.trim();
+    const input = document.getElementById('email-in');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
-      document.getElementById('email-in').style.borderLeft = '2px solid #f87171';
+      input.style.borderLeft = '2px solid #f87171';
+      input.focus();
       return;
     }
     const btn = document.querySelector('.email-form button');
-    btn.textContent = 'Welcome, Warrior \u2713';
-    btn.style.background = '#4ade80';
-    btn.style.color = '#060e1c';
-    document.getElementById('email-in').value = '';
+    btn.textContent = 'Entering Arena…';
+    btn.style.opacity = '0.7';
+    btn.disabled = true;
+    window.location.href = 'auth.html?email=' + encodeURIComponent(val);
   }
-
 
   document.querySelectorAll('a[href^="#"]').forEach(a => {
     a.addEventListener('click', e => {
