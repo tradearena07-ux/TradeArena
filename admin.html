@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TradeArena — Command Center</title>
+  <title>TradeArena — Sign In</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -12,850 +12,508 @@
       --navy:   #060e1c;
       --navy2:  #091528;
       --navy3:  #0d1e3a;
-      --navy4:  #122248;
       --gold:   #c9a030;
       --gold2:  #e8c060;
       --cream:  #f2e8cc;
       --muted:  #7a8aaa;
       --border: rgba(201,160,48,0.22);
-      --bdl:    rgba(201,160,48,0.08);
       --green:  #4ade80;
       --red:    #f87171;
-      --amber:  #fbbf24;
     }
 
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
 
     body {
+      min-height: 100vh;
       background: var(--navy);
       color: var(--cream);
       font-family: 'DM Sans', sans-serif;
       font-weight: 300;
-      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
     }
 
     body::before {
       content: '';
       position: fixed; inset: 0; z-index: 0; pointer-events: none;
       background-image: repeating-linear-gradient(
-        -55deg, transparent, transparent 80px,
-        rgba(201,160,48,0.018) 80px, rgba(201,160,48,0.018) 81px
+        -55deg,
+        transparent, transparent 80px,
+        rgba(201,160,48,0.025) 80px,
+        rgba(201,160,48,0.025) 81px
       );
     }
 
-    /* ── GATE ── */
-    #gate {
-      position: fixed; inset: 0; z-index: 999;
-      background: var(--navy);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 18px; text-align: center; padding: 20px;
+    body::after {
+      content: '';
+      position: fixed; top: 0; left: 50%; transform: translateX(-50%);
+      width: 800px; height: 500px;
+      background: radial-gradient(ellipse at top, rgba(201,160,48,0.09) 0%, transparent 65%);
+      pointer-events: none; z-index: 0;
     }
-    #gate.hidden { display: none; }
-    #gate h2 {
-      font-family: 'Cinzel', serif; font-size: 1.1rem;
-      font-weight: 600; text-transform: uppercase;
-      letter-spacing: 0.08em; color: var(--red);
-    }
-    #gate p { font-size: 0.88rem; color: var(--muted); }
-    #gate a {
-      font-family: 'Cinzel', serif; font-size: 11px;
-      letter-spacing: 0.12em; text-transform: uppercase;
-      color: var(--gold); text-decoration: none;
-      border: 1px solid var(--gold); padding: 11px 26px;
-      transition: background 0.2s, color 0.2s;
-    }
-    #gate a:hover { background: var(--gold); color: var(--navy); }
 
-    /* ── HEADER ── */
-    .header {
-      background: rgba(9,21,40,0.97);
-      border-bottom: 1px solid var(--border);
-      position: sticky; top: 0; z-index: 100;
+    .card {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 440px;
+      background: var(--navy2);
+      border: 1px solid var(--border);
+      padding: 48px 44px;
     }
-    .header-inner {
-      max-width: 1400px; margin: 0 auto; padding: 0 26px;
-      display: flex; align-items: center; justify-content: space-between;
-      height: 62px;
-    }
-    .logo-wrap { display: flex; align-items: center; gap: 14px; }
-    .logo-mark {
-      display: flex; align-items: center; gap: 10px;
-      text-decoration: none;
+
+    /* Logo */
+    .logo {
+      display: flex; align-items: center; gap: 12px;
+      text-decoration: none; margin-bottom: 38px;
     }
     .logo-text {
       font-family: 'Cinzel Decorative', serif;
-      font-size: 1rem; font-weight: 700;
+      font-size: 1.1rem; font-weight: 700;
       letter-spacing: 0.05em; color: var(--gold2);
     }
     .logo-text span { color: var(--cream); }
-    .admin-tag {
-      font-family: 'Cinzel', serif; font-size: 9px;
-      letter-spacing: 0.18em; text-transform: uppercase;
-      color: var(--gold); border: 1px solid var(--border);
-      padding: 4px 10px;
-    }
-    .header-right { display: flex; align-items: center; gap: 14px; }
-    .admin-email {
-      font-family: 'Cinzel', serif; font-size: 10px;
-      letter-spacing: 0.06em; color: var(--muted);
-    }
-    .hbtn {
-      font-family: 'Cinzel', serif; font-size: 10px;
-      letter-spacing: 0.1em; text-transform: uppercase;
-      color: var(--muted); border: 1px solid var(--bdl);
-      padding: 7px 16px; background: none; cursor: pointer;
-      text-decoration: none;
-      transition: color 0.2s, border-color 0.2s;
-      display: inline-block;
-    }
-    .hbtn:hover { color: var(--cream); border-color: var(--border); }
-    .hbtn.danger:hover { color: var(--red); border-color: var(--red); }
 
-    /* ── PAGE ── */
-    #mainPage { display: none; }
-    .page {
-      max-width: 1400px; margin: 0 auto;
-      padding: 24px 26px;
-      position: relative; z-index: 1;
+    /* Ornament */
+    .ornament {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 30px;
+    }
+    .ornament::before, .ornament::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(to right, transparent, rgba(201,160,48,0.4));
+    }
+    .ornament::after {
+      background: linear-gradient(to left, transparent, rgba(201,160,48,0.4));
+    }
+    .ornament span {
+      font-family: 'Cinzel', serif;
+      font-size: 9px; letter-spacing: 0.26em;
+      text-transform: uppercase; color: var(--gold);
     }
 
-    /* ── STAT CARDS ── */
-    .stat-cards {
-      display: grid; grid-template-columns: repeat(5, 1fr);
-      gap: 1px; background: var(--border);
+    h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.65rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      line-height: 1.2; margin-bottom: 10px;
+    }
+
+    .subtitle {
+      font-size: 0.88rem; color: var(--muted);
+      line-height: 1.78; margin-bottom: 30px;
+    }
+
+    /* Error box */
+    .error-box {
+      display: none;
+      background: rgba(248,113,113,0.08);
+      border: 1px solid rgba(248,113,113,0.4);
+      border-left: 3px solid var(--red);
+      padding: 12px 14px; margin-bottom: 14px;
+      font-size: 12.5px; color: #fca5a5; line-height: 1.65;
+    }
+    .error-box.show { display: block; }
+
+    /* Field */
+    .field { margin-bottom: 14px; }
+    .field label {
+      display: block;
+      font-family: 'Cinzel', serif;
+      font-size: 9px; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 7px;
+    }
+    .field input {
+      width: 100%; padding: 13px 16px;
+      background: var(--navy3);
       border: 1px solid var(--border);
-      margin-bottom: 22px;
-    }
-    .scard {
-      background: var(--navy2); padding: 20px 22px;
-      transition: background 0.2s;
-    }
-    .scard:hover { background: var(--navy3); }
-    .scard-label {
-      font-family: 'Cinzel', serif; font-size: 8.5px;
-      letter-spacing: 0.18em; text-transform: uppercase;
-      color: var(--muted); margin-bottom: 10px;
-    }
-    .scard-val {
-      font-family: 'Cinzel', serif; font-size: 1.9rem;
-      font-weight: 600; color: var(--cream); line-height: 1;
-    }
-    .scard-val.green { color: var(--green); }
-    .scard-val.gold  { color: var(--gold2); }
-    .scard-val.amber { color: var(--amber); }
-    .scard-sub { font-size: 11px; color: var(--muted); margin-top: 6px; }
-
-    /* ── GRID LAYOUT ── */
-    .two-col {
-      display: grid; grid-template-columns: 1fr 340px;
-      gap: 18px; margin-bottom: 18px;
-    }
-    .right-col { display: flex; flex-direction: column; gap: 18px; }
-
-    /* ── PANEL ── */
-    .panel {
-      background: var(--navy2); border: 1px solid var(--border);
-      padding: 22px 26px;
-    }
-    .panel-head {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 18px;
-    }
-    .panel-title {
-      font-family: 'Cinzel', serif; font-size: 9px;
-      letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold);
-      display: flex; align-items: center; gap: 10px;
-    }
-    .panel-title::before {
-      content: ''; display: block; width: 16px; height: 1px; background: var(--gold);
-    }
-    .panel-count {
-      font-family: 'Cinzel', serif; font-size: 10px;
-      letter-spacing: 0.08em; color: var(--muted);
-      border: 1px solid var(--bdl); padding: 3px 10px;
-    }
-
-    /* ── TOOLBAR ── */
-    .toolbar { display: flex; gap: 10px; margin-bottom: 14px; }
-    .search-box {
-      flex: 1; padding: 10px 13px;
-      background: var(--navy3); border: 1px solid var(--bdl);
-      color: var(--cream); font-family: 'DM Sans', sans-serif;
-      font-size: 13px; outline: none;
+      color: var(--cream);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px; outline: none;
       transition: border-color 0.2s;
     }
-    .search-box:focus { border-color: var(--gold); }
-    .search-box::placeholder { color: var(--muted); }
-    .filter-sel {
-      padding: 10px 12px;
-      background: var(--navy3); border: 1px solid var(--bdl);
-      color: var(--muted); font-family: 'Cinzel', serif;
-      font-size: 9px; letter-spacing: 0.1em; outline: none;
-    }
-    .filter-sel option { background: var(--navy3); }
-    .btn-csv {
-      font-family: 'Cinzel', serif; font-size: 9px;
-      letter-spacing: 0.12em; text-transform: uppercase;
-      border: 1px solid var(--border); color: var(--gold);
-      padding: 0 16px; background: none; cursor: pointer;
-      transition: background 0.2s, color 0.2s; white-space: nowrap;
-    }
-    .btn-csv:hover { background: var(--gold); color: var(--navy); }
+    .field input::placeholder { color: var(--muted); }
+    .field input:focus { border-color: var(--gold); }
+    .field input.err { border-color: var(--red); }
 
-    /* ── TABLE ── */
-    .tbl { width: 100%; border-collapse: collapse; }
-    .tbl th {
-      font-family: 'Cinzel', serif; font-size: 8.5px;
-      letter-spacing: 0.14em; text-transform: uppercase;
-      color: var(--muted); text-align: left;
-      padding: 0 10px 10px 0;
-      border-bottom: 1px solid var(--bdl);
+    /* Button */
+    .btn {
+      width: 100%; padding: 15px;
+      background: linear-gradient(135deg, var(--gold), var(--gold2), var(--gold));
+      background-size: 200% auto;
+      color: var(--navy); border: none; cursor: pointer;
+      font-family: 'Cinzel', serif;
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      transition: background-position 0.4s, opacity 0.2s;
+      clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
     }
-    .tbl td {
-      padding: 12px 10px 12px 0;
-      border-bottom: 1px solid var(--bdl);
-      font-size: 12.5px; vertical-align: middle;
-    }
-    .tbl tr:last-child td { border-bottom: none; }
-    .tbl tr:hover td { background: rgba(201,160,48,0.025); }
+    .btn:hover:not(:disabled) { background-position: right center; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    .tag {
-      font-family: 'Cinzel', serif; font-size: 9px;
-      letter-spacing: 0.08em; text-transform: uppercase;
-      padding: 3px 10px; border: 1px solid; display: inline-block;
-      clip-path: polygon(3px 0%, 100% 0%, calc(100% - 3px) 100%, 0% 100%);
+    /* Note */
+    .note {
+      margin-top: 16px;
+      font-size: 11px; color: var(--muted);
+      text-align: center; line-height: 1.75;
+      font-family: 'Cinzel', serif; letter-spacing: 0.04em;
     }
-    .tag.ok  { border-color: var(--green); color: var(--green); }
-    .tag.new { border-color: var(--amber); color: var(--amber); }
+    .note a { color: var(--gold); text-decoration: none; }
 
-    /* ── UNIVERSITY BARS ── */
-    .uni-row { margin-bottom: 14px; }
-    .uni-row:last-child { margin-bottom: 0; }
-    .uni-top {
-      display: flex; justify-content: space-between;
-      align-items: center; margin-bottom: 5px;
+    /* Accepted unis strip */
+    .uni-strip {
+      margin-top: 24px; padding-top: 20px;
+      border-top: 1px solid rgba(201,160,48,0.08);
     }
-    .uni-name {
-      font-family: 'Cinzel', serif; font-size: 11px;
-      letter-spacing: 0.04em; color: var(--cream);
+    .uni-label {
+      font-family: 'Cinzel', serif; font-size: 8px;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 10px; text-align: center;
     }
-    .uni-count { font-size: 12px; color: var(--muted); }
-    .bar-bg { height: 4px; background: var(--bdl); }
-    .bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--gold), var(--gold2));
-      transition: width 0.8s ease;
+    .uni-badges {
+      display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+    }
+    .uni-badge {
+      font-size: 9px; font-family: 'Cinzel', serif;
+      letter-spacing: 0.05em;
+      padding: 3px 9px;
+      border: 1px solid rgba(201,160,48,0.12);
+      color: var(--muted);
     }
 
-    /* ── PROGRESS BAR ── */
-    .progress-wrap { margin-bottom: 12px; }
-    .progress-top {
-      display: flex; justify-content: space-between;
-      font-size: 12px; color: var(--muted); margin-bottom: 7px;
-    }
-    .progress-bg { height: 6px; background: var(--bdl); }
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--gold), var(--gold2));
-      transition: width 0.8s ease;
-    }
+    /* Success panel */
+    .panel { display: none; }
+    .panel.show { display: block; }
+    .form-panel.hide { display: none; }
 
-    /* ── SPARKLINE CANVAS ── */
-    #sparkCanvas { display: block; width: 100%; }
-
-    /* ── PAGINATION ── */
-    .pag { display: flex; gap: 7px; justify-content: flex-end; margin-top: 14px; }
-    .pbtn {
-      font-family: 'Cinzel', serif; font-size: 9px;
-      letter-spacing: 0.1em; border: 1px solid var(--bdl);
-      background: none; color: var(--muted); padding: 6px 13px;
-      cursor: pointer; transition: color 0.2s, border-color 0.2s;
+    .check-icon {
+      width: 60px; height: 60px; margin: 0 auto 22px;
+      border: 1px solid var(--green);
+      display: flex; align-items: center; justify-content: center;
+      clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
     }
-    .pbtn:hover:not(:disabled), .pbtn.active {
-      color: var(--gold); border-color: var(--gold);
+    .check-icon svg {
+      width: 26px; height: 26px;
+      stroke: var(--green); fill: none; stroke-width: 2.5;
     }
-    .pbtn:disabled { opacity: 0.3; cursor: not-allowed; }
-
-    /* ── SKELETON ── */
-    .skel {
-      background: linear-gradient(90deg, var(--navy3) 25%, var(--navy4) 50%, var(--navy3) 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.4s infinite;
-      height: 13px; margin: 5px 0;
+    .success-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.2rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin-bottom: 14px; text-align: center;
     }
-    @keyframes shimmer {
-      0%   { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
+    .success-body {
+      font-size: 0.88rem; color: var(--muted);
+      line-height: 1.85; text-align: center;
     }
-
-    /* ── TOAST ── */
-    .toast {
-      position: fixed; bottom: 22px; right: 22px; z-index: 500;
-      background: var(--navy2); border: 1px solid var(--border);
-      padding: 12px 18px; font-size: 12px;
+    .success-email { color: var(--gold2); font-weight: 500; }
+    .success-hint {
+      margin-top: 18px; padding-top: 18px;
+      border-top: 1px solid rgba(201,160,48,0.08);
+      font-size: 11px; color: var(--muted);
       font-family: 'Cinzel', serif; letter-spacing: 0.05em;
-      transform: translateX(130%); transition: transform 0.3s;
+      text-align: center;
     }
-    .toast.show { transform: translateX(0); }
-    .toast.ok   { border-color: var(--green); color: var(--green); }
+    .success-hint a { color: var(--gold); text-decoration: none; cursor: pointer; }
 
-    /* ── RESPONSIVE ── */
-    @media (max-width: 1100px) {
-      .two-col { grid-template-columns: 1fr; }
-      .stat-cards { grid-template-columns: repeat(3, 1fr); }
+    /* Spinner */
+    .spinner {
+      display: inline-block;
+      width: 13px; height: 13px;
+      border: 2px solid rgba(6,14,28,0.3);
+      border-top-color: var(--navy);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle; margin-right: 7px;
     }
-    @media (max-width: 700px) {
-      .stat-cards { grid-template-columns: repeat(2, 1fr); }
-      .page { padding: 14px; }
-      .header-inner { padding: 0 14px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Redirect panel */
+    .redirect-msg {
+      text-align: center; padding: 20px 0;
+      font-size: 0.9rem; color: var(--muted);
+    }
+
+    @media (max-width: 480px) {
+      .card { padding: 36px 22px; }
+      h1 { font-size: 1.35rem; }
     }
   </style>
 </head>
 <body>
+<div class="card">
 
-<!-- Access Gate -->
-<div id="gate">
-  <svg width="40" height="46" viewBox="0 0 40 46" fill="none">
-    <path d="M20 2L36 9V22C36 31 29 39 20 43C11 39 4 31 4 22V9L20 2Z"
-          fill="#091528" stroke="#f87171" stroke-width="1"/>
-    <text x="20" y="28" text-anchor="middle"
-          font-family="serif" font-size="16" fill="#f87171">!</text>
-  </svg>
-  <h2 id="gateTitle">Checking access…</h2>
-  <p id="gateMsg">Please wait</p>
-  <a href="auth.html" id="gateLink" style="display:none;">Sign In →</a>
-</div>
+  <!-- Logo -->
+  <a href="index.html" class="logo">
+    <svg width="32" height="36" viewBox="0 0 40 46" fill="none">
+      <path d="M20 2L36 9V22C36 31 29 39 20 43C11 39 4 31 4 22V9L20 2Z"
+            fill="#091528" stroke="#c9a030" stroke-width="1"/>
+      <text x="20" y="27" text-anchor="middle"
+            font-family="serif" font-size="12" font-weight="bold" fill="#e8c060">&#8383;</text>
+      <polyline points="12,24 17,19 20,22 28,13"
+                fill="none" stroke="#c9a030" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <div class="logo-text">Trade<span>Arena</span></div>
+  </a>
 
-<!-- Header -->
-<header class="header">
-  <div class="header-inner">
-    <div class="logo-wrap">
-      <a href="index.html" class="logo-mark">
-        <svg width="26" height="30" viewBox="0 0 40 46" fill="none">
-          <path d="M20 2L36 9V22C36 31 29 39 20 43C11 39 4 31 4 22V9L20 2Z"
-                fill="#091528" stroke="#c9a030" stroke-width="1"/>
-          <text x="20" y="27" text-anchor="middle"
-                font-family="serif" font-size="12" font-weight="bold" fill="#e8c060">&#8383;</text>
-        </svg>
-        <div class="logo-text">Trade<span>Arena</span></div>
-      </a>
-      <div class="admin-tag">Command Center</div>
+  <!-- Already signed in -->
+  <div id="redirectPanel" style="display:none;">
+    <p class="redirect-msg">You're already signed in. Redirecting to the Arena…</p>
+  </div>
+
+  <!-- Sign in form -->
+  <div class="form-panel" id="formPanel">
+    <div class="ornament"><span>Student Access</span></div>
+    <h1>Enter the<br>Arena</h1>
+    <p class="subtitle">
+      Sign in with your university email.
+      We'll send a one-click magic link — no password needed.
+    </p>
+
+    <div class="error-box" id="errorBox"></div>
+
+    <div class="field">
+      <label>University Email</label>
+      <input
+        type="email"
+        id="emailInput"
+        placeholder="you@student.unsw.edu.au"
+        autocomplete="email"
+      />
     </div>
-    <div class="header-right">
-      <span class="admin-email" id="adminEmail">—</span>
-      <a href="trade.html" class="hbtn">← War Room</a>
-      <button class="hbtn danger" onclick="logout()">Sign Out</button>
+
+    <button class="btn" id="submitBtn" onclick="handleLogin()">
+      Send Magic Link
+    </button>
+
+    <p class="note">
+      Must be a university email (.edu.au)
+      &nbsp;·&nbsp;
+      <a href="index.html">← Back to home</a>
+    </p>
+
+    <div class="uni-strip">
+      <div class="uni-label">Accepted institutions</div>
+      <div class="uni-badges">
+        <span class="uni-badge">unsw.edu.au</span>
+        <span class="uni-badge">usyd.edu.au</span>
+        <span class="uni-badge">uts.edu.au</span>
+        <span class="uni-badge">mq.edu.au</span>
+        <span class="uni-badge">unimelb.edu.au</span>
+        <span class="uni-badge">monash.edu</span>
+        <span class="uni-badge">anu.edu.au</span>
+        <span class="uni-badge">+ all .edu.au</span>
+      </div>
     </div>
   </div>
-</header>
 
-<!-- Page -->
-<div id="mainPage">
-  <div class="page">
-
-    <!-- Stats -->
-    <div class="stat-cards">
-      <div class="scard">
-        <div class="scard-label">Total Signups</div>
-        <div class="scard-val gold" id="stTotal">—</div>
-        <div class="scard-sub">All time</div>
-      </div>
-      <div class="scard">
-        <div class="scard-label">Today</div>
-        <div class="scard-val green" id="stToday">—</div>
-        <div class="scard-sub">New registrations</div>
-      </div>
-      <div class="scard">
-        <div class="scard-label">This Week</div>
-        <div class="scard-val" id="stWeek">—</div>
-        <div class="scard-sub">7-day signups</div>
-      </div>
-      <div class="scard">
-        <div class="scard-label">Universities</div>
-        <div class="scard-val gold" id="stUnis">—</div>
-        <div class="scard-sub">Unique institutions</div>
-      </div>
-      <div class="scard">
-        <div class="scard-label">Spots Left</div>
-        <div class="scard-val amber" id="stSpots">—</div>
-        <div class="scard-sub">of 500 early access</div>
-      </div>
+  <!-- Success -->
+  <div class="panel" id="successPanel">
+    <div class="check-icon">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
     </div>
-
-    <!-- Main grid -->
-    <div class="two-col">
-
-      <!-- Left: Registrations table -->
-      <div class="panel">
-        <div class="panel-head">
-          <div class="panel-title">Registrations</div>
-          <div style="display:flex;gap:10px;align-items:center;">
-            <span class="panel-count" id="regCount">—</span>
-            <button class="btn-csv" onclick="exportCSV()">Export CSV</button>
-          </div>
-        </div>
-
-        <div class="toolbar">
-          <input class="search-box" type="text" id="searchInput"
-                 placeholder="Search email or university…" oninput="filterRegs()"/>
-          <select class="filter-sel" id="uniFilter" onchange="filterRegs()">
-            <option value="">All unis</option>
-          </select>
-        </div>
-
-        <table class="tbl">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Email</th>
-              <th>University</th>
-              <th>Joined</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="regBody">
-            <tr><td colspan="5"><div class="skel" style="width:70%"></div></td></tr>
-            <tr><td colspan="5"><div class="skel" style="width:55%"></div></td></tr>
-            <tr><td colspan="5"><div class="skel" style="width:80%"></div></td></tr>
-          </tbody>
-        </table>
-
-        <div class="pag" id="pagEl"></div>
-      </div>
-
-      <!-- Right column -->
-      <div class="right-col">
-
-        <!-- Uni breakdown -->
-        <div class="panel">
-          <div class="panel-title" style="margin-bottom:18px;">University Breakdown</div>
-          <div id="uniBreakdown">
-            <div class="skel" style="width:100%;height:16px;margin-bottom:12px;"></div>
-            <div class="skel" style="width:80%;height:16px;margin-bottom:12px;"></div>
-            <div class="skel" style="width:60%;height:16px;"></div>
-          </div>
-        </div>
-
-        <!-- Signup trend -->
-        <div class="panel">
-          <div class="panel-title" style="margin-bottom:14px;">Signup Trend (14 days)</div>
-          <canvas id="sparkCanvas" height="80"></canvas>
-        </div>
-
-        <!-- Early access progress -->
-        <div class="panel">
-          <div class="panel-title" style="margin-bottom:14px;">Early Access Progress</div>
-          <div class="progress-wrap">
-            <div class="progress-top">
-              <span>Spots claimed</span>
-              <span id="progressLabel">0 / 500</span>
-            </div>
-            <div class="progress-bg">
-              <div class="progress-fill" id="progressFill" style="width:0%"></div>
-            </div>
-          </div>
-          <div style="font-size:11px;color:var(--muted);line-height:1.8;margin-top:8px;">
-            First 500 students get $0 brokerage forever + $10 bonus credit.
-          </div>
-        </div>
-
-      </div>
+    <p class="success-title">Check your inbox</p>
+    <div class="success-body">
+      <p>Magic link sent to</p>
+      <p class="success-email" id="sentTo" style="margin-top:6px;"></p>
+      <p style="margin-top:12px;">Click the link in your email to enter the Arena.<br>It expires in <strong style="color:var(--cream)">10 minutes</strong>.</p>
+      <p style="margin-top:10px;font-size:11px;">
+        Can't find it? Check your <strong style="color:var(--cream)">Spam / Junk</strong> folder.
+      </p>
     </div>
-
-    <!-- Leaderboard -->
-    <div class="panel">
-      <div class="panel-head">
-        <div class="panel-title">Paper Trading Leaderboard</div>
-        <span class="panel-count" id="lbCount">—</span>
-      </div>
-      <table class="tbl">
-        <thead>
-          <tr>
-            <th>Rank</th>
-            <th>Trader</th>
-            <th>University</th>
-            <th>Portfolio P&amp;L</th>
-            <th>Trades</th>
-            <th>Joined</th>
-          </tr>
-        </thead>
-        <tbody id="lbBody">
-          <tr><td colspan="6"><div class="skel" style="width:65%"></div></td></tr>
-          <tr><td colspan="6"><div class="skel" style="width:50%"></div></td></tr>
-        </tbody>
-      </table>
+    <div class="success-hint">
+      Wrong email or didn't arrive?
+      <a onclick="resetForm()">Try again →</a>
     </div>
-
   </div>
-</div>
 
-<!-- Toast -->
-<div class="toast" id="toast"></div>
+</div>
 
 <script>
-  // ─── CONFIG ─────────────────────────────────────────────────────
+  // ─── Supabase config ───────────────────────────────────────────
   const SUPABASE_URL      = 'https://chncykagtzotdtflkhim.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNobmN5a2FndHpvdGR0ZmxraGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDYxNjIsImV4cCI6MjA5MTIyMjE2Mn0.ZRrZcBn_hLAPP7xL3kWgkpH5itLIIXzCWb_9_Ics_OE';
-  const ADMIN_EMAILS      = ['tradearena07@gmail.com']; // ← add more admin emails here
-  const PAGE_SIZE         = 20;
-  // ────────────────────────────────────────────────────────────────
+  const REDIRECT_TO       = 'https://www.tradearena.com.au/trade.html';
+  // ──────────────────────────────────────────────────────────────
 
   const { createClient } = supabase;
   const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  var allRegs      = [];
-  var filteredRegs = [];
-  var currentPage  = 0;
+  const emailInput = document.getElementById('emailInput');
+  const submitBtn  = document.getElementById('submitBtn');
+  const errorBox   = document.getElementById('errorBox');
+  const formPanel  = document.getElementById('formPanel');
+  const successPanel = document.getElementById('successPanel');
 
-  // ─── INIT ────────────────────────────────────────────────────────
-  async function init() {
-    var gateTitle = document.getElementById('gateTitle');
-    var gateMsg   = document.getElementById('gateMsg');
-    var gateLink  = document.getElementById('gateLink');
+  // Accepted email domains
+  function isStudentEmail(email) {
+    const lower = email.toLowerCase();
+    return (
+      lower.endsWith('.edu.au')   ||
+      lower.endsWith('.ac.nz')    ||
+      lower.endsWith('monash.edu')
+    );
+  }
 
-    var session = null;
+  // Map email domain to university name
+  function getUniversity(email) {
+    const domain = email.split('@')[1]?.toLowerCase() || '';
+    const map = {
+      'student.unsw.edu.au':    'UNSW Sydney',
+      'unsw.edu.au':            'UNSW Sydney',
+      'ad.unsw.edu.au':         'UNSW Sydney',
+      'usyd.edu.au':            'University of Sydney',
+      'student.usyd.edu.au':    'University of Sydney',
+      'uts.edu.au':             'UTS Sydney',
+      'student.uts.edu.au':     'UTS Sydney',
+      'mq.edu.au':              'Macquarie University',
+      'students.mq.edu.au':     'Macquarie University',
+      'unimelb.edu.au':         'University of Melbourne',
+      'student.unimelb.edu.au': 'University of Melbourne',
+      'monash.edu':             'Monash University',
+      'student.monash.edu':     'Monash University',
+      'anu.edu.au':             'ANU',
+      'uq.edu.au':              'University of Queensland',
+      'qut.edu.au':             'QUT',
+      'curtin.edu.au':          'Curtin University',
+      'uwa.edu.au':             'University of WA',
+      'adelaide.edu.au':        'University of Adelaide',
+      'rmit.edu.au':            'RMIT University',
+      'deakin.edu.au':          'Deakin University',
+      'latrobe.edu.au':         'La Trobe University',
+      'griffith.edu.au':        'Griffith University',
+      'newcastle.edu.au':       'University of Newcastle',
+      'wollongong.edu.au':      'University of Wollongong',
+      'scu.edu.au':             'Southern Cross University',
+      'une.edu.au':             'University of New England',
+    };
+    return map[domain] || domain;
+  }
+
+  function showError(msg) {
+    errorBox.innerHTML = msg;
+    errorBox.classList.add('show');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Send Magic Link';
+  }
+
+  function resetForm() {
+    formPanel.classList.remove('hide');
+    successPanel.classList.remove('show');
+    emailInput.value = '';
+    emailInput.classList.remove('err');
+    errorBox.classList.remove('show');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Send Magic Link';
+    emailInput.focus();
+  }
+
+  async function handleLogin() {
+    const email = emailInput.value.trim().toLowerCase();
+
+    // Reset errors
+    errorBox.classList.remove('show');
+    emailInput.classList.remove('err');
+
+    // Validate format
+    if (!email) {
+      emailInput.classList.add('err');
+      showError('Please enter your university email address.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      emailInput.classList.add('err');
+      showError('That doesn\'t look like a valid email. Please check and try again.');
+      return;
+    }
+    if (!isStudentEmail(email)) {
+      emailInput.classList.add('err');
+      showError(
+        'Please use your <strong>university email</strong> (e.g. you@student.unsw.edu.au).<br>' +
+        'Gmail, Hotmail and personal emails are not accepted.'
+      );
+      return;
+    }
+
+    // Send OTP
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner"></span>Sending…';
+
+    let otpError = null;
     try {
-      var res = await sb.auth.getSession();
-      session = res.data && res.data.session;
-    } catch(e) {
-      gateTitle.textContent = 'Connection Error';
-      gateMsg.textContent   = 'Could not connect to Supabase. Check your API keys.';
+      const { error } = await sb.auth.signInWithOtp({
+        email: email,
+        options: {
+          emailRedirectTo: REDIRECT_TO,
+          shouldCreateUser: true,
+        },
+      });
+      otpError = error;
+    } catch (err) {
+      showError('Network error. Please check your connection and try again.');
       return;
     }
 
-    if (!session) {
-      gateTitle.textContent = 'Sign In Required';
-      gateMsg.textContent   = 'Please sign in to access the Command Center.';
-      gateLink.style.display = 'inline-block';
-      return;
-    }
-
-    var userEmail = session.user.email;
-    if (!ADMIN_EMAILS.includes(userEmail)) {
-      gateTitle.textContent = 'Access Denied';
-      gateMsg.textContent   = userEmail + ' does not have admin access.';
-      gateLink.style.display = 'inline-block';
-      return;
-    }
-
-    // Grant access
-    document.getElementById('gate').classList.add('hidden');
-    document.getElementById('mainPage').style.display = 'block';
-    document.getElementById('adminEmail').textContent = userEmail;
-
-    await Promise.all([loadRegistrations(), loadLeaderboard()]);
-
-    // Auto-refresh every 30s
-    setInterval(function() { loadRegistrations(); loadLeaderboard(); }, 30000);
-  }
-
-  async function logout() {
-    await sb.auth.signOut();
-    window.location.href = 'auth.html';
-  }
-
-  // ─── REGISTRATIONS ───────────────────────────────────────────────
-  async function loadRegistrations() {
-    var res = null;
-    try {
-      res = await sb.from('registrations')
-        .select('*')
-        .order('created_at', { ascending: false });
-    } catch(e) {
-      document.getElementById('regBody').innerHTML =
-        '<tr><td colspan="5" style="color:var(--red);font-family:Cinzel,serif;font-size:11px;padding:20px 0;">Error loading data. Check RLS policies in Supabase.</td></tr>';
-      return;
-    }
-
-    allRegs      = res.data || [];
-    filteredRegs = allRegs.slice();
-
-    renderStats();
-    renderUniFilter();
-    renderUniBreakdown();
-    renderSparkline();
-    renderTable();
-  }
-
-  function renderStats() {
-    var total = allRegs.length;
-    var now   = new Date();
-
-    var today = allRegs.filter(function(r) {
-      return new Date(r.created_at).toDateString() === now.toDateString();
-    }).length;
-
-    var cutoff7 = new Date(now); cutoff7.setDate(now.getDate() - 7);
-    var week = allRegs.filter(function(r) {
-      return new Date(r.created_at) >= cutoff7;
-    }).length;
-
-    var unis  = new Set(allRegs.map(function(r) { return r.university; }).filter(Boolean)).size;
-    var spots = Math.max(0, 500 - total);
-    var pct   = Math.min(100, (total / 500) * 100).toFixed(1);
-
-    document.getElementById('stTotal').textContent   = total;
-    document.getElementById('stToday').textContent   = today;
-    document.getElementById('stWeek').textContent    = week;
-    document.getElementById('stUnis').textContent    = unis;
-    document.getElementById('stSpots').textContent   = spots;
-    document.getElementById('progressLabel').textContent = total + ' / 500';
-    document.getElementById('progressFill').style.width  = pct + '%';
-    document.getElementById('regCount').textContent = total + ' total';
-  }
-
-  function renderUniFilter() {
-    var sel  = document.getElementById('uniFilter');
-    var unis = Array.from(new Set(allRegs.map(function(r) { return r.university; }).filter(Boolean))).sort();
-    var cur  = sel.value;
-
-    // Keep only the "All unis" option then re-add
-    while (sel.options.length > 1) sel.remove(1);
-    unis.forEach(function(u) {
-      var opt = document.createElement('option');
-      opt.value = u; opt.textContent = u;
-      sel.appendChild(opt);
-    });
-    sel.value = cur;
-  }
-
-  function filterRegs() {
-    var q   = document.getElementById('searchInput').value.toLowerCase();
-    var uni = document.getElementById('uniFilter').value;
-    filteredRegs = allRegs.filter(function(r) {
-      var mQ   = !q   || (r.email || '').toLowerCase().includes(q) || (r.university || '').toLowerCase().includes(q);
-      var mUni = !uni || r.university === uni;
-      return mQ && mUni;
-    });
-    currentPage = 0;
-    renderTable();
-  }
-
-  function renderTable() {
-    var body  = document.getElementById('regBody');
-    var start = currentPage * PAGE_SIZE;
-    var page  = filteredRegs.slice(start, start + PAGE_SIZE);
-
-    if (!page.length) {
-      body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px 0;color:var(--muted);font-family:Cinzel,serif;font-size:10px;letter-spacing:.1em">NO RESULTS</td></tr>';
-      renderPag();
-      return;
-    }
-
-    body.innerHTML = page.map(function(r, i) {
-      var d    = new Date(r.created_at);
-      var date = d.toLocaleDateString('en-AU', { day:'2-digit', month:'short', year:'2-digit' });
-      var isNew = (Date.now() - d.getTime()) < 172800000; // 2 days
-      return '<tr>'
-        + '<td style="color:var(--muted);font-family:Cinzel,serif;font-size:11px">' + (start + i + 1) + '</td>'
-        + '<td style="font-size:13px">' + (r.email || '—') + '</td>'
-        + '<td style="font-size:12px;color:var(--muted)">' + (r.university || '—') + '</td>'
-        + '<td style="font-size:11px;color:var(--muted)">' + date + '</td>'
-        + '<td>'
-          + '<span class="tag ' + (r.user_id ? 'ok' : 'new') + '">' + (r.user_id ? 'Verified' : 'Pending') + '</span>'
-          + (isNew ? '<span style="margin-left:7px;font-family:Cinzel,serif;font-size:9px;color:var(--amber);letter-spacing:.1em">NEW</span>' : '')
-        + '</td>'
-        + '</tr>';
-    }).join('');
-
-    renderPag();
-  }
-
-  function renderPag() {
-    var total = Math.ceil(filteredRegs.length / PAGE_SIZE);
-    var el    = document.getElementById('pagEl');
-    if (total <= 1) { el.innerHTML = ''; return; }
-
-    var html = '<button class="pbtn" onclick="goPage(' + (currentPage-1) + ')"' + (currentPage===0 ? ' disabled' : '') + '>← Prev</button>';
-    for (var i = 0; i < total; i++) {
-      if (total <= 7 || Math.abs(i - currentPage) <= 1 || i === 0 || i === total-1) {
-        html += '<button class="pbtn' + (i===currentPage?' active':'') + '" onclick="goPage(' + i + ')">' + (i+1) + '</button>';
-      } else if (Math.abs(i - currentPage) === 2) {
-        html += '<span style="color:var(--muted);padding:0 4px">…</span>';
+    if (otpError) {
+      const msg = otpError.message || '';
+      if (msg.toLowerCase().includes('rate limit') || msg.toLowerCase().includes('too many')) {
+        showError('Too many attempts. Please wait 60 seconds and try again.');
+      } else if (msg.toLowerCase().includes('email logins are disabled')) {
+        showError('⚠️ Email sign-in is not enabled in Supabase.<br>Go to: Supabase → Authentication → Providers → Email → toggle ON.');
+      } else if (msg.toLowerCase().includes('redirect')) {
+        showError('⚠️ Redirect URL not whitelisted.<br>Go to: Supabase → Authentication → URL Configuration → add <strong>https://www.tradearena.com.au/trade.html</strong>');
+      } else {
+        showError('Error: ' + msg + '<br><small>If this keeps happening, email tradearena07@gmail.com</small>');
       }
-    }
-    html += '<button class="pbtn" onclick="goPage(' + (currentPage+1) + ')"' + (currentPage===total-1 ? ' disabled' : '') + '>Next →</button>';
-    el.innerHTML = html;
-  }
-
-  function goPage(p) { currentPage = p; renderTable(); }
-
-  function renderUniBreakdown() {
-    var counts = {};
-    allRegs.forEach(function(r) {
-      var u = r.university || 'Unknown';
-      counts[u] = (counts[u] || 0) + 1;
-    });
-    var sorted = Object.entries(counts).sort(function(a,b) { return b[1]-a[1]; }).slice(0, 8);
-    var max = sorted.length ? sorted[0][1] : 1;
-
-    document.getElementById('uniBreakdown').innerHTML = sorted.map(function(entry) {
-      var pct = ((entry[1] / max) * 100).toFixed(1);
-      return '<div class="uni-row">'
-        + '<div class="uni-top"><span class="uni-name">' + entry[0] + '</span><span class="uni-count">' + entry[1] + '</span></div>'
-        + '<div class="bar-bg"><div class="bar-fill" style="width:' + pct + '%"></div></div>'
-        + '</div>';
-    }).join('') || '<p style="color:var(--muted);font-size:12px">No data yet.</p>';
-  }
-
-  function renderSparkline() {
-    var canvas = document.getElementById('sparkCanvas');
-    if (!canvas) return;
-    var ctx = canvas.getContext('2d');
-    var W = canvas.offsetWidth || 280;
-    var H = 80;
-    canvas.width  = W * (window.devicePixelRatio || 1);
-    canvas.height = H * (window.devicePixelRatio || 1);
-    ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
-
-    var days = 14;
-    var counts = new Array(days).fill(0);
-    var now = Date.now();
-    allRegs.forEach(function(r) {
-      var diff = Math.floor((now - new Date(r.created_at).getTime()) / 86400000);
-      if (diff >= 0 && diff < days) counts[days - 1 - diff]++;
-    });
-
-    var max = Math.max.apply(null, counts.concat([1]));
-    var step = W / (days - 1);
-    var pad = 10;
-
-    // Grid
-    ctx.strokeStyle = 'rgba(201,160,48,0.07)';
-    ctx.lineWidth = 1;
-    for (var g = 0; g <= 3; g++) {
-      var gy = (H - pad) - (g / 3) * (H - pad * 2);
-      ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
-    }
-
-    // Fill
-    var grad = ctx.createLinearGradient(0, 0, 0, H);
-    grad.addColorStop(0, 'rgba(201,160,48,0.22)');
-    grad.addColorStop(1, 'rgba(201,160,48,0)');
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    counts.forEach(function(c, i) {
-      var x = i * step;
-      var y = (H - pad) - ((c / max) * (H - pad * 2));
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    });
-    ctx.lineTo((days-1)*step, H - pad);
-    ctx.lineTo(0, H - pad);
-    ctx.closePath();
-    ctx.fill();
-
-    // Line
-    ctx.strokeStyle = '#c9a030';
-    ctx.lineWidth = 1.8;
-    ctx.lineJoin  = 'round';
-    ctx.beginPath();
-    counts.forEach(function(c, i) {
-      var x = i * step;
-      var y = (H - pad) - ((c / max) * (H - pad * 2));
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-
-    // Dots
-    ctx.fillStyle = '#e8c060';
-    counts.forEach(function(c, i) {
-      var x = i * step;
-      var y = (H - pad) - ((c / max) * (H - pad * 2));
-      ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
-    });
-  }
-
-  // ─── LEADERBOARD ─────────────────────────────────────────────────
-  async function loadLeaderboard() {
-    var portRes = null, regsRes = null, tradeRes = null;
-    try {
-      portRes  = await sb.from('portfolios').select('*').order('cash_balance', { ascending: false }).limit(25);
-      regsRes  = await sb.from('registrations').select('user_id, email, university, created_at');
-      tradeRes = await sb.from('trades').select('user_id');
-    } catch(e) { return; }
-
-    var portfolios = portRes.data || [];
-    var regs       = regsRes.data  || [];
-    var tradeRows  = tradeRes.data || [];
-
-    var regMap    = {};
-    regs.forEach(function(r) { if (r.user_id) regMap[r.user_id] = r; });
-
-    var tradeCount = {};
-    tradeRows.forEach(function(t) { tradeCount[t.user_id] = (tradeCount[t.user_id] || 0) + 1; });
-
-    document.getElementById('lbCount').textContent = portfolios.length + ' traders';
-
-    if (!portfolios.length) {
-      document.getElementById('lbBody').innerHTML =
-        '<tr><td colspan="6" style="text-align:center;padding:24px 0;color:var(--muted);font-family:Cinzel,serif;font-size:10px;letter-spacing:.1em">NO TRADERS YET</td></tr>';
       return;
     }
 
-    document.getElementById('lbBody').innerHTML = portfolios.map(function(p, i) {
-      var reg    = regMap[p.user_id] || {};
-      var pnl    = (p.cash_balance || 10000) - 10000;
-      var isUp   = pnl >= 0;
-      var date   = reg.created_at
-        ? new Date(reg.created_at).toLocaleDateString('en-AU', { day:'2-digit', month:'short' })
-        : '—';
-      var tc = tradeCount[p.user_id] || 0;
-      var emailParts = (reg.email || '').split('@');
+    // Log to registrations table (best effort — don't block on failure)
+    try {
+      await sb.from('registrations').upsert(
+        {
+          email:       email,
+          university:  getUniversity(email),
+          updated_at:  new Date().toISOString(),
+        },
+        { onConflict: 'email' }
+      );
+    } catch (_) { /* non-critical */ }
 
-      return '<tr>'
-        + '<td style="font-family:Cinzel,serif;font-size:1.15rem;font-weight:600;color:' + (i===0?'var(--gold2)':'var(--muted)') + '">'
-          + String(i+1).padStart(2,'0') + '</td>'
-        + '<td>'
-          + '<div style="font-size:13px;color:var(--cream)">' + (emailParts[0] || p.user_id.slice(0,8)+'…') + '</div>'
-          + '<div style="font-size:10.5px;color:var(--muted)">' + (emailParts[1] ? '@'+emailParts[1] : '—') + '</div>'
-        + '</td>'
-        + '<td style="font-size:12px;color:var(--muted)">' + (reg.university || '—') + '</td>'
-        + '<td>'
-          + '<span style="font-family:Cinzel,serif;font-size:1rem;color:' + (isUp?'var(--green)':'var(--red)') + '">'
-            + (isUp?'+':'-') + '$' + Math.abs(pnl).toFixed(2)
-          + '</span>'
-          + '<div style="font-size:10px;color:var(--muted)">from $10,000 start</div>'
-        + '</td>'
-        + '<td style="font-family:Cinzel,serif;font-size:1rem;color:var(--cream)">' + tc + '</td>'
-        + '<td style="font-size:11px;color:var(--muted)">' + date + '</td>'
-        + '</tr>';
-    }).join('');
+    // Show success
+    document.getElementById('sentTo').textContent = email;
+    formPanel.classList.add('hide');
+    successPanel.classList.add('show');
   }
 
-  // ─── EXPORT CSV ───────────────────────────────────────────────────
-  function exportCSV() {
-    var rows = [['#','Email','University','Joined','Verified']];
-    filteredRegs.forEach(function(r, i) {
-      rows.push([
-        i + 1,
-        r.email || '',
-        r.university || '',
-        new Date(r.created_at).toISOString().split('T')[0],
-        r.user_id ? 'Yes' : 'No'
-      ]);
-    });
-    var csv  = rows.map(function(row) {
-      return row.map(function(c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(',');
-    }).join('\n');
-    var blob = new Blob([csv], { type: 'text/csv' });
-    var url  = URL.createObjectURL(blob);
-    var a    = document.createElement('a');
-    a.href = url;
-    a.download = 'tradearena-registrations-' + new Date().toISOString().split('T')[0] + '.csv';
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('CSV exported ✓');
-  }
+  // Enter key support
+  emailInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') handleLogin();
+  });
 
-  function showToast(msg) {
-    var t = document.getElementById('toast');
-    t.textContent = msg; t.className = 'toast ok show';
-    setTimeout(function() { t.classList.remove('show'); }, 3000);
-  }
+  // Pre-fill from landing page redirect (?email=...)
+  (function() {
+    const params = new URLSearchParams(window.location.search);
+    const prefill = params.get('email');
+    if (prefill) {
+      emailInput.value = decodeURIComponent(prefill);
+    }
+  })();
 
-  init();
+  // Check if already signed in
+  (async function() {
+    try {
+      const { data } = await sb.auth.getSession();
+      if (data && data.session) {
+        formPanel.style.display = 'none';
+        document.getElementById('redirectPanel').style.display = 'block';
+        setTimeout(function() {
+          window.location.href = 'trade.html';
+        }, 1500);
+      }
+    } catch (_) { /* show form normally */ }
+  })();
 </script>
 </body>
 </html>
