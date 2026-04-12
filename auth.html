@@ -9,291 +9,132 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
-      --navy:   #060e1c;
-      --navy2:  #091528;
-      --navy3:  #0d1e3a;
-      --gold:   #c9a030;
-      --gold2:  #e8c060;
-      --cream:  #f2e8cc;
-      --muted:  #7a8aaa;
-      --border: rgba(201,160,48,0.22);
-      --green:  #4ade80;
-      --red:    #f87171;
+      --navy:#060e1c; --navy2:#091528; --navy3:#0d1e3a;
+      --gold:#c9a030; --gold2:#e8c060; --cream:#f2e8cc;
+      --muted:#7a8aaa; --border:rgba(201,160,48,0.22);
+      --bdl:rgba(201,160,48,0.08); --green:#4ade80; --red:#f87171;
     }
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+    body{min-height:100vh;background:var(--navy);color:var(--cream);font-family:'DM Sans',sans-serif;font-weight:300;display:flex;align-items:center;justify-content:center;padding:40px 20px;}
+    body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:repeating-linear-gradient(-55deg,transparent,transparent 80px,rgba(201,160,48,0.025) 80px,rgba(201,160,48,0.025) 81px);}
+    body::after{content:'';position:fixed;top:0;left:50%;transform:translateX(-50%);width:800px;height:500px;background:radial-gradient(ellipse at top,rgba(201,160,48,0.09) 0%,transparent 65%);pointer-events:none;z-index:0;}
+    .card{position:relative;z-index:1;width:100%;max-width:460px;background:var(--navy2);border:1px solid var(--border);padding:44px;}
+    .logo{display:flex;align-items:center;gap:12px;text-decoration:none;margin-bottom:30px;}
+    .logo-text{font-family:'Cinzel Decorative',serif;font-size:1.1rem;font-weight:700;letter-spacing:0.05em;color:var(--gold2);}
+    .logo-text span{color:var(--cream);}
 
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    /* USER TYPE TOGGLE */
+    .type-toggle{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--border);margin-bottom:26px;}
+    .type-btn{padding:14px 10px;text-align:center;cursor:pointer;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);border:none;background:transparent;transition:background 0.2s,color 0.2s;border-bottom:2px solid transparent;}
+    .type-btn .icon{display:block;font-size:18px;margin-bottom:4px;}
+    .type-btn .sub{display:block;font-size:8px;letter-spacing:0.08em;color:var(--muted);margin-top:3px;font-family:'DM Sans',sans-serif;text-transform:none;font-weight:300;}
+    .type-btn.active{background:rgba(201,160,48,0.10);color:var(--gold2);border-bottom-color:var(--gold);}
+    .type-btn.active .sub{color:var(--gold);}
 
-    body {
-      min-height: 100vh;
-      background: var(--navy);
-      color: var(--cream);
-      font-family: 'DM Sans', sans-serif;
-      font-weight: 300;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 40px 20px;
-    }
+    .ornament{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
+    .ornament::before,.ornament::after{content:'';flex:1;height:1px;}
+    .ornament::before{background:linear-gradient(to right,transparent,rgba(201,160,48,0.4));}
+    .ornament::after{background:linear-gradient(to left,transparent,rgba(201,160,48,0.4));}
+    .ornament span{font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.26em;text-transform:uppercase;color:var(--gold);white-space:nowrap;}
 
-    body::before {
-      content: '';
-      position: fixed; inset: 0; z-index: 0; pointer-events: none;
-      background-image: repeating-linear-gradient(
-        -55deg,
-        transparent, transparent 80px,
-        rgba(201,160,48,0.025) 80px,
-        rgba(201,160,48,0.025) 81px
-      );
-    }
+    h1{font-family:'Cinzel',serif;font-size:1.55rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;line-height:1.2;margin-bottom:8px;}
+    .subtitle{font-size:0.87rem;color:var(--muted);line-height:1.78;margin-bottom:22px;}
 
-    body::after {
-      content: '';
-      position: fixed; top: 0; left: 50%; transform: translateX(-50%);
-      width: 800px; height: 500px;
-      background: radial-gradient(ellipse at top, rgba(201,160,48,0.09) 0%, transparent 65%);
-      pointer-events: none; z-index: 0;
-    }
+    .error-box{display:none;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.4);border-left:3px solid var(--red);padding:11px 14px;margin-bottom:14px;font-size:12.5px;color:#fca5a5;line-height:1.65;}
+    .error-box.show{display:block;}
 
-    .card {
-      position: relative; z-index: 1;
-      width: 100%; max-width: 440px;
-      background: var(--navy2);
-      border: 1px solid var(--border);
-      padding: 48px 44px;
-    }
+    .field{margin-bottom:13px;}
+    .field label{display:block;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+    .field input{width:100%;padding:13px 16px;background:var(--navy3);border:1px solid var(--border);color:var(--cream);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color 0.2s;}
+    .field input::placeholder{color:var(--muted);}
+    .field input:focus{border-color:var(--gold);}
+    .field input.err{border-color:var(--red);}
 
-    /* Logo */
-    .logo {
-      display: flex; align-items: center; gap: 12px;
-      text-decoration: none; margin-bottom: 38px;
-    }
-    .logo-text {
-      font-family: 'Cinzel Decorative', serif;
-      font-size: 1.1rem; font-weight: 700;
-      letter-spacing: 0.05em; color: var(--gold2);
-    }
-    .logo-text span { color: var(--cream); }
+    /* OTP BOXES */
+    .otp-row{display:flex;gap:8px;justify-content:center;margin:6px 0 14px;}
+    .otp-box{width:54px;height:62px;text-align:center;font-family:'Cinzel',serif;font-size:1.7rem;font-weight:600;background:var(--navy3);border:1px solid var(--border);color:var(--gold2);outline:none;caret-color:transparent;transition:border-color 0.2s,background 0.2s;}
+    .otp-box:focus{border-color:var(--gold);background:#0a1830;}
+    .otp-box.filled{border-color:rgba(201,160,48,0.55);}
 
-    /* Ornament */
-    .ornament {
-      display: flex; align-items: center; gap: 14px;
-      margin-bottom: 30px;
-    }
-    .ornament::before, .ornament::after {
-      content: ''; flex: 1; height: 1px;
-      background: linear-gradient(to right, transparent, rgba(201,160,48,0.4));
-    }
-    .ornament::after {
-      background: linear-gradient(to left, transparent, rgba(201,160,48,0.4));
-    }
-    .ornament span {
-      font-family: 'Cinzel', serif;
-      font-size: 9px; letter-spacing: 0.26em;
-      text-transform: uppercase; color: var(--gold);
-    }
+    .otp-hint{font-size:12.5px;color:var(--muted);text-align:center;margin-bottom:16px;line-height:1.7;}
+    .otp-hint strong{color:var(--gold2);}
+    .otp-timer{font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.1em;color:var(--muted);text-align:center;margin-bottom:18px;}
+    .otp-timer span{color:var(--gold);}
 
-    h1 {
-      font-family: 'Cinzel', serif;
-      font-size: 1.65rem; font-weight: 600;
-      text-transform: uppercase; letter-spacing: 0.05em;
-      line-height: 1.2; margin-bottom: 10px;
-    }
+    .btn{width:100%;padding:15px;background:linear-gradient(135deg,var(--gold),var(--gold2),var(--gold));background-size:200% auto;color:var(--navy);border:none;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;transition:background-position 0.4s,opacity 0.2s;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);}
+    .btn:hover:not(:disabled){background-position:right center;}
+    .btn:disabled{opacity:0.5;cursor:not-allowed;}
+    .btn-outline{width:100%;padding:13px;background:transparent;border:1px solid var(--bdl);color:var(--muted);cursor:pointer;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;margin-top:10px;transition:border-color 0.2s,color 0.2s;}
+    .btn-outline:hover{border-color:var(--border);color:var(--cream);}
 
-    .subtitle {
-      font-size: 0.88rem; color: var(--muted);
-      line-height: 1.78; margin-bottom: 30px;
-    }
+    .note{margin-top:16px;font-size:11px;color:var(--muted);text-align:center;line-height:1.75;font-family:'Cinzel',serif;letter-spacing:0.04em;}
+    .note a{color:var(--gold);text-decoration:none;}
 
-    /* Error box */
-    .error-box {
-      display: none;
-      background: rgba(248,113,113,0.08);
-      border: 1px solid rgba(248,113,113,0.4);
-      border-left: 3px solid var(--red);
-      padding: 12px 14px; margin-bottom: 14px;
-      font-size: 12.5px; color: #fca5a5; line-height: 1.65;
-    }
-    .error-box.show { display: block; }
+    .uni-strip{margin-top:22px;padding-top:18px;border-top:1px solid var(--bdl);}
+    .uni-label{font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;text-align:center;}
+    .uni-badges{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;}
+    .uni-badge{font-size:9px;font-family:'Cinzel',serif;letter-spacing:0.05em;padding:3px 9px;border:1px solid rgba(201,160,48,0.12);color:var(--muted);}
 
-    /* Field */
-    .field { margin-bottom: 14px; }
-    .field label {
-      display: block;
-      font-family: 'Cinzel', serif;
-      font-size: 9px; letter-spacing: 0.18em;
-      text-transform: uppercase; color: var(--muted);
-      margin-bottom: 7px;
-    }
-    .field input {
-      width: 100%; padding: 13px 16px;
-      background: var(--navy3);
-      border: 1px solid var(--border);
-      color: var(--cream);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 14px; outline: none;
-      transition: border-color 0.2s;
-    }
-    .field input::placeholder { color: var(--muted); }
-    .field input:focus { border-color: var(--gold); }
-    .field input.err { border-color: var(--red); }
+    .step{display:none;}
+    .step.active{display:block;}
+    .spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(6,14,28,0.3);border-top-color:var(--navy);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:7px;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .redirect-msg{text-align:center;padding:20px 0;font-size:0.9rem;color:var(--muted);}
 
-    /* Button */
-    .btn {
-      width: 100%; padding: 15px;
-      background: linear-gradient(135deg, var(--gold), var(--gold2), var(--gold));
-      background-size: 200% auto;
-      color: var(--navy); border: none; cursor: pointer;
-      font-family: 'Cinzel', serif;
-      font-size: 11px; font-weight: 700;
-      letter-spacing: 0.16em; text-transform: uppercase;
-      transition: background-position 0.4s, opacity 0.2s;
-      clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
-    }
-    .btn:hover:not(:disabled) { background-position: right center; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    /* Note */
-    .note {
-      margin-top: 16px;
-      font-size: 11px; color: var(--muted);
-      text-align: center; line-height: 1.75;
-      font-family: 'Cinzel', serif; letter-spacing: 0.04em;
-    }
-    .note a { color: var(--gold); text-decoration: none; }
-
-    /* Accepted unis strip */
-    .uni-strip {
-      margin-top: 24px; padding-top: 20px;
-      border-top: 1px solid rgba(201,160,48,0.08);
-    }
-    .uni-label {
-      font-family: 'Cinzel', serif; font-size: 8px;
-      letter-spacing: 0.2em; text-transform: uppercase;
-      color: var(--muted); margin-bottom: 10px; text-align: center;
-    }
-    .uni-badges {
-      display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
-    }
-    .uni-badge {
-      font-size: 9px; font-family: 'Cinzel', serif;
-      letter-spacing: 0.05em;
-      padding: 3px 9px;
-      border: 1px solid rgba(201,160,48,0.12);
-      color: var(--muted);
-    }
-
-    /* Success panel */
-    .panel { display: none; }
-    .panel.show { display: block; }
-    .form-panel.hide { display: none; }
-
-    .check-icon {
-      width: 60px; height: 60px; margin: 0 auto 22px;
-      border: 1px solid var(--green);
-      display: flex; align-items: center; justify-content: center;
-      clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
-    }
-    .check-icon svg {
-      width: 26px; height: 26px;
-      stroke: var(--green); fill: none; stroke-width: 2.5;
-    }
-    .success-title {
-      font-family: 'Cinzel', serif;
-      font-size: 1.2rem; font-weight: 600;
-      text-transform: uppercase; letter-spacing: 0.08em;
-      margin-bottom: 14px; text-align: center;
-    }
-    .success-body {
-      font-size: 0.88rem; color: var(--muted);
-      line-height: 1.85; text-align: center;
-    }
-    .success-email { color: var(--gold2); font-weight: 500; }
-    .success-hint {
-      margin-top: 18px; padding-top: 18px;
-      border-top: 1px solid rgba(201,160,48,0.08);
-      font-size: 11px; color: var(--muted);
-      font-family: 'Cinzel', serif; letter-spacing: 0.05em;
-      text-align: center;
-    }
-    .success-hint a { color: var(--gold); text-decoration: none; cursor: pointer; }
-
-    /* Spinner */
-    .spinner {
-      display: inline-block;
-      width: 13px; height: 13px;
-      border: 2px solid rgba(6,14,28,0.3);
-      border-top-color: var(--navy);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      vertical-align: middle; margin-right: 7px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Redirect panel */
-    .redirect-msg {
-      text-align: center; padding: 20px 0;
-      font-size: 0.9rem; color: var(--muted);
-    }
-
-    @media (max-width: 480px) {
-      .card { padding: 36px 22px; }
-      h1 { font-size: 1.35rem; }
+    @media(max-width:480px){
+      .card{padding:32px 18px;}
+      h1{font-size:1.3rem;}
+      .otp-box{width:44px;height:52px;font-size:1.4rem;}
     }
   </style>
 </head>
 <body>
 <div class="card">
 
-  <!-- Logo -->
   <a href="index.html" class="logo">
     <svg width="32" height="36" viewBox="0 0 40 46" fill="none">
-      <path d="M20 2L36 9V22C36 31 29 39 20 43C11 39 4 31 4 22V9L20 2Z"
-            fill="#091528" stroke="#c9a030" stroke-width="1"/>
-      <text x="20" y="27" text-anchor="middle"
-            font-family="serif" font-size="12" font-weight="bold" fill="#e8c060">&#8383;</text>
-      <polyline points="12,24 17,19 20,22 28,13"
-                fill="none" stroke="#c9a030" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M20 2L36 9V22C36 31 29 39 20 43C11 39 4 31 4 22V9L20 2Z" fill="#091528" stroke="#c9a030" stroke-width="1"/>
+      <text x="20" y="27" text-anchor="middle" font-family="serif" font-size="12" font-weight="bold" fill="#e8c060">&#8383;</text>
+      <polyline points="12,24 17,19 20,22 28,13" fill="none" stroke="#c9a030" stroke-width="1.5" stroke-linecap="round"/>
     </svg>
     <div class="logo-text">Trade<span>Arena</span></div>
   </a>
 
-  <!-- Already signed in -->
   <div id="redirectPanel" style="display:none;">
-    <p class="redirect-msg">You're already signed in. Redirecting to the Arena…</p>
+    <p class="redirect-msg">Already signed in. Redirecting…</p>
   </div>
 
-  <!-- Sign in form -->
-  <div class="form-panel" id="formPanel">
-    <div class="ornament"><span>Student Access</span></div>
-    <h1>Enter the<br>Arena</h1>
-    <p class="subtitle">
-      Sign in with your university email.
-      We'll send a one-click magic link — no password needed.
-    </p>
-
-    <div class="error-box" id="errorBox"></div>
-
-    <div class="field">
-      <label>University Email</label>
-      <input
-        type="email"
-        id="emailInput"
-        placeholder="you@student.unsw.edu.au"
-        autocomplete="email"
-      />
+  <!-- STEP 1: Type + Email -->
+  <div class="step active" id="step1">
+    <div class="type-toggle">
+      <button class="type-btn active" id="btnStudent" onclick="setType('student')">
+        <span class="icon">🎓</span>
+        Student
+        <span class="sub">University email required</span>
+      </button>
+      <button class="type-btn" id="btnPublic" onclick="setType('public')">
+        <span class="icon">🌐</span>
+        Public
+        <span class="sub">Any email welcome</span>
+      </button>
     </div>
 
-    <button class="btn" id="submitBtn" onclick="handleLogin()">
-      Send Magic Link
-    </button>
+    <div class="ornament"><span id="ornamentText">Student Access</span></div>
+    <h1>Enter the<br>Arena</h1>
+    <p class="subtitle" id="subtitleText">Enter your university email. We'll send a 6-digit code you verify right here — no link clicking, no leaving the page.</p>
 
-    <p class="note">
-      Must be a university email (.edu.au)
-      &nbsp;·&nbsp;
-      <a href="index.html">← Back to home</a>
-    </p>
+    <div class="error-box" id="errorBox1"></div>
 
-    <div class="uni-strip">
+    <div class="field">
+      <label id="emailLabel">University Email</label>
+      <input type="email" id="emailInput" placeholder="you@student.unsw.edu.au" autocomplete="email"/>
+    </div>
+
+    <button class="btn" id="sendBtn" onclick="sendOtp()">Send Verification Code</button>
+
+    <p class="note" id="noteText">Must be a university email (.edu.au) &nbsp;·&nbsp; <a href="index.html">← Back</a></p>
+
+    <div class="uni-strip" id="uniStrip">
       <div class="uni-label">Accepted institutions</div>
       <div class="uni-badges">
         <span class="uni-badge">unsw.edu.au</span>
@@ -308,212 +149,179 @@
     </div>
   </div>
 
-  <!-- Success -->
-  <div class="panel" id="successPanel">
-    <div class="check-icon">
-      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+  <!-- STEP 2: OTP Entry -->
+  <div class="step" id="step2">
+    <div class="ornament"><span>Verification Code</span></div>
+    <h1>Enter<br>Your Code</h1>
+    <p class="otp-hint">6-digit code sent to<br><strong id="sentToLabel">—</strong></p>
+
+    <div class="error-box" id="errorBox2"></div>
+
+    <div class="otp-row">
+      <input class="otp-box" id="o1" maxlength="1" inputmode="numeric"/>
+      <input class="otp-box" id="o2" maxlength="1" inputmode="numeric"/>
+      <input class="otp-box" id="o3" maxlength="1" inputmode="numeric"/>
+      <input class="otp-box" id="o4" maxlength="1" inputmode="numeric"/>
+      <input class="otp-box" id="o5" maxlength="1" inputmode="numeric"/>
+      <input class="otp-box" id="o6" maxlength="1" inputmode="numeric"/>
     </div>
-    <p class="success-title">Check your inbox</p>
-    <div class="success-body">
-      <p>Magic link sent to</p>
-      <p class="success-email" id="sentTo" style="margin-top:6px;"></p>
-      <p style="margin-top:12px;">Click the link in your email to enter the Arena.<br>It expires in <strong style="color:var(--cream)">10 minutes</strong>.</p>
-      <p style="margin-top:10px;font-size:11px;">
-        Can't find it? Check your <strong style="color:var(--cream)">Spam / Junk</strong> folder.
-      </p>
-    </div>
-    <div class="success-hint">
-      Wrong email or didn't arrive?
-      <a onclick="resetForm()">Try again →</a>
-    </div>
+
+    <div class="otp-timer">Code expires in <span id="timerCount">10:00</span></div>
+
+    <button class="btn" id="verifyBtn" onclick="verifyOtp()">Verify &amp; Enter Arena</button>
+    <button class="btn-outline" onclick="goBack()">← Change Email</button>
+
+    <p class="note" style="margin-top:14px;">
+      Didn't receive it? Check spam or <a href="#" onclick="resendCode();return false;">resend code</a>
+    </p>
   </div>
 
 </div>
-
 <script>
-  // ─── Supabase config ───────────────────────────────────────────
   const SUPABASE_URL      = 'https://chncykagtzotdtflkhim.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNobmN5a2FndHpvdGR0ZmxraGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDYxNjIsImV4cCI6MjA5MTIyMjE2Mn0.ZRrZcBn_hLAPP7xL3kWgkpH5itLIIXzCWb_9_Ics_OE';
-  const REDIRECT_TO       = 'https://www.tradearena.com.au/trade.html';
-  // ──────────────────────────────────────────────────────────────
-
   const { createClient } = supabase;
   const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  const emailInput = document.getElementById('emailInput');
-  const submitBtn  = document.getElementById('submitBtn');
-  const errorBox   = document.getElementById('errorBox');
-  const formPanel  = document.getElementById('formPanel');
-  const successPanel = document.getElementById('successPanel');
+  var userType = 'student';
+  var currentEmail = '';
+  var timerInterval = null;
 
-  // Accepted email domains
-  function isStudentEmail(email) {
-    const lower = email.toLowerCase();
-    return (
-      lower.endsWith('.edu.au')   ||
-      lower.endsWith('.ac.nz')    ||
-      lower.endsWith('monash.edu')
-    );
+  function setType(type) {
+    userType = type;
+    document.getElementById('btnStudent').classList.toggle('active', type === 'student');
+    document.getElementById('btnPublic').classList.toggle('active', type === 'public');
+    if (type === 'student') {
+      document.getElementById('ornamentText').textContent = 'Student Access';
+      document.getElementById('emailLabel').textContent   = 'University Email';
+      document.getElementById('emailInput').placeholder   = 'you@student.unsw.edu.au';
+      document.getElementById('subtitleText').textContent = 'Enter your university email. We\'ll send a 6-digit code you verify right here.';
+      document.getElementById('noteText').innerHTML       = 'Must be a university email (.edu.au) &nbsp;·&nbsp; <a href="index.html">← Back</a>';
+      document.getElementById('uniStrip').style.display   = 'block';
+    } else {
+      document.getElementById('ornamentText').textContent = 'Public Access';
+      document.getElementById('emailLabel').textContent   = 'Email Address';
+      document.getElementById('emailInput').placeholder   = 'you@gmail.com';
+      document.getElementById('subtitleText').textContent = 'Anyone can join TradeArena. Enter any email to receive your 6-digit code.';
+      document.getElementById('noteText').innerHTML       = 'Open to everyone &nbsp;·&nbsp; <a href="index.html">← Back</a>';
+      document.getElementById('uniStrip').style.display   = 'none';
+    }
+    document.getElementById('emailInput').classList.remove('err');
+    document.getElementById('errorBox1').classList.remove('show');
   }
 
-  // Map email domain to university name
+  function isStudentEmail(e){ const l=e.toLowerCase(); return l.endsWith('.edu.au')||l.endsWith('.ac.nz')||l.endsWith('monash.edu'); }
+
   function getUniversity(email) {
-    const domain = email.split('@')[1]?.toLowerCase() || '';
-    const map = {
-      'student.unsw.edu.au':    'UNSW Sydney',
-      'unsw.edu.au':            'UNSW Sydney',
-      'ad.unsw.edu.au':         'UNSW Sydney',
-      'usyd.edu.au':            'University of Sydney',
-      'student.usyd.edu.au':    'University of Sydney',
-      'uts.edu.au':             'UTS Sydney',
-      'student.uts.edu.au':     'UTS Sydney',
-      'mq.edu.au':              'Macquarie University',
-      'students.mq.edu.au':     'Macquarie University',
-      'unimelb.edu.au':         'University of Melbourne',
-      'student.unimelb.edu.au': 'University of Melbourne',
-      'monash.edu':             'Monash University',
-      'student.monash.edu':     'Monash University',
-      'anu.edu.au':             'ANU',
-      'uq.edu.au':              'University of Queensland',
-      'qut.edu.au':             'QUT',
-      'curtin.edu.au':          'Curtin University',
-      'uwa.edu.au':             'University of WA',
-      'adelaide.edu.au':        'University of Adelaide',
-      'rmit.edu.au':            'RMIT University',
-      'deakin.edu.au':          'Deakin University',
-      'latrobe.edu.au':         'La Trobe University',
-      'griffith.edu.au':        'Griffith University',
-      'newcastle.edu.au':       'University of Newcastle',
-      'wollongong.edu.au':      'University of Wollongong',
-      'scu.edu.au':             'Southern Cross University',
-      'une.edu.au':             'University of New England',
-    };
-    return map[domain] || domain;
+    const d = email.split('@')[1]?.toLowerCase()||'';
+    const m = {'student.unsw.edu.au':'UNSW Sydney','unsw.edu.au':'UNSW Sydney','ad.unsw.edu.au':'UNSW Sydney','usyd.edu.au':'University of Sydney','student.usyd.edu.au':'University of Sydney','uts.edu.au':'UTS Sydney','student.uts.edu.au':'UTS Sydney','mq.edu.au':'Macquarie University','students.mq.edu.au':'Macquarie University','unimelb.edu.au':'University of Melbourne','student.unimelb.edu.au':'University of Melbourne','monash.edu':'Monash University','student.monash.edu':'Monash University','anu.edu.au':'ANU','uq.edu.au':'University of Queensland','qut.edu.au':'QUT','curtin.edu.au':'Curtin University','uwa.edu.au':'University of WA','adelaide.edu.au':'University of Adelaide','rmit.edu.au':'RMIT University','deakin.edu.au':'Deakin University','latrobe.edu.au':'La Trobe University','griffith.edu.au':'Griffith University','newcastle.edu.au':'University of Newcastle','wollongong.edu.au':'University of Wollongong'};
+    return m[d] || (userType==='public'?'Public':d);
   }
 
-  function showError(msg) {
-    errorBox.innerHTML = msg;
-    errorBox.classList.add('show');
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Send Magic Link';
-  }
+  function showErr(id, msg){ const b=document.getElementById(id); b.innerHTML=msg; b.classList.add('show'); }
+  function clearErr(id){ document.getElementById(id).classList.remove('show'); }
 
-  function resetForm() {
-    formPanel.classList.remove('hide');
-    successPanel.classList.remove('show');
-    emailInput.value = '';
-    emailInput.classList.remove('err');
-    errorBox.classList.remove('show');
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Send Magic Link';
-    emailInput.focus();
-  }
+  async function sendOtp() {
+    const email = document.getElementById('emailInput').value.trim().toLowerCase();
+    const btn   = document.getElementById('sendBtn');
+    clearErr('errorBox1');
+    document.getElementById('emailInput').classList.remove('err');
 
-  async function handleLogin() {
-    const email = emailInput.value.trim().toLowerCase();
-
-    // Reset errors
-    errorBox.classList.remove('show');
-    emailInput.classList.remove('err');
-
-    // Validate format
-    if (!email) {
-      emailInput.classList.add('err');
-      showError('Please enter your university email address.');
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      document.getElementById('emailInput').classList.add('err');
+      showErr('errorBox1','Please enter a valid email address.');
       return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      emailInput.classList.add('err');
-      showError('That doesn\'t look like a valid email. Please check and try again.');
-      return;
-    }
-    if (!isStudentEmail(email)) {
-      emailInput.classList.add('err');
-      showError(
-        'Please use your <strong>university email</strong> (e.g. you@student.unsw.edu.au).<br>' +
-        'Gmail, Hotmail and personal emails are not accepted.'
-      );
+    if (userType==='student' && !isStudentEmail(email)) {
+      document.getElementById('emailInput').classList.add('err');
+      showErr('errorBox1','Please use your <strong>university email</strong> (e.g. you@student.unsw.edu.au).<br>No uni email? Switch to <strong>Public</strong> above.');
       return;
     }
 
-    // Send OTP
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner"></span>Sending…';
+    currentEmail = email;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Sending Code…';
 
-    let otpError = null;
     try {
-      const { error } = await sb.auth.signInWithOtp({
-        email: email,
-        options: {
-          emailRedirectTo: REDIRECT_TO,
-          shouldCreateUser: true,
-        },
+      const { error } = await sb.auth.signInWithOtp({ email, options:{ shouldCreateUser:true } });
+      if (error) {
+        const msg = error.message||'';
+        showErr('errorBox1', msg.toLowerCase().includes('rate') ? 'Too many attempts. Wait 60s and try again.' : 'Error: '+msg);
+        btn.disabled=false; btn.textContent='Send Verification Code'; return;
+      }
+    } catch(e) {
+      showErr('errorBox1','Network error. Check your connection.');
+      btn.disabled=false; btn.textContent='Send Verification Code'; return;
+    }
+
+    try { await sb.from('registrations').upsert({ email, university:getUniversity(email), user_type:userType, updated_at:new Date().toISOString() },{ onConflict:'email' }); } catch(_){}
+
+    document.getElementById('sentToLabel').textContent = email;
+    document.getElementById('step1').classList.remove('active');
+    document.getElementById('step2').classList.add('active');
+    startTimer(600);
+    setTimeout(()=>document.getElementById('o1').focus(),100);
+    btn.disabled=false; btn.textContent='Send Verification Code';
+  }
+
+  // OTP box behaviour
+  (function(){
+    const ids=['o1','o2','o3','o4','o5','o6'];
+    ids.forEach(function(id,i){
+      const el=document.getElementById(id);
+      el.addEventListener('input',function(){
+        this.value=this.value.replace(/\D/g,'').slice(-1);
+        if(this.value){ this.classList.add('filled'); if(i<5) document.getElementById(ids[i+1]).focus(); else verifyOtp(); }
+        else this.classList.remove('filled');
       });
-      otpError = error;
-    } catch (err) {
-      showError('Network error. Please check your connection and try again.');
-      return;
-    }
+      el.addEventListener('keydown',function(e){
+        if(e.key==='Backspace'&&!this.value&&i>0) document.getElementById(ids[i-1]).focus();
+      });
+      el.addEventListener('paste',function(e){
+        e.preventDefault();
+        const p=(e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'');
+        ids.forEach(function(bid,j){ const b=document.getElementById(bid); b.value=p[j]||''; b.classList.toggle('filled',!!b.value); });
+        if(p.length>=6) verifyOtp(); else document.getElementById(ids[Math.min(p.length,5)]).focus();
+      });
+    });
+  })();
 
-    if (otpError) {
-      const msg = otpError.message || '';
-      if (msg.toLowerCase().includes('rate limit') || msg.toLowerCase().includes('too many')) {
-        showError('Too many attempts. Please wait 60 seconds and try again.');
-      } else if (msg.toLowerCase().includes('email logins are disabled')) {
-        showError('⚠️ Email sign-in is not enabled in Supabase.<br>Go to: Supabase → Authentication → Providers → Email → toggle ON.');
-      } else if (msg.toLowerCase().includes('redirect')) {
-        showError('⚠️ Redirect URL not whitelisted.<br>Go to: Supabase → Authentication → URL Configuration → add <strong>https://www.tradearena.com.au/trade.html</strong>');
-      } else {
-        showError('Error: ' + msg + '<br><small>If this keeps happening, email tradearena07@gmail.com</small>');
-      }
-      return;
-    }
-
-    // Log to registrations table (best effort — don't block on failure)
+  async function verifyOtp() {
+    const ids=['o1','o2','o3','o4','o5','o6'];
+    const code=ids.map(id=>document.getElementById(id).value).join('');
+    const btn=document.getElementById('verifyBtn');
+    clearErr('errorBox2');
+    if(code.length<6){ showErr('errorBox2','Please enter all 6 digits.'); return; }
+    btn.disabled=true; btn.innerHTML='<span class="spinner"></span>Verifying…';
     try {
-      await sb.from('registrations').upsert(
-        {
-          email:       email,
-          university:  getUniversity(email),
-          updated_at:  new Date().toISOString(),
-        },
-        { onConflict: 'email' }
-      );
-    } catch (_) { /* non-critical */ }
-
-    // Show success
-    document.getElementById('sentTo').textContent = email;
-    formPanel.classList.add('hide');
-    successPanel.classList.add('show');
+      const { error } = await sb.auth.verifyOtp({ email:currentEmail, token:code, type:'email' });
+      if(error){
+        showErr('errorBox2','Invalid or expired code. <a href="#" onclick="resendCode();return false;">Resend →</a>');
+        ids.forEach(id=>{ document.getElementById(id).value=''; document.getElementById(id).classList.remove('filled'); });
+        document.getElementById('o1').focus();
+        btn.disabled=false; btn.textContent='Verify & Enter Arena'; return;
+      }
+    } catch(e){ showErr('errorBox2','Network error. Try again.'); btn.disabled=false; btn.textContent='Verify & Enter Arena'; return; }
+    clearInterval(timerInterval);
+    window.location.href='trade.html';
   }
 
-  // Enter key support
-  emailInput.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') handleLogin();
-  });
+  function startTimer(sec){
+    clearInterval(timerInterval);
+    var r=sec;
+    function tick(){ var m=Math.floor(r/60),s=r%60; document.getElementById('timerCount').textContent=m+':'+(s<10?'0':'')+s; if(r<=0){ clearInterval(timerInterval); document.getElementById('otpTimer').innerHTML='<span style="color:var(--red)">Code expired — resend below</span>'; } r--; }
+    tick(); timerInterval=setInterval(tick,1000);
+  }
 
-  // Pre-fill from landing page redirect (?email=...)
-  (function() {
-    const params = new URLSearchParams(window.location.search);
-    const prefill = params.get('email');
-    if (prefill) {
-      emailInput.value = decodeURIComponent(prefill);
-    }
-  })();
+  async function resendCode(){
+    clearErr('errorBox2');
+    try{ await sb.auth.signInWithOtp({email:currentEmail,options:{shouldCreateUser:true}}); startTimer(600); ['o1','o2','o3','o4','o5','o6'].forEach(id=>{document.getElementById(id).value='';document.getElementById(id).classList.remove('filled');}); document.getElementById('o1').focus(); }catch(_){}
+  }
 
-  // Check if already signed in
-  (async function() {
-    try {
-      const { data } = await sb.auth.getSession();
-      if (data && data.session) {
-        formPanel.style.display = 'none';
-        document.getElementById('redirectPanel').style.display = 'block';
-        setTimeout(function() {
-          window.location.href = 'trade.html';
-        }, 1500);
-      }
-    } catch (_) { /* show form normally */ }
-  })();
+  function goBack(){ clearInterval(timerInterval); document.getElementById('step2').classList.remove('active'); document.getElementById('step1').classList.add('active'); clearErr('errorBox1'); }
+
+  (function(){ const p=new URLSearchParams(window.location.search); const e=p.get('email'); if(e) document.getElementById('emailInput').value=decodeURIComponent(e); })();
+  (async function(){ try{ const {data}=await sb.auth.getSession(); if(data&&data.session){ document.getElementById('step1').style.display='none'; document.getElementById('redirectPanel').style.display='block'; setTimeout(()=>window.location.href='trade.html',1500); }}catch(_){} })();
 </script>
 </body>
 </html>
