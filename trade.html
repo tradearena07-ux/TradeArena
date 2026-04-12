@@ -8,441 +8,201 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    :root {
-      --navy:   #060e1c;
-      --navy2:  #091528;
-      --navy3:  #0d1e3a;
-      --navy4:  #122248;
-      --gold:   #c9a030;
-      --gold2:  #e8c060;
-      --cream:  #f2e8cc;
-      --muted:  #7a8aaa;
-      --border: rgba(201,160,48,0.20);
-      --bdl:    rgba(201,160,48,0.08);
-      --green:  #4ade80;
-      --red:    #f87171;
+    :root{
+      --navy:#060e1c;--navy2:#091528;--navy3:#0d1e3a;--navy4:#122248;
+      --gold:#c9a030;--gold2:#e8c060;--cream:#f2e8cc;--muted:#7a8aaa;
+      --border:rgba(201,160,48,0.20);--bdl:rgba(201,160,48,0.08);
+      --green:#4ade80;--red:#f87171;--amber:#fbbf24;--blue:#60a5fa;--saffron:#ff9933;
     }
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{background:var(--navy);color:var(--cream);font-family:'DM Sans',sans-serif;font-weight:300;min-height:100vh;}
+    body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:repeating-linear-gradient(-55deg,transparent,transparent 80px,rgba(201,160,48,0.02) 80px,rgba(201,160,48,0.02) 81px);}
 
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
+    /* AUTH GATE */
+    #authGate{position:fixed;inset:0;z-index:999;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center;padding:20px;}
+    #authGate.hidden{display:none;}
+    #authGate p{font-size:0.9rem;color:var(--muted);}
+    #authGate a{font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);text-decoration:none;border:1px solid var(--gold);padding:12px 28px;transition:background 0.2s,color 0.2s;}
+    #authGate a:hover{background:var(--gold);color:var(--navy);}
 
-    body {
-      background: var(--navy);
-      color: var(--cream);
-      font-family: 'DM Sans', sans-serif;
-      font-weight: 300;
-      min-height: 100vh;
-    }
+    /* TICKER */
+    .ticker-bar{height:36px;background:var(--navy2);border-bottom:1px solid var(--border);overflow:hidden;display:flex;align-items:center;position:sticky;top:0;z-index:200;}
+    .ticker-label{background:var(--gold);color:var(--navy);font-family:'Cinzel',serif;font-size:9px;font-weight:600;letter-spacing:0.12em;padding:0 14px;height:100%;display:flex;align-items:center;white-space:nowrap;flex-shrink:0;}
+    .ticker-track{display:flex;gap:48px;white-space:nowrap;animation:ticker 32s linear infinite;padding-left:28px;font-size:11px;letter-spacing:0.04em;color:var(--muted);}
+    .tick .up{color:var(--green);margin-left:5px;}
+    .tick .dn{color:var(--red);margin-left:5px;}
+    @keyframes ticker{from{transform:translateX(0);}to{transform:translateX(-50%);}}
 
-    body::before {
-      content: '';
-      position: fixed; inset: 0; z-index: 0; pointer-events: none;
-      background-image: repeating-linear-gradient(
-        -55deg, transparent, transparent 80px,
-        rgba(201,160,48,0.02) 80px, rgba(201,160,48,0.02) 81px
-      );
-    }
+    /* HEADER */
+    .app-header{background:rgba(9,21,40,0.96);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);position:sticky;top:36px;z-index:100;}
+    .app-nav{max-width:1320px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:62px;}
+    .logo-mark{display:flex;align-items:center;gap:10px;text-decoration:none;}
+    .logo-text{font-family:'Cinzel Decorative',serif;font-size:1rem;font-weight:700;letter-spacing:0.05em;color:var(--gold2);}
+    .logo-text span{color:var(--cream);}
+    .nav-right{display:flex;align-items:center;gap:12px;}
+    .user-info{font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.08em;color:var(--muted);border:1px solid var(--bdl);padding:6px 14px;display:flex;align-items:center;gap:8px;}
+    .live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s ease-out infinite;}
+    .user-badge{font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;padding:3px 10px;border:1px solid;clip-path:polygon(3px 0%,100% 0%,calc(100% - 3px) 100%,0% 100%);}
+    .user-badge.student{border-color:var(--gold);color:var(--gold);}
+    .user-badge.public{border-color:var(--blue);color:var(--blue);}
+    @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(74,222,128,0.5);}70%{box-shadow:0 0 0 7px rgba(74,222,128,0);}100%{box-shadow:0 0 0 0 rgba(74,222,128,0);}}
+    .btn-logout{font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);border:1px solid var(--bdl);padding:8px 16px;background:none;cursor:pointer;transition:color 0.2s,border-color 0.2s;}
+    .btn-logout:hover{color:var(--red);border-color:var(--red);}
 
-    /* ── AUTH GATE ── */
-    #authGate {
-      position: fixed; inset: 0; z-index: 999;
-      background: var(--navy);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 20px; text-align: center; padding: 20px;
-    }
-    #authGate.hidden { display: none; }
-    #authGate p { font-size: 0.9rem; color: var(--muted); }
-    #authGate a {
-      font-family: 'Cinzel', serif; font-size: 11px;
-      letter-spacing: 0.12em; text-transform: uppercase;
-      color: var(--gold); text-decoration: none;
-      border: 1px solid var(--gold); padding: 12px 28px;
-      transition: background 0.2s, color 0.2s;
-    }
-    #authGate a:hover { background: var(--gold); color: var(--navy); }
+    /* LAYOUT */
+    #mainApp{display:none;}
+    .layout{max-width:1320px;margin:0 auto;padding:20px 24px;display:grid;grid-template-columns:1fr 310px;gap:16px;position:relative;z-index:1;}
 
-    /* ── TICKER ── */
-    .ticker-bar {
-      height: 36px;
-      background: var(--navy2);
-      border-bottom: 1px solid var(--border);
-      overflow: hidden;
-      display: flex; align-items: center;
-      position: sticky; top: 0; z-index: 200;
-    }
-    .ticker-label {
-      background: var(--gold); color: var(--navy);
-      font-family: 'Cinzel', serif; font-size: 9px;
-      font-weight: 600; letter-spacing: 0.12em;
-      padding: 0 14px; height: 100%;
-      display: flex; align-items: center;
-      white-space: nowrap; flex-shrink: 0;
-    }
-    .ticker-track {
-      display: flex; gap: 48px; white-space: nowrap;
-      animation: ticker 28s linear infinite;
-      padding-left: 28px; font-size: 11px;
-      letter-spacing: 0.04em; color: var(--muted);
-    }
-    .tick .up { color: var(--green); margin-left: 5px; }
-    .tick .dn { color: var(--red);   margin-left: 5px; }
-    @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    /* PANEL */
+    .panel{background:var(--navy2);border:1px solid var(--border);padding:20px 24px;}
+    .panel-title{font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+    .panel-title::before{content:'';display:block;width:18px;height:1px;background:var(--gold);}
 
-    /* ── HEADER ── */
-    .app-header {
-      background: rgba(9,21,40,0.96);
-      border-bottom: 1px solid var(--border);
-      backdrop-filter: blur(20px);
-      position: sticky; top: 36px; z-index: 100;
-    }
-    .app-nav {
-      max-width: 1280px; margin: 0 auto; padding: 0 24px;
-      display: flex; align-items: center; justify-content: space-between;
-      height: 62px;
-    }
-    .logo-mark {
-      display: flex; align-items: center; gap: 10px;
-      text-decoration: none;
-    }
-    .logo-text {
-      font-family: 'Cinzel Decorative', serif;
-      font-size: 1rem; font-weight: 700;
-      letter-spacing: 0.05em; color: var(--gold2);
-    }
-    .logo-text span { color: var(--cream); }
-    .nav-right { display: flex; align-items: center; gap: 16px; }
-    .user-info {
-      font-family: 'Cinzel', serif; font-size: 10px;
-      letter-spacing: 0.08em; color: var(--muted);
-      border: 1px solid var(--bdl);
-      padding: 6px 14px;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .live-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: var(--green);
-      animation: pulse 2s ease-out infinite;
-    }
-    @keyframes pulse {
-      0%   { box-shadow: 0 0 0 0 rgba(74,222,128,0.5); }
-      70%  { box-shadow: 0 0 0 7px rgba(74,222,128,0); }
-      100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); }
-    }
-    .btn-logout {
-      font-family: 'Cinzel', serif; font-size: 10px;
-      letter-spacing: 0.1em; text-transform: uppercase;
-      color: var(--muted); border: 1px solid var(--bdl);
-      padding: 8px 16px; background: none; cursor: pointer;
-      transition: color 0.2s, border-color 0.2s;
-    }
-    .btn-logout:hover { color: var(--red); border-color: var(--red); }
+    /* STATS ROW */
+    .stats-row{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border:1px solid var(--border);}
+    .stat-box{background:var(--navy2);padding:16px 20px;}
+    .stat-label{font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+    .stat-val{font-family:'Cinzel',serif;font-size:1.6rem;font-weight:600;color:var(--cream);line-height:1;}
+    .stat-val.up{color:var(--green);}
+    .stat-val.dn{color:var(--red);}
+    .stat-sub{font-size:11px;color:var(--muted);margin-top:4px;}
 
-    /* ── MAIN LAYOUT ── */
-    #mainApp { display: none; }
-    .layout {
-      max-width: 1280px; margin: 0 auto; padding: 24px;
-      display: grid;
-      grid-template-columns: 1fr 320px;
-      gap: 18px;
-      position: relative; z-index: 1;
-    }
+    /* MARKET CATEGORY TABS */
+    .market-cats{display:flex;gap:0;margin-bottom:16px;border:1px solid var(--border);}
+    .mcat{flex:1;padding:10px 6px;text-align:center;cursor:pointer;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);background:transparent;border:none;border-bottom:2px solid transparent;transition:all 0.2s;}
+    .mcat .flag{display:block;font-size:16px;margin-bottom:3px;}
+    .mcat.active-us{color:var(--blue);border-bottom-color:var(--blue);background:rgba(96,165,250,0.06);}
+    .mcat.active-in{color:var(--saffron);border-bottom-color:var(--saffron);background:rgba(255,153,51,0.06);}
+    .mcat.active-crypto{color:var(--gold2);border-bottom-color:var(--gold2);background:rgba(232,192,96,0.06);}
+    .mcat.active-asx{color:var(--green);border-bottom-color:var(--green);background:rgba(74,222,128,0.06);}
 
-    /* ── PANEL ── */
-    .panel {
-      background: var(--navy2);
-      border: 1px solid var(--border);
-      padding: 22px 26px;
-    }
-    .panel-title {
-      font-family: 'Cinzel', serif; font-size: 9px;
-      letter-spacing: 0.2em; text-transform: uppercase;
-      color: var(--gold); margin-bottom: 18px;
-      display: flex; align-items: center; gap: 10px;
-    }
-    .panel-title::before {
-      content: ''; display: block;
-      width: 18px; height: 1px; background: var(--gold);
-    }
+    /* MARKET CARDS */
+    .market-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+    .mcard{padding:12px 14px;background:var(--navy3);border:1px solid var(--bdl);cursor:pointer;transition:border-color 0.2s,background 0.2s;}
+    .mcard:hover,.mcard.selected{border-color:var(--gold);background:var(--navy4);}
+    .mcard-sym{font-family:'Cinzel',serif;font-size:11px;font-weight:600;letter-spacing:0.06em;color:var(--cream);margin-bottom:3px;}
+    .mcard-name{font-size:9px;color:var(--muted);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .mcard-price{font-family:'Cinzel',serif;font-size:1rem;color:var(--cream);font-weight:500;}
+    .mcard-chg{font-size:11px;margin-top:2px;}
+    .mcard-chg.up{color:var(--green);}
+    .mcard-chg.dn{color:var(--red);}
 
-    /* ── PORTFOLIO STATS ── */
-    .stats-row {
-      grid-column: 1 / -1;
-      display: grid; grid-template-columns: repeat(4, 1fr);
-      gap: 1px; background: var(--border);
-      border: 1px solid var(--border);
-    }
-    .stat-box {
-      background: var(--navy2);
-      padding: 18px 22px;
-    }
-    .stat-label {
-      font-family: 'Cinzel', serif; font-size: 8px;
-      letter-spacing: 0.18em; text-transform: uppercase;
-      color: var(--muted); margin-bottom: 8px;
-    }
-    .stat-val {
-      font-family: 'Cinzel', serif; font-size: 1.7rem;
-      font-weight: 600; color: var(--cream); line-height: 1;
-    }
-    .stat-val.up  { color: var(--green); }
-    .stat-val.dn  { color: var(--red); }
-    .stat-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+    /* TRADE PANEL */
+    .trade-panel{grid-column:2;grid-row:2/6;}
+    .tab-row{display:grid;grid-template-columns:1fr 1fr;margin-bottom:18px;border-bottom:1px solid var(--bdl);}
+    .tab{padding:10px;text-align:center;font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:color 0.2s,border-color 0.2s;}
+    .tab.active-buy{color:var(--green);border-color:var(--green);}
+    .tab.active-sell{color:var(--red);border-color:var(--red);}
 
-    /* ── MARKET CARDS ── */
-    .market-grid {
-      display: grid; grid-template-columns: repeat(4, 1fr);
-      gap: 8px; margin-bottom: 0;
-    }
-    .mcard {
-      padding: 13px 15px;
-      background: var(--navy3);
-      border: 1px solid var(--bdl);
-      cursor: pointer;
-      transition: border-color 0.2s, background 0.2s;
-    }
-    .mcard:hover, .mcard.selected {
-      border-color: var(--gold);
-      background: var(--navy4);
-    }
-    .mcard-sym {
-      font-family: 'Cinzel', serif; font-size: 11px;
-      font-weight: 600; letter-spacing: 0.06em;
-      color: var(--cream); margin-bottom: 4px;
-    }
-    .mcard-price {
-      font-family: 'Cinzel', serif; font-size: 1.05rem;
-      color: var(--cream); font-weight: 500;
-    }
-    .mcard-chg { font-size: 11px; margin-top: 2px; }
-    .mcard-chg.up { color: var(--green); }
-    .mcard-chg.dn { color: var(--red); }
+    .trade-field{margin-bottom:12px;}
+    .trade-field label{display:block;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+    .trade-field select,.trade-field input{width:100%;padding:11px 13px;background:var(--navy3);border:1px solid var(--bdl);color:var(--cream);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s;}
+    .trade-field select option{background:var(--navy3);}
+    .trade-field select:focus,.trade-field input:focus{border-color:var(--gold);}
 
-    /* ── TRADE PANEL ── */
-    .trade-panel {
-      grid-column: 2;
-      grid-row: 2 / 5;
-    }
-    .tab-row {
-      display: grid; grid-template-columns: 1fr 1fr;
-      margin-bottom: 20px; margin-top: -4px;
-      border-bottom: 1px solid var(--bdl);
-    }
-    .tab {
-      padding: 10px; text-align: center;
-      font-family: 'Cinzel', serif; font-size: 11px;
-      letter-spacing: 0.12em; text-transform: uppercase;
-      color: var(--muted); cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: color 0.2s, border-color 0.2s;
-    }
-    .tab.active-buy  { color: var(--green); border-color: var(--green); }
-    .tab.active-sell { color: var(--red);   border-color: var(--red); }
+    .trade-summary{background:var(--navy3);border:1px solid var(--bdl);padding:11px 13px;margin-bottom:13px;font-size:11.5px;color:var(--muted);line-height:2.1;}
+    .trade-summary span{color:var(--cream);float:right;}
 
-    .trade-field { margin-bottom: 13px; }
-    .trade-field label {
-      display: block; font-family: 'Cinzel', serif;
-      font-size: 9px; letter-spacing: 0.16em;
-      text-transform: uppercase; color: var(--muted); margin-bottom: 6px;
-    }
-    .trade-field select,
-    .trade-field input {
-      width: 100%; padding: 11px 13px;
-      background: var(--navy3); border: 1px solid var(--bdl);
-      color: var(--cream); font-family: 'DM Sans', sans-serif;
-      font-size: 13px; outline: none;
-      transition: border-color 0.2s;
-    }
-    .trade-field select option { background: var(--navy3); }
-    .trade-field select:focus,
-    .trade-field input:focus { border-color: var(--gold); }
+    .btn-trade{width:100%;padding:13px;font-family:'Cinzel',serif;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;border:none;cursor:pointer;clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%);transition:opacity 0.2s;}
+    .btn-trade:disabled{opacity:0.45;cursor:not-allowed;}
+    .btn-trade.buy{background:var(--green);color:var(--navy);}
+    .btn-trade.sell{background:var(--red);color:#fff;}
 
-    .trade-summary {
-      background: var(--navy3); border: 1px solid var(--bdl);
-      padding: 12px 14px; margin-bottom: 14px;
-      font-size: 11.5px; color: var(--muted); line-height: 2.1;
-    }
-    .trade-summary span { color: var(--cream); float: right; }
+    .trade-msg{margin-top:10px;font-size:12px;text-align:center;font-family:'Cinzel',serif;letter-spacing:0.04em;min-height:18px;}
+    .trade-msg.ok{color:var(--green);}
+    .trade-msg.err{color:var(--red);}
 
-    .btn-trade {
-      width: 100%; padding: 13px;
-      font-family: 'Cinzel', serif; font-size: 11px;
-      font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
-      border: none; cursor: pointer;
-      clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
-      transition: opacity 0.2s;
-    }
-    .btn-trade:disabled { opacity: 0.45; cursor: not-allowed; }
-    .btn-trade.buy  { background: var(--green); color: var(--navy); }
-    .btn-trade.sell { background: var(--red);   color: #fff; }
+    .quick-amounts{margin-top:16px;padding-top:14px;border-top:1px solid var(--bdl);}
+    .qa-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+    .qa-row{display:flex;gap:6px;}
+    .qa-btn{flex:1;padding:8px 4px;background:var(--navy3);border:1px solid var(--bdl);color:var(--muted);font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.08em;cursor:pointer;transition:border-color 0.2s,color 0.2s;}
+    .qa-btn:hover{border-color:var(--gold);color:var(--gold);}
 
-    .trade-msg {
-      margin-top: 10px; font-size: 12px; text-align: center;
-      font-family: 'Cinzel', serif; letter-spacing: 0.04em;
-      min-height: 18px;
-    }
-    .trade-msg.ok  { color: var(--green); }
-    .trade-msg.err { color: var(--red); }
+    /* HOLDINGS & HISTORY */
+    .data-table{width:100%;border-collapse:collapse;}
+    .data-table th{font-family:'Cinzel',serif;font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);text-align:left;padding:0 8px 10px 0;border-bottom:1px solid var(--bdl);}
+    .data-table td{padding:12px 8px 12px 0;border-bottom:1px solid var(--bdl);font-size:12.5px;vertical-align:middle;}
+    .data-table tr:last-child td{border-bottom:none;}
+    .sym{font-family:'Cinzel',serif;font-weight:600;font-size:13px;}
+    .sym-name{font-size:10px;color:var(--muted);margin-top:2px;}
+    .pnl{font-family:'Cinzel',serif;}
+    .pnl.up{color:var(--green);}
+    .pnl.dn{color:var(--red);}
 
-    /* Quick amounts */
-    .quick-amounts {
-      margin-top: 18px; padding-top: 16px;
-      border-top: 1px solid var(--bdl);
-    }
-    .qa-label {
-      font-family: 'Cinzel', serif; font-size: 9px;
-      letter-spacing: 0.14em; text-transform: uppercase;
-      color: var(--muted); margin-bottom: 8px;
-    }
-    .qa-row { display: flex; gap: 7px; }
-    .qa-btn {
-      flex: 1; padding: 8px 4px;
-      background: var(--navy3); border: 1px solid var(--bdl);
-      color: var(--muted); font-family: 'Cinzel', serif;
-      font-size: 10px; letter-spacing: 0.08em;
-      cursor: pointer; transition: border-color 0.2s, color 0.2s;
-    }
-    .qa-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .hist-item{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--bdl);}
+    .hist-item:last-child{border-bottom:none;}
+    .hist-badge{font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:3px 10px;border:1px solid;display:inline-block;margin-right:9px;clip-path:polygon(3px 0%,100% 0%,calc(100% - 3px) 100%,0% 100%);}
+    .hist-badge.buy{border-color:var(--green);color:var(--green);}
+    .hist-badge.sell{border-color:var(--red);color:var(--red);}
+    .hist-sym{font-family:'Cinzel',serif;font-weight:600;font-size:13px;}
+    .hist-sub{font-size:10.5px;color:var(--muted);margin-top:2px;}
+    .hist-val{font-family:'Cinzel',serif;font-size:13px;text-align:right;}
+    .hist-time{font-size:10px;color:var(--muted);text-align:right;margin-top:2px;}
 
-    /* ── HOLDINGS TABLE ── */
-    .data-table { width: 100%; border-collapse: collapse; }
-    .data-table th {
-      font-family: 'Cinzel', serif; font-size: 8.5px;
-      letter-spacing: 0.14em; text-transform: uppercase;
-      color: var(--muted); text-align: left;
-      padding: 0 8px 10px 0;
-      border-bottom: 1px solid var(--bdl);
-    }
-    .data-table td {
-      padding: 13px 8px 13px 0;
-      border-bottom: 1px solid var(--bdl);
-      font-size: 12.5px; vertical-align: middle;
-    }
-    .data-table tr:last-child td { border-bottom: none; }
-    .sym { font-family: 'Cinzel', serif; font-weight: 600; font-size: 13px; }
-    .sym-name { font-size: 10px; color: var(--muted); margin-top: 2px; }
-    .pnl { font-family: 'Cinzel', serif; }
-    .pnl.up { color: var(--green); }
-    .pnl.dn { color: var(--red); }
+    .empty{text-align:center;padding:36px 0;color:var(--muted);font-size:0.87rem;line-height:1.85;}
+    .empty small{display:block;margin-top:8px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.14em;color:var(--gold);}
 
-    /* ── TRADE HISTORY ── */
-    .hist-item {
-      display: flex; align-items: center;
-      justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--bdl);
-    }
-    .hist-item:last-child { border-bottom: none; }
-    .hist-badge {
-      font-family: 'Cinzel', serif; font-size: 9px;
-      letter-spacing: 0.1em; text-transform: uppercase;
-      padding: 3px 10px; border: 1px solid;
-      display: inline-block; margin-right: 9px;
-      clip-path: polygon(3px 0%, 100% 0%, calc(100% - 3px) 100%, 0% 100%);
-    }
-    .hist-badge.buy  { border-color: var(--green); color: var(--green); }
-    .hist-badge.sell { border-color: var(--red);   color: var(--red); }
-    .hist-sym  { font-family: 'Cinzel', serif; font-weight: 600; font-size: 13px; }
-    .hist-sub  { font-size: 10.5px; color: var(--muted); margin-top: 2px; }
-    .hist-val  { font-family: 'Cinzel', serif; font-size: 13px; text-align: right; }
-    .hist-time { font-size: 10px; color: var(--muted); text-align: right; margin-top: 2px; }
+    /* TOAST */
+    .toast{position:fixed;bottom:24px;right:24px;z-index:500;background:var(--navy2);border:1px solid var(--border);padding:13px 20px;font-size:12.5px;font-family:'Cinzel',serif;letter-spacing:0.05em;transform:translateX(140%);transition:transform 0.3s ease;max-width:320px;}
+    .toast.show{transform:translateX(0);}
+    .toast.ok{border-color:var(--green);color:var(--green);}
+    .toast.err{border-color:var(--red);color:var(--red);}
 
-    /* Empty state */
-    .empty {
-      text-align: center; padding: 36px 0;
-      color: var(--muted); font-size: 0.87rem; line-height: 1.85;
-    }
-    .empty small {
-      display: block; margin-top: 8px;
-      font-family: 'Cinzel', serif; font-size: 9px;
-      letter-spacing: 0.14em; color: var(--gold);
-    }
-
-    /* ── TOAST ── */
-    .toast {
-      position: fixed; bottom: 24px; right: 24px; z-index: 500;
-      background: var(--navy2); border: 1px solid var(--border);
-      padding: 13px 20px; font-size: 12.5px;
-      font-family: 'Cinzel', serif; letter-spacing: 0.05em;
-      transform: translateX(140%);
-      transition: transform 0.3s ease;
-      max-width: 300px;
-    }
-    .toast.show  { transform: translateX(0); }
-    .toast.ok    { border-color: var(--green); color: var(--green); }
-    .toast.err   { border-color: var(--red);   color: var(--red); }
-
-    /* ── RESPONSIVE ── */
-    @media (max-width: 1000px) {
-      .layout { grid-template-columns: 1fr; }
-      .trade-panel { grid-column: 1; grid-row: auto; }
-      .stats-row { grid-template-columns: repeat(2, 1fr); }
-      .market-grid { grid-template-columns: repeat(4, 1fr); }
-    }
-    @media (max-width: 600px) {
-      .market-grid { grid-template-columns: repeat(2, 1fr); }
-      .stats-row { grid-template-columns: repeat(2, 1fr); }
-      .stat-val { font-size: 1.35rem; }
-      .layout { padding: 14px; }
-      .app-nav { padding: 0 14px; }
-    }
+    @media(max-width:1100px){.layout{grid-template-columns:1fr;}.trade-panel{grid-column:1;grid-row:auto;}.stats-row{grid-template-columns:repeat(3,1fr);}.market-grid{grid-template-columns:repeat(4,1fr);}}
+    @media(max-width:600px){.market-grid{grid-template-columns:repeat(2,1fr);}.stats-row{grid-template-columns:repeat(2,1fr);}.stat-val{font-size:1.35rem;}.layout{padding:12px;}.app-nav{padding:0 14px;}.mcat .flag{font-size:13px;}}
   </style>
 </head>
 <body>
 
-<!-- Auth Gate -->
 <div id="authGate">
   <svg width="40" height="46" viewBox="0 0 40 46" fill="none">
-    <path d="M20 2L36 9V22C36 31 29 39 20 43C11 39 4 31 4 22V9L20 2Z"
-          fill="#091528" stroke="#c9a030" stroke-width="1"/>
-    <text x="20" y="27" text-anchor="middle"
-          font-family="serif" font-size="12" font-weight="bold" fill="#e8c060">&#8383;</text>
-    <polyline points="12,24 17,19 20,22 28,13"
-              fill="none" stroke="#c9a030" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M20 2L36 9V22C36 31 29 39 20 43C11 39 4 31 4 22V9L20 2Z" fill="#091528" stroke="#c9a030" stroke-width="1"/>
+    <text x="20" y="27" text-anchor="middle" font-family="serif" font-size="12" font-weight="bold" fill="#e8c060">&#8383;</text>
+    <polyline points="12,24 17,19 20,22 28,13" fill="none" stroke="#c9a030" stroke-width="1.5" stroke-linecap="round"/>
   </svg>
   <p>You need to sign in to access the War Room</p>
   <a href="auth.html">Sign In →</a>
 </div>
 
-<!-- Ticker -->
 <div class="ticker-bar">
   <div class="ticker-label">Live Markets</div>
-  <div class="ticker-track" id="tickerTrack">
-    <span class="tick">AAPL  <span class="up" id="tp-AAPL">$182.50</span></span>
-    <span class="tick">BTC   <span class="up" id="tp-BTC">$64,200</span></span>
-    <span class="tick">NVDA  <span class="up" id="tp-NVDA">$875.20</span></span>
-    <span class="tick">ETH   <span class="dn" id="tp-ETH">$3,420</span></span>
-    <span class="tick">TSLA  <span class="up" id="tp-TSLA">$248.90</span></span>
-    <span class="tick">MSFT  <span class="up" id="tp-MSFT">$415.30</span></span>
-    <span class="tick">AMZN  <span class="up" id="tp-AMZN">$192.40</span></span>
-    <span class="tick">SOL   <span class="up" id="tp-SOL">$148.60</span></span>
-    <!-- duplicate for seamless scroll -->
-    <span class="tick">AAPL  <span class="up">$182.50</span></span>
-    <span class="tick">BTC   <span class="up">$64,200</span></span>
-    <span class="tick">NVDA  <span class="up">$875.20</span></span>
-    <span class="tick">ETH   <span class="dn">$3,420</span></span>
-    <span class="tick">TSLA  <span class="up">$248.90</span></span>
-    <span class="tick">MSFT  <span class="up">$415.30</span></span>
-    <span class="tick">AMZN  <span class="up">$192.40</span></span>
-    <span class="tick">SOL   <span class="up">$148.60</span></span>
+  <div class="ticker-track">
+    <span class="tick">AAPL <span class="up">$182.50</span></span>
+    <span class="tick">BTC <span class="up">$64,200</span></span>
+    <span class="tick">RELIANCE <span class="up">₹2,847</span></span>
+    <span class="tick">NVDA <span class="up">$875.20</span></span>
+    <span class="tick">ETH <span class="dn">$3,420</span></span>
+    <span class="tick">CBA <span class="up">$118.40</span></span>
+    <span class="tick">TCS <span class="up">₹3,920</span></span>
+    <span class="tick">SOL <span class="up">$148.60</span></span>
+    <span class="tick">TSLA <span class="up">$248.90</span></span>
+    <span class="tick">BHP <span class="dn">$43.20</span></span>
+    <span class="tick">AAPL <span class="up">$182.50</span></span>
+    <span class="tick">BTC <span class="up">$64,200</span></span>
+    <span class="tick">RELIANCE <span class="up">₹2,847</span></span>
+    <span class="tick">NVDA <span class="up">$875.20</span></span>
+    <span class="tick">ETH <span class="dn">$3,420</span></span>
+    <span class="tick">CBA <span class="up">$118.40</span></span>
+    <span class="tick">TCS <span class="up">₹3,920</span></span>
+    <span class="tick">SOL <span class="up">$148.60</span></span>
+    <span class="tick">TSLA <span class="up">$248.90</span></span>
+    <span class="tick">BHP <span class="dn">$43.20</span></span>
   </div>
 </div>
 
-<!-- Header -->
 <header class="app-header">
   <div class="app-nav">
     <a href="index.html" class="logo-mark">
       <svg width="28" height="32" viewBox="0 0 40 46" fill="none">
-        <path d="M20 2L36 9V22C36 31 29 39 20 43C11 39 4 31 4 22V9L20 2Z"
-              fill="#091528" stroke="#c9a030" stroke-width="1"/>
-        <text x="20" y="27" text-anchor="middle"
-              font-family="serif" font-size="12" font-weight="bold" fill="#e8c060">&#8383;</text>
-        <polyline points="12,24 17,19 20,22 28,13"
-                  fill="none" stroke="#c9a030" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M20 2L36 9V22C36 31 29 39 20 43C11 39 4 31 4 22V9L20 2Z" fill="#091528" stroke="#c9a030" stroke-width="1"/>
+        <text x="20" y="27" text-anchor="middle" font-family="serif" font-size="12" font-weight="bold" fill="#e8c060">&#8383;</text>
+        <polyline points="12,24 17,19 20,22 28,13" fill="none" stroke="#c9a030" stroke-width="1.5" stroke-linecap="round"/>
       </svg>
       <div class="logo-text">Trade<span>Arena</span></div>
     </a>
     <div class="nav-right">
+      <span class="user-badge student" id="userBadge">Student</span>
       <div class="user-info">
         <div class="live-dot"></div>
         <span id="userHandle">—</span>
@@ -452,11 +212,10 @@
   </div>
 </header>
 
-<!-- Main App -->
 <div id="mainApp">
   <div class="layout">
 
-    <!-- Portfolio Stats Row -->
+    <!-- Stats Row -->
     <div class="stats-row">
       <div class="stat-box">
         <div class="stat-label">Total Portfolio</div>
@@ -478,15 +237,37 @@
         <div class="stat-val" id="statPnl">$0.00</div>
         <div class="stat-sub" id="statPnlPct">0.00%</div>
       </div>
+      <div class="stat-box">
+        <div class="stat-label">Active Market</div>
+        <div class="stat-val" id="statMarket" style="font-size:1.1rem;">🇺🇸 US</div>
+        <div class="stat-sub" id="statMarketSub">NYSE / NASDAQ</div>
+      </div>
     </div>
 
-    <!-- Market Prices (left column) -->
+    <!-- Market Panel (left) -->
     <div class="panel">
-      <div class="panel-title">Live Market Prices</div>
+      <div class="panel-title">Market Arena</div>
+
+      <!-- Category Tabs -->
+      <div class="market-cats">
+        <button class="mcat active-us" id="cat-us" onclick="switchMarket('us')">
+          <span class="flag">🇺🇸</span>US
+        </button>
+        <button class="mcat" id="cat-in" onclick="switchMarket('in')">
+          <span class="flag">🇮🇳</span>India
+        </button>
+        <button class="mcat" id="cat-crypto" onclick="switchMarket('crypto')">
+          <span class="flag">₿</span>Crypto
+        </button>
+        <button class="mcat" id="cat-asx" onclick="switchMarket('asx')">
+          <span class="flag">🇦🇺</span>ASX
+        </button>
+      </div>
+
       <div class="market-grid" id="marketGrid"></div>
     </div>
 
-    <!-- Trade Panel (right column, spans rows) -->
+    <!-- Trade Panel (right, spans rows) -->
     <div class="panel trade-panel">
       <div class="panel-title">Execute Trade</div>
 
@@ -497,26 +278,15 @@
 
       <div class="trade-field">
         <label>Asset</label>
-        <select id="tradeSymbol" onchange="onSymbolChange()">
-          <option value="AAPL">AAPL — Apple</option>
-          <option value="TSLA">TSLA — Tesla</option>
-          <option value="NVDA">NVDA — NVIDIA</option>
-          <option value="MSFT">MSFT — Microsoft</option>
-          <option value="AMZN">AMZN — Amazon</option>
-          <option value="BTC">BTC — Bitcoin</option>
-          <option value="ETH">ETH — Ethereum</option>
-          <option value="SOL">SOL — Solana</option>
-        </select>
+        <select id="tradeSymbol" onchange="onSymbolChange()"></select>
       </div>
 
       <div class="trade-field">
-        <label>Amount (AUD $)</label>
+        <label id="amountLabel">Amount (AUD $)</label>
         <input type="number" id="tradeAmount" placeholder="10.00" min="1" step="0.01" oninput="updateSummary()"/>
       </div>
 
-      <div class="trade-summary" id="tradeSummary">
-        Select an asset and enter an amount
-      </div>
+      <div class="trade-summary" id="tradeSummary">Select an asset and enter an amount</div>
 
       <button class="btn-trade buy" id="tradeBtn" onclick="executeTrade()">Buy</button>
       <div class="trade-msg" id="tradeMsg"></div>
@@ -536,446 +306,374 @@
     <div class="panel">
       <div class="panel-title">My Holdings</div>
       <div id="holdingsEl">
-        <div class="empty">
-          No positions yet.<br>
-          Make your first trade above.
-          <small>Try buying $10 of BTC or AAPL</small>
-        </div>
+        <div class="empty">No positions yet.<br>Make your first trade above.<small>Try buying $10 of AAPL or BTC</small></div>
       </div>
     </div>
 
     <!-- Trade History -->
     <div class="panel">
       <div class="panel-title">Trade History</div>
-      <div id="historyEl">
-        <div class="empty">No trades yet.</div>
-      </div>
+      <div id="historyEl"><div class="empty">No trades yet.</div></div>
     </div>
 
   </div>
 </div>
 
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script>
-  // ─── CONFIG ────────────────────────────────────────────────────
   const SUPABASE_URL      = 'https://chncykagtzotdtflkhim.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNobmN5a2FndHpvdGR0ZmxraGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDYxNjIsImV4cCI6MjA5MTIyMjE2Mn0.ZRrZcBn_hLAPP7xL3kWgkpH5itLIIXzCWb_9_Ics_OE';
-  // ──────────────────────────────────────────────────────────────
-
   const { createClient } = supabase;
   const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // ─── MARKET DATA ───────────────────────────────────────────────
-  const ASSETS = {
-    AAPL: { name: 'Apple Inc.',  price: 182.50  },
-    TSLA: { name: 'Tesla',       price: 248.90  },
-    NVDA: { name: 'NVIDIA',      price: 875.20  },
-    MSFT: { name: 'Microsoft',   price: 415.30  },
-    AMZN: { name: 'Amazon',      price: 192.40  },
-    BTC:  { name: 'Bitcoin',     price: 64200   },
-    ETH:  { name: 'Ethereum',    price: 3420    },
-    SOL:  { name: 'Solana',      price: 148.60  },
+  // ── MARKET DATA ─────────────────────────────────────────────────
+  const MARKETS = {
+    us: {
+      label:'🇺🇸 US', sub:'NYSE / NASDAQ', currency:'$',
+      assets:{
+        AAPL:{name:'Apple Inc.',      price:182.50},
+        TSLA:{name:'Tesla',           price:248.90},
+        NVDA:{name:'NVIDIA',          price:875.20},
+        MSFT:{name:'Microsoft',       price:415.30},
+        AMZN:{name:'Amazon',          price:192.40},
+        GOOGL:{name:'Alphabet',       price:175.80},
+        META:{name:'Meta Platforms',  price:512.60},
+        JPM:{name:'JPMorgan Chase',   price:198.20},
+      }
+    },
+    in: {
+      label:'🇮🇳 India', sub:'NSE / BSE', currency:'₹',
+      assets:{
+        RELIANCE:{name:'Reliance Industries', price:2847},
+        TCS:{name:'Tata Consultancy',         price:3920},
+        HDFC:{name:'HDFC Bank',               price:1680},
+        INFY:{name:'Infosys',                 price:1542},
+        WIPRO:{name:'Wipro',                  price:478},
+        ICICIBANK:{name:'ICICI Bank',         price:1102},
+        BAJFINANCE:{name:'Bajaj Finance',     price:7240},
+        HCLTECH:{name:'HCL Technologies',     price:1678},
+      }
+    },
+    crypto: {
+      label:'₿ Crypto', sub:'Global 24/7', currency:'$',
+      assets:{
+        BTC:{name:'Bitcoin',    price:64200},
+        ETH:{name:'Ethereum',   price:3420},
+        SOL:{name:'Solana',     price:148.60},
+        BNB:{name:'BNB',        price:412.30},
+        XRP:{name:'XRP',        price:0.62},
+        ADA:{name:'Cardano',    price:0.48},
+        DOGE:{name:'Dogecoin',  price:0.16},
+        AVAX:{name:'Avalanche', price:37.80},
+      }
+    },
+    asx: {
+      label:'🇦🇺 ASX', sub:'Australian Securities Exchange', currency:'$',
+      assets:{
+        CBA:{name:'Commonwealth Bank', price:118.40},
+        BHP:{name:'BHP Group',         price:43.20},
+        CSL:{name:'CSL Limited',       price:278.60},
+        ANZ:{name:'ANZ Banking Group', price:28.90},
+        NAB:{name:'National Aust. Bank',price:36.50},
+        WBC:{name:'Westpac Banking',   price:27.80},
+        MQG:{name:'Macquarie Group',   price:198.40},
+        WES:{name:'Wesfarmers',        price:72.30},
+      }
+    }
   };
 
-  // Track daily % change
   const dayChanges = {};
-  Object.keys(ASSETS).forEach(function(sym) {
-    dayChanges[sym] = parseFloat((Math.random() * 7 - 2.5).toFixed(2));
+  Object.keys(MARKETS).forEach(function(mkt){
+    Object.keys(MARKETS[mkt].assets).forEach(function(sym){
+      dayChanges[sym] = parseFloat((Math.random()*7-2.5).toFixed(2));
+    });
   });
 
-  function fmtPrice(sym) {
-    var p = ASSETS[sym].price;
-    if (sym === 'BTC') return '$' + Math.round(p).toLocaleString('en-AU');
-    return '$' + p.toFixed(2);
+  var currentMarket = 'us';
+  var currentUser   = null;
+  var portfolio     = { cash_balance:10000 };
+  var holdings      = [];
+  var tradeHistory  = [];
+  var tradeMode     = 'buy';
+  var currentSymbol = 'AAPL';
+
+  function getAssets(){ return MARKETS[currentMarket].assets; }
+  function getCurrency(){ return MARKETS[currentMarket].currency; }
+
+  function fmtPrice(sym){
+    var p = getAssets()[sym] ? getAssets()[sym].price : 0;
+    var cur = getCurrency();
+    if(sym==='BTC'||['RELIANCE','TCS','HDFC','INFY','WIPRO','ICICIBANK','BAJFINANCE','HCLTECH'].includes(sym))
+      return cur+Math.round(p).toLocaleString();
+    if(p < 10) return cur+p.toFixed(4);
+    return cur+p.toFixed(2);
   }
 
-  // Simulate realistic price movement every 6 seconds
-  function driftPrices() {
-    Object.keys(ASSETS).forEach(function(sym) {
-      var vol = ['BTC','ETH','SOL'].includes(sym) ? 0.005 : 0.002;
-      var move = (Math.random() - 0.49) * vol;
-      ASSETS[sym].price = ASSETS[sym].price * (1 + move);
-      dayChanges[sym] = parseFloat((dayChanges[sym] + move * 100).toFixed(2));
+  function switchMarket(mkt){
+    currentMarket = mkt;
+    // Update active tab
+    ['us','in','crypto','asx'].forEach(function(m){
+      var el = document.getElementById('cat-'+m);
+      el.className = 'mcat' + (m===mkt ? ' active-'+m : '');
+    });
+    // Update stat
+    document.getElementById('statMarket').textContent    = MARKETS[mkt].label;
+    document.getElementById('statMarketSub').textContent = MARKETS[mkt].sub;
+    // Update currency label
+    document.getElementById('amountLabel').textContent = 'Amount (AUD $)';
+    // Pick first symbol of new market
+    currentSymbol = Object.keys(MARKETS[mkt].assets)[0];
+    renderMarket();
+    rebuildSymbolSelect();
+    updateSummary();
+  }
+
+  function renderMarket(){
+    var grid = document.getElementById('marketGrid');
+    if(!grid) return;
+    var assets = getAssets();
+    grid.innerHTML = Object.keys(assets).map(function(sym){
+      var chg = dayChanges[sym]||0;
+      var isUp = chg>=0;
+      var sel = sym===currentSymbol ? ' selected' : '';
+      return '<div class="mcard'+sel+'" onclick="selectAsset(\''+sym+'\')">'+
+        '<div class="mcard-sym">'+sym+'</div>'+
+        '<div class="mcard-name">'+assets[sym].name+'</div>'+
+        '<div class="mcard-price">'+fmtPrice(sym)+'</div>'+
+        '<div class="mcard-chg '+(isUp?'up':'dn')+'">'+(isUp?'+':'')+chg.toFixed(2)+'%</div>'+
+        '</div>';
+    }).join('');
+  }
+
+  function rebuildSymbolSelect(){
+    var sel = document.getElementById('tradeSymbol');
+    var assets = getAssets();
+    sel.innerHTML = Object.keys(assets).map(function(sym){
+      return '<option value="'+sym+'"'+(sym===currentSymbol?' selected':'')+'>'+sym+' — '+assets[sym].name+'</option>';
+    }).join('');
+  }
+
+  function driftPrices(){
+    Object.keys(MARKETS).forEach(function(mkt){
+      Object.keys(MARKETS[mkt].assets).forEach(function(sym){
+        var vol = ['BTC','ETH','SOL','BNB','XRP','ADA','DOGE','AVAX'].includes(sym) ? 0.006 : 0.002;
+        var move = (Math.random()-0.49)*vol;
+        MARKETS[mkt].assets[sym].price *= (1+move);
+        dayChanges[sym] = parseFloat((dayChanges[sym]+move*100).toFixed(2));
+      });
     });
     renderMarket();
     updatePortfolioStats();
   }
 
-  function renderMarket() {
-    var grid = document.getElementById('marketGrid');
-    if (!grid) return;
-    grid.innerHTML = Object.keys(ASSETS).map(function(sym) {
-      var chg = dayChanges[sym];
-      var isUp = chg >= 0;
-      var sel = (sym === currentSymbol) ? ' selected' : '';
-      return '<div class="mcard' + sel + '" onclick="selectAsset(\'' + sym + '\')">'
-        + '<div class="mcard-sym">' + sym + '</div>'
-        + '<div class="mcard-price">' + fmtPrice(sym) + '</div>'
-        + '<div class="mcard-chg ' + (isUp ? 'up' : 'dn') + '">'
-        + (isUp ? '+' : '') + chg.toFixed(2) + '%</div>'
-        + '</div>';
-    }).join('');
-  }
-
-  // ─── APP STATE ─────────────────────────────────────────────────
-  var currentUser    = null;
-  var portfolio      = { cash_balance: 10000 };
-  var holdings       = [];
-  var tradeHistory   = [];
-  var tradeMode      = 'buy';
-  var currentSymbol  = 'AAPL';
-
-  // ─── AUTH ──────────────────────────────────────────────────────
-  async function init() {
-    try {
+  // ── AUTH ────────────────────────────────────────────────────────
+  async function init(){
+    try{
       var res = await sb.auth.getSession();
-      var session = res.data && res.data.session;
-      if (!session) {
-        document.getElementById('authGate').classList.remove('hidden');
-        return;
-      }
+      var session = res.data&&res.data.session;
+      if(!session){ document.getElementById('authGate').classList.remove('hidden'); return; }
       currentUser = session.user;
-    } catch(e) {
-      document.getElementById('authGate').classList.remove('hidden');
-      return;
-    }
+    }catch(e){ document.getElementById('authGate').classList.remove('hidden'); return; }
 
     document.getElementById('authGate').classList.add('hidden');
     document.getElementById('mainApp').style.display = 'block';
     document.getElementById('userHandle').textContent = currentUser.email.split('@')[0];
 
+    // Detect user type from email domain
+    var isStudent = currentUser.email.toLowerCase().endsWith('.edu.au') ||
+                    currentUser.email.toLowerCase().endsWith('.ac.nz') ||
+                    currentUser.email.toLowerCase().endsWith('monash.edu');
+    var badge = document.getElementById('userBadge');
+    if(isStudent){ badge.textContent='Student'; badge.className='user-badge student'; }
+    else{ badge.textContent='Public'; badge.className='user-badge public'; }
+
     await loadPortfolio();
     await loadHoldings();
     await loadHistory();
 
+    rebuildSymbolSelect();
     renderMarket();
     updatePortfolioStats();
     renderHoldings();
     renderHistory();
     updateSummary();
-
-    // Start price simulation
     setInterval(driftPrices, 6000);
   }
 
-  async function logout() {
-    await sb.auth.signOut();
-    window.location.href = 'auth.html';
+  async function logout(){ await sb.auth.signOut(); window.location.href='auth.html'; }
+
+  // ── DATABASE ────────────────────────────────────────────────────
+  async function loadPortfolio(){
+    try{
+      var res = await sb.from('portfolios').select('*').eq('user_id',currentUser.id).single();
+      if(res.error||!res.data){
+        var ins = await sb.from('portfolios').insert({user_id:currentUser.id,cash_balance:10000}).select().single();
+        portfolio = ins.data || {cash_balance:10000};
+      } else { portfolio = res.data; }
+    }catch(e){ portfolio={cash_balance:10000}; }
   }
 
-  // ─── DATABASE ──────────────────────────────────────────────────
-  async function loadPortfolio() {
-    try {
-      var res = await sb.from('portfolios').select('*').eq('user_id', currentUser.id).single();
-      if (res.error || !res.data) {
-        // Create new portfolio
-        var ins = await sb.from('portfolios')
-          .insert({ user_id: currentUser.id, cash_balance: 10000 })
-          .select().single();
-        portfolio = (ins.data) ? ins.data : { cash_balance: 10000 };
-      } else {
-        portfolio = res.data;
-      }
-    } catch(e) {
-      portfolio = { cash_balance: 10000 };
-    }
+  async function loadHoldings(){
+    try{ var r=await sb.from('holdings').select('*').eq('user_id',currentUser.id); holdings=r.data||[]; }catch(e){holdings=[];}
   }
 
-  async function loadHoldings() {
-    try {
-      var res = await sb.from('holdings').select('*').eq('user_id', currentUser.id);
-      holdings = res.data || [];
-    } catch(e) { holdings = []; }
+  async function loadHistory(){
+    try{ var r=await sb.from('trades').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}).limit(30); tradeHistory=r.data||[]; }catch(e){tradeHistory=[];}
   }
 
-  async function loadHistory() {
-    try {
-      var res = await sb.from('trades')
-        .select('*')
-        .eq('user_id', currentUser.id)
-        .order('created_at', { ascending: false })
-        .limit(30);
-      tradeHistory = res.data || [];
-    } catch(e) { tradeHistory = []; }
-  }
-
-  // ─── UI ────────────────────────────────────────────────────────
-  function selectAsset(sym) {
+  // ── UI ──────────────────────────────────────────────────────────
+  function selectAsset(sym){
     currentSymbol = sym;
     document.getElementById('tradeSymbol').value = sym;
     renderMarket();
     updateSummary();
   }
 
-  function onSymbolChange() {
+  function onSymbolChange(){
     currentSymbol = document.getElementById('tradeSymbol').value;
     renderMarket();
     updateSummary();
   }
 
-  function setMode(mode) {
+  function setMode(mode){
     tradeMode = mode;
-    var btnBuy  = document.getElementById('tabBuy');
-    var btnSell = document.getElementById('tabSell');
-    var tradeBtn = document.getElementById('tradeBtn');
-    if (mode === 'buy') {
-      btnBuy.className  = 'tab active-buy';
-      btnSell.className = 'tab';
-      tradeBtn.className = 'btn-trade buy';
-      tradeBtn.textContent = 'Buy';
-    } else {
-      btnBuy.className  = 'tab';
-      btnSell.className = 'tab active-sell';
-      tradeBtn.className = 'btn-trade sell';
-      tradeBtn.textContent = 'Sell';
-    }
+    document.getElementById('tabBuy').className  = mode==='buy'  ? 'tab active-buy'  : 'tab';
+    document.getElementById('tabSell').className = mode==='sell' ? 'tab active-sell' : 'tab';
+    var btn = document.getElementById('tradeBtn');
+    btn.className = 'btn-trade '+(mode==='buy'?'buy':'sell');
+    btn.textContent = mode==='buy'?'Buy':'Sell';
     updateSummary();
   }
 
-  function setAmt(n) {
-    document.getElementById('tradeAmount').value = n;
-    updateSummary();
-  }
+  function setAmt(n){ document.getElementById('tradeAmount').value=n; updateSummary(); }
 
-  function updateSummary() {
-    var sym    = document.getElementById('tradeSymbol').value;
+  function updateSummary(){
+    var sym    = document.getElementById('tradeSymbol').value || currentSymbol;
     currentSymbol = sym;
-    var amount = parseFloat(document.getElementById('tradeAmount').value) || 0;
-    var price  = ASSETS[sym].price;
-    var shares = amount > 0 ? amount / price : 0;
-    var el     = document.getElementById('tradeSummary');
-
-    if (amount <= 0) {
-      el.innerHTML = 'Enter an amount to preview the order';
-      return;
-    }
-
-    var sharesStr = shares < 1 ? shares.toFixed(6) : shares.toFixed(4);
-    el.innerHTML =
-      'Asset: <span>' + sym + ' — ' + ASSETS[sym].name + '</span>' +
-      '<br>Price: <span>' + fmtPrice(sym) + '</span>' +
-      '<br>Shares: <span>' + sharesStr + '</span>' +
-      '<br>Total: <span>$' + amount.toFixed(2) + '</span>';
+    var amount = parseFloat(document.getElementById('tradeAmount').value)||0;
+    var assets = getAssets();
+    if(!assets[sym]) return;
+    var price  = assets[sym].price;
+    var shares = amount>0 ? amount/price : 0;
+    var el = document.getElementById('tradeSummary');
+    if(amount<=0){ el.innerHTML='Enter an amount to preview the order'; return; }
+    var sharesStr = shares<1 ? shares.toFixed(6) : shares.toFixed(4);
+    el.innerHTML='Asset: <span>'+sym+' — '+assets[sym].name+'</span>'+
+      '<br>Price: <span>'+fmtPrice(sym)+'</span>'+
+      '<br>Units: <span>'+sharesStr+'</span>'+
+      '<br>Cost: <span>$'+amount.toFixed(2)+' AUD</span>';
   }
 
-  function updatePortfolioStats() {
-    var invested = 0, costBasis = 0;
-    holdings.forEach(function(h) {
-      if (ASSETS[h.symbol]) {
-        invested   += h.shares * ASSETS[h.symbol].price;
+  function updatePortfolioStats(){
+    var invested=0, costBasis=0;
+    holdings.forEach(function(h){
+      var allAssets = Object.assign({}, MARKETS.us.assets, MARKETS.in.assets, MARKETS.crypto.assets, MARKETS.asx.assets);
+      if(allAssets[h.symbol]){
+        invested   += h.shares * allAssets[h.symbol].price;
         costBasis  += h.shares * h.avg_price;
       }
     });
-
-    var cash  = portfolio.cash_balance || 0;
-    var total = cash + invested;
-    var pnl   = invested - costBasis;
-    var pct   = costBasis > 0 ? (pnl / costBasis * 100) : 0;
-    var isUp  = pnl >= 0;
-
-    document.getElementById('statTotal').textContent    = '$' + total.toFixed(2);
-    document.getElementById('statCash').textContent     = '$' + cash.toFixed(2);
-    document.getElementById('statInvested').textContent = '$' + invested.toFixed(2);
-
-    var pnlEl  = document.getElementById('statPnl');
-    var pnlPct = document.getElementById('statPnlPct');
-    pnlEl.textContent  = (isUp ? '+' : '') + '$' + Math.abs(pnl).toFixed(2);
-    pnlEl.className    = 'stat-val ' + (isUp ? 'up' : 'dn');
-    pnlPct.textContent = (isUp ? '+' : '-') + Math.abs(pct).toFixed(2) + '%';
+    var cash=portfolio.cash_balance||0, total=cash+invested, pnl=invested-costBasis;
+    var pct=costBasis>0?(pnl/costBasis*100):0, isUp=pnl>=0;
+    document.getElementById('statTotal').textContent    = '$'+total.toFixed(2);
+    document.getElementById('statCash').textContent     = '$'+cash.toFixed(2);
+    document.getElementById('statInvested').textContent = '$'+invested.toFixed(2);
+    var pe=document.getElementById('statPnl'), pp=document.getElementById('statPnlPct');
+    pe.textContent=(isUp?'+':'')+' $'+Math.abs(pnl).toFixed(2);
+    pe.className='stat-val '+(isUp?'up':'dn');
+    pp.textContent=(isUp?'+':'-')+Math.abs(pct).toFixed(2)+'%';
   }
 
-  function renderHoldings() {
-    var el = document.getElementById('holdingsEl');
-    if (!holdings.length) {
-      el.innerHTML = '<div class="empty">No positions yet.<br>Make your first trade above.<small>Try buying $10 of BTC or AAPL</small></div>';
-      return;
-    }
-    var rows = holdings.map(function(h) {
-      var price  = ASSETS[h.symbol] ? ASSETS[h.symbol].price : h.avg_price;
-      var value  = h.shares * price;
-      var cost   = h.shares * h.avg_price;
-      var pnl    = value - cost;
-      var isUp   = pnl >= 0;
-      var shares = h.shares < 1 ? h.shares.toFixed(6) : h.shares.toFixed(4);
-      return '<tr>'
-        + '<td><div class="sym">' + h.symbol + '</div><div class="sym-name">' + (ASSETS[h.symbol] ? ASSETS[h.symbol].name : '') + '</div></td>'
-        + '<td>' + shares + '</td>'
-        + '<td>$' + h.avg_price.toFixed(2) + '</td>'
-        + '<td>$' + value.toFixed(2) + '</td>'
-        + '<td class="pnl ' + (isUp ? 'up' : 'dn') + '">' + (isUp ? '+' : '-') + '$' + Math.abs(pnl).toFixed(2) + '</td>'
-        + '</tr>';
+  function renderHoldings(){
+    var el=document.getElementById('holdingsEl');
+    if(!holdings.length){ el.innerHTML='<div class="empty">No positions yet.<br>Make your first trade above.<small>Try buying $10 of AAPL or BTC</small></div>'; return; }
+    var allAssets=Object.assign({},MARKETS.us.assets,MARKETS.in.assets,MARKETS.crypto.assets,MARKETS.asx.assets);
+    var rows=holdings.map(function(h){
+      var price=allAssets[h.symbol]?allAssets[h.symbol].price:h.avg_price;
+      var value=h.shares*price, cost=h.shares*h.avg_price, pnl=value-cost, isUp=pnl>=0;
+      var shares=h.shares<1?h.shares.toFixed(6):h.shares.toFixed(4);
+      return '<tr><td><div class="sym">'+h.symbol+'</div><div class="sym-name">'+(allAssets[h.symbol]?allAssets[h.symbol].name:'')+'</div></td>'+
+        '<td>'+shares+'</td><td>$'+h.avg_price.toFixed(2)+'</td><td>$'+value.toFixed(2)+'</td>'+
+        '<td class="pnl '+(isUp?'up':'dn')+'">'+(isUp?'+':'-')+'$'+Math.abs(pnl).toFixed(2)+'</td></tr>';
     }).join('');
-
-    el.innerHTML = '<table class="data-table">'
-      + '<thead><tr><th>Asset</th><th>Shares</th><th>Avg Price</th><th>Value</th><th>P&amp;L</th></tr></thead>'
-      + '<tbody>' + rows + '</tbody></table>';
+    el.innerHTML='<table class="data-table"><thead><tr><th>Asset</th><th>Units</th><th>Avg Price</th><th>Value</th><th>P&L</th></tr></thead><tbody>'+rows+'</tbody></table>';
   }
 
-  function renderHistory() {
-    var el = document.getElementById('historyEl');
-    if (!tradeHistory.length) {
-      el.innerHTML = '<div class="empty">No trades yet.</div>';
-      return;
-    }
-    el.innerHTML = tradeHistory.map(function(t) {
-      var d   = new Date(t.created_at);
-      var fmt = d.toLocaleDateString('en-AU', { day:'2-digit', month:'short' })
-              + ' ' + d.toLocaleTimeString('en-AU', { hour:'2-digit', minute:'2-digit' });
-      return '<div class="hist-item">'
-        + '<div><span class="hist-badge ' + t.type + '">' + t.type + '</span>'
-        + '<span class="hist-sym">' + t.symbol + '</span>'
-        + '<div class="hist-sub">' + parseFloat(t.shares).toFixed(4) + ' shares @ $' + parseFloat(t.price).toFixed(2) + '</div></div>'
-        + '<div><div class="hist-val">$' + parseFloat(t.total).toFixed(2) + '</div>'
-        + '<div class="hist-time">' + fmt + '</div></div>'
-        + '</div>';
+  function renderHistory(){
+    var el=document.getElementById('historyEl');
+    if(!tradeHistory.length){ el.innerHTML='<div class="empty">No trades yet.</div>'; return; }
+    el.innerHTML=tradeHistory.map(function(t){
+      var d=new Date(t.created_at);
+      var fmt=d.toLocaleDateString('en-AU',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'});
+      return '<div class="hist-item"><div><span class="hist-badge '+t.type+'">'+t.type+'</span><span class="hist-sym">'+t.symbol+'</span><div class="hist-sub">'+parseFloat(t.shares).toFixed(4)+' units @ $'+parseFloat(t.price).toFixed(2)+'</div></div>'+
+        '<div><div class="hist-val">$'+parseFloat(t.total).toFixed(2)+'</div><div class="hist-time">'+fmt+'</div></div></div>';
     }).join('');
   }
 
-  // ─── TRADING ───────────────────────────────────────────────────
-  async function executeTrade() {
+  // ── TRADING ─────────────────────────────────────────────────────
+  async function executeTrade(){
     var sym    = document.getElementById('tradeSymbol').value;
     var amount = parseFloat(document.getElementById('tradeAmount').value);
     var msgEl  = document.getElementById('tradeMsg');
     var btn    = document.getElementById('tradeBtn');
+    msgEl.className='trade-msg'; msgEl.textContent='';
 
-    msgEl.className = 'trade-msg';
-    msgEl.textContent = '';
+    if(!amount||amount<1){ msgEl.className='trade-msg err'; msgEl.textContent='Minimum trade is $1.00'; return; }
 
-    if (!amount || amount < 1) {
-      msgEl.className = 'trade-msg err';
-      msgEl.textContent = 'Minimum trade is $1.00';
-      return;
-    }
+    var assets = getAssets();
+    if(!assets[sym]){ msgEl.className='trade-msg err'; msgEl.textContent='Asset not found in current market.'; return; }
+    var price=assets[sym].price, shares=amount/price;
 
-    var price  = ASSETS[sym].price;
-    var shares = amount / price;
-
-    if (tradeMode === 'buy') {
-      if (amount > portfolio.cash_balance) {
-        msgEl.className = 'trade-msg err';
-        msgEl.textContent = 'Not enough cash. Available: $' + portfolio.cash_balance.toFixed(2);
-        return;
-      }
-
-      btn.disabled = true;
-      btn.textContent = 'Processing…';
-
-      var newCash = portfolio.cash_balance - amount;
-
-      try {
-        // Update cash balance
-        await sb.from('portfolios')
-          .update({ cash_balance: newCash })
-          .eq('user_id', currentUser.id);
-        portfolio.cash_balance = newCash;
-
-        // Upsert holding
-        var existing = holdings.find(function(h) { return h.symbol === sym; });
-        if (existing) {
-          var totalShares = existing.shares + shares;
-          var newAvg      = ((existing.shares * existing.avg_price) + amount) / totalShares;
-          await sb.from('holdings')
-            .update({ shares: totalShares, avg_price: newAvg })
-            .eq('user_id', currentUser.id)
-            .eq('symbol', sym);
-          existing.shares    = totalShares;
-          existing.avg_price = newAvg;
+    if(tradeMode==='buy'){
+      if(amount>portfolio.cash_balance){ msgEl.className='trade-msg err'; msgEl.textContent='Not enough cash. Available: $'+portfolio.cash_balance.toFixed(2); return; }
+      btn.disabled=true; btn.textContent='Processing…';
+      var newCash=portfolio.cash_balance-amount;
+      try{
+        await sb.from('portfolios').update({cash_balance:newCash}).eq('user_id',currentUser.id);
+        portfolio.cash_balance=newCash;
+        var existing=holdings.find(function(h){return h.symbol===sym;});
+        if(existing){
+          var ts=existing.shares+shares, na=((existing.shares*existing.avg_price)+amount)/ts;
+          await sb.from('holdings').update({shares:ts,avg_price:na}).eq('user_id',currentUser.id).eq('symbol',sym);
+          existing.shares=ts; existing.avg_price=na;
         } else {
-          var insRes = await sb.from('holdings')
-            .insert({ user_id: currentUser.id, symbol: sym, shares: shares, avg_price: price })
-            .select().single();
-          if (insRes.data) holdings.push(insRes.data);
+          var ir=await sb.from('holdings').insert({user_id:currentUser.id,symbol:sym,shares,avg_price:price}).select().single();
+          if(ir.data) holdings.push(ir.data);
         }
-
-        // Log trade
-        var tradeRes = await sb.from('trades')
-          .insert({ user_id: currentUser.id, symbol: sym, type: 'buy', shares: shares, price: price, total: amount })
-          .select().single();
-        if (tradeRes.data) tradeHistory.unshift(tradeRes.data);
-
-        showToast('Bought ' + shares.toFixed(4) + ' ' + sym + ' for $' + amount.toFixed(2), 'ok');
-
-      } catch(e) {
-        msgEl.className  = 'trade-msg err';
-        msgEl.textContent = 'Trade failed. Please try again.';
-        // Revert cash
-        portfolio.cash_balance += amount;
-      }
+        var tr=await sb.from('trades').insert({user_id:currentUser.id,symbol:sym,type:'buy',shares,price,total:amount}).select().single();
+        if(tr.data) tradeHistory.unshift(tr.data);
+        showToast('Bought '+shares.toFixed(4)+' '+sym+' for $'+amount.toFixed(2),'ok');
+      }catch(e){ msgEl.className='trade-msg err'; msgEl.textContent='Trade failed. Try again.'; portfolio.cash_balance+=amount; }
 
     } else {
-      // SELL
-      var holding = holdings.find(function(h) { return h.symbol === sym; });
-      if (!holding || holding.shares <= 0) {
-        msgEl.className = 'trade-msg err';
-        msgEl.textContent = 'You don\'t hold any ' + sym;
-        return;
-      }
-      var sellShares = amount / price;
-      if (sellShares > holding.shares + 0.000001) {
-        msgEl.className  = 'trade-msg err';
-        msgEl.textContent = 'You only hold ' + holding.shares.toFixed(4) + ' ' + sym
-          + ' (worth ~$' + (holding.shares * price).toFixed(2) + ')';
-        return;
-      }
-
-      btn.disabled = true;
-      btn.textContent = 'Processing…';
-
-      var proceeds = sellShares * price;
-      var newCashS = portfolio.cash_balance + proceeds;
-
-      try {
-        await sb.from('portfolios')
-          .update({ cash_balance: newCashS })
-          .eq('user_id', currentUser.id);
-        portfolio.cash_balance = newCashS;
-
-        var newShares = holding.shares - sellShares;
-        if (newShares < 0.000001) {
-          await sb.from('holdings')
-            .delete()
-            .eq('user_id', currentUser.id)
-            .eq('symbol', sym);
-          holdings = holdings.filter(function(h) { return h.symbol !== sym; });
-        } else {
-          await sb.from('holdings')
-            .update({ shares: newShares })
-            .eq('user_id', currentUser.id)
-            .eq('symbol', sym);
-          holding.shares = newShares;
-        }
-
-        var sellRes = await sb.from('trades')
-          .insert({ user_id: currentUser.id, symbol: sym, type: 'sell', shares: sellShares, price: price, total: proceeds })
-          .select().single();
-        if (sellRes.data) tradeHistory.unshift(sellRes.data);
-
-        showToast('Sold ' + sellShares.toFixed(4) + ' ' + sym + ' for $' + proceeds.toFixed(2), 'ok');
-
-      } catch(e) {
-        msgEl.className   = 'trade-msg err';
-        msgEl.textContent = 'Trade failed. Please try again.';
-        portfolio.cash_balance -= proceeds;
-      }
+      var holding=holdings.find(function(h){return h.symbol===sym;});
+      if(!holding||holding.shares<=0){ msgEl.className='trade-msg err'; msgEl.textContent='You don\'t hold any '+sym; return; }
+      var sellShares=amount/price;
+      if(sellShares>holding.shares+0.000001){ msgEl.className='trade-msg err'; msgEl.textContent='You only hold '+holding.shares.toFixed(4)+' '+sym+' (~$'+(holding.shares*price).toFixed(2)+')'; return; }
+      btn.disabled=true; btn.textContent='Processing…';
+      var proceeds=sellShares*price, newCashS=portfolio.cash_balance+proceeds;
+      try{
+        await sb.from('portfolios').update({cash_balance:newCashS}).eq('user_id',currentUser.id);
+        portfolio.cash_balance=newCashS;
+        var ns=holding.shares-sellShares;
+        if(ns<0.000001){ await sb.from('holdings').delete().eq('user_id',currentUser.id).eq('symbol',sym); holdings=holdings.filter(function(h){return h.symbol!==sym;}); }
+        else{ await sb.from('holdings').update({shares:ns}).eq('user_id',currentUser.id).eq('symbol',sym); holding.shares=ns; }
+        var sr=await sb.from('trades').insert({user_id:currentUser.id,symbol:sym,type:'sell',shares:sellShares,price,total:proceeds}).select().single();
+        if(sr.data) tradeHistory.unshift(sr.data);
+        showToast('Sold '+sellShares.toFixed(4)+' '+sym+' for $'+proceeds.toFixed(2),'ok');
+      }catch(e){ msgEl.className='trade-msg err'; msgEl.textContent='Trade failed. Try again.'; portfolio.cash_balance-=proceeds; }
     }
 
-    // Reset button
-    btn.disabled = false;
-    btn.textContent = tradeMode.charAt(0).toUpperCase() + tradeMode.slice(1);
-    document.getElementById('tradeAmount').value = '';
-    updateSummary();
-    updatePortfolioStats();
-    renderHoldings();
-    renderHistory();
+    btn.disabled=false; btn.textContent=tradeMode.charAt(0).toUpperCase()+tradeMode.slice(1);
+    document.getElementById('tradeAmount').value='';
+    updateSummary(); updatePortfolioStats(); renderHoldings(); renderHistory();
   }
 
-  function showToast(msg, type) {
-    var t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className   = 'toast ' + (type || 'ok') + ' show';
-    setTimeout(function() { t.classList.remove('show'); }, 3500);
+  function showToast(msg,type){
+    var t=document.getElementById('toast');
+    t.textContent=msg; t.className='toast '+(type||'ok')+' show';
+    setTimeout(function(){t.classList.remove('show');},3500);
   }
 
   init();
