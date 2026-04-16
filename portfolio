@@ -493,5 +493,13 @@
             console.log('%c💡 Next: Connect this to Supabase? Just give me your table names and I’ll add real fetch() calls.', 'color:#eab308')
         }
     </script>
+<script>
+    // Auth guard — redirect to login if not logged in
+    async function checkAuth() {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) window.location.href = 'auth.html'
+    }
+    window.onload = () => { checkAuth(); /* your existing onload code */ }
+</script>
 </body>
 </html>
