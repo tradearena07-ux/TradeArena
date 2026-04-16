@@ -508,5 +508,13 @@
             }, 2200)
         }
     </script>
+    <script>
+    // Auth guard — redirect to login if not logged in
+    async function checkAuth() {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) window.location.href = 'auth.html'
+    }
+    window.onload = () => { checkAuth(); /* your existing onload code */ }
+</script>
 </body>
 </html>
