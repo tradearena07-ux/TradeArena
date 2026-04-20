@@ -1,0 +1,17 @@
+{
+  "name": "trade-arena",
+  "version": "1.0.0",
+  "description": "TradeArena - Trade. Battle. Grow.",
+  "type": "module",
+  "scripts": {
+    "dev": "npx serve .",
+    "build": "echo 'Static HTML project - no build needed'"
+  },
+  "keywords": ["trading", "arena"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@vercel/speed-insights": "^1.0.14"
+  },
+  "devDependencies": {}
+}
