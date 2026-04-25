@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 46">
+  <path d="M20 2L36 9V22C36 31 29 39 20 43C11 39 4 31 4 22V9L20 2Z" fill="#091528" stroke="#c9a030" stroke-width="1.5"/>
+  <path d="M20 8L30 12.5V21C30 26.5 25.5 31.5 20 34C14.5 31.5 10 26.5 10 21V12.5L20 8Z" fill="none" stroke="#e8c060" stroke-width="0.75" opacity="0.6"/>
+  <text x="20" y="27" text-anchor="middle" font-family="serif" font-size="13" font-weight="bold" fill="#e8c060">&#8383;</text>
+  <polyline points="12,24 17,19 20,22 28,13" fill="none" stroke="#c9a030" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

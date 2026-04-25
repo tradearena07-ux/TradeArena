@@ -4,256 +4,335 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TradeArena — Enter the Arena</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=Cinzel+Decorative:wght@700&amp;family=DM+Sans:wght@300;400;500&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/styles.css"/>
   <style>
-    :root{
-      --navy:#060e1c;--navy2:#091528;--navy3:#0d1e3a;--navy4:#0a1830;
-      --gold:#c9a030;--gold2:#e8c060;--cream:#f2e8cc;--muted:#7a8aaa;
-      --border:rgba(201,160,48,0.22);--bdl:rgba(201,160,48,0.08);
-      --green:#4ade80;--red:#f87171;--blue:#60a5fa;
-    }
-    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
-    html,body{height:100%;}
-    body{background:var(--navy);color:var(--cream);font-family:'DM Sans',sans-serif;font-weight:300;display:flex;min-height:100vh;overflow-x:hidden;}
-    .left{width:400px;flex-shrink:0;background:var(--navy2);border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:center;padding:56px 48px;position:relative;overflow:hidden;}
-    .left::before{content:'';position:absolute;top:-100px;left:-100px;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(201,160,48,0.08) 0%,transparent 70%);pointer-events:none;}
-    .left::after{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(-55deg,transparent,transparent 40px,rgba(201,160,48,0.022) 40px,rgba(201,160,48,0.022) 41px);pointer-events:none;}
-    .li{position:relative;z-index:1;}
-    .logo{display:flex;align-items:center;gap:12px;text-decoration:none;margin-bottom:48px;}
-    .logo-txt{font-family:'Cinzel Decorative',serif;font-size:1.1rem;font-weight:700;letter-spacing:0.05em;color:var(--gold2);}
-    .logo-txt span{color:var(--cream);}
-    .lh{font-family:'Cinzel',serif;font-size:2rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;line-height:1.1;margin-bottom:16px;}
-    .lh em{display:block;color:var(--gold2);font-style:italic;font-weight:400;}
-    .lsub{font-size:0.88rem;color:var(--muted);line-height:1.85;margin-bottom:36px;}
-    .perk{display:flex;align-items:flex-start;gap:13px;margin-bottom:16px;font-size:0.86rem;color:var(--muted);}
-    .pico{width:34px;height:34px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;clip-path:polygon(4px 0%,100% 0%,calc(100% - 4px) 100%,0% 100%);margin-top:1px;}
+    body{display:flex;flex-direction:column;}
+    .auth-wrap{flex:1;display:grid;grid-template-columns:420px 1fr;min-height:calc(100vh - 80px);}
+    .auth-left{background:var(--navy2);border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:center;padding:48px;position:relative;overflow:hidden;}
+    .auth-left::before{content:'';position:absolute;top:-100px;left:-100px;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(201,160,48,.08) 0%,transparent 70%);pointer-events:none;}
+    .auth-left::after{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(-55deg,transparent,transparent 40px,rgba(201,160,48,.022) 40px,rgba(201,160,48,.022) 41px);pointer-events:none;}
+    .auth-left > *{position:relative;z-index:1;}
+    .auth-headline{font-family:'Cinzel',serif;font-size:1.9rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;line-height:1.1;margin-bottom:16px;}
+    .auth-headline em{display:block;color:var(--gold2);font-style:italic;font-weight:400;}
+    .perk{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px;font-size:.9rem;color:var(--muted);line-height:1.5;}
+    .pico{width:36px;height:36px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;clip-path:polygon(4px 0%,100% 0%,calc(100% - 4px) 100%,0% 100%);background:var(--navy3);}
     .perk strong{color:var(--cream);}
-    .right{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 32px;position:relative;}
-    .right::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:600px;height:360px;background:radial-gradient(ellipse at top,rgba(201,160,48,0.07) 0%,transparent 65%);pointer-events:none;}
-    .card{position:relative;z-index:1;width:100%;max-width:400px;}
-    .ttoggle{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--border);margin-bottom:28px;}
-    .tbtn{padding:14px 10px;text-align:center;cursor:pointer;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);background:transparent;border:none;border-bottom:2px solid transparent;transition:all 0.2s;}
+    .auth-right{flex:1;display:flex;align-items:center;justify-content:center;padding:48px 32px;position:relative;}
+    .auth-right::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:600px;height:360px;background:radial-gradient(ellipse at top,rgba(201,160,48,.07) 0%,transparent 65%);pointer-events:none;}
+    .auth-card{position:relative;z-index:1;width:100%;max-width:420px;}
+    .toggle-row{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--border);margin-bottom:28px;border-radius:8px;overflow:hidden;}
+    .tbtn{padding:14px 10px;text-align:center;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);background:transparent;border:none;border-bottom:2px solid transparent;transition:all .2s;}
     .tbtn .ticon{display:block;font-size:20px;margin-bottom:4px;}
     .tbtn .tsub{display:block;font-family:'DM Sans',sans-serif;font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);margin-top:3px;font-weight:300;}
-    .tbtn.as{color:var(--gold2);border-bottom-color:var(--gold);background:rgba(201,160,48,0.07);}
-    .tbtn.ap{color:var(--blue);border-bottom-color:var(--blue);background:rgba(96,165,250,0.07);}
+    .tbtn.as{color:var(--gold2);border-bottom-color:var(--gold);background:rgba(201,160,48,.07);}
+    .tbtn.ap{color:var(--blue);border-bottom-color:var(--blue);background:rgba(96,165,250,.07);}
     .tbtn.ap .tsub{color:var(--blue);}
-    .stag{font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.26em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+    .stag{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:12px;margin-bottom:14px;}
     .stag::before{content:'';display:block;width:22px;height:1px;background:var(--gold);}
-    h1{font-family:'Cinzel',serif;font-size:1.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;line-height:1.15;margin-bottom:8px;}
-    .sub{font-size:0.87rem;color:var(--muted);line-height:1.78;margin-bottom:24px;}
-    .ebox{display:none;border-left:3px solid var(--red);background:rgba(248,113,113,0.07);padding:11px 14px;margin-bottom:14px;font-size:12.5px;color:#fca5a5;line-height:1.65;}
-    .ebox.show{display:block;}
-    .field{margin-bottom:13px;}
-    .field label{display:block;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
-    .field input{width:100%;padding:14px 16px;background:var(--navy3);border:1px solid var(--border);color:var(--cream);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color 0.2s,background 0.2s;}
-    .field input::placeholder{color:var(--muted);}
-    .field input:focus{border-color:var(--gold);background:var(--navy4);}
-    .field input.ferr{border-color:var(--red);}
-    .btn{width:100%;padding:15px;background:linear-gradient(135deg,var(--gold) 0%,var(--gold2) 50%,var(--gold) 100%);background-size:200% auto;color:var(--navy);border:none;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;transition:background-position 0.5s,opacity 0.2s;clip-path:polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%);}
-    .btn:hover:not(:disabled){background-position:right center;}
-    .btn:disabled{opacity:0.45;cursor:not-allowed;}
-    .bghost{width:100%;padding:12px;background:transparent;border:1px solid var(--bdl);color:var(--muted);cursor:pointer;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;margin-top:10px;transition:border-color 0.2s,color 0.2s;}
-    .bghost:hover{border-color:var(--border);color:var(--cream);}
-    .otp-to{font-size:12.5px;color:var(--muted);text-align:center;margin-bottom:22px;line-height:1.75;}
-    .otp-to strong{display:block;color:var(--gold2);font-size:13.5px;margin-top:4px;}
-    .orow{display:flex;gap:9px;justify-content:center;margin-bottom:10px;}
-    .obox{width:56px;height:65px;text-align:center;font-family:'Cinzel',serif;font-size:1.85rem;font-weight:700;background:var(--navy3);border:1px solid var(--border);color:var(--gold2);outline:none;caret-color:transparent;transition:border-color 0.15s,background 0.15s,transform 0.1s;}
+    .auth-card h1{font-family:'Cinzel',serif;font-size:1.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;line-height:1.15;margin-bottom:10px;}
+    .sub{font-size:.9rem;color:var(--muted);line-height:1.7;margin-bottom:22px;}
+    .otp-to{font-size:13px;color:var(--muted);text-align:center;margin-bottom:18px;line-height:1.6;}
+    .otp-to strong{display:block;color:var(--gold2);font-size:14px;margin-top:4px;}
+    .orow{display:flex;gap:9px;justify-content:center;margin-bottom:14px;}
+    .obox{width:50px;height:60px;text-align:center;font-family:'Cinzel',serif;font-size:1.7rem;font-weight:700;background:var(--navy3);border:1px solid var(--border);color:var(--gold2);outline:none;caret-color:transparent;border-radius:8px;transition:all .15s;}
     .obox:focus{border-color:var(--gold);background:var(--navy4);transform:scale(1.05);}
-    .obox.filled{border-color:rgba(201,160,48,0.55);background:rgba(201,160,48,0.04);}
-    .obox.shk{border-color:var(--red);animation:shk 0.4s ease;}
+    .obox.filled{border-color:rgba(201,160,48,.55);background:rgba(201,160,48,.04);}
+    .obox.shk{border-color:var(--red);animation:shk .4s ease;}
     @keyframes shk{0%,100%{transform:translateX(0);}25%,75%{transform:translateX(-6px);}50%{transform:translateX(6px);}}
-    .otimer{font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.1em;color:var(--muted);text-align:center;margin-bottom:18px;}
+    .otimer{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.1em;color:var(--muted);text-align:center;margin-bottom:18px;}
     .otimer .tc{color:var(--gold);}
     .otimer .exp{color:var(--red);}
-    .note{margin-top:14px;font-size:11px;color:var(--muted);text-align:center;line-height:1.75;font-family:'Cinzel',serif;letter-spacing:0.04em;}
-    .note a{color:var(--gold);text-decoration:none;}
+    .note{margin-top:14px;font-size:11px;color:var(--muted);text-align:center;line-height:1.7;font-family:'Cinzel',serif;letter-spacing:.04em;}
+    .note a{color:var(--gold);text-decoration:none;cursor:pointer;}
     .ustrip{margin-top:22px;padding-top:18px;border-top:1px solid var(--bdl);}
-    .ulbl{font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;text-align:center;}
+    .ulbl{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;text-align:center;}
     .ubadges{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;}
-    .ubadge{font-size:9px;font-family:'Cinzel',serif;letter-spacing:0.05em;padding:3px 10px;border:1px solid rgba(201,160,48,0.12);color:var(--muted);}
+    .ubadge{font-size:9px;font-family:'Cinzel',serif;letter-spacing:.05em;padding:3px 10px;border:1px solid rgba(201,160,48,.18);color:var(--muted);border-radius:9999px;}
     .step{display:none;}
     .step.on{display:block;}
-    .spin{display:inline-block;width:12px;height:12px;border:2px solid rgba(6,14,28,0.3);border-top-color:var(--navy);border-radius:50%;animation:sp 0.7s linear infinite;vertical-align:middle;margin-right:6px;}
-    @keyframes sp{to{transform:rotate(360deg);}}
-    .redir{text-align:center;padding:20px 0;font-size:0.9rem;color:var(--muted);}
+    .demo-banner{background:rgba(201,160,48,.1);border:1px dashed var(--gold);border-radius:8px;padding:14px 16px;margin-bottom:14px;text-align:center;font-size:13px;color:var(--cream);}
+    .demo-banner .code{display:block;font-family:'Cinzel',serif;font-size:1.6rem;letter-spacing:.5em;color:var(--gold2);margin-top:6px;font-weight:700;}
+    .demo-banner small{color:var(--muted);font-size:11px;display:block;margin-top:6px;}
+    @media(max-width:780px){.auth-wrap{grid-template-columns:1fr;}.auth-left{display:none;}}
   </style>
 </head>
 <body>
 
-<div class="left">
-  <div class="li">
-    <a href="index.html" class="logo">
-      <svg width="34" height="40" viewBox="0 0 40 46" fill="none">
-        <path d="M20 2L36 9V22C36 31 29 39 20 43C11 39 4 31 4 22V9L20 2Z" fill="#091528" stroke="#c9a030" stroke-width="1"/>
-        <path d="M20 8L30 12.5V21C30 26.5 25.5 31.5 20 34C14.5 31.5 10 26.5 10 21V12.5L20 8Z" fill="none" stroke="#e8c060" stroke-width="0.75" opacity="0.6"/>
-        <text x="20" y="27" text-anchor="middle" font-family="serif" font-size="12" font-weight="bold" fill="#e8c060">&#8383;</text>
-        <polyline points="12,24 17,19 20,22 28,13" fill="none" stroke="#c9a030" stroke-width="1.5" stroke-linecap="round"/>
-      </svg>
-      <div class="logo-txt">Trade<span>Arena</span></div>
-    </a>
-    <div class="lh">Where traders<br><em>battle &amp; grow.</em></div>
-    <p class="lsub">Paper trade real stocks and crypto. Compete on campus leaderboards. Zero risk. Real skills.</p>
+<div id="tarena-nav"></div>
+
+<div class="auth-wrap">
+
+  <!-- BRAND PANEL -->
+  <div class="auth-left">
+    <div class="auth-headline">Where traders<br><em>battle &amp; grow.</em></div>
+    <p class="text-muted" style="font-size:.92rem;line-height:1.7;margin-bottom:28px;">Paper trade real stocks and crypto. Compete on campus leaderboards. Zero risk. Real skills.</p>
     <div class="perk"><div class="pico">$1</div><div><strong>Fractional trading</strong> from $1 — own any asset, any size.</div></div>
-    <div class="perk"><div class="pico">🏆</div><div><strong>Campus leagues</strong> — USyd vs UNSW every Monday.</div></div>
-    <div class="perk"><div class="pico">🌍</div><div><strong>4 markets</strong> — US, India, Crypto &amp; ASX in one arena.</div></div>
-    <div class="perk"><div class="pico">$0</div><div><strong>Zero brokerage</strong> forever for first 500 warriors.</div></div>
+    <div class="perk"><div class="pico">🏆</div><div><strong>Campus leagues</strong> — USYD vs UNSW every Monday.</div></div>
+    <div class="perk"><div class="pico">🌍</div><div><strong>4 markets</strong> — ASX, US, Crypto &amp; more in one arena.</div></div>
+    <div class="perk"><div class="pico">$0</div><div><strong>Zero brokerage</strong> forever for the first 500 warriors.</div></div>
   </div>
-</div>
 
-<div class="right">
-  <div class="card">
-    <div id="redir" style="display:none;"><p class="redir">Already signed in. Redirecting to dashboard…</p></div>
+  <!-- FORM -->
+  <div class="auth-right">
+    <div class="auth-card">
 
-    <!-- STEP 1 -->
-    <div class="step on" id="s1">
-      <div class="ttoggle">
-        <button class="tbtn as" id="btnS" onclick="setType('student')">
-          <span class="ticon">🎓</span>Student<span class="tsub">Requires .edu.au</span>
-        </button>
-        <button class="tbtn" id="btnP" onclick="setType('public')">
-          <span class="ticon">🌐</span>Public<span class="tsub">Any email</span>
-        </button>
-      </div>
-      <div class="stag" id="stag">Student Access</div>
-      <h1>Enter<br>the Arena</h1>
-      <p class="sub" id="sub1">Enter your university email. We'll send a 6‑digit code — verify right here.</p>
-      <div class="ebox" id="e1"></div>
-      <div class="field">
-        <label id="elbl">University Email</label>
-        <input type="email" id="eIn" placeholder="you@student.unsw.edu.au" autocomplete="email"/>
-      </div>
-      <button class="btn" id="sendBtn" onclick="sendCode()">Send 6‑Digit Code</button>
-      <p class="note" id="n1">Must be a university email (.edu.au) &nbsp;·&nbsp; <a href="index.html">← Back</a></p>
-      <div id="ustrip" class="ustrip">
-        <div class="ulbl">Accepted institutions</div>
-        <div class="ubadges">
-          <span class="ubadge">unsw.edu.au</span><span class="ubadge">usyd.edu.au</span>
-          <span class="ubadge">uts.edu.au</span><span class="ubadge">mq.edu.au</span>
-          <span class="ubadge">unimelb.edu.au</span><span class="ubadge">monash.edu</span>
-          <span class="ubadge">anu.edu.au</span><span class="ubadge">+ all .edu.au</span>
+      <div class="step on" id="s1">
+        <div class="toggle-row">
+          <button class="tbtn as" id="btnS" onclick="setType('student')">
+            <span class="ticon">🎓</span>Student<span class="tsub">.edu.au required</span>
+          </button>
+          <button class="tbtn" id="btnP" onclick="setType('public')">
+            <span class="ticon">🌐</span>Public<span class="tsub">Any email</span>
+          </button>
+        </div>
+        <div class="stag" id="stag">Student Access</div>
+        <h1>Enter<br>the Arena</h1>
+        <p class="sub" id="sub1">Enter your university email. We'll send a 6-digit code — verify right here.</p>
+        <div class="error-box" id="e1"></div>
+        <div class="field">
+          <label id="elbl">University Email</label>
+          <input type="email" id="eIn" placeholder="you@student.unsw.edu.au" autocomplete="email"/>
+        </div>
+        <button class="btn-gold full" id="sendBtn" onclick="sendCode()">Send 6-Digit Code</button>
+        <p class="note" id="n1">Must be a university email (.edu.au) &nbsp;·&nbsp; <a href="index.html">← Back</a></p>
+        <div class="ustrip" id="ustrip">
+          <div class="ulbl">Accepted institutions</div>
+          <div class="ubadges">
+            <span class="ubadge">unsw.edu.au</span><span class="ubadge">usyd.edu.au</span>
+            <span class="ubadge">uts.edu.au</span><span class="ubadge">mq.edu.au</span>
+            <span class="ubadge">unimelb.edu.au</span><span class="ubadge">monash.edu</span>
+            <span class="ubadge">anu.edu.au</span><span class="ubadge">+ all .edu.au</span>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- STEP 2 - OTP SCREEN -->
-    <div class="step" id="s2">
-      <div class="stag">Verification Code</div>
-      <h1>Enter<br>Your Code</h1>
-      <p class="otp-to">6‑digit code sent to<strong id="sentTo">—</strong></p>
-      <div class="ebox" id="e2"></div>
-      <div class="orow">
-        <input class="obox" id="d1" maxlength="1" inputmode="numeric" autocomplete="one-time-code"/>
-        <input class="obox" id="d2" maxlength="1" inputmode="numeric"/>
-        <input class="obox" id="d3" maxlength="1" inputmode="numeric"/>
-        <input class="obox" id="d4" maxlength="1" inputmode="numeric"/>
-        <input class="obox" id="d5" maxlength="1" inputmode="numeric"/>
-        <input class="obox" id="d6" maxlength="1" inputmode="numeric"/>
+      <div class="step" id="s2">
+        <div class="stag">Verification Code</div>
+        <h1>Enter<br>Your Code</h1>
+        <p class="otp-to">6-digit code sent to<strong id="sentTo">—</strong></p>
+        <div class="demo-banner" id="demoBanner" style="display:none;">
+          <div>📨 <strong>Demo mode</strong> — your code is</div>
+          <span class="code" id="demoCode">000000</span>
+          <small>(In production this is emailed. Static demos show it here.)</small>
+        </div>
+        <div class="error-box" id="e2"></div>
+        <div class="orow">
+          <input class="obox" id="d1" maxlength="1" inputmode="numeric" autocomplete="one-time-code"/>
+          <input class="obox" id="d2" maxlength="1" inputmode="numeric"/>
+          <input class="obox" id="d3" maxlength="1" inputmode="numeric"/>
+          <input class="obox" id="d4" maxlength="1" inputmode="numeric"/>
+          <input class="obox" id="d5" maxlength="1" inputmode="numeric"/>
+          <input class="obox" id="d6" maxlength="1" inputmode="numeric"/>
+        </div>
+        <div class="otimer" id="timerEl">Code expires in <span class="tc" id="tc">10:00</span></div>
+        <button class="btn-gold full" id="vBtn" onclick="verify()">Verify &amp; Enter Arena</button>
+        <button class="btn-ghost full" style="margin-top:12px;" onclick="goBack()">← Change Email</button>
+        <p class="note" style="margin-top:14px;">No email? Check spam &nbsp;·&nbsp; <a onclick="resend();return false;">Resend →</a></p>
       </div>
-      <div class="otimer" id="timerEl">Code expires in <span class="tc" id="tc">10:00</span></div>
-      <button class="btn" id="vBtn" onclick="verify()">Verify &amp; Enter Arena</button>
-      <button class="bghost" onclick="goBack()">← Change Email</button>
-      <p class="note" style="margin-top:14px;">No email? Check spam &nbsp;·&nbsp; <a href="#" onclick="resend();return false;">Resend →</a></p>
+
+      <div class="step" id="s3">
+        <div class="stag" style="color:var(--green);">Welcome, Warrior</div>
+        <h1>You're in!</h1>
+        <p class="sub">Redirecting to the arena…</p>
+        <div style="text-align:center;padding:30px 0;">
+          <span class="spin" style="width:32px;height:32px;border-width:3px;border-color:rgba(201,160,48,.3);border-top-color:var(--gold);"></span>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
 
+<script src="assets/app.js"></script>
 <script>
-  const SUPA_URL = 'https://chncykagtzotdtflkhim.supabase.co';
-  const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNobmN5a2FndHpvdGR0ZmxraGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDYxNjIsImV4cCI6MjA5MTIyMjE2Mn0.ZRrZcBn_hLAPP7xL3kWgkpH5itLIIXzCWb_9_Ics_OE';
-  const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+  TArenaUI.renderNav('auth');
 
-  let uType = 'student', curEmail = '', timerInt = null;
+  // If already signed in, skip straight to the arena.
+  (function () {
+    if (TArenaAuth.getSession()) {
+      document.getElementById('s1').classList.remove('on');
+      document.getElementById('s3').classList.add('on');
+      setTimeout(() => window.location.href = 'trade.html', 1200);
+    }
+  })();
+
+  let uType = 'student';
+  let timerInterval = null;
   const DS = ['d1','d2','d3','d4','d5','d6'];
 
-  function setType(t) { /* your original setType - unchanged */ 
+  function setType(t) {
     uType = t;
-    document.getElementById('btnS').className = 'tbtn' + (t==='student'?' as':'');
-    document.getElementById('btnP').className = 'tbtn' + (t==='public'?' ap':'');
-    // ... rest of your original setType code (I kept it identical)
+    document.getElementById('btnS').className = 'tbtn' + (t === 'student' ? ' as' : '');
+    document.getElementById('btnP').className = 'tbtn' + (t === 'public' ? ' ap' : '');
     if (t === 'student') {
       document.getElementById('stag').textContent = 'Student Access';
       document.getElementById('elbl').textContent = 'University Email';
       document.getElementById('eIn').placeholder = 'you@student.unsw.edu.au';
-      document.getElementById('sub1').textContent = 'Enter your university email. We\'ll send a 6‑digit code — verify right here.';
+      document.getElementById('sub1').textContent = 'Enter your university email. We\'ll send a 6-digit code — verify right here.';
       document.getElementById('n1').innerHTML = 'Must be a university email (.edu.au) &nbsp;·&nbsp; <a href="index.html">← Back</a>';
       document.getElementById('ustrip').style.display = 'block';
     } else {
       document.getElementById('stag').textContent = 'Public Access';
       document.getElementById('elbl').textContent = 'Your Email';
       document.getElementById('eIn').placeholder = 'you@gmail.com';
-      document.getElementById('sub1').textContent = 'Anyone can join TradeArena. Enter any email to get your 6‑digit verification code.';
+      document.getElementById('sub1').textContent = 'Anyone can join TradeArena. Enter any email to get your 6-digit verification code.';
       document.getElementById('n1').innerHTML = 'Open to everyone &nbsp;·&nbsp; <a href="index.html">← Back</a>';
       document.getElementById('ustrip').style.display = 'none';
     }
+    document.getElementById('eIn').classList.remove('err');
+    hideError('e1');
   }
 
-  async function sendCode() {
+  function showError(id, msg) {
+    const el = document.getElementById(id);
+    el.innerHTML = msg;
+    el.classList.add('show');
+  }
+  function hideError(id) {
+    const el = document.getElementById(id);
+    el.classList.remove('show');
+  }
+
+  function sendCode() {
     const email = document.getElementById('eIn').value.trim().toLowerCase();
     const btn = document.getElementById('sendBtn');
-    console.log('%c[DEBUG] sendCode started for email:', 'color:#e8c060', email);
+    hideError('e1');
+    document.getElementById('eIn').classList.remove('err');
 
-    // your original validation
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      document.getElementById('eIn').classList.add('ferr');
-      showE('e1','Please enter a valid email address.');
-      return;
-    }
-    if (uType==='student' && !isUni(email)) {
-      document.getElementById('eIn').classList.add('ferr');
-      showE('e1','Please use your university email (.edu.au).');
-      return;
-    }
-
-    curEmail = email;
     btn.disabled = true;
     btn.innerHTML = '<span class="spin"></span>Sending Code…';
 
-    try {
-      const { error } = await sb.auth.signInWithOtp({
-        email,
-        options: { shouldCreateUser: true }
-      });
-
-      console.log('%c[DEBUG] Supabase response:', 'color:#e8c060', {error});
-
-      if (error) {
-        showE('e1', error.message);
-        btn.disabled = false;
-        btn.textContent = 'Send 6‑Digit Code';
+    const result = TArenaAuth.sendOtp(email, uType);
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.innerHTML = 'Send 6-Digit Code';
+      if (!result.ok) {
+        document.getElementById('eIn').classList.add('err');
+        showError('e1', result.error);
         return;
       }
-
-      // SUCCESS - force show OTP screen
+      // Move to OTP step
       document.getElementById('sentTo').textContent = email;
+      document.getElementById('demoBanner').style.display = 'block';
+      document.getElementById('demoCode').textContent = result.code;
       document.getElementById('s1').classList.remove('on');
       document.getElementById('s2').classList.add('on');
-      startTimer(600);
-      setTimeout(()=>document.getElementById('d1').focus(), 100);
-      console.log('%c✅ OTP screen shown successfully!', 'color:#4ade80');
-    } catch(e) {
-      console.error('%c[ERROR] Supabase call failed:', e);
-      showE('e1','Network or Supabase error. Check console (F12) and tell me what you see.');
-    } finally {
+      DS.forEach(id => { document.getElementById(id).value = ''; document.getElementById(id).classList.remove('filled', 'shk'); });
+      startTimer(result.expiresAt);
+      setTimeout(() => document.getElementById('d1').focus(), 100);
+    }, 450);
+  }
+
+  function startTimer(expiresAt) {
+    if (timerInterval) clearInterval(timerInterval);
+    const tc = document.getElementById('tc');
+    function tick() {
+      const remain = Math.max(0, expiresAt - Date.now());
+      const m = Math.floor(remain / 60000);
+      const s = Math.floor((remain % 60000) / 1000);
+      tc.textContent = `${m}:${String(s).padStart(2,'0')}`;
+      if (remain === 0) {
+        tc.className = 'exp';
+        tc.textContent = 'EXPIRED';
+        clearInterval(timerInterval);
+      }
+    }
+    tick();
+    timerInterval = setInterval(tick, 1000);
+  }
+
+  function verify() {
+    const code = DS.map(id => document.getElementById(id).value).join('');
+    if (code.length !== 6) {
+      showError('e2', 'Please enter all 6 digits.');
+      DS.forEach(id => document.getElementById(id).classList.add('shk'));
+      setTimeout(() => DS.forEach(id => document.getElementById(id).classList.remove('shk')), 400);
+      return;
+    }
+    const btn = document.getElementById('vBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin"></span>Verifying…';
+    setTimeout(() => {
+      const r = TArenaAuth.verifyOtp(code);
       btn.disabled = false;
-      btn.textContent = 'Send 6‑Digit Code';
+      btn.innerHTML = 'Verify &amp; Enter Arena';
+      if (!r.ok) {
+        showError('e2', r.error);
+        DS.forEach(id => document.getElementById(id).classList.add('shk'));
+        setTimeout(() => DS.forEach(id => document.getElementById(id).classList.remove('shk')), 400);
+        return;
+      }
+      hideError('e2');
+      document.getElementById('s2').classList.remove('on');
+      document.getElementById('s3').classList.add('on');
+      setTimeout(() => window.location.href = 'trade.html', 900);
+    }, 350);
+  }
+
+  function resend() {
+    const email = document.getElementById('sentTo').textContent;
+    if (!email || email === '—') return;
+    const r = TArenaAuth.sendOtp(email, uType);
+    if (r.ok) {
+      document.getElementById('demoCode').textContent = r.code;
+      startTimer(r.expiresAt);
+      hideError('e2');
+      DS.forEach(id => { document.getElementById(id).value = ''; document.getElementById(id).classList.remove('filled'); });
+      document.getElementById('d1').focus();
     }
   }
 
-  // Rest of your original OTP wiring, verify, resend, goBack, timer, etc. (kept 100% identical)
-  // ... (the full OTP box listeners, verify function, startTimer, resend, etc. are exactly as you had)
+  function goBack() {
+    if (timerInterval) clearInterval(timerInterval);
+    document.getElementById('s2').classList.remove('on');
+    document.getElementById('s1').classList.add('on');
+    document.getElementById('eIn').focus();
+  }
 
-  // Auto-login check
-  (async function(){
-    const {data} = await sb.auth.getSession();
-    if(data?.session){
-      document.getElementById('s1').style.display='none';
-      document.getElementById('redir').style.display='block';
-      setTimeout(()=>window.location.href='trade.html',1400);
-    }
-  })();
+  // OTP input handling
+  DS.forEach((id, i) => {
+    const inp = document.getElementById(id);
+    inp.addEventListener('input', e => {
+      const v = e.target.value.replace(/\D/g, '').slice(-1);
+      e.target.value = v;
+      if (v) {
+        inp.classList.add('filled');
+        if (i < 5) document.getElementById(DS[i+1]).focus();
+        else if (DS.every(x => document.getElementById(x).value.length === 1)) verify();
+      } else {
+        inp.classList.remove('filled');
+      }
+    });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !inp.value && i > 0) {
+        document.getElementById(DS[i-1]).focus();
+      }
+    });
+    inp.addEventListener('paste', e => {
+      e.preventDefault();
+      const txt = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6);
+      if (!txt) return;
+      txt.split('').forEach((ch, idx) => {
+        if (idx < 6) {
+          const el = document.getElementById(DS[idx]);
+          el.value = ch;
+          el.classList.add('filled');
+        }
+      });
+      if (txt.length === 6) verify();
+      else document.getElementById(DS[txt.length]).focus();
+    });
+  });
+
+  document.getElementById('eIn').addEventListener('keydown', e => {
+    if (e.key === 'Enter') sendCode();
+  });
+
+  console.log('%c⚔️ TradeArena Auth ready · demo mode active', 'color:#e8c060;font-weight:700;');
 </script>
 </body>
 </html>

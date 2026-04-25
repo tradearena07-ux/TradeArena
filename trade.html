@@ -1,528 +1,544 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TradeArena • War Room</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://s3.tradingview.com/tv.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        
-        :root {
-            --tv-color: #22c55e;
-        }
-        
-        body {
-            font-family: 'Inter', system_ui, sans-serif;
-        }
-        
-        .dashboard-bg {
-            background: linear-gradient(180deg, #0f172a 0%, #020617 100%);
-        }
-        
-        .ticker {
-            animation: ticker-slide 30s linear infinite;
-        }
-        
-        .chart-container {
-            height: 520px;
-        }
-        
-        .live-dot {
-            animation: pulse 2s infinite;
-        }
-    </style>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TradeArena · War Room</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=Cinzel+Decorative:wght@700&amp;family=DM+Sans:wght@300;400;500&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <script src="https://s3.tradingview.com/tv.js"></script>
+  <style>
+    .ticker-bar{background:var(--navy2);border-bottom:1px solid var(--bdl);overflow:hidden;padding:10px 0;}
+    .ticker-track{display:inline-flex;gap:48px;animation:scroll 35s linear infinite;white-space:nowrap;padding-left:32px;}
+    .ticker-track > span{display:inline-flex;gap:10px;align-items:center;font-size:13px;}
+    .ticker-track strong{color:var(--cream);font-family:'Cinzel',serif;letter-spacing:.04em;}
+    @keyframes scroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+
+    .layout{display:grid;grid-template-columns:240px 1fr 360px;gap:20px;padding:20px 24px;flex:1;}
+    @media(max-width:1280px){.layout{grid-template-columns:200px 1fr 320px;}}
+    @media(max-width:1100px){.layout{grid-template-columns:1fr;}.sidebar{display:none;}.right-panel{order:3;}}
+
+    .sidebar{display:flex;flex-direction:column;gap:6px;background:var(--navy2);border:1px solid var(--border);border-radius:20px;padding:18px;height:fit-content;position:sticky;top:88px;}
+    .side-link{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;cursor:pointer;color:var(--muted);font-family:'Cinzel',serif;font-size:13px;letter-spacing:.04em;transition:all .2s;}
+    .side-link:hover{background:rgba(201,160,48,.06);color:var(--cream);}
+    .side-link.active{background:rgba(201,160,48,.1);color:var(--gold2);}
+    .side-link i{width:18px;text-align:center;}
+    .side-divider{height:1px;background:var(--bdl);margin:14px 4px;}
+    .side-cta{margin-top:8px;background:var(--navy3);border:1px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;transition:all .2s;}
+    .side-cta:hover{border-color:var(--gold);}
+    .side-cta .label{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.18em;color:var(--gold);text-transform:uppercase;margin-bottom:6px;}
+
+    .main-col{display:flex;flex-direction:column;gap:18px;min-width:0;}
+    .symbol-header{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:14px;}
+    .symbol-header h2{font-family:'Cinzel',serif;font-size:1.8rem;letter-spacing:.02em;}
+    .symbol-header .price{font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;letter-spacing:-1px;}
+    .symbol-header .meta{font-size:13px;color:var(--muted);}
+    .tf-row{display:flex;gap:6px;}
+    .tf-btn{padding:8px 14px;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Cinzel',serif;font-size:11px;letter-spacing:.1em;cursor:pointer;border-radius:8px;transition:all .2s;}
+    .tf-btn:hover{color:var(--cream);}
+    .tf-btn.active{background:rgba(201,160,48,.12);border-color:var(--gold);color:var(--gold2);}
+
+    .chart-shell{background:var(--navy3);border:1px solid var(--border);border-radius:20px;overflow:hidden;height:480px;}
+
+    .tabs{display:flex;gap:6px;border-bottom:1px solid var(--border);margin-bottom:0;}
+    .tab{padding:14px 22px;cursor:pointer;font-family:'Cinzel',serif;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border-bottom:2px solid transparent;transition:all .2s;}
+    .tab:hover{color:var(--cream);}
+    .tab.active{color:var(--gold2);border-bottom-color:var(--gold);}
+    .tab-content{background:var(--navy2);border:1px solid var(--border);border-top:none;border-radius:0 0 20px 20px;padding:24px;}
+
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;}
+    .stat-card{background:var(--navy3);border:1px solid var(--bdl);border-radius:14px;padding:16px;}
+    .stat-card .lbl{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-family:'Cinzel',serif;margin-bottom:6px;}
+    .stat-card .val{font-family:'Cinzel',serif;font-size:1.4rem;}
+
+    .right-panel{display:flex;flex-direction:column;gap:18px;min-width:0;}
+    .panel-card{background:var(--navy2);border:1px solid var(--border);border-radius:20px;padding:22px;}
+    .panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+    .panel-head h3{font-family:'Cinzel',serif;font-size:1.05rem;letter-spacing:.04em;}
+    .holding-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--bdl);cursor:pointer;transition:padding .15s;}
+    .holding-row:hover{padding-left:6px;}
+    .holding-row:last-child{border-bottom:none;}
+    .h-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:11px;font-weight:700;color:#fff;letter-spacing:.05em;flex-shrink:0;}
+    .h-icon.asx{background:linear-gradient(135deg,#065f46,#10b981);}
+    .h-icon.us{background:linear-gradient(135deg,#1e40af,#60a5fa);}
+    .h-icon.crypto{background:linear-gradient(135deg,#92400e,#f59e0b);}
+
+    .market-pill{display:inline-flex;align-items:center;gap:8px;background:var(--navy3);border:1px solid var(--border);padding:6px 14px;border-radius:9999px;font-size:12px;cursor:pointer;}
+    .market-pill.active{background:rgba(201,160,48,.12);border-color:var(--gold);color:var(--gold2);}
+
+    .total-bar{background:var(--navy2);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px;}
+    .total-stat{display:flex;flex-direction:column;}
+    .total-stat .l{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-family:'Cinzel',serif;}
+    .total-stat .v{font-family:'Cinzel',serif;font-size:1.3rem;font-weight:700;}
+
+    .quick-modal-row{display:flex;gap:12px;margin-bottom:18px;}
+    .qm-btn{flex:1;padding:18px;border-radius:14px;border:none;cursor:pointer;font-family:'Cinzel',serif;font-size:1.1rem;letter-spacing:.1em;font-weight:700;transition:opacity .2s, transform .15s;}
+    .qm-btn.buy{background:linear-gradient(135deg,#065f46,#10b981);color:#fff;}
+    .qm-btn.sell{background:var(--navy3);border:1px solid var(--border);color:var(--muted);}
+    .qm-btn.sell.active{background:linear-gradient(135deg,#7f1d1d,#dc2626);color:#fff;border:none;}
+    .qm-btn.buy.dim{background:var(--navy3);border:1px solid var(--border);color:var(--muted);}
+  </style>
 </head>
-<body class="dashboard-bg text-white min-h-screen">
+<body>
 
-    <!-- TOP NAV -->
-    <nav class="bg-slate-900 border-b border-slate-700 px-6 py-3 flex items-center justify-between sticky top-0 z-50">
-        <div class="flex items-center gap-8">
-            <!-- Logo -->
-            <div class="flex items-center gap-2">
-                <div class="w-9 h-9 bg-emerald-500 rounded-2xl flex items-center justify-center text-2xl font-bold">₿</div>
-                <h1 class="text-3xl font-bold tracking-tighter">TradeArena</h1>
-            </div>
+<div id="tarena-nav"></div>
 
-            <!-- Market Selector -->
-            <div class="flex items-center gap-2 bg-slate-800 rounded-3xl px-5 py-2 text-sm font-medium">
-                <div class="flex items-center gap-1.5">
-                    <span class="text-emerald-400">🇦🇺</span>
-                    <span>ASX</span>
-                </div>
-                <i class="fa-solid fa-chevron-down text-xs"></i>
-                <div class="h-4 w-px bg-slate-600"></div>
-                <div onclick="switchMarket('US')" class="cursor-pointer hover:text-white px-3 py-1 rounded-3xl transition">🇺🇸 US</div>
-                <div onclick="switchMarket('CRYPTO')" class="cursor-pointer hover:text-white px-3 py-1 rounded-3xl transition">₿ Crypto</div>
-            </div>
+<!-- Total bar -->
+<div class="total-bar">
+  <div style="display:flex;gap:14px;align-items:center;">
+    <span class="market-pill active" onclick="setMarketFilter('all')">All</span>
+    <span class="market-pill" onclick="setMarketFilter('asx')">🇦🇺 ASX</span>
+    <span class="market-pill" onclick="setMarketFilter('us')">🇺🇸 US</span>
+    <span class="market-pill" onclick="setMarketFilter('crypto')">₿ Crypto</span>
+    <span class="badge" style="margin-left:8px;"><span class="live-dot"></span> ASX OPEN · <span id="market-clock">— AEST</span></span>
+  </div>
+  <div style="display:flex;gap:32px;align-items:center;">
+    <div class="total-stat">
+      <span class="l">Total Value</span>
+      <span class="v text-green" id="totalValue">$0</span>
+    </div>
+    <div class="total-stat">
+      <span class="l">Today's P&amp;L</span>
+      <span class="v" id="totalPnl">$0</span>
+    </div>
+  </div>
+</div>
 
-            <!-- Search -->
-            <div class="relative w-96">
-                <input 
-                    id="searchInput"
-                    type="text" 
-                    placeholder="Search ASX, stocks, crypto... (e.g. BHP, AAPL, BTC)"
-                    class="w-full bg-slate-800 text-white placeholder:text-slate-400 border border-slate-700 focus:border-emerald-500 rounded-3xl pl-12 pr-6 py-3 text-sm outline-none">
-                <i class="fa-solid fa-magnifying-glass absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-            </div>
+<!-- Ticker -->
+<div class="ticker-bar">
+  <div class="ticker-track" id="ticker-track"></div>
+</div>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="side-link active"><i class="fa-solid fa-chart-line"></i><span>Dashboard</span></div>
+    <div class="side-link" onclick="window.location.href='portfolio.html'"><i class="fa-solid fa-briefcase"></i><span>Portfolio</span></div>
+    <div class="side-link" onclick="alert('Markets explorer coming soon — pick from the watchlist on the right.')"><i class="fa-solid fa-globe"></i><span>Markets</span></div>
+    <div class="side-link" onclick="alert('Watchlist is on the right pane →')"><i class="fa-solid fa-star"></i><span>Watchlist</span></div>
+    <div class="side-link" onclick="showOrders()"><i class="fa-solid fa-list-check"></i><span>Orders</span></div>
+    <div class="side-link" onclick="alert('AI Insights — opens via the chart tab.')"><i class="fa-solid fa-brain"></i><span>AI Analysis</span></div>
+    <div class="side-divider"></div>
+    <div class="side-cta" onclick="openQuickTrade()">
+      <div class="label">Quick Trade</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-weight:600;">Instant Buy</div>
+          <div class="text-muted" style="font-size:11.5px;">0 fees · Paper mode</div>
         </div>
+        <i class="fa-solid fa-bolt text-gold" style="font-size:18px;"></i>
+      </div>
+    </div>
+  </aside>
 
-        <div class="flex items-center gap-8">
-            <!-- Market Status -->
-            <div class="flex items-center gap-3 text-sm">
-                <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 bg-emerald-400 rounded-full live-dot"></div>
-                    <span class="font-medium">ASX Open</span>
-                </div>
-                <span class="text-emerald-400 font-medium">+1.24%</span>
-                <span class="text-xs text-slate-400">10:58 AEST • Apr 16</span>
-            </div>
+  <!-- Main -->
+  <div class="main-col">
 
-            <!-- User Balance -->
-            <div class="flex items-center gap-6">
-                <div>
-                    <div class="text-xs text-slate-400">Total Value</div>
-                    <div id="total-value" class="text-2xl font-semibold text-emerald-400">$48,742.80</div>
-                </div>
-                <div class="text-right">
-                    <div class="text-xs text-slate-400">Today's P&amp;L</div>
-                    <div id="today-pl" class="flex items-center gap-1 text-lg font-semibold text-emerald-400">
-                        +$1,284.50 <span class="text-emerald-400 text-sm">(+2.71%)</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- User -->
-            <div class="flex items-center gap-3">
-                <div class="text-right">
-                    <div class="font-semibold">Alex Chen</div>
-                    <div class="text-xs text-slate-400">@tradearena07 • Paper Mode</div>
-                </div>
-                <div class="w-9 h-9 bg-gradient-to-br from-purple-500 to-emerald-500 rounded-2xl flex items-center justify-center text-xl">👨‍💼</div>
-            </div>
+    <div class="symbol-header">
+      <div>
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+          <h2 id="symName">BHP.AX</h2>
+          <span class="price text-green" id="symPrice">$43.82</span>
+          <span class="text-green mono" id="symChange">+0.87 (+2.02%)</span>
         </div>
-    </nav>
-
-    <div class="flex h-[calc(100vh-65px)]">
-
-        <!-- LEFT SIDEBAR -->
-        <div class="w-64 bg-slate-900 border-r border-slate-700 p-4 flex flex-col">
-            <nav class="space-y-1">
-                <a onclick="navigateTo('dashboard')" class="flex items-center gap-3 px-4 py-4 rounded-3xl bg-emerald-500/10 text-emerald-400 font-medium">
-                    <i class="fa-solid fa-chart-line w-5"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a onclick="navigateTo('markets')" class="flex items-center gap-3 px-4 py-4 hover:bg-slate-800 rounded-3xl transition">
-                    <i class="fa-solid fa-globe w-5"></i>
-                    <span>Markets</span>
-                </a>
-                <a onclick="navigateTo('portfolio')" class="flex items-center gap-3 px-4 py-4 hover:bg-slate-800 rounded-3xl transition">
-                    <i class="fa-solid fa-briefcase w-5"></i>
-                    <span>Portfolio</span>
-                </a>
-                <a onclick="navigateTo('watchlist')" class="flex items-center gap-3 px-4 py-4 hover:bg-slate-800 rounded-3xl transition">
-                    <i class="fa-solid fa-star w-5"></i>
-                    <span>Watchlist</span>
-                </a>
-                <a onclick="navigateTo('orders')" class="flex items-center gap-3 px-4 py-4 hover:bg-slate-800 rounded-3xl transition">
-                    <i class="fa-solid fa-list-check w-5"></i>
-                    <span>Orders</span>
-                </a>
-                <a onclick="navigateTo('analysis')" class="flex items-center gap-3 px-4 py-4 hover:bg-slate-800 rounded-3xl transition">
-                    <i class="fa-solid fa-brain w-5"></i>
-                    <span>AI Analysis</span>
-                </a>
-            </nav>
-
-            <div class="mt-auto pt-8 border-t border-slate-700">
-                <div class="px-4 text-xs uppercase text-slate-400 mb-3">Quick Trade</div>
-                <div onclick="quickTradeModal()" class="flex items-center justify-between bg-slate-800 hover:bg-emerald-500 hover:text-white transition px-5 py-4 rounded-3xl cursor-pointer">
-                    <div class="flex items-center gap-3">
-                        <i class="fa-solid fa-bolt text-2xl"></i>
-                        <div>
-                            <div class="font-semibold">Instant Buy</div>
-                            <div class="text-xs text-slate-400">0 fees • 0.1s execution</div>
-                        </div>
-                    </div>
-                    <i class="fa-solid fa-arrow-right"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- MAIN CONTENT -->
-        <div class="flex-1 flex flex-col overflow-auto">
-
-            <!-- Ticker Bar -->
-            <div class="bg-slate-950 border-b border-slate-700 py-2 overflow-hidden">
-                <div id="ticker-bar" class="ticker flex items-center gap-8 text-sm whitespace-nowrap">
-                    <!-- Populated by JS -->
-                </div>
-            </div>
-
-            <div class="p-6 flex-1 flex gap-6">
-
-                <!-- CHART AREA (TradingView powered) -->
-                <div class="flex-1 flex flex-col">
-                    <div class="flex justify-between items-end mb-4">
-                        <div>
-                            <div class="flex items-center gap-3">
-                                <div id="symbol-name" class="text-3xl font-semibold">BHP.AX</div>
-                                <div id="symbol-price" class="text-4xl font-bold text-emerald-400">43.82</div>
-                                <div id="symbol-change" class="text-emerald-400 font-medium">+0.87 (+2.02%)</div>
-                            </div>
-                            <div class="text-slate-400">BHP Group Limited • ASX</div>
-                        </div>
-                        
-                        <div class="flex items-center gap-2 text-sm">
-                            <button onclick="changeTimeframe(1)" class="time-btn active px-4 py-1.5 rounded-3xl">1D</button>
-                            <button onclick="changeTimeframe(5)" class="time-btn px-4 py-1.5 rounded-3xl">5D</button>
-                            <button onclick="changeTimeframe(30)" class="time-btn px-4 py-1.5 rounded-3xl">1M</button>
-                            <button onclick="changeTimeframe(365)" class="time-btn px-4 py-1.5 rounded-3xl">1Y</button>
-                            <button onclick="changeTimeframe('all')" class="time-btn px-4 py-1.5 rounded-3xl">ALL</button>
-                        </div>
-                    </div>
-
-                    <!-- TradingView Widget -->
-                    <div id="tradingview-widget" class="chart-container bg-slate-900 rounded-3xl border border-slate-700 overflow-hidden"></div>
-
-                    <!-- Tabs under chart -->
-                    <div class="mt-6 flex gap-8 border-b border-slate-700 text-sm">
-                        <div onclick="switchTab(0)" class="tab-item active pb-3 border-b-2 border-emerald-400 cursor-pointer">Overview</div>
-                        <div onclick="switchTab(1)" class="tab-item pb-3 cursor-pointer">Fundamentals</div>
-                        <div onclick="switchTab(2)" class="tab-item pb-3 cursor-pointer">News</div>
-                        <div onclick="switchTab(3)" class="tab-item pb-3 cursor-pointer">AI Insights</div>
-                    </div>
-
-                    <div id="tab-content" class="flex-1 p-6 bg-slate-900 rounded-3xl mt-4 text-sm">
-                        <div id="overview-content">
-                            <div class="grid grid-cols-3 gap-6">
-                                <div class="bg-slate-800 rounded-3xl p-6">
-                                    <div class="text-slate-400">Market Cap</div>
-                                    <div class="text-3xl font-semibold">$210.4B</div>
-                                </div>
-                                <div class="bg-slate-800 rounded-3xl p-6">
-                                    <div class="text-slate-400">Volume (24h)</div>
-                                    <div class="text-3xl font-semibold">8.4M shares</div>
-                                </div>
-                                <div class="bg-slate-800 rounded-3xl p-6">
-                                    <div class="text-slate-400">52w High / Low</div>
-                                    <div class="text-3xl font-semibold">48.90 / 39.20</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- RIGHT PANEL: Portfolio + Watchlist -->
-                <div class="w-96 flex flex-col gap-6">
-
-                    <!-- Portfolio Summary -->
-                    <div class="bg-slate-900 rounded-3xl p-6 border border-slate-700">
-                        <div class="flex justify-between items-center mb-6">
-                            <h2 class="font-semibold text-lg">Your Portfolio</h2>
-                            <span onclick="viewFullPortfolio()" class="text-emerald-400 text-sm cursor-pointer hover:underline">Full view →</span>
-                        </div>
-                        
-                        <div class="space-y-6">
-                            <!-- Holding 1 -->
-                            <div class="flex justify-between items-center">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-9 h-9 bg-blue-500 rounded-2xl flex items-center justify-center">BHP</div>
-                                    <div>
-                                        <div class="font-medium">BHP.AX</div>
-                                        <div class="text-xs text-slate-400">420 shares</div>
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <div class="font-semibold">$18,404.40</div>
-                                    <div class="text-emerald-400 text-sm">+$1,284 (+7.5%)</div>
-                                </div>
-                            </div>
-
-                            <!-- Holding 2 -->
-                            <div class="flex justify-between items-center">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-9 h-9 bg-orange-500 rounded-2xl flex items-center justify-center">CBA</div>
-                                    <div>
-                                        <div class="font-medium">CBA.AX</div>
-                                        <div class="text-xs text-slate-400">85 shares</div>
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <div class="font-semibold">$12,345.00</div>
-                                    <div class="text-red-400 text-sm">-$210 (-1.7%)</div>
-                                </div>
-                            </div>
-
-                            <!-- Holding 3 -->
-                            <div class="flex justify-between items-center">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-9 h-9 bg-purple-500 rounded-2xl flex items-center justify-center">BTC</div>
-                                    <div>
-                                        <div class="font-medium">Bitcoin</div>
-                                        <div class="text-xs text-slate-400">0.12 BTC</div>
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <div class="font-semibold">$12,993.40</div>
-                                    <div class="text-emerald-400 text-sm">+$1,320 (+11.3%)</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Watchlist -->
-                    <div class="flex-1 bg-slate-900 rounded-3xl p-6 border border-slate-700 overflow-hidden flex flex-col">
-                        <div class="flex justify-between mb-4">
-                            <h2 class="font-semibold text-lg">Watchlist</h2>
-                            <i onclick="addToWatchlist()" class="fa-solid fa-plus cursor-pointer"></i>
-                        </div>
-                        <div id="watchlist-table" class="flex-1 overflow-auto text-sm">
-                            <!-- Populated by JS -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <div class="meta" id="symMeta">BHP Group · ASX</div>
+      </div>
+      <div class="tf-row">
+        <button class="tf-btn active" onclick="changeTimeframe(this,'5')">1D</button>
+        <button class="tf-btn" onclick="changeTimeframe(this,'30')">5D</button>
+        <button class="tf-btn" onclick="changeTimeframe(this,'D')">1M</button>
+        <button class="tf-btn" onclick="changeTimeframe(this,'W')">1Y</button>
+        <button class="tf-btn" onclick="changeTimeframe(this,'M')">ALL</button>
+      </div>
     </div>
 
-    <!-- QUICK TRADE MODAL -->
-    <div onclick="if(event.target.id === 'quick-modal') hideModal()" id="quick-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-[9999]">
-        <div onclick="event.stopImmediatePropagation()" class="bg-slate-900 w-[420px] rounded-3xl p-8">
-            <h3 class="text-2xl font-semibold mb-6">Instant Trade • BHP.AX</h3>
-            <div class="flex gap-4 mb-8">
-                <button onclick="setOrderType('buy')" id="buy-btn" class="flex-1 py-6 rounded-3xl bg-emerald-500 text-black font-bold text-xl">BUY</button>
-                <button onclick="setOrderType('sell')" id="sell-btn" class="flex-1 py-6 rounded-3xl bg-slate-700 hover:bg-red-500 transition font-bold text-xl">SELL</button>
-            </div>
-            <div class="mb-8">
-                <input type="text" id="trade-amount" placeholder="$500" class="w-full bg-slate-800 rounded-3xl px-6 py-6 text-4xl outline-none text-center">
-            </div>
-            <button onclick="executeQuickTrade()" class="w-full py-6 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xl rounded-3xl">Place Order • $500</button>
-            <p class="text-center text-xs text-slate-400 mt-4">0 fees • Instant fill on ASX</p>
-        </div>
+    <div class="chart-shell" id="tv-chart"></div>
+
+    <div>
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab(this, 'overview')">Overview</div>
+        <div class="tab" onclick="switchTab(this, 'fundamentals')">Fundamentals</div>
+        <div class="tab" onclick="switchTab(this, 'news')">News</div>
+        <div class="tab" onclick="switchTab(this, 'ai')">AI Insights</div>
+      </div>
+      <div class="tab-content" id="tab-content"></div>
+    </div>
+  </div>
+
+  <!-- Right panel -->
+  <aside class="right-panel">
+
+    <div class="panel-card">
+      <div class="panel-head">
+        <h3>Your Portfolio</h3>
+        <a href="portfolio.html" class="text-gold" style="font-size:12px;">Full view →</a>
+      </div>
+      <div id="holdings-mini"></div>
     </div>
 
-    <script>
-        // Tailwind script already loaded
-        function initTailwind() {
-            tailwind.config = {
-                content: [],
-                theme: { extend: {} }
-            }
-        }
+    <div class="panel-card">
+      <div class="panel-head">
+        <h3>Watchlist</h3>
+        <i class="fa-solid fa-plus text-gold" style="cursor:pointer;" onclick="addToWatchlist()" title="Add symbol"></i>
+      </div>
+      <div id="watchlist-list"></div>
+    </div>
 
-        // Fake live ticker data
-        const tickers = [
-            { symbol: "BHP.AX", price: 43.82, change: 2.02 },
-            { symbol: "CBA.AX", price: 145.30, change: -0.45 },
-            { symbol: "RIO.AX", price: 118.90, change: 1.88 },
-            { symbol: "CSL.AX", price: 312.45, change: 0.92 },
-            { symbol: "WBC.AX", price: 31.20, change: -1.12 },
-            { symbol: "AAPL", price: 228.40, change: 1.34 },
-            { symbol: "BTC", price: 64320, change: 3.81 },
-        ]
+  </aside>
+</div>
 
-        function renderTickerBar() {
-            const container = document.getElementById('ticker-bar')
-            container.innerHTML = tickers.map(t => `
-                <div class="flex items-center gap-6 px-6">
-                    <span class="font-medium">${t.symbol}</span>
-                    <span class="font-mono">${t.price}</span>
-                    <span class="${t.change > 0 ? 'text-emerald-400' : 'text-red-400'} font-medium">
-                        ${t.change > 0 ? '+' : ''}${t.change}%
-                    </span>
-                </div>
-            `).join('')
-        }
+<!-- Quick trade modal -->
+<div class="modal-backdrop" id="qtModal" onclick="if(event.target.id==='qtModal') closeQuickTrade()">
+  <div class="modal">
+    <h3>Instant Trade · <span id="qt-symbol">BHP.AX</span></h3>
+    <div class="quick-modal-row">
+      <button class="qm-btn buy" id="qt-buy" onclick="setOrderSide('buy')">BUY</button>
+      <button class="qm-btn sell" id="qt-sell" onclick="setOrderSide('sell')">SELL</button>
+    </div>
+    <div class="field">
+      <label>Amount (AUD)</label>
+      <input type="number" id="qt-amount" placeholder="500" value="500" min="1" step="1"/>
+    </div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:18px;display:flex;justify-content:space-between;">
+      <span>Estimated shares</span><span id="qt-shares" class="text-gold mono">— shares</span>
+    </div>
+    <button class="btn-gold full" onclick="executeQuickTrade()">Place Order</button>
+    <p class="text-muted" style="text-align:center;margin-top:14px;font-size:12px;">0 fees · Instant fill on ASX · Paper mode</p>
+  </div>
+</div>
 
-        // Watchlist data
-        let watchlistData = [
-            { symbol: "BHP.AX", price: 43.82, change: 2.02, volume: "8.4M" },
-            { symbol: "CBA.AX", price: 145.30, change: -0.45, volume: "2.1M" },
-            { symbol: "MQG.AX", price: 212.80, change: 4.12, volume: "980K" },
-            { symbol: "WDS.AX", price: 24.15, change: -1.8, volume: "4.3M" },
-        ]
+<!-- Orders modal -->
+<div class="modal-backdrop" id="ordersModal" onclick="if(event.target.id==='ordersModal') closeOrders()">
+  <div class="modal" style="max-width:640px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+      <h3 style="margin:0;">Recent Orders</h3>
+      <button class="btn-ghost" onclick="closeOrders()">Close</button>
+    </div>
+    <div id="orders-list" style="max-height:60vh;overflow:auto;"></div>
+  </div>
+</div>
 
-        function renderWatchlist() {
-            const container = document.getElementById('watchlist-table')
-            container.innerHTML = `
-                <table class="w-full">
-                    <thead>
-                        <tr class="text-xs text-slate-400 border-b border-slate-700">
-                            <th class="text-left py-2 font-medium">SYMBOL</th>
-                            <th class="text-right py-2 font-medium">PRICE</th>
-                            <th class="text-right py-2 font-medium">CHANGE</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-sm">
-                        ${watchlistData.map(item => `
-                            <tr onclick="loadSymbol('${item.symbol}')" class="border-b border-slate-700 hover:bg-slate-800 cursor-pointer">
-                                <td class="py-4 font-medium">${item.symbol}</td>
-                                <td class="py-4 text-right font-mono">${item.price}</td>
-                                <td class="py-4 text-right ${item.change > 0 ? 'text-emerald-400' : 'text-red-400'}">
-                                    ${item.change > 0 ? '+' : ''}${item.change}%
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `
-        }
+<script src="assets/app.js"></script>
+<script src="assets/market.js"></script>
+<script>
+  // --- Auth guard ---
+  if (!TArenaAuth.requireAuth()) { /* will redirect */ }
+  TArenaUI.renderNav('trade');
 
-        // TradingView Widget
-        function initTradingView(symbol = "BHP.AX") {
-            const container = document.getElementById('tradingview-widget')
-            container.innerHTML = '' // clear previous
+  let currentSymbol = 'BHP.AX';
+  let currentSide = 'buy';
+  let marketFilter = 'all';
 
-            new TradingView.widget({
-                "width": "100%",
-                "height": "100%",
-                "symbol": symbol,
-                "interval": "5",
-                "timezone": "Australia/Sydney",
-                "theme": "dark",
-                "style": "1",
-                "locale": "en",
-                "toolbar_bg": "#0f172a",
-                "enable_publishing": false,
-                "hide_top_toolbar": false,
-                "hide_legend": false,
-                "save_image": true,
-                "container_id": "tradingview-widget"
-            })
-        }
-
-        // Simulate live price updates
-        function simulateLivePrices() {
-            setInterval(() => {
-                // Update total value slightly
-                let value = parseFloat(document.getElementById('total-value').innerText.replace('$', '').replace(',', ''))
-                value = value + (Math.random() * 80 - 30)
-                document.getElementById('total-value').innerText = '$' + value.toFixed(2)
-
-                // Random watchlist updates
-                watchlistData.forEach(item => {
-                    if (Math.random() > 0.7) {
-                        item.change = parseFloat((item.change + (Math.random() * 1.2 - 0.6)).toFixed(2))
-                        item.price = parseFloat((item.price + (Math.random() * 1.5 - 0.7)).toFixed(2))
-                    }
-                })
-                renderWatchlist()
-            }, 4500)
-        }
-
-        // Tab switching
-        function switchTab(n) {
-            document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active', 'border-b-2', 'border-emerald-400'))
-            document.querySelectorAll('.tab-item')[n].classList.add('active', 'border-b-2', 'border-emerald-400')
-            
-            const content = document.getElementById('tab-content')
-            if (n === 0) {
-                content.innerHTML = `<div id="overview-content" class="grid grid-cols-3 gap-6">
-                    <div class="bg-slate-800 rounded-3xl p-6"><div class="text-slate-400">Market Cap</div><div class="text-3xl font-semibold">$210.4B</div></div>
-                    <div class="bg-slate-800 rounded-3xl p-6"><div class="text-slate-400">Volume (24h)</div><div class="text-3xl font-semibold">8.4M shares</div></div>
-                    <div class="bg-slate-800 rounded-3xl p-6"><div class="text-slate-400">52w High / Low</div><div class="text-3xl font-semibold">48.90 / 39.20</div></div>
-                </div>`
-            } else if (n === 3) {
-                content.innerHTML = `<div class="p-8 text-center"><div class="mx-auto w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-3xl flex items-center justify-center text-4xl mb-4">🤖</div><p class="text-xl font-medium">Grok AI says: BHP is in strong uptrend. Target $47.20 in next 7 days. RSI 68 • Bullish divergence detected.</p></div>`
-            }
-        }
-
-        // Symbol loader
-        function loadSymbol(symbol) {
-            document.getElementById('symbol-name').innerText = symbol
-            document.getElementById('symbol-price').innerText = (Math.random() * 50 + 30).toFixed(2)
-            document.getElementById('symbol-change').innerHTML = `+${(Math.random()*3).toFixed(2)} <span class="text-emerald-400">(+${(Math.random()*2.5).toFixed(1)}%)</span>`
-            initTradingView(symbol)
-        }
-
-        // Fake navigation
-        function navigateTo(page) {
-            alert(`✅ Navigating to ${page.toUpperCase()} (full pages coming soon – just say the word and I’ll build them!)`)
-        }
-
-        function quickTradeModal() {
-            document.getElementById('quick-modal').classList.remove('hidden')
-            document.getElementById('quick-modal').classList.add('flex')
-        }
-
-        function hideModal() {
-            const modal = document.getElementById('quick-modal')
-            modal.classList.add('hidden')
-            modal.classList.remove('flex')
-        }
-
-        function setOrderType(type) {
-            document.getElementById('buy-btn').classList.toggle('bg-emerald-500', type === 'buy')
-            document.getElementById('buy-btn').classList.toggle('bg-slate-700', type === 'sell')
-            document.getElementById('sell-btn').classList.toggle('bg-red-500', type === 'sell')
-            document.getElementById('sell-btn').classList.toggle('bg-slate-700', type === 'buy')
-        }
-
-        function executeQuickTrade() {
-            hideModal()
-            alert('🚀 Order placed! $500 BHP.AX bought at market price. Check your portfolio in 2 seconds.')
-            // Simulate portfolio update
-            renderWatchlist()
-        }
-
-        function addToWatchlist() {
-            const newSymbol = prompt('Add symbol to watchlist (e.g. FMG.AX)', 'FMG.AX')
-            if (newSymbol) {
-                watchlistData.unshift({ symbol: newSymbol, price: 18.45, change: 3.2, volume: "1.2M" })
-                renderWatchlist()
-            }
-        }
-
-        function viewFullPortfolio() {
-            alert('📊 Full portfolio page would open here. Want me to generate the complete Portfolio HTML next?')
-        }
-
-        function changeTimeframe(tf) {
-            document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'))
-            event.target.classList.add('active')
-            // In real app this would reload chart with different interval
-            console.log('Timeframe changed to', tf)
-        }
-
-        function switchMarket(market) {
-            alert(`🌍 Switched to ${market} market. Live data now showing ${market === 'US' ? 'NYSE/NASDAQ' : 'Crypto'} prices.`)
-            renderTickerBar()
-        }
-
-        // INITIALIZE EVERYTHING
-        window.onload = function() {
-            initTailwind()
-            renderTickerBar()
-            renderWatchlist()
-            initTradingView("BHP.AX")
-            simulateLivePrices()
-            
-            console.log('%c✅ TradeArena War Room v2.0 loaded – TradingView + Zerodha + Groww level UI ready!', 'color:#22c55e; font-size:13px; font-weight:bold')
-            
-            // Welcome message
-            setTimeout(() => {
-                console.log('%cYour P&L is LIVE. Real-time ASX data + AI analysis coming next if you want.', 'color:#eab308')
-            }, 2200)
-        }
-    </script>
-    <script>
-    // Auth guard — redirect to login if not logged in
-    async function checkAuth() {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session) window.location.href = 'auth.html'
-    }
-    window.onload = () => { checkAuth(); /* your existing onload code */ }
-</script>
-    <script>
-  const sb = supabase.createClient('https://chncykagtzotdtflkhim.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...');
-  async function checkAuth() {
-    const { data } = await sb.auth.getSession();
-    if (!data.session) window.location.href = 'auth.html';
+  // --- Ticker ---
+  function renderTicker() {
+    const items = TArenaMarket.byMarket('all');
+    // Duplicate for seamless scroll
+    const html = items.concat(items).map(t => `
+      <span><strong>${t.symbol}</strong>
+        <span class="mono">${t.price < 100 ? t.price.toFixed(2) : t.price.toLocaleString()}</span>
+        <span style="color:${t.change > 0 ? 'var(--green)' : 'var(--red)'};">${t.change > 0 ? '↑' : '↓'} ${Math.abs(t.change).toFixed(2)}%</span>
+      </span>`).join('');
+    document.getElementById('ticker-track').innerHTML = html;
   }
-  window.onload = () => { checkAuth(); /* your existing onload */ };
+
+  // --- Symbol header ---
+  function renderSymbol() {
+    const m = TArenaMarket.find(currentSymbol);
+    if (!m) return;
+    document.getElementById('symName').textContent = m.symbol;
+    const priceEl = document.getElementById('symPrice');
+    priceEl.textContent = '$' + (m.price < 100 ? m.price.toFixed(2) : m.price.toLocaleString());
+    priceEl.className = 'price ' + (m.change > 0 ? 'text-green' : 'text-red');
+    const chgEl = document.getElementById('symChange');
+    const sign = m.change > 0 ? '+' : '';
+    chgEl.textContent = `${sign}${(m.price * m.change / 100).toFixed(2)} (${sign}${m.change.toFixed(2)}%)`;
+    chgEl.className = 'mono ' + (m.change > 0 ? 'text-green' : 'text-red');
+    document.getElementById('symMeta').textContent = `${m.name} · ${m.market.toUpperCase()}`;
+    document.getElementById('qt-symbol').textContent = m.symbol;
+    updateQtShares();
+  }
+
+  // --- TradingView chart ---
+  let tvWidget = null;
+  let currentInterval = '5';
+  function loadChart() {
+    const m = TArenaMarket.find(currentSymbol);
+    if (!m) return;
+    document.getElementById('tv-chart').innerHTML = '';
+    try {
+      tvWidget = new TradingView.widget({
+        width: '100%', height: '100%',
+        symbol: m.tv,
+        interval: currentInterval,
+        timezone: 'Australia/Sydney',
+        theme: 'dark',
+        style: '1',
+        locale: 'en',
+        toolbar_bg: '#091528',
+        enable_publishing: false,
+        hide_side_toolbar: false,
+        allow_symbol_change: false,
+        container_id: 'tv-chart',
+      });
+    } catch (e) {
+      document.getElementById('tv-chart').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);">Chart unavailable.</div>';
+    }
+  }
+
+  function changeTimeframe(btn, interval) {
+    document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentInterval = interval;
+    loadChart();
+  }
+
+  // --- Tabs ---
+  function switchTab(el, key) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    renderTabContent(key);
+  }
+  function renderTabContent(key) {
+    const m = TArenaMarket.find(currentSymbol);
+    const c = document.getElementById('tab-content');
+    if (key === 'overview') {
+      c.innerHTML = `<div class="stats-grid">
+        <div class="stat-card"><div class="lbl">Market Cap</div><div class="val">${m.mcap}</div></div>
+        <div class="stat-card"><div class="lbl">Volume (24h)</div><div class="val">${m.vol}</div></div>
+        <div class="stat-card"><div class="lbl">52w High</div><div class="val text-green">$${m.high52.toLocaleString()}</div></div>
+        <div class="stat-card"><div class="lbl">52w Low</div><div class="val text-red">$${m.low52.toLocaleString()}</div></div>
+        <div class="stat-card"><div class="lbl">Day Change</div><div class="val ${m.change > 0 ? 'text-green' : 'text-red'}">${TArenaUI.fmtPct(m.change)}</div></div>
+      </div>`;
+    } else if (key === 'fundamentals') {
+      c.innerHTML = `<div class="stats-grid">
+        <div class="stat-card"><div class="lbl">P/E Ratio</div><div class="val">${(15 + Math.random() * 20).toFixed(1)}</div></div>
+        <div class="stat-card"><div class="lbl">EPS (TTM)</div><div class="val">$${(2 + Math.random() * 8).toFixed(2)}</div></div>
+        <div class="stat-card"><div class="lbl">Dividend Yield</div><div class="val">${(1 + Math.random() * 6).toFixed(2)}%</div></div>
+        <div class="stat-card"><div class="lbl">Beta</div><div class="val">${(0.5 + Math.random() * 1.5).toFixed(2)}</div></div>
+        <div class="stat-card"><div class="lbl">Revenue (TTM)</div><div class="val">${m.mcap}</div></div>
+      </div>`;
+    } else if (key === 'news') {
+      const headlines = [
+        { t: `${m.name} reports strong Q1 earnings, beats expectations`, src: 'AFR · 2h ago' },
+        { t: `Analysts raise ${m.symbol} target price after iron-ore rebound`, src: 'Bloomberg · 6h ago' },
+        { t: `Why ${m.name} could be a top pick for 2026`, src: 'Motley Fool · 1d ago' },
+      ];
+      c.innerHTML = headlines.map(h => `
+        <div style="padding:14px 0;border-bottom:1px solid var(--bdl);">
+          <div style="font-weight:500;margin-bottom:4px;">${h.t}</div>
+          <div class="text-muted" style="font-size:12px;">${h.src}</div>
+        </div>`).join('');
+    } else {
+      const direction = m.change > 0 ? 'uptrend' : 'pullback';
+      const target = (m.price * (1 + (Math.random() * 0.08 + 0.02))).toFixed(2);
+      c.innerHTML = `<div style="text-align:center;padding:18px 0;">
+        <div style="display:inline-flex;width:60px;height:60px;background:rgba(201,160,48,.1);color:var(--gold2);border-radius:18px;align-items:center;justify-content:center;font-size:28px;margin-bottom:14px;">🤖</div>
+        <p style="font-size:1.05rem;line-height:1.6;max-width:560px;margin:0 auto;">
+          <strong class="text-gold">AI says:</strong> ${m.symbol} is in a strong ${direction}.
+          7-day target: <strong class="text-gold">$${target}</strong>.
+          RSI ${(40 + Math.random() * 30).toFixed(0)} · Sentiment <strong class="${m.change > 0 ? 'text-green' : 'text-red'}">${m.change > 0 ? 'bullish' : 'cautious'}</strong>.
+        </p>
+      </div>`;
+    }
+  }
+
+  // --- Holdings mini ---
+  function renderHoldingsMini() {
+    const c = document.getElementById('holdings-mini');
+    c.innerHTML = TArenaMarket.holdings.slice(0, 4).map(h => {
+      const v = TArenaMarket.holdingValue(h);
+      const sign = v.pnl > 0 ? '+' : '';
+      return `<div class="holding-row" onclick="loadSymbol('${h.symbol}')">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="h-icon ${h.type}">${h.symbol.replace('.AX','').slice(0,3)}</div>
+          <div>
+            <div style="font-weight:500;">${h.symbol}</div>
+            <div class="text-muted" style="font-size:11.5px;">${h.qty} ${h.type === 'crypto' ? '' : 'shares'}</div>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div class="mono" style="font-weight:600;">${TArenaUI.fmtMoney(v.value, {decimals:2})}</div>
+          <div class="${v.pnl > 0 ? 'text-green' : 'text-red'}" style="font-size:12px;">${sign}${TArenaUI.fmtMoney(v.pnl, {decimals:2}).replace('-','')} (${sign}${v.pnlPct.toFixed(1)}%)</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // --- Watchlist ---
+  function renderWatchlist() {
+    const c = document.getElementById('watchlist-list');
+    let symbols = TArenaMarket.getWatchlist();
+    if (marketFilter !== 'all') {
+      symbols = symbols.filter(s => {
+        const m = TArenaMarket.find(s);
+        return m && m.market === marketFilter;
+      });
+    }
+    if (!symbols.length) {
+      c.innerHTML = '<div class="text-muted" style="text-align:center;padding:18px;font-size:13px;">No symbols in watchlist for this market.</div>';
+      return;
+    }
+    c.innerHTML = symbols.map(sym => {
+      const m = TArenaMarket.find(sym);
+      if (!m) return '';
+      return `<div class="holding-row" onclick="loadSymbol('${sym}')">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="h-icon ${m.market}">${sym.replace('.AX','').slice(0,3)}</div>
+          <div>
+            <div style="font-weight:500;">${m.symbol}</div>
+            <div class="text-muted" style="font-size:11.5px;">${m.name}</div>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div class="mono">${m.price < 100 ? m.price.toFixed(2) : m.price.toLocaleString()}</div>
+          <div class="${m.change > 0 ? 'text-green' : 'text-red'}" style="font-size:12px;">${m.change > 0 ? '+' : ''}${m.change.toFixed(2)}%</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function addToWatchlist() {
+    const sym = prompt('Add symbol to watchlist (e.g. NVDA, FMG.AX, ETH)');
+    if (!sym) return;
+    const upper = sym.trim().toUpperCase();
+    const m = TArenaMarket.find(upper);
+    if (!m) { alert(`"${upper}" isn't in our market data right now. Try BHP.AX, AAPL, NVDA, BTC, ETH, etc.`); return; }
+    const list = TArenaMarket.getWatchlist();
+    if (list.includes(upper)) { alert(`${upper} is already in your watchlist.`); return; }
+    list.unshift(upper);
+    TArenaMarket.setWatchlist(list);
+    renderWatchlist();
+  }
+
+  // --- Totals ---
+  function renderTotals() {
+    document.getElementById('totalValue').textContent = TArenaUI.fmtMoney(TArenaMarket.totalValue(), {decimals:2});
+    const pnl = TArenaMarket.totalPnl();
+    const el = document.getElementById('totalPnl');
+    el.textContent = (pnl >= 0 ? '+' : '') + TArenaUI.fmtMoney(pnl, {decimals:2}).replace('-','-');
+    el.className = 'v ' + (pnl >= 0 ? 'text-green' : 'text-red');
+  }
+
+  // --- Quick trade modal ---
+  function openQuickTrade() {
+    document.getElementById('qtModal').classList.add('show');
+    setOrderSide('buy');
+    updateQtShares();
+    setTimeout(() => document.getElementById('qt-amount').focus(), 50);
+  }
+  function closeQuickTrade() { document.getElementById('qtModal').classList.remove('show'); }
+  function setOrderSide(side) {
+    currentSide = side;
+    const buy = document.getElementById('qt-buy');
+    const sell = document.getElementById('qt-sell');
+    if (side === 'buy') {
+      buy.classList.remove('dim'); sell.classList.remove('active');
+    } else {
+      buy.classList.add('dim'); sell.classList.add('active');
+    }
+  }
+  function updateQtShares() {
+    const m = TArenaMarket.find(currentSymbol);
+    const amt = parseFloat(document.getElementById('qt-amount').value) || 0;
+    if (!m || amt <= 0) { document.getElementById('qt-shares').textContent = '— shares'; return; }
+    const shares = amt / m.price;
+    document.getElementById('qt-shares').textContent = `${shares.toFixed(shares < 1 ? 6 : 4)} ${m.market === 'crypto' ? m.symbol : 'shares'}`;
+  }
+  function executeQuickTrade() {
+    const m = TArenaMarket.find(currentSymbol);
+    const amt = parseFloat(document.getElementById('qt-amount').value);
+    if (!m || !amt || amt <= 0) { alert('Enter an amount greater than $0.'); return; }
+    const shares = amt / m.price;
+    TArenaMarket.placeOrder({
+      symbol: m.symbol, name: m.name, side: currentSide,
+      amount: amt, shares: +shares.toFixed(6), price: m.price,
+    });
+    closeQuickTrade();
+    alert(`✅ ${currentSide.toUpperCase()} order filled: ${shares.toFixed(4)} ${m.symbol} @ $${m.price} ($${amt})`);
+  }
+  document.addEventListener('input', e => {
+    if (e.target.id === 'qt-amount') updateQtShares();
+  });
+
+  // --- Orders modal ---
+  function showOrders() {
+    const list = TArenaMarket.getOrders();
+    const c = document.getElementById('orders-list');
+    if (!list.length) {
+      c.innerHTML = '<div class="text-muted" style="text-align:center;padding:24px;">No orders yet. Try the Quick Trade button.</div>';
+    } else {
+      c.innerHTML = '<table class="tarena"><thead><tr><th>Time</th><th>Side</th><th>Symbol</th><th class="text-right">Amount</th><th class="text-right">Price</th></tr></thead><tbody>' +
+        list.map(o => `<tr><td class="text-muted" style="font-size:12px;">${new Date(o.ts).toLocaleString('en-AU')}</td>
+          <td><span class="${o.side === 'buy' ? 'badge' : 'badge badge-red'}">${o.side.toUpperCase()}</span></td>
+          <td><strong>${o.symbol}</strong> <span class="text-muted" style="font-size:12px;">${o.name || ''}</span></td>
+          <td class="text-right mono">${TArenaUI.fmtMoney(o.amount, {decimals:2})}</td>
+          <td class="text-right mono">$${o.price.toLocaleString()}</td></tr>`).join('') +
+        '</tbody></table>';
+    }
+    document.getElementById('ordersModal').classList.add('show');
+  }
+  function closeOrders() { document.getElementById('ordersModal').classList.remove('show'); }
+
+  // --- Market filter (affects watchlist) ---
+  function setMarketFilter(m) {
+    marketFilter = m;
+    document.querySelectorAll('.market-pill').forEach(p => p.classList.remove('active'));
+    event.target.classList.add('active');
+    renderWatchlist();
+  }
+
+  // --- Symbol switch ---
+  function loadSymbol(sym) {
+    if (!TArenaMarket.find(sym)) return;
+    currentSymbol = sym;
+    renderSymbol();
+    loadChart();
+    renderTabContent('overview');
+    document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === 0));
+  }
+  window.loadSymbol = loadSymbol;
+  window.setMarketFilter = setMarketFilter;
+  window.openQuickTrade = openQuickTrade;
+  window.closeQuickTrade = closeQuickTrade;
+  window.setOrderSide = setOrderSide;
+  window.executeQuickTrade = executeQuickTrade;
+  window.showOrders = showOrders;
+  window.closeOrders = closeOrders;
+  window.changeTimeframe = changeTimeframe;
+  window.switchTab = switchTab;
+  window.addToWatchlist = addToWatchlist;
+
+  // --- Clock ---
+  function updateClock() {
+    const opts = { timeZone: 'Australia/Sydney', hour: 'numeric', minute: '2-digit', hour12: true };
+    document.getElementById('market-clock').textContent = new Date().toLocaleTimeString('en-AU', opts) + ' AEST';
+  }
+
+  // --- Init ---
+  renderTicker();
+  renderSymbol();
+  renderHoldingsMini();
+  renderWatchlist();
+  renderTotals();
+  renderTabContent('overview');
+  updateClock();
+  loadChart();
+
+  setInterval(() => {
+    TArenaMarket.tick();
+    renderTicker();
+    renderSymbol();
+    renderHoldingsMini();
+    renderWatchlist();
+    renderTotals();
+  }, 4500);
+  setInterval(updateClock, 30000);
+
+  console.log('%c⚔️ TradeArena · War Room ready.', 'color:#e8c060;font-weight:700;');
 </script>
 </body>
 </html>

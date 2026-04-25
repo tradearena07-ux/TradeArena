@@ -4,242 +4,170 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TradeArena — Where Traders Battle &amp; Grow</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=Cinzel+Decorative:wght@700&amp;family=DM+Sans:wght@300;400;500&amp;display=swap" rel="stylesheet"/>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/styles.css"/>
   <style>
-    :root{
-      --navy:#060e1c;--navy2:#091528;--navy3:#0d1e3a;--navy4:#0a1830;
-      --gold:#c9a030;--gold2:#e8c060;--cream:#f2e8cc;--muted:#7a8aaa;
-      --border:rgba(201,160,48,0.22);--bdl:rgba(201,160,48,0.08);
-      --green:#4ade80;--red:#f87171;
-    }
-    *{margin:0;padding:0;box-sizing:border-box;}
-    body{background:var(--navy);color:var(--cream);font-family:'DM Sans',sans-serif;font-weight:300;overflow-x:hidden;}
-    .logo{display:flex;align-items:center;gap:12px;text-decoration:none;font-family:'Cinzel Decorative',serif;font-size:1.4rem;font-weight:700;letter-spacing:0.05em;color:var(--gold2);}
-    .logo span{color:var(--cream);}
-    nav{background:var(--navy2);border-bottom:1px solid var(--border);padding:20px 5%;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
-    .hero{background:linear-gradient(180deg,#060e1c,#0a1830);padding:120px 5% 100px;display:flex;align-items:center;gap:8%;}
-    .hero-left{flex:1;}
-    .hero-left .tag{font-family:'Cinzel',serif;font-size:15px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);margin-bottom:16px;}
-    .hero-left h1{font-family:'Cinzel',serif;font-size:4.2rem;font-weight:700;line-height:1.05;letter-spacing:-2px;margin-bottom:24px;}
+    .hero{background:linear-gradient(180deg,#060e1c,#0a1830);padding:100px 5% 90px;display:flex;align-items:center;gap:6%;flex-wrap:wrap;}
+    .hero-left{flex:1;min-width:320px;}
+    .hero-left h1{font-family:'Cinzel',serif;font-size:4rem;font-weight:700;line-height:1.05;letter-spacing:-2px;margin:18px 0 22px;}
     .hero-left h1 em{color:var(--gold2);font-style:normal;}
-    .hero-left p{font-size:1.25rem;line-height:1.5;color:var(--muted);max-width:520px;margin-bottom:40px;}
-    .cta-btn{display:inline-flex;align-items:center;gap:12px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);padding:22px 48px;border-radius:9999px;font-family:'Cinzel',serif;font-size:18px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .3s;box-shadow:0 10px 30px -10px var(--gold);}
-    .cta-btn:hover{transform:translateY(-4px);box-shadow:0 20px 40px -10px var(--gold);}
-    .live-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(74,222,128,.15);color:var(--green);padding:6px 16px;border-radius:9999px;font-size:13px;font-weight:500;}
-    .hero-right{flex:1;position:relative;}
-    .hero-right .card{background:var(--navy3);border:1px solid var(--border);border-radius:24px;padding:32px;width:100%;max-width:420px;margin:0 auto;box-shadow:0 30px 60px -20px rgba(201,160,48,.2);}
-    .ticker{position:absolute;top:30px;left:50%;transform:translateX(-50%);background:var(--navy2);border:1px solid var(--border);padding:12px 30px;border-radius:9999px;white-space:nowrap;display:flex;gap:40px;font-family:'Cinzel',serif;font-size:15px;z-index:10;}
-    section{padding:100px 5%;}
-    .section-title{font-family:'Cinzel',serif;font-size:2.8rem;font-weight:700;text-align:center;margin-bottom:60px;letter-spacing:-1px;}
-    .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:32px;}
-    .feature-card{background:var(--navy3);border:1px solid var(--border);border-radius:24px;padding:40px 32px;transition:all .3s;}
-    .feature-card:hover{transform:translateY(-8px);border-color:var(--gold);}
-    .feature-card i{font-size:42px;color:var(--gold2);margin-bottom:24px;}
-    .leaderboard{background:var(--navy2);border-radius:32px;padding:40px;}
-    footer{background:var(--navy2);padding:80px 5% 40px;border-top:1px solid var(--border);}
-    .spin{display:inline-block;width:18px;height:18px;border:3px solid rgba(201,160,48,.3);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;}
-    @keyframes spin{to{transform:rotate(360deg);}}
-    @media(max-width:1024px){.hero{flex-direction:column;padding-top:80px;gap:60px;}.hero-left h1{font-size:3.2rem;}}
+    .hero-left p{font-size:1.15rem;line-height:1.55;color:var(--muted);max-width:520px;margin-bottom:36px;}
+    .stats-row{margin-top:36px;display:flex;gap:32px;font-size:14px;color:var(--muted);flex-wrap:wrap;}
+    .stats-row strong{color:var(--cream);}
+    .hero-right{flex:1;min-width:320px;position:relative;}
+    .ticker-pill{background:var(--navy2);border:1px solid var(--border);padding:10px 26px;border-radius:9999px;display:flex;gap:30px;font-family:'Cinzel',serif;font-size:14px;margin-bottom:18px;overflow:hidden;}
+    .feature-card{background:var(--navy3);border:1px solid var(--border);border-radius:24px;padding:36px 28px;transition:transform .25s,border-color .25s;}
+    .feature-card:hover{transform:translateY(-6px);border-color:var(--gold);}
+    .feature-card i{font-size:38px;color:var(--gold2);margin-bottom:18px;}
+    .feature-card h3{font-family:'Cinzel',serif;font-size:1.4rem;margin-bottom:10px;letter-spacing:.02em;}
+    .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;max-width:1200px;margin:0 auto;}
+    @media(max-width:900px){.hero-left h1{font-size:2.6rem;}}
   </style>
 </head>
 <body>
 
-  <!-- NAV -->
-  <nav>
-    <a href="index.html" class="logo">
-      <svg width="34" height="40" viewBox="0 0 40 46" fill="none">
-        <path d="M20 2L36 9V22C36 31 29 39 20 43C11 39 4 31 4 22V9L20 2Z" fill="#091528" stroke="#c9a030" stroke-width="1"/>
-        <path d="M20 8L30 12.5V21C30 26.5 25.5 31.5 20 34C14.5 31.5 10 26.5 10 21V12.5L20 8Z" fill="none" stroke="#e8c060" stroke-width="0.75" opacity="0.6"/>
-        <text x="20" y="27" text-anchor="middle" font-family="serif" font-size="12" font-weight="bold" fill="#e8c060">&#8383;</text>
-        <polyline points="12,24 17,19 20,22 28,13" fill="none" stroke="#c9a030" stroke-width="1.5" stroke-linecap="round"/>
-      </svg>
-      Trade<span>Arena</span>
-    </a>
+<div id="tarena-nav"></div>
 
-    <div style="display:flex;gap:40px;font-family:'Cinzel',serif;font-size:15px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);">
-      <a href="trade.html" style="text-decoration:none;color:inherit;">Trade</a>
-      <a href="portfolio.html" style="text-decoration:none;color:inherit;">Portfolio</a>
-      <a href="#" style="text-decoration:none;color:inherit;">Leagues</a>
-      <a href="#" style="text-decoration:none;color:inherit;">Campus</a>
-      <a href="auth.html" id="nav-auth" style="text-decoration:none;color:var(--gold2);">Account</a>
-    </div>
-
-    <div id="user-pill" onclick="logout()" style="display:none;cursor:pointer;background:var(--navy3);border:1px solid var(--border);padding:8px 24px;border-radius:9999px;font-size:14px;display:flex;align-items:center;gap:10px;">
-      <span id="user-name"></span>
-      <i class="fa-solid fa-circle text-green-400"></i>
-    </div>
-  </nav>
-
-  <!-- HERO -->
-  <div class="hero">
-    <div class="hero-left">
-      <div class="live-badge"><i class="fa-solid fa-circle" style="font-size:10px;"></i> ASX + CRYPTO LIVE • 11:16 PM AEST</div>
-      <h1>Where traders<br><em>battle &amp; grow.</em></h1>
-      <p>Paper trade real ASX stocks, US shares &amp; crypto.<br>Zero risk. Real-time prices. Campus leaderboards. Built for warriors.</p>
-      
-      <button onclick="handleArenaClick()" id="arena-btn" class="cta-btn">
-        <span id="btn-text">Enter the Arena</span>
-        <i class="fa-solid fa-arrow-right"></i>
-      </button>
-      
-      <div style="margin-top:40px;display:flex;gap:40px;font-size:14px;color:var(--muted);">
-        <div><strong style="color:var(--green);">4,872</strong> warriors online</div>
-        <div><strong>$2.4M</strong> paper volume today</div>
-        <div>Next campus battle: <strong style="color:var(--gold2);">USYD vs UNSW</strong> in 47h</div>
-      </div>
-    </div>
-
-    <!-- Hero visual card -->
-    <div class="hero-right">
-      <div class="ticker" id="live-ticker">
-        <!-- JS populated -->
-      </div>
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;margin-bottom:24px;">
-          <div><strong>BHP.AX</strong></div>
-          <div style="color:var(--green);">43.82 <span style="font-size:13px;">+2.02%</span></div>
-        </div>
-        <div style="height:240px;background:linear-gradient(180deg,#0a1830,#091528);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:42px;color:var(--gold2);font-family:'Cinzel',serif;letter-spacing:8px;">
-          LIVE CHART
-        </div>
-        <div style="margin-top:24px;font-size:13px;display:flex;justify-content:space-between;color:var(--muted);">
-          <div>Your paper P&amp;L today: <span style="color:var(--green);">+$1,284</span></div>
-          <div class="live-badge" style="font-size:11px;padding:4px 12px;">Paper Mode</div>
-        </div>
-      </div>
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-left">
+    <div class="badge"><span class="live-dot"></span> ASX + CRYPTO LIVE · <span id="market-clock">11:16 PM AEST</span></div>
+    <h1>Where traders<br><em>battle &amp; grow.</em></h1>
+    <p>Paper trade real ASX stocks, US shares &amp; crypto.<br>Zero risk. Real-time prices. Campus leaderboards. Built for warriors.</p>
+    <button id="arenaBtn" class="btn-gold lg" onclick="enterArena()">
+      <span id="arenaBtnLabel">Enter the Arena</span>
+      <i class="fa-solid fa-arrow-right"></i>
+    </button>
+    <div class="stats-row">
+      <div><strong class="text-green">4,872</strong> warriors online</div>
+      <div><strong>$2.4M</strong> paper volume today</div>
+      <div>Next campus battle: <strong class="text-gold">USYD vs UNSW</strong> in 47h</div>
     </div>
   </div>
 
-  <!-- FEATURES -->
-  <section>
-    <div class="section-title">Built for Australian warriors</div>
-    <div class="features">
-      <div class="feature-card">
-        <i class="fa-solid fa-bolt"></i>
-        <h3 style="font-family:'Cinzel',serif;font-size:1.6rem;margin-bottom:12px;">Instant 6-digit OTP</h3>
-        <p style="color:var(--muted);">Sign up in 8 seconds. No passwords needed first time. Then switch to password for lightning login.</p>
+  <div class="hero-right">
+    <div class="ticker-pill" id="live-ticker"></div>
+    <div class="card" style="max-width:440px;margin:0 auto;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:20px;">
+        <div><strong>BHP.AX</strong> <span class="text-muted" style="font-size:12px;">BHP Group · ASX</span></div>
+        <div class="text-green mono" id="hero-price">$43.82 <span style="font-size:12px;">+2.02%</span></div>
       </div>
-      <div class="feature-card">
-        <i class="fa-solid fa-trophy"></i>
-        <h3 style="font-family:'Cinzel',serif;font-size:1.6rem;margin-bottom:12px;">Campus Leagues</h3>
-        <p style="color:var(--muted);">Real-time rankings. USYD vs UNSW vs UQ every week. Win bragging rights + real prizes.</p>
+      <div style="height:220px;background:linear-gradient(180deg,#0a1830,#091528);border-radius:16px;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;letter-spacing:6px;color:var(--gold2);font-size:32px;border:1px solid var(--bdl);position:relative;overflow:hidden;">
+        <svg viewBox="0 0 400 200" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;">
+          <polyline fill="none" stroke="#c9a030" stroke-width="2" stroke-linejoin="round" points="0,140 30,130 60,135 90,120 120,125 150,110 180,115 210,90 240,95 270,75 300,80 330,60 360,65 400,50"/>
+          <polyline fill="none" stroke="#4ade80" stroke-width="1" opacity=".4" stroke-dasharray="3,3" points="0,150 400,80"/>
+        </svg>
+        <span style="position:relative;z-index:1;text-shadow:0 4px 24px rgba(0,0,0,.6);">LIVE CHART</span>
       </div>
-      <div class="feature-card">
-        <i class="fa-solid fa-chart-line"></i>
-        <h3 style="font-family:'Cinzel',serif;font-size:1.6rem;margin-bottom:12px;">Pro TradingView Charts</h3>
-        <p style="color:var(--muted);">Real ASX, US &amp; crypto data. Zero fees. Fractional shares from $1. Full portfolio analytics.</p>
+      <div style="margin-top:20px;font-size:13px;display:flex;justify-content:space-between;color:var(--muted);">
+        <div>Your paper P&amp;L today: <span class="text-green">+$1,284</span></div>
+        <div class="badge-gold badge" style="font-size:11px;padding:3px 10px;">Paper Mode</div>
       </div>
     </div>
-  </section>
+  </div>
+</div>
 
-  <!-- LEADERBOARD TEASER -->
-  <section style="background:var(--navy2);">
-    <div class="section-title">This week’s Top Warriors</div>
-    <div class="leaderboard">
-      <table style="width:100%;border-collapse:collapse;">
-        <tr style="color:var(--gold);font-family:'Cinzel',serif;text-transform:uppercase;font-size:13px;">
-          <td style="padding:16px 0;border-bottom:1px solid var(--border);">RANK</td>
-          <td style="padding:16px 0;border-bottom:1px solid var(--border);">WARRIOR</td>
-          <td style="padding:16px 0;border-bottom:1px solid var(--border);">UNI</td>
-          <td style="padding:16px 0;border-bottom:1px solid var(--border);text-align:right;">P&amp;L THIS WEEK</td>
+<!-- FEATURES -->
+<section>
+  <div class="section-title">Built for Australian warriors</div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <i class="fa-solid fa-bolt"></i>
+      <h3>Instant 6-digit OTP</h3>
+      <p class="text-muted" style="line-height:1.6;">Sign up in 8 seconds. No passwords first time. Verify with a 6-digit code we send straight to your inbox.</p>
+    </div>
+    <div class="feature-card">
+      <i class="fa-solid fa-trophy"></i>
+      <h3>Campus Leagues</h3>
+      <p class="text-muted" style="line-height:1.6;">Real-time rankings. USYD vs UNSW vs UQ every week. Win bragging rights and real prizes.</p>
+    </div>
+    <div class="feature-card">
+      <i class="fa-solid fa-chart-line"></i>
+      <h3>Pro TradingView Charts</h3>
+      <p class="text-muted" style="line-height:1.6;">Real ASX, US &amp; crypto data. Zero fees. Fractional shares from $1. Full portfolio analytics.</p>
+    </div>
+    <div class="feature-card">
+      <i class="fa-solid fa-shield-halved"></i>
+      <h3>Zero Risk, Real Skills</h3>
+      <p class="text-muted" style="line-height:1.6;">$50,000 paper cash to start. Trade like a pro without burning real money. Practice → graduate.</p>
+    </div>
+  </div>
+</section>
+
+<!-- LEADERBOARD -->
+<section style="background:var(--navy2);">
+  <div class="section-title">This week's Top Warriors</div>
+  <div class="card-flat" style="max-width:900px;margin:0 auto;padding:36px;">
+    <table class="tarena">
+      <thead>
+        <tr>
+          <th>Rank</th><th>Warrior</th><th>University</th><th class="text-right">P&amp;L This Week</th>
         </tr>
-        <tr><td style="padding:18px 0;">1</td><td>@alexchen07</td><td>UNSW</td><td style="text-align:right;color:var(--green);">+$14,820</td></tr>
-        <tr><td style="padding:18px 0;">2</td><td>@sydneytrader22</td><td>USYD</td><td style="text-align:right;color:var(--green);">+$9,410</td></tr>
-        <tr><td style="padding:18px 0;">3</td><td>@cryptoqueen_mq</td><td>Macquarie</td><td style="text-align:right;color:var(--green);">+$7,650</td></tr>
-      </table>
-    </div>
-  </section>
+      </thead>
+      <tbody>
+        <tr><td><span class="text-gold mono">#1</span></td><td>@alexchen07</td><td>UNSW</td><td class="text-right text-green mono">+$14,820</td></tr>
+        <tr><td><span class="text-gold mono">#2</span></td><td>@sydneytrader22</td><td>USYD</td><td class="text-right text-green mono">+$9,410</td></tr>
+        <tr><td><span class="text-gold mono">#3</span></td><td>@cryptoqueen_mq</td><td>Macquarie</td><td class="text-right text-green mono">+$7,650</td></tr>
+        <tr><td><span class="mono text-muted">#4</span></td><td>@uts_bull</td><td>UTS</td><td class="text-right text-green mono">+$5,320</td></tr>
+        <tr><td><span class="mono text-muted">#5</span></td><td>@grok_grad</td><td>ANU</td><td class="text-right text-green mono">+$4,980</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
 
-  <footer>
-    <div style="display:flex;justify-content:space-between;align-items:flex-end;max-width:1280px;margin:0 auto;">
-      <div>
-        <div class="logo" style="font-size:2rem;margin-bottom:16px;">Trade<span>Arena</span></div>
-        <p style="color:var(--muted);max-width:340px;">Paper trading platform for Australian university students. Real markets. Zero risk. Built in Sydney.</p>
-      </div>
-      <div style="text-align:right;">
-        <p style="font-family:'Cinzel',serif;font-size:13px;letter-spacing:2px;color:var(--gold);">© 2026 TradeArena • All warriors welcome</p>
-        <a href="auth.html" style="color:var(--muted);text-decoration:none;">Already have an account? Sign in →</a>
-      </div>
-    </div>
-  </footer>
+<div id="tarena-footer"></div>
 
-  <script>
-    const SUPA_URL = 'https://chncykagtzotdtflkhim.supabase.co';
-    const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNobmN5a2FndHpvdGR0ZmxraGltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NDYxNjIsImV4cCI6MjA5MTIyMjE2Mn0.ZRrZcBn_hLAPP7xL3kWgkpH5itLIIXzCWb_9_Ics_OE';
-    const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+<script src="assets/app.js"></script>
+<script src="assets/market.js"></script>
+<script>
+  TArenaUI.renderNav('home');
+  TArenaUI.renderFooter();
+  TArenaAuth.seedDemoUsers();
 
-    // Live ticker (same style as your trading pages)
-    const tickers = [
-      {s:"BHP.AX",p:43.82,c:2.02},{s:"CBA.AX",p:145.30,c:-0.45},
-      {s:"RIO.AX",p:118.90,c:1.88},{s:"BTC",p:64320,c:3.81},
-      {s:"CSL.AX",p:312.45,c:0.92}
-    ];
-    function renderTicker() {
-      const container = document.getElementById('live-ticker');
-      container.innerHTML = tickers.map(t => `
-        <div style="display:flex;gap:12px;align-items:center;">
-          <span style="font-weight:700;">${t.s}</span>
-          <span style="font-family:'Cinzel',serif;">${t.p}</span>
-          <span style="color:${t.c>0?'#4ade80':'#f87171'};">${t.c>0?'↑':'↓'} ${t.c}%</span>
-        </div>
-      `).join('');
+  // Update enter-arena button if signed in
+  (function () {
+    const session = TArenaAuth.getSession();
+    if (session) {
+      document.getElementById('arenaBtnLabel').textContent = 'Open the War Room';
     }
+  })();
 
-    // Check login status and change button + nav
-    async function checkLogin() {
-      const { data } = await sb.auth.getSession();
-      const btn = document.getElementById('arena-btn');
-      const navAuth = document.getElementById('nav-auth');
-      const userPill = document.getElementById('user-pill');
+  function enterArena() {
+    if (TArenaAuth.getSession()) window.location.href = 'trade.html';
+    else window.location.href = 'auth.html';
+  }
 
-      if (data?.session) {
-        // Logged in → show "Your Account"
-        document.getElementById('btn-text').innerHTML = `Your Account <i class="fa-solid fa-arrow-right"></i>`;
-        navAuth.textContent = 'Dashboard';
-        navAuth.href = 'trade.html';
-        
-        // Show user pill
-        userPill.style.display = 'flex';
-        document.getElementById('user-name').innerHTML = `
-          ${data.session.user.email.split('@')[0]} 
-          <span style="font-size:12px;color:var(--muted);margin-left:8px;">(Paper Mode)</span>
-        `;
-      } else {
-        // Not logged in
-        document.getElementById('btn-text').textContent = 'Enter the Arena';
-      }
-    }
+  // Live ticker
+  const tickerEl = document.getElementById('live-ticker');
+  function renderTicker() {
+    const items = TArenaMarket.byMarket('all').slice(0, 5);
+    tickerEl.innerHTML = items.map(t => `
+      <span style="display:inline-flex;gap:8px;align-items:center;">
+        <strong>${t.symbol}</strong>
+        <span>${t.price < 100 ? t.price.toFixed(2) : t.price.toLocaleString()}</span>
+        <span style="color:${t.change > 0 ? 'var(--green)' : 'var(--red)'};">${t.change > 0 ? '↑' : '↓'} ${Math.abs(t.change).toFixed(2)}%</span>
+      </span>`).join('');
+  }
+  function updateHeroPrice() {
+    const bhp = TArenaMarket.find('BHP.AX');
+    if (!bhp) return;
+    const el = document.getElementById('hero-price');
+    el.innerHTML = `$${bhp.price.toFixed(2)} <span style="font-size:12px;">${bhp.change > 0 ? '+' : ''}${bhp.change.toFixed(2)}%</span>`;
+    el.className = 'mono ' + (bhp.change > 0 ? 'text-green' : 'text-red');
+  }
+  function updateClock() {
+    const opts = { timeZone: 'Australia/Sydney', hour: 'numeric', minute: '2-digit', hour12: true };
+    document.getElementById('market-clock').textContent = new Date().toLocaleTimeString('en-AU', opts) + ' AEST';
+  }
 
-    async function handleArenaClick() {
-      const { data } = await sb.auth.getSession();
-      if (data?.session) {
-        window.location.href = 'trade.html';
-      } else {
-        window.location.href = 'auth.html';
-      }
-    }
+  renderTicker(); updateHeroPrice(); updateClock();
+  setInterval(() => { TArenaMarket.tick(); renderTicker(); updateHeroPrice(); }, 4000);
+  setInterval(updateClock, 30000);
 
-    async function logout() {
-      await sb.auth.signOut();
-      window.location.reload();
-    }
-
-    // Init
-    window.onload = () => {
-      renderTicker();
-      checkLogin();
-      
-      // Auto refresh ticker every 4 seconds
-      setInterval(() => {
-        tickers.forEach(t => t.c = parseFloat((t.c + (Math.random()*1.8 - 0.9)).toFixed(2)));
-        renderTicker();
-      }, 4000);
-
-      console.log('%c✅ TradeArena Landing Page v2.0 loaded with your exact navy/gold theme', 'color:#e8c060;font-weight:700');
-    };
-  </script>
+  console.log('%c⚔️ TradeArena · Welcome, warrior.', 'color:#e8c060;font-size:14px;font-weight:700;');
+</script>
 </body>
 </html>

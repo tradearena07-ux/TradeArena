@@ -1,513 +1,333 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TradeArena • Portfolio</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        
-        body {
-            font-family: 'Inter', system_ui, sans-serif;
-        }
-        
-        .dashboard-bg {
-            background: linear-gradient(180deg, #0f172a 0%, #020617 100%);
-        }
-        
-        .card-hover {
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .card-hover:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 20px 25px -5px rgb(16 185 129 / 0.1);
-        }
-        
-        .live-dot {
-            animation: pulse 2s infinite;
-        }
-    </style>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TradeArena · Portfolio</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=Cinzel+Decorative:wght@700&amp;family=DM+Sans:wght@300;400;500&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    .pf-header{padding:32px 5% 18px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:18px;}
+    .pf-title h1{font-family:'Cinzel',serif;font-size:2.4rem;letter-spacing:-1px;}
+    .pf-title p{color:var(--muted);margin-top:4px;font-size:14px;}
+    .pf-stats{display:flex;gap:24px;flex-wrap:wrap;}
+    .pf-stat{display:flex;flex-direction:column;}
+    .pf-stat .l{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-family:'Cinzel',serif;}
+    .pf-stat .v{font-family:'Cinzel',serif;font-size:1.6rem;font-weight:700;}
+
+    .pf-body{padding:0 5% 60px;display:flex;flex-direction:column;gap:24px;flex:1;}
+
+    .filter-row{display:flex;gap:8px;flex-wrap:wrap;}
+    .pf-pill{padding:8px 18px;border-radius:9999px;background:var(--navy3);border:1px solid var(--border);cursor:pointer;font-family:'Cinzel',serif;font-size:12px;letter-spacing:.08em;color:var(--muted);transition:all .2s;}
+    .pf-pill:hover{color:var(--cream);}
+    .pf-pill.active{background:rgba(201,160,48,.12);border-color:var(--gold);color:var(--gold2);}
+
+    .perf-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:14px;}
+    .perf-row h3{font-family:'Cinzel',serif;font-size:1.05rem;letter-spacing:.04em;}
+    .perf-tabs{display:flex;gap:6px;}
+    .perf-tab{padding:6px 14px;border-radius:8px;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Cinzel',serif;font-size:11px;letter-spacing:.08em;cursor:pointer;transition:all .2s;}
+    .perf-tab:hover{color:var(--cream);}
+    .perf-tab.active{background:rgba(201,160,48,.12);border-color:var(--gold);color:var(--gold2);}
+
+    .grid-portfolio{display:grid;grid-template-columns:1.6fr 1fr;gap:24px;}
+    @media(max-width:1100px){.grid-portfolio{grid-template-columns:1fr;}}
+
+    .h-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:11px;font-weight:700;color:#fff;letter-spacing:.05em;flex-shrink:0;}
+    .h-icon.asx{background:linear-gradient(135deg,#065f46,#10b981);}
+    .h-icon.us{background:linear-gradient(135deg,#1e40af,#60a5fa);}
+    .h-icon.crypto{background:linear-gradient(135deg,#92400e,#f59e0b);}
+
+    .metric{padding:18px;background:var(--navy3);border:1px solid var(--bdl);border-radius:14px;}
+    .metric .lbl{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+    .metric .val{font-family:'Cinzel',serif;font-size:1.6rem;font-weight:700;}
+    .metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  </style>
 </head>
-<body class="dashboard-bg text-white min-h-screen">
+<body>
 
-    <!-- TOP NAV (same as trade.html) -->
-    <nav class="bg-slate-900 border-b border-slate-700 px-6 py-3 flex items-center justify-between sticky top-0 z-50">
-        <div class="flex items-center gap-8">
-            <!-- Logo -->
-            <div class="flex items-center gap-2">
-                <div class="w-9 h-9 bg-emerald-500 rounded-2xl flex items-center justify-center text-2xl font-bold">₿</div>
-                <h1 class="text-3xl font-bold tracking-tighter">TradeArena</h1>
-            </div>
+<div id="tarena-nav"></div>
 
-            <!-- Market Selector -->
-            <div class="flex items-center gap-2 bg-slate-800 rounded-3xl px-5 py-2 text-sm font-medium">
-                <div class="flex items-center gap-1.5">
-                    <span class="text-emerald-400">🇦🇺</span>
-                    <span>ASX</span>
-                </div>
-                <i class="fa-solid fa-chevron-down text-xs"></i>
-                <div onclick="switchMarket()" class="cursor-pointer hover:text-white px-3 py-1 rounded-3xl transition">🇺🇸 US</div>
-            </div>
+<div class="pf-header">
+  <div class="pf-title">
+    <h1>Your Portfolio</h1>
+    <p>Real-time P&amp;L · Diversification · Performance vs ASX 200</p>
+  </div>
+  <div class="pf-stats">
+    <div class="pf-stat"><span class="l">Portfolio Value</span><span class="v text-green" id="totalValue">$0</span></div>
+    <div class="pf-stat"><span class="l">Total P&amp;L</span><span class="v" id="totalPnl">$0</span></div>
+    <div class="pf-stat"><span class="l">Today's P&amp;L</span><span class="v text-green" id="todayPnl">+$1,284 <span style="font-size:14px;">(+2.71%)</span></span></div>
+  </div>
+</div>
 
-            <!-- Search -->
-            <div class="relative w-96">
-                <input type="text" placeholder="Search your holdings... (BHP, CBA...)" 
-                       class="w-full bg-slate-800 text-white placeholder:text-slate-400 border border-slate-700 focus:border-emerald-500 rounded-3xl pl-12 pr-6 py-3 text-sm outline-none">
-                <i class="fa-solid fa-magnifying-glass absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-            </div>
-        </div>
+<div class="pf-body">
 
-        <div class="flex items-center gap-8">
-            <!-- Portfolio Stats -->
-            <div class="flex items-center gap-6">
-                <div>
-                    <div class="text-xs text-slate-400">Portfolio Value</div>
-                    <div id="total-value" class="text-3xl font-semibold text-emerald-400">$48,742.80</div>
-                </div>
-                <div class="text-right">
-                    <div class="text-xs text-slate-400">Total P&amp;L</div>
-                    <div id="total-pl" class="flex items-center gap-1 text-2xl font-semibold text-emerald-400">
-                        +$4,872.30 <span class="text-emerald-400 text-base">(+11.1%)</span>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <div class="text-xs text-slate-400">Today's P&amp;L</div>
-                    <div id="today-pl" class="flex items-center gap-1 text-lg font-semibold text-emerald-400">
-                        +$1,284.50 <span class="text-emerald-400 text-sm">(+2.71%)</span>
-                    </div>
-                </div>
-            </div>
+  <div class="filter-row">
+    <span class="pf-pill active" onclick="filterPf(this,'all')">All Holdings</span>
+    <span class="pf-pill" onclick="filterPf(this,'asx')">🇦🇺 ASX</span>
+    <span class="pf-pill" onclick="filterPf(this,'us')">🇺🇸 US Stocks</span>
+    <span class="pf-pill" onclick="filterPf(this,'crypto')">₿ Crypto</span>
+    <span style="margin-left:auto;"></span>
+    <button class="btn-ghost" onclick="exportCsv()"><i class="fa-solid fa-download"></i> Export CSV</button>
+  </div>
 
-            <!-- User -->
-            <div class="flex items-center gap-3">
-                <div class="text-right">
-                    <div class="font-semibold">Alex Chen</div>
-                    <div class="text-xs text-slate-400">@tradearena07 • Paper Mode</div>
-                </div>
-                <div class="w-9 h-9 bg-gradient-to-br from-purple-500 to-emerald-500 rounded-2xl flex items-center justify-center text-xl">👨‍💼</div>
-            </div>
-        </div>
-    </nav>
+  <!-- Performance chart -->
+  <div class="card-flat">
+    <div class="perf-row">
+      <h3>Portfolio Performance vs ASX 200</h3>
+      <div class="perf-tabs">
+        <button class="perf-tab" onclick="changePeriod(this,7)">7D</button>
+        <button class="perf-tab active" onclick="changePeriod(this,30)">30D</button>
+        <button class="perf-tab" onclick="changePeriod(this,90)">90D</button>
+        <button class="perf-tab" onclick="changePeriod(this,365)">1Y</button>
+      </div>
+    </div>
+    <canvas id="performanceChart" height="100"></canvas>
+  </div>
 
-    <div class="flex h-[calc(100vh-65px)]">
+  <div class="grid-portfolio">
 
-        <!-- LEFT SIDEBAR (same as trade.html) -->
-        <div class="w-64 bg-slate-900 border-r border-slate-700 p-4 flex flex-col">
-            <nav class="space-y-1">
-                <a onclick="navigateTo('dashboard')" class="flex items-center gap-3 px-4 py-4 hover:bg-slate-800 rounded-3xl transition">
-                    <i class="fa-solid fa-chart-line w-5"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a onclick="navigateTo('markets')" class="flex items-center gap-3 px-4 py-4 hover:bg-slate-800 rounded-3xl transition">
-                    <i class="fa-solid fa-globe w-5"></i>
-                    <span>Markets</span>
-                </a>
-                <a onclick="navigateTo('portfolio')" class="flex items-center gap-3 px-4 py-4 rounded-3xl bg-emerald-500/10 text-emerald-400 font-medium">
-                    <i class="fa-solid fa-briefcase w-5"></i>
-                    <span>Portfolio</span>
-                </a>
-                <a onclick="navigateTo('watchlist')" class="flex items-center gap-3 px-4 py-4 hover:bg-slate-800 rounded-3xl transition">
-                    <i class="fa-solid fa-star w-5"></i>
-                    <span>Watchlist</span>
-                </a>
-                <a onclick="navigateTo('orders')" class="flex items-center gap-3 px-4 py-4 hover:bg-slate-800 rounded-3xl transition">
-                    <i class="fa-solid fa-list-check w-5"></i>
-                    <span>Orders</span>
-                </a>
-                <a onclick="navigateTo('analysis')" class="flex items-center gap-3 px-4 py-4 hover:bg-slate-800 rounded-3xl transition">
-                    <i class="fa-solid fa-brain w-5"></i>
-                    <span>AI Analysis</span>
-                </a>
-            </nav>
-
-            <div class="mt-auto pt-8 border-t border-slate-700">
-                <div onclick="exportPortfolio()" class="flex items-center justify-center gap-2 bg-slate-800 hover:bg-emerald-500 hover:text-black transition px-5 py-4 rounded-3xl cursor-pointer text-sm font-medium">
-                    <i class="fa-solid fa-download"></i>
-                    <span>Export CSV / Tax Report</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- MAIN PORTFOLIO CONTENT -->
-        <div class="flex-1 overflow-auto p-8">
-
-            <div class="flex justify-between items-end mb-8">
-                <div>
-                    <h1 class="text-4xl font-bold">Your Portfolio</h1>
-                    <p class="text-slate-400 mt-1">Real-time P&amp;L • Diversification • Performance curve</p>
-                </div>
-                
-                <div class="flex items-center gap-4">
-                    <div onclick="filterPortfolio('all')" id="filter-all" class="filter-btn active px-6 py-3 rounded-3xl text-sm font-medium cursor-pointer">All Holdings</div>
-                    <div onclick="filterPortfolio('asx')" id="filter-asx" class="filter-btn px-6 py-3 rounded-3xl text-sm font-medium cursor-pointer">ASX Only</div>
-                    <div onclick="filterPortfolio('crypto')" id="filter-crypto" class="filter-btn px-6 py-3 rounded-3xl text-sm font-medium cursor-pointer">Crypto</div>
-                    <div onclick="filterPortfolio('us')" id="filter-us" class="filter-btn px-6 py-3 rounded-3xl text-sm font-medium cursor-pointer">US Stocks</div>
-                </div>
-            </div>
-
-            <!-- PERFORMANCE CURVE -->
-            <div class="bg-slate-900 rounded-3xl p-6 mb-8 border border-slate-700">
-                <div class="flex justify-between mb-6">
-                    <div class="font-semibold text-lg">Portfolio Performance</div>
-                    <div class="flex gap-2 text-sm">
-                        <button onclick="changePerformancePeriod(7)" class="perf-btn active px-5 py-2 rounded-3xl">7D</button>
-                        <button onclick="changePerformancePeriod(30)" class="perf-btn px-5 py-2 rounded-3xl">30D</button>
-                        <button onclick="changePerformancePeriod(90)" class="perf-btn px-5 py-2 rounded-3xl">90D</button>
-                        <button onclick="changePerformancePeriod(365)" class="perf-btn px-5 py-2 rounded-3xl">1Y</button>
-                        <button onclick="changePerformancePeriod('all')" class="perf-btn px-5 py-2 rounded-3xl">ALL</button>
-                    </div>
-                </div>
-                <canvas id="performanceChart" class="w-full h-80"></canvas>
-            </div>
-
-            <div class="grid grid-cols-12 gap-8">
-
-                <!-- HOLDINGS TABLE -->
-                <div class="col-span-8 bg-slate-900 rounded-3xl p-6 border border-slate-700">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="font-semibold text-xl">Holdings • 7 positions</h2>
-                        <div class="text-emerald-400 text-sm flex items-center gap-1 cursor-pointer" onclick="viewAllHoldings()">
-                            View all <i class="fa-solid fa-arrow-right"></i>
-                        </div>
-                    </div>
-
-                    <table class="w-full" id="holdings-table">
-                        <thead>
-                            <tr class="text-xs text-slate-400 border-b border-slate-700">
-                                <th class="text-left py-4 font-medium">ASSET</th>
-                                <th class="text-right py-4 font-medium">QTY</th>
-                                <th class="text-right py-4 font-medium">AVG COST</th>
-                                <th class="text-right py-4 font-medium">CURRENT</th>
-                                <th class="text-right py-4 font-medium">VALUE</th>
-                                <th class="text-right py-4 font-medium">P&amp;L</th>
-                                <th class="text-right py-4 font-medium">% RETURN</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-sm divide-y divide-slate-700" id="holdings-body">
-                            <!-- Populated by JS -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- ALLOCATION + STATS -->
-                <div class="col-span-4 flex flex-col gap-6">
-
-                    <!-- Pie Chart -->
-                    <div class="bg-slate-900 rounded-3xl p-6 border border-slate-700 flex-1">
-                        <div class="font-semibold mb-6">Asset Allocation</div>
-                        <canvas id="allocationChart" class="w-full h-64"></canvas>
-                    </div>
-
-                    <!-- Key Metrics -->
-                    <div class="bg-slate-900 rounded-3xl p-6 border border-slate-700">
-                        <div class="grid grid-cols-2 gap-6">
-                            <div>
-                                <div class="text-xs text-slate-400">XIRR</div>
-                                <div class="text-3xl font-semibold text-emerald-400">18.4%</div>
-                                <div class="text-xs text-emerald-400">+4.2% this month</div>
-                            </div>
-                            <div>
-                                <div class="text-xs text-slate-400">Diversification Score</div>
-                                <div class="text-3xl font-semibold">92/100</div>
-                                <div class="text-xs text-emerald-400">Excellent • Low concentration risk</div>
-                            </div>
-                            <div class="col-span-2 text-xs bg-slate-800 rounded-2xl p-4 flex items-center justify-between">
-                                <span>Biggest winner</span>
-                                <span class="text-emerald-400 font-medium">BTC • +42%</span>
-                            </div>
-                            <div class="col-span-2 text-xs bg-slate-800 rounded-2xl p-4 flex items-center justify-between">
-                                <span>Biggest loser</span>
-                                <span class="text-red-400 font-medium">CBA • -3.8%</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- Holdings table -->
+    <div class="card-flat">
+      <div class="perf-row" style="margin-bottom:8px;">
+        <h3>Holdings <span class="text-muted" style="font-weight:400;font-family:'DM Sans';font-size:13px;letter-spacing:0;">· <span id="holdCount">0</span> positions</span></h3>
+        <a href="trade.html" class="text-gold" style="font-size:13px;">Trade now →</a>
+      </div>
+      <table class="tarena">
+        <thead>
+          <tr>
+            <th>Asset</th>
+            <th class="text-right">Qty</th>
+            <th class="text-right">Avg Cost</th>
+            <th class="text-right">Current</th>
+            <th class="text-right">Value</th>
+            <th class="text-right">P&amp;L</th>
+            <th class="text-right">% Return</th>
+          </tr>
+        </thead>
+        <tbody id="holdings-body"></tbody>
+      </table>
     </div>
 
-    <script>
-        // Tailwind
-        tailwind.config = { content: [] }
+    <!-- Allocation + metrics -->
+    <div style="display:flex;flex-direction:column;gap:24px;">
+      <div class="card-flat">
+        <div class="perf-row" style="margin-bottom:8px;">
+          <h3>Asset Allocation</h3>
+        </div>
+        <canvas id="allocationChart" height="200"></canvas>
+      </div>
 
-        // Fake portfolio holdings (matches your trade.html data)
-        let holdings = [
-            {
-                symbol: "BHP.AX",
-                name: "BHP Group",
-                qty: 420,
-                avgCost: 41.20,
-                current: 43.82,
-                value: 18404.40,
-                pnl: 1104.40,
-                pnlPct: 6.38,
-                type: "asx"
-            },
-            {
-                symbol: "CBA.AX",
-                name: "Commonwealth Bank",
-                qty: 85,
-                avgCost: 148.10,
-                current: 145.30,
-                value: 12350.50,
-                pnl: -238.00,
-                pnlPct: -1.89,
-                type: "asx"
-            },
-            {
-                symbol: "BTC",
-                name: "Bitcoin",
-                qty: 0.12,
-                avgCost: 52000,
-                current: 64320,
-                value: 7718.40,
-                pnl: 1478.40,
-                pnlPct: 23.72,
-                type: "crypto"
-            },
-            {
-                symbol: "AAPL",
-                name: "Apple Inc.",
-                qty: 28,
-                avgCost: 210,
-                current: 228.40,
-                value: 6395.20,
-                pnl: 514.40,
-                pnlPct: 8.75,
-                type: "us"
-            },
-            {
-                symbol: "RIO.AX",
-                name: "Rio Tinto",
-                qty: 65,
-                avgCost: 112,
-                current: 118.90,
-                value: 7728.50,
-                pnl: 449.50,
-                pnlPct: 6.17,
-                type: "asx"
-            },
-            {
-                symbol: "MQG.AX",
-                name: "Macquarie Group",
-                qty: 22,
-                avgCost: 198,
-                current: 212.80,
-                value: 4681.60,
-                pnl: 327.60,
-                pnlPct: 7.52,
-                type: "asx"
-            },
-            {
-                symbol: "CSL.AX",
-                name: "CSL Limited",
-                qty: 12,
-                avgCost: 305,
-                current: 312.45,
-                value: 3749.40,
-                pnl: 89.40,
-                pnlPct: 2.44,
-                type: "asx"
-            }
-        ]
+      <div class="card-flat">
+        <div class="perf-row" style="margin-bottom:14px;"><h3>Key Metrics</h3></div>
+        <div class="metric-grid">
+          <div class="metric"><div class="lbl">XIRR</div><div class="val text-green">18.4%</div><div class="text-green" style="font-size:11px;margin-top:4px;">+4.2% this month</div></div>
+          <div class="metric"><div class="lbl">Diversification</div><div class="val">92<span style="font-size:14px;color:var(--muted);">/100</span></div><div class="text-green" style="font-size:11px;margin-top:4px;">Excellent</div></div>
+          <div class="metric" style="grid-column:span 2;display:flex;justify-content:space-between;align-items:center;"><span class="text-muted" style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;">Biggest Winner</span><span id="bestPerformer" class="text-green mono" style="font-weight:600;"></span></div>
+          <div class="metric" style="grid-column:span 2;display:flex;justify-content:space-between;align-items:center;"><span class="text-muted" style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;">Biggest Loser</span><span id="worstPerformer" class="text-red mono" style="font-weight:600;"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-        function renderHoldings(filteredHoldings = holdings) {
-            const tbody = document.getElementById('holdings-body')
-            tbody.innerHTML = filteredHoldings.map(h => `
-                <tr onclick="loadSymbolInChart('${h.symbol}')" class="hover:bg-slate-800 cursor-pointer transition">
-                    <td class="py-5">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 bg-gradient-to-br ${h.type === 'crypto' ? 'from-orange-500 to-yellow-500' : h.type === 'us' ? 'from-blue-500 to-cyan-500' : 'from-emerald-500 to-teal-500'} rounded-2xl flex items-center justify-center text-white text-xs font-bold">${h.symbol.substring(0,3)}</div>
-                            <div>
-                                <div class="font-semibold">${h.symbol}</div>
-                                <div class="text-xs text-slate-400">${h.name}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="py-5 text-right font-medium">${h.qty}</td>
-                    <td class="py-5 text-right font-mono">$${h.avgCost}</td>
-                    <td class="py-5 text-right font-mono">$${h.current}</td>
-                    <td class="py-5 text-right font-semibold">$${(h.value).toLocaleString('en-US')}</td>
-                    <td class="py-5 text-right ${h.pnl > 0 ? 'text-emerald-400' : 'text-red-400'} font-medium">
-                        ${h.pnl > 0 ? '+' : ''}$${Math.abs(h.pnl).toFixed(2)}
-                    </td>
-                    <td class="py-5 text-right ${h.pnlPct > 0 ? 'text-emerald-400' : 'text-red-400'} font-medium">
-                        ${h.pnlPct > 0 ? '+' : ''}${h.pnlPct.toFixed(1)}%
-                    </td>
-                </tr>
-            `).join('')
-        }
+<div id="tarena-footer"></div>
 
-        // Performance Line Chart (Portfolio vs ASX 200)
-        let performanceChartInstance
-        function initPerformanceChart(days = 30) {
-            const ctx = document.getElementById('performanceChart')
-            if (performanceChartInstance) performanceChartInstance.destroy()
-
-            const labels = Array.from({length: days}, (_, i) => {
-                const d = new Date()
-                d.setDate(d.getDate() - (days - i))
-                return d.toLocaleDateString('en-AU', {day:'numeric', month:'short'})
-            })
-
-            const portfolioData = Array.from({length: days}, (_, i) => 42000 + (i * 420) + Math.random() * 800)
-            const benchmarkData = Array.from({length: days}, (_, i) => 7200 + (i * 45) + Math.random() * 120)
-
-            performanceChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Your Portfolio',
-                            data: portfolioData,
-                            borderColor: '#22c55e',
-                            tension: 0.3,
-                            borderWidth: 3,
-                            pointRadius: 0
-                        },
-                        {
-                            label: 'ASX 200',
-                            data: benchmarkData,
-                            borderColor: '#64748b',
-                            tension: 0.3,
-                            borderWidth: 2,
-                            pointRadius: 0
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: true, position: 'top', align: 'end' } },
-                    scales: {
-                        y: { grid: { color: '#334155' }, ticks: { color: '#64748b' } },
-                        x: { grid: { color: '#334155' }, ticks: { color: '#64748b' } }
-                    }
-                }
-            })
-        }
-
-        // Allocation Pie Chart
-        let allocationChartInstance
-        function initAllocationChart() {
-            const ctx = document.getElementById('allocationChart')
-            if (allocationChartInstance) allocationChartInstance.destroy()
-
-            allocationChartInstance = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['ASX Equities', 'Crypto', 'US Stocks', 'Cash'],
-                    datasets: [{
-                        data: [62, 16, 13, 9],
-                        backgroundColor: ['#10b981', '#f59e0b', '#3b82f6', '#64748b'],
-                        borderColor: '#0f172a',
-                        borderWidth: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    cutout: '70%',
-                    plugins: {
-                        legend: { position: 'bottom', labels: { color: '#e2e8f0', boxWidth: 12, padding: 20, font: { size: 13 } } }
-                    }
-                }
-            })
-        }
-
-        // Live total value updater
-        function simulateLivePortfolio() {
-            setInterval(() => {
-                let value = parseFloat(document.getElementById('total-value').innerText.replace('$', '').replace(',', ''))
-                value += (Math.random() * 120 - 40)
-                document.getElementById('total-value').innerText = '$' + value.toFixed(2)
-
-                // Randomly update one holding
-                if (Math.random() > 0.6) {
-                    holdings[0].current += (Math.random() * 1.2 - 0.5)
-                    holdings[0].value = holdings[0].qty * holdings[0].current
-                    holdings[0].pnl = holdings[0].value - (holdings[0].qty * holdings[0].avgCost)
-                    holdings[0].pnlPct = (holdings[0].pnl / (holdings[0].qty * holdings[0].avgCost)) * 100
-                    renderHoldings()
-                }
-            }, 3200)
-        }
-
-        function filterPortfolio(type) {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'))
-            if (type === 'all') document.getElementById('filter-all').classList.add('active')
-            else if (type === 'asx') document.getElementById('filter-asx').classList.add('active')
-            else if (type === 'crypto') document.getElementById('filter-crypto').classList.add('active')
-            else document.getElementById('filter-us').classList.add('active')
-
-            let filtered = holdings
-            if (type !== 'all') filtered = holdings.filter(h => h.type === type)
-            renderHoldings(filtered)
-        }
-
-        function changePerformancePeriod(period) {
-            document.querySelectorAll('.perf-btn').forEach(b => b.classList.remove('active'))
-            event.target.classList.add('active')
-            initPerformanceChart(typeof period === 'number' ? period : 365)
-        }
-
-        function loadSymbolInChart(symbol) {
-            alert(`📈 Loading ${symbol} in full TradingView chart (opens trade.html automatically in real app)`)
-            // In real SPA you would switch views or open trade.html with ?symbol=BHP.AX
-            window.location.href = 'trade.html?symbol=' + symbol
-        }
-
-        function viewAllHoldings() {
-            alert('🔥 Full detailed holdings view with sparklines and tax implications would load here.\n\nWant me to add sparklines + export next?')
-        }
-
-        function exportPortfolio() {
-            alert('📤 Portfolio exported as CSV + Australian tax report (ready for ATO).')
-        }
-
-        function navigateTo(page) {
-            if (page === 'dashboard') window.location.href = 'trade.html'
-            else if (page === 'orders') alert('📋 Orders page coming next – say YES and I’ll drop it instantly!')
-            else alert(`✅ ${page.toUpperCase()} page would load here.`)
-        }
-
-        function switchMarket() {
-            alert('🌍 Market switched – portfolio now showing combined AU + US + Crypto')
-            renderHoldings()
-        }
-
-        // INIT
-        window.onload = function() {
-            renderHoldings()
-            initPerformanceChart(30)
-            initAllocationChart()
-            simulateLivePortfolio()
-
-            console.log('%c✅ TradeArena Portfolio v2.0 loaded – Zerodha + Groww + TradingView level complete!', 'color:#22c55e; font-size:14px; font-weight:bold')
-            
-            // Supabase note for you
-            console.log('%c💡 Next: Connect this to Supabase? Just give me your table names and I’ll add real fetch() calls.', 'color:#eab308')
-        }
-    </script>
+<script src="assets/app.js"></script>
+<script src="assets/market.js"></script>
 <script>
-    // Auth guard — redirect to login if not logged in
-    async function checkAuth() {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session) window.location.href = 'auth.html'
-    }
-    window.onload = () => { checkAuth(); /* your existing onload code */ }
-</script>
-<script>
-  const sb = supabase.createClient('https://chncykagtzotdtflkhim.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...');
-  async function checkAuth() {
-    const { data } = await sb.auth.getSession();
-    if (!data.session) window.location.href = 'auth.html';
+  if (!TArenaAuth.requireAuth()) {/* redirected */}
+  TArenaUI.renderNav('portfolio');
+  TArenaUI.renderFooter();
+
+  let pfFilter = 'all';
+
+  function filteredHoldings() {
+    return pfFilter === 'all'
+      ? TArenaMarket.holdings
+      : TArenaMarket.holdings.filter(h => h.type === pfFilter);
   }
-  window.onload = () => { checkAuth(); /* your existing onload */ };
+
+  function renderHoldings() {
+    const list = filteredHoldings();
+    document.getElementById('holdCount').textContent = list.length;
+    const tbody = document.getElementById('holdings-body');
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-muted text-right" style="text-align:center;padding:30px;">No holdings in this market.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = list.map(h => {
+      const v = TArenaMarket.holdingValue(h);
+      const sign = v.pnl > 0 ? '+' : '';
+      return `<tr class="row" onclick="window.location.href='trade.html'">
+        <td><div style="display:flex;align-items:center;gap:12px;">
+          <div class="h-icon ${h.type}">${h.symbol.replace('.AX','').slice(0,3)}</div>
+          <div><div style="font-weight:600;">${h.symbol}</div><div class="text-muted" style="font-size:12px;">${v.name}</div></div>
+        </div></td>
+        <td class="text-right mono">${h.qty.toLocaleString('en-US', {maximumFractionDigits:6})}</td>
+        <td class="text-right mono">$${h.avgCost.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+        <td class="text-right mono">$${v.current.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+        <td class="text-right mono" style="font-weight:600;">${TArenaUI.fmtMoney(v.value, {decimals:2})}</td>
+        <td class="text-right ${v.pnl > 0 ? 'text-green' : 'text-red'} mono">${sign}${TArenaUI.fmtMoney(v.pnl, {decimals:2}).replace('-','-')}</td>
+        <td class="text-right ${v.pnlPct > 0 ? 'text-green' : 'text-red'} mono">${sign}${v.pnlPct.toFixed(2)}%</td>
+      </tr>`;
+    }).join('');
+
+    // Best / worst
+    const valued = TArenaMarket.holdings.map(h => ({h, ...TArenaMarket.holdingValue(h)}));
+    valued.sort((a,b) => b.pnlPct - a.pnlPct);
+    const best = valued[0], worst = valued[valued.length - 1];
+    document.getElementById('bestPerformer').textContent = `${best.h.symbol} · +${best.pnlPct.toFixed(1)}%`;
+    document.getElementById('worstPerformer').textContent = `${worst.h.symbol} · ${worst.pnlPct.toFixed(1)}%`;
+  }
+
+  function renderTotals() {
+    document.getElementById('totalValue').textContent = TArenaUI.fmtMoney(TArenaMarket.totalValue(), {decimals:2});
+    const pnl = TArenaMarket.totalPnl();
+    const pct = (pnl / TArenaMarket.totalCost()) * 100;
+    const el = document.getElementById('totalPnl');
+    el.innerHTML = `${pnl >= 0 ? '+' : '-'}${TArenaUI.fmtMoney(Math.abs(pnl), {decimals:2})} <span style="font-size:14px;">(${pnl >= 0 ? '+' : ''}${pct.toFixed(2)}%)</span>`;
+    el.className = 'v ' + (pnl >= 0 ? 'text-green' : 'text-red');
+  }
+
+  function filterPf(el, type) {
+    document.querySelectorAll('.pf-pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    pfFilter = type;
+    renderHoldings();
+  }
+  window.filterPf = filterPf;
+
+  // --- Charts ---
+  let perfChart, allocChart;
+  function buildPerformanceChart(days) {
+    const labels = Array.from({length: days}, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (days - 1 - i));
+      return d.toLocaleDateString('en-AU', {day: 'numeric', month: 'short'});
+    });
+
+    // Random-walk style series
+    function walk(seed, base, drift, vol) {
+      let v = base;
+      const arr = [];
+      for (let i = 0; i < days; i++) {
+        v += drift + (Math.random() - 0.5) * vol;
+        arr.push(Math.max(0, +v.toFixed(2)));
+      }
+      return arr;
+    }
+    const portfolio = walk(1, 42500, 80, 800);
+    const benchmark = walk(2, 42500, 35, 600);
+
+    const ctx = document.getElementById('performanceChart').getContext('2d');
+    if (perfChart) perfChart.destroy();
+    perfChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Your Portfolio',
+            data: portfolio,
+            borderColor: '#e8c060',
+            backgroundColor: 'rgba(201,160,48,0.15)',
+            borderWidth: 2.5, tension: 0.35, pointRadius: 0, fill: true,
+          },
+          {
+            label: 'ASX 200',
+            data: benchmark,
+            borderColor: '#7a8aaa',
+            borderWidth: 1.5, tension: 0.35, pointRadius: 0,
+            borderDash: [4,4],
+          }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', align: 'end',
+            labels: { color: '#f2e8cc', usePointStyle: true, padding: 18, font: { family: 'Cinzel', size: 11 } } },
+          tooltip: { backgroundColor: '#091528', borderColor: '#c9a030', borderWidth: 1, titleColor: '#e8c060', bodyColor: '#f2e8cc' }
+        },
+        scales: {
+          y: { grid: { color: 'rgba(201,160,48,0.06)' }, ticks: { color: '#7a8aaa', callback: v => '$' + (v/1000).toFixed(0) + 'k' } },
+          x: { grid: { color: 'rgba(201,160,48,0.04)' }, ticks: { color: '#7a8aaa', maxRotation: 0, autoSkip: true, maxTicksLimit: 10 } }
+        }
+      }
+    });
+  }
+  function buildAllocationChart() {
+    const groups = { ASX: 0, US: 0, Crypto: 0 };
+    TArenaMarket.holdings.forEach(h => {
+      const v = TArenaMarket.holdingValue(h).value;
+      if (h.type === 'asx') groups.ASX += v;
+      else if (h.type === 'us') groups.US += v;
+      else if (h.type === 'crypto') groups.Crypto += v;
+    });
+    const total = Object.values(groups).reduce((a,b)=>a+b,0);
+    const cash = total * 0.05;
+    const ctx = document.getElementById('allocationChart').getContext('2d');
+    if (allocChart) allocChart.destroy();
+    allocChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['ASX Equities', 'US Stocks', 'Crypto', 'Cash'],
+        datasets: [{
+          data: [groups.ASX, groups.US, groups.Crypto, cash],
+          backgroundColor: ['#10b981','#60a5fa','#f59e0b','#7a8aaa'],
+          borderColor: '#091528', borderWidth: 4,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '68%',
+        plugins: {
+          legend: { position: 'bottom', labels: { color: '#f2e8cc', boxWidth: 12, padding: 16, font: { family: 'Cinzel', size: 11 } } },
+          tooltip: { backgroundColor: '#091528', borderColor: '#c9a030', borderWidth: 1, titleColor: '#e8c060', bodyColor: '#f2e8cc',
+            callbacks: { label: c => `${c.label}: ${TArenaUI.fmtMoney(c.parsed, {decimals:0})}` } }
+        }
+      }
+    });
+  }
+  function changePeriod(el, n) {
+    document.querySelectorAll('.perf-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    buildPerformanceChart(n);
+  }
+  window.changePeriod = changePeriod;
+
+  function exportCsv() {
+    const rows = [['Symbol','Name','Qty','Avg Cost','Current','Value','P&L','% Return']];
+    TArenaMarket.holdings.forEach(h => {
+      const v = TArenaMarket.holdingValue(h);
+      rows.push([h.symbol, v.name, h.qty, h.avgCost, v.current.toFixed(2), v.value.toFixed(2), v.pnl.toFixed(2), v.pnlPct.toFixed(2) + '%']);
+    });
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], {type: 'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'tradearena-portfolio-' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+  window.exportCsv = exportCsv;
+
+  // --- Init ---
+  renderHoldings();
+  renderTotals();
+  buildPerformanceChart(30);
+  buildAllocationChart();
+
+  setInterval(() => {
+    TArenaMarket.tick();
+    renderHoldings();
+    renderTotals();
+  }, 4500);
+
+  console.log('%c⚔️ TradeArena · Portfolio loaded.', 'color:#e8c060;font-weight:700;');
 </script>
 </body>
 </html>
