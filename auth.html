@@ -3,14 +3,13 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TradeArena — Enter the Arena</title>
+  <title>TradeArena — Sign in</title>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=Cinzel+Decorative:wght@700&amp;family=DM+Sans:wght@300;400;500&amp;display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
   <link rel="stylesheet" href="assets/styles.css"/>
   <style>
-    body{display:flex;flex-direction:column;}
     .auth-wrap{flex:1;display:grid;grid-template-columns:420px 1fr;min-height:calc(100vh - 80px);}
     .auth-left{background:var(--navy2);border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:center;padding:48px;position:relative;overflow:hidden;}
     .auth-left::before{content:'';position:absolute;top:-100px;left:-100px;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(201,160,48,.08) 0%,transparent 70%);pointer-events:none;}
@@ -23,8 +22,8 @@
     .perk strong{color:var(--cream);}
     .auth-right{flex:1;display:flex;align-items:center;justify-content:center;padding:48px 32px;position:relative;}
     .auth-right::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:600px;height:360px;background:radial-gradient(ellipse at top,rgba(201,160,48,.07) 0%,transparent 65%);pointer-events:none;}
-    .auth-card{position:relative;z-index:1;width:100%;max-width:420px;}
-    .toggle-row{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--border);margin-bottom:28px;border-radius:8px;overflow:hidden;}
+    .auth-card{position:relative;z-index:1;width:100%;max-width:440px;}
+    .toggle-row{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--border);margin-bottom:28px;border-radius:12px;overflow:hidden;}
     .tbtn{padding:14px 10px;text-align:center;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);background:transparent;border:none;border-bottom:2px solid transparent;transition:all .2s;}
     .tbtn .ticon{display:block;font-size:20px;margin-bottom:4px;}
     .tbtn .tsub{display:block;font-family:'DM Sans',sans-serif;font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);margin-top:3px;font-weight:300;}
@@ -38,9 +37,9 @@
     .otp-to{font-size:13px;color:var(--muted);text-align:center;margin-bottom:18px;line-height:1.6;}
     .otp-to strong{display:block;color:var(--gold2);font-size:14px;margin-top:4px;}
     .orow{display:flex;gap:9px;justify-content:center;margin-bottom:14px;}
-    .obox{width:50px;height:60px;text-align:center;font-family:'Cinzel',serif;font-size:1.7rem;font-weight:700;background:var(--navy3);border:1px solid var(--border);color:var(--gold2);outline:none;caret-color:transparent;border-radius:8px;transition:all .15s;}
-    .obox:focus{border-color:var(--gold);background:var(--navy4);transform:scale(1.05);}
-    .obox.filled{border-color:rgba(201,160,48,.55);background:rgba(201,160,48,.04);}
+    .obox{width:54px;height:64px;text-align:center;font-family:'Cinzel',serif;font-size:1.8rem;font-weight:700;background:var(--navy3);border:1px solid var(--border);color:var(--gold2);outline:none;caret-color:var(--gold);border-radius:10px;transition:all .15s;}
+    .obox:focus{border-color:var(--gold);background:var(--navy4);transform:scale(1.05);box-shadow:0 0 0 4px rgba(201,160,48,.12);}
+    .obox.filled{border-color:rgba(201,160,48,.55);background:rgba(201,160,48,.06);}
     .obox.shk{border-color:var(--red);animation:shk .4s ease;}
     @keyframes shk{0%,100%{transform:translateX(0);}25%,75%{transform:translateX(-6px);}50%{transform:translateX(6px);}}
     .otimer{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.1em;color:var(--muted);text-align:center;margin-bottom:18px;}
@@ -54,9 +53,44 @@
     .ubadge{font-size:9px;font-family:'Cinzel',serif;letter-spacing:.05em;padding:3px 10px;border:1px solid rgba(201,160,48,.18);color:var(--muted);border-radius:9999px;}
     .step{display:none;}
     .step.on{display:block;}
-    .demo-banner{background:rgba(201,160,48,.1);border:1px dashed var(--gold);border-radius:8px;padding:14px 16px;margin-bottom:14px;text-align:center;font-size:13px;color:var(--cream);}
-    .demo-banner .code{display:block;font-family:'Cinzel',serif;font-size:1.6rem;letter-spacing:.5em;color:var(--gold2);margin-top:6px;font-weight:700;}
-    .demo-banner small{color:var(--muted);font-size:11px;display:block;margin-top:6px;}
+
+    /* SUPER VISIBLE demo banner */
+    .demo-card{
+      background:linear-gradient(135deg, rgba(201,160,48,.18), rgba(232,192,96,.08));
+      border:2px solid var(--gold);
+      border-radius:16px;padding:18px 18px 16px;margin-bottom:22px;text-align:center;
+      box-shadow:0 12px 40px -10px rgba(201,160,48,.4);
+      position:relative;
+      animation:demoPulse 2.5s ease infinite;
+    }
+    @keyframes demoPulse{0%,100%{box-shadow:0 12px 40px -10px rgba(201,160,48,.4);}50%{box-shadow:0 18px 50px -10px rgba(201,160,48,.6);}}
+    .demo-card .demo-tag{display:inline-flex;align-items:center;gap:6px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--navy);background:var(--gold2);padding:3px 10px;border-radius:9999px;font-weight:700;margin-bottom:10px;}
+    .demo-card .demo-msg{font-size:13px;color:var(--cream);margin-bottom:6px;}
+    .demo-card .demo-code{
+      font-family:'Cinzel',serif;font-size:2.4rem;letter-spacing:.4em;color:var(--gold2);
+      font-weight:700;line-height:1;margin:8px 0 10px 6px;cursor:pointer;
+      transition:transform .15s;
+      display:inline-block;
+    }
+    .demo-card .demo-code:hover{transform:scale(1.04);}
+    .demo-card .demo-actions{display:flex;gap:8px;justify-content:center;margin-top:6px;flex-wrap:wrap;}
+    .demo-card .mini-btn{
+      background:var(--navy);border:1px solid var(--gold);color:var(--gold2);
+      font-family:'Cinzel',serif;font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;
+      padding:7px 14px;border-radius:9999px;cursor:pointer;font-weight:600;
+      transition:background .2s, color .2s;
+    }
+    .demo-card .mini-btn:hover{background:var(--gold2);color:var(--navy);}
+    .demo-card small{display:block;color:var(--muted);font-size:10.5px;margin-top:8px;line-height:1.5;}
+
+    .session-banner{
+      background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);
+      border-radius:12px;padding:14px;margin-bottom:18px;
+      display:flex;align-items:center;gap:12px;
+    }
+    .session-banner .sb-text{flex:1;font-size:13px;line-height:1.5;}
+    .session-banner .sb-text strong{color:var(--green);}
+
     @media(max-width:780px){.auth-wrap{grid-template-columns:1fr;}.auth-left{display:none;}}
   </style>
 </head>
@@ -80,6 +114,15 @@
   <div class="auth-right">
     <div class="auth-card">
 
+      <!-- Already signed in banner -->
+      <div class="session-banner" id="sessionBanner" style="display:none;">
+        <div id="sbAvatar"></div>
+        <div class="sb-text">
+          <strong>You're signed in</strong> as <span id="sbEmail">—</span><br>
+          <span class="text-muted" style="font-size:12px;">Redirecting to your profile…</span>
+        </div>
+      </div>
+
       <div class="step on" id="s1">
         <div class="toggle-row">
           <button class="tbtn as" id="btnS" onclick="setType('student')">
@@ -91,7 +134,7 @@
         </div>
         <div class="stag" id="stag">Student Access</div>
         <h1>Enter<br>the Arena</h1>
-        <p class="sub" id="sub1">Enter your university email. We'll send a 6-digit code — verify right here.</p>
+        <p class="sub" id="sub1">Pick <strong>Student</strong> for your <code>.edu.au</code> email, or <strong>Public</strong> to use any email (Gmail, etc). We'll show your verification code right here.</p>
         <div class="error-box" id="e1"></div>
         <div class="field">
           <label id="elbl">University Email</label>
@@ -111,14 +154,22 @@
       </div>
 
       <div class="step" id="s2">
+
+        <!-- HUGE demo banner -->
+        <div class="demo-card" id="demoCard">
+          <div class="demo-tag">📨 Demo Mode</div>
+          <div class="demo-msg">Your verification code is</div>
+          <div class="demo-code" id="demoCode" onclick="copyCode()" title="Click to copy">000000</div>
+          <div class="demo-actions">
+            <button class="mini-btn" onclick="autoFillAndVerify()"><i class="fa-solid fa-bolt"></i> Use this code</button>
+            <button class="mini-btn" onclick="copyCode()"><i class="fa-solid fa-copy"></i> Copy</button>
+          </div>
+          <small>This is a static demo — your code is shown here instead of emailed. In production it goes to your inbox.</small>
+        </div>
+
         <div class="stag">Verification Code</div>
         <h1>Enter<br>Your Code</h1>
         <p class="otp-to">6-digit code sent to<strong id="sentTo">—</strong></p>
-        <div class="demo-banner" id="demoBanner" style="display:none;">
-          <div>📨 <strong>Demo mode</strong> — your code is</div>
-          <span class="code" id="demoCode">000000</span>
-          <small>(In production this is emailed. Static demos show it here.)</small>
-        </div>
         <div class="error-box" id="e2"></div>
         <div class="orow">
           <input class="obox" id="d1" maxlength="1" inputmode="numeric" autocomplete="one-time-code"/>
@@ -131,13 +182,13 @@
         <div class="otimer" id="timerEl">Code expires in <span class="tc" id="tc">10:00</span></div>
         <button class="btn-gold full" id="vBtn" onclick="verify()">Verify &amp; Enter Arena</button>
         <button class="btn-ghost full" style="margin-top:12px;" onclick="goBack()">← Change Email</button>
-        <p class="note" style="margin-top:14px;">No email? Check spam &nbsp;·&nbsp; <a onclick="resend();return false;">Resend →</a></p>
+        <p class="note" style="margin-top:14px;">Need a fresh code? &nbsp;·&nbsp; <a onclick="resend();return false;">Resend →</a></p>
       </div>
 
       <div class="step" id="s3">
         <div class="stag" style="color:var(--green);">Welcome, Warrior</div>
         <h1>You're in!</h1>
-        <p class="sub">Redirecting to the arena…</p>
+        <p class="sub">Loading your profile…</p>
         <div style="text-align:center;padding:30px 0;">
           <span class="spin" style="width:32px;height:32px;border-width:3px;border-color:rgba(201,160,48,.3);border-top-color:var(--gold);"></span>
         </div>
@@ -153,10 +204,14 @@
 
   // If already signed in, skip straight to the arena.
   (function () {
-    if (TArenaAuth.getSession()) {
+    const s = TArenaAuth.getSession();
+    if (s) {
+      const banner = document.getElementById('sessionBanner');
+      banner.style.display = 'flex';
+      document.getElementById('sbAvatar').innerHTML = TArenaUI.avatarHtml(s.user, 38);
+      document.getElementById('sbEmail').innerHTML = `<strong>${s.user.email}</strong>`;
       document.getElementById('s1').classList.remove('on');
-      document.getElementById('s3').classList.add('on');
-      setTimeout(() => window.location.href = 'trade.html', 1200);
+      setTimeout(() => window.location.href = 'profile.html', 1400);
     }
   })();
 
@@ -172,14 +227,14 @@
       document.getElementById('stag').textContent = 'Student Access';
       document.getElementById('elbl').textContent = 'University Email';
       document.getElementById('eIn').placeholder = 'you@student.unsw.edu.au';
-      document.getElementById('sub1').textContent = 'Enter your university email. We\'ll send a 6-digit code — verify right here.';
+      document.getElementById('sub1').innerHTML = 'Enter your <strong>.edu.au</strong> university email. We\'ll show your 6-digit code on the next screen — verify right here.';
       document.getElementById('n1').innerHTML = 'Must be a university email (.edu.au) &nbsp;·&nbsp; <a href="index.html">← Back</a>';
       document.getElementById('ustrip').style.display = 'block';
     } else {
       document.getElementById('stag').textContent = 'Public Access';
       document.getElementById('elbl').textContent = 'Your Email';
       document.getElementById('eIn').placeholder = 'you@gmail.com';
-      document.getElementById('sub1').textContent = 'Anyone can join TradeArena. Enter any email to get your 6-digit verification code.';
+      document.getElementById('sub1').innerHTML = 'Anyone can join TradeArena. Use <strong>any</strong> email (Gmail, Outlook, etc) — no .edu.au required.';
       document.getElementById('n1').innerHTML = 'Open to everyone &nbsp;·&nbsp; <a href="index.html">← Back</a>';
       document.getElementById('ustrip').style.display = 'none';
     }
@@ -216,15 +271,14 @@
         return;
       }
       // Move to OTP step
-      document.getElementById('sentTo').textContent = email;
-      document.getElementById('demoBanner').style.display = 'block';
+      document.getElementById('sentTo').textContent = result.email;
       document.getElementById('demoCode').textContent = result.code;
       document.getElementById('s1').classList.remove('on');
       document.getElementById('s2').classList.add('on');
       DS.forEach(id => { document.getElementById(id).value = ''; document.getElementById(id).classList.remove('filled', 'shk'); });
       startTimer(result.expiresAt);
       setTimeout(() => document.getElementById('d1').focus(), 100);
-    }, 450);
+    }, 380);
   }
 
   function startTimer(expiresAt) {
@@ -269,8 +323,33 @@
       hideError('e2');
       document.getElementById('s2').classList.remove('on');
       document.getElementById('s3').classList.add('on');
-      setTimeout(() => window.location.href = 'trade.html', 900);
+      setTimeout(() => window.location.href = 'profile.html', 900);
     }, 350);
+  }
+
+  function autoFillAndVerify() {
+    const code = document.getElementById('demoCode').textContent.trim();
+    if (!/^\d{6}$/.test(code)) return;
+    code.split('').forEach((ch, i) => {
+      const el = document.getElementById(DS[i]);
+      el.value = ch;
+      el.classList.add('filled');
+    });
+    setTimeout(verify, 200);
+  }
+
+  function copyCode() {
+    const code = document.getElementById('demoCode').textContent.trim();
+    if (!/^\d{6}$/.test(code)) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(code).then(() => {
+        const c = document.getElementById('demoCode');
+        const orig = c.textContent;
+        c.style.color = 'var(--green)';
+        c.textContent = 'COPIED';
+        setTimeout(() => { c.textContent = orig; c.style.color = ''; }, 800);
+      });
+    }
   }
 
   function resend() {
@@ -332,7 +411,7 @@
     if (e.key === 'Enter') sendCode();
   });
 
-  console.log('%c⚔️ TradeArena Auth ready · demo mode active', 'color:#e8c060;font-weight:700;');
+  console.log('%c⚔️ TradeArena Auth ready · demo OTP visible on screen', 'color:#e8c060;font-weight:700;');
 </script>
 </body>
 </html>

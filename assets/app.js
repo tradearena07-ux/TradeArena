@@ -4,6 +4,7 @@
   const SESSION_KEY = 'tarena_session';
   const PENDING_KEY = 'tarena_pending_otp';
   const REGS_KEY    = 'tarena_registrations';
+  const PROFILES_KEY = 'tarena_profiles';
 
   function genCode() {
     let c = '';
@@ -55,6 +56,32 @@
     localStorage.removeItem(PENDING_KEY);
   }
 
+  // ------- Profile (per-user editable data) -------
+  function _profiles() {
+    try { return JSON.parse(localStorage.getItem(PROFILES_KEY) || '{}'); } catch (e) { return {}; }
+  }
+  function getProfile(email) {
+    const all = _profiles();
+    if (all[email]) return all[email];
+    // Default profile
+    const local = (email || '').split('@')[0];
+    const display = local.split(/[._-]/).map(w => w[0] ? w[0].toUpperCase() + w.slice(1) : '').join(' ').trim() || email;
+    const uni = getUniversity(email);
+    return {
+      email,
+      displayName: display,
+      bio: uni === 'Public' ? 'Trading the markets · Paper mode' : `Studying at ${uni} · Paper mode warrior`,
+      tier: 'Bronze Warrior',
+      country: '🇦🇺',
+    };
+  }
+  function saveProfile(email, updates) {
+    const all = _profiles();
+    all[email] = Object.assign(getProfile(email), updates);
+    localStorage.setItem(PROFILES_KEY, JSON.stringify(all));
+    return all[email];
+  }
+
   // sendOtp(email, type) → { ok, code, expiresAt, error }
   function sendOtp(email, type) {
     email = (email || '').trim().toLowerCase();
@@ -63,7 +90,7 @@
       return { ok: false, error: 'That doesn\'t look like a valid email address.' };
     }
     if (type === 'student' && !isStudentEmail(email)) {
-      return { ok: false, error: 'Please use a university email (.edu.au) or switch to Public access.' };
+      return { ok: false, error: 'Please use a university email (.edu.au) or switch to <strong>Public</strong> access above.' };
     }
     const code = genCode();
     const expiresAt = Date.now() + 10 * 60 * 1000;
@@ -76,12 +103,13 @@
     if (!raw) return { ok: false, error: 'No code pending. Request a new one.' };
     let p; try { p = JSON.parse(raw); } catch (e) { return { ok: false, error: 'Pending code is corrupted.' }; }
     if (Date.now() > p.expiresAt) return { ok: false, error: 'Code expired. Request a new one.' };
-    if (String(code) !== p.code)  return { ok: false, error: 'Incorrect code. Please try again.' };
+    if (String(code) !== String(p.code))  return { ok: false, error: 'Incorrect code. Please try again.' };
 
     const session = {
       user: {
         email:      p.email,
-        handle:     '@' + p.email.split('@')[0].replace(/\./g, '_'),
+        handle:     '@' + p.email.split('@')[0].replace(/[^a-z0-9_]/g, '_').toLowerCase(),
+        username:   p.email.split('@')[0].replace(/[^a-z0-9_]/g, '_').toLowerCase(),
         university: getUniversity(p.email),
         type:       p.type,
         joinedAt:   Date.now(),
@@ -106,9 +134,7 @@
     return { ok: true, session };
   }
 
-  function signOut() {
-    clearSession();
-  }
+  function signOut() { clearSession(); }
 
   function requireAuth() {
     const s = getSession();
@@ -124,7 +150,7 @@
   }
 
   function clearAllData() {
-    [SESSION_KEY, PENDING_KEY, REGS_KEY, 'tarena_orders', 'tarena_watchlist'].forEach(k => localStorage.removeItem(k));
+    [SESSION_KEY, PENDING_KEY, REGS_KEY, PROFILES_KEY, 'tarena_orders', 'tarena_watchlist'].forEach(k => localStorage.removeItem(k));
   }
 
   function seedDemoUsers() {
@@ -144,6 +170,29 @@
     localStorage.setItem(REGS_KEY, JSON.stringify(merged));
   }
 
+  // ------- Avatar (initials + deterministic gradient) -------
+  function getAvatar(emailOrUser) {
+    const email = typeof emailOrUser === 'string' ? emailOrUser : (emailOrUser && emailOrUser.email) || '';
+    const local = email.split('@')[0] || email || '?';
+    const parts = local.split(/[._-]/).filter(Boolean);
+    const initials = ((parts[0] || '?')[0] + (parts[1] ? parts[1][0] : (parts[0][1] || ''))).toUpperCase();
+    let hash = 0;
+    for (let i = 0; i < email.length; i++) hash = ((hash << 5) - hash + email.charCodeAt(i)) | 0;
+    const h1 = Math.abs(hash) % 360;
+    const h2 = (h1 + 35) % 360;
+    return {
+      initials: initials || '??',
+      gradient: `linear-gradient(135deg, hsl(${h1},65%,45%), hsl(${h2},75%,55%))`,
+      hue: h1,
+    };
+  }
+
+  function avatarHtml(emailOrUser, size) {
+    size = size || 36;
+    const a = getAvatar(emailOrUser);
+    return `<div class="ta-avatar" style="width:${size}px;height:${size}px;background:${a.gradient};font-size:${Math.round(size*0.38)}px;">${a.initials}</div>`;
+  }
+
   // ---------- Shared NAV / FOOTER renderers ----------
   function logoSvg() {
     return `<svg width="30" height="34" viewBox="0 0 40 46" fill="none" aria-hidden="true">
@@ -158,8 +207,8 @@
     const links = [
       { id: 'trade',     href: 'trade.html',     label: 'Trade' },
       { id: 'portfolio', href: 'portfolio.html', label: 'Portfolio' },
+      { id: 'profile',   href: 'profile.html',   label: 'Profile' },
       { id: 'leagues',   href: '#leagues',       label: 'Leagues' },
-      { id: 'campus',    href: '#campus',        label: 'Campus' },
     ];
     const session = getSession();
     const linksHtml = links.map(l =>
@@ -168,14 +217,32 @@
 
     let accountHtml;
     if (session) {
+      const u = session.user;
       accountHtml = `
-        <div class="user-pill" id="userPill" title="Click to sign out">
-          <span class="dot"></span>
-          <span>${session.user.handle}</span>
-          <span class="text-muted" style="font-size:11px;">· ${session.user.university}</span>
+        <div class="ta-account-wrap">
+          <button class="ta-pill" id="userPill" aria-label="Open account menu">
+            ${avatarHtml(u, 32)}
+            <span class="ta-pill-name">${u.handle}</span>
+            <i class="fa-solid fa-chevron-down" style="font-size:10px;color:var(--muted);"></i>
+          </button>
+          <div class="ta-menu" id="userMenu">
+            <a href="profile.html" class="ta-menu-row">
+              ${avatarHtml(u, 38)}
+              <div>
+                <div style="font-weight:600;color:var(--cream);">${u.handle}</div>
+                <div class="text-muted" style="font-size:11.5px;">${u.email}</div>
+              </div>
+            </a>
+            <div class="ta-menu-sep"></div>
+            <a href="profile.html" class="ta-menu-link"><i class="fa-solid fa-user"></i> View profile</a>
+            <a href="portfolio.html" class="ta-menu-link"><i class="fa-solid fa-briefcase"></i> Portfolio</a>
+            <a href="trade.html" class="ta-menu-link"><i class="fa-solid fa-bolt"></i> Trade</a>
+            <div class="ta-menu-sep"></div>
+            <button class="ta-menu-link ta-menu-logout" id="logoutBtn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out</button>
+          </div>
         </div>`;
     } else {
-      accountHtml = `<a href="auth.html" class="btn-account ${activePage === 'auth' ? 'active' : ''}">Account</a>`;
+      accountHtml = `<a href="auth.html" class="btn-account ${activePage === 'auth' ? 'active' : ''}">Sign in</a>`;
     }
 
     const html = `
@@ -189,12 +256,23 @@
     if (mount) {
       mount.innerHTML = html;
       const pill = document.getElementById('userPill');
-      if (pill) pill.addEventListener('click', () => {
-        if (confirm('Sign out of TradeArena?')) {
+      const menu = document.getElementById('userMenu');
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (pill && menu) {
+        pill.addEventListener('click', e => {
+          e.stopPropagation();
+          menu.classList.toggle('open');
+        });
+        document.addEventListener('click', e => {
+          if (!menu.contains(e.target) && e.target !== pill) menu.classList.remove('open');
+        });
+      }
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
           signOut();
           window.location.href = 'index.html';
-        }
-      });
+        });
+      }
     }
   }
 
@@ -234,6 +312,7 @@
     sendOtp, verifyOtp, getSession, signOut, requireAuth,
     isStudentEmail, getUniversity, getRegistrations,
     clearAllData, seedDemoUsers,
+    getProfile, saveProfile,
   };
-  global.TArenaUI = { renderNav, renderFooter, fmtMoney, fmtPct, logoSvg };
+  global.TArenaUI = { renderNav, renderFooter, fmtMoney, fmtPct, logoSvg, getAvatar, avatarHtml };
 })(window);
