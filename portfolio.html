@@ -502,7 +502,7 @@
     window.onload = () => { checkAuth(); /* your existing onload code */ }
 </script>
 <script>
-  const sb = Supabase.createClient('https://chncykagtzotdtflkhim.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...');
+  const sb = supabase.createClient('https://chncykagtzotdtflkhim.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...');
   async function checkAuth() {
     const { data } = await sb.auth.getSession();
     if (!data.session) window.location.href = 'auth.html';
