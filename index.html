@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TradeArena — Where Traders Battle &amp; Grow</title>
+  <title>TradeArena — Paper trading for Australian students</title>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=Cinzel+Decorative:wght@700&amp;family=DM+Sans:wght@300;400;500&amp;display=swap" rel="stylesheet"/>
@@ -35,16 +35,16 @@
 <div class="hero">
   <div class="hero-left">
     <div class="badge"><span class="live-dot"></span> ASX + CRYPTO LIVE · <span id="market-clock">11:16 PM AEST</span></div>
-    <h1>Where traders<br><em>battle &amp; grow.</em></h1>
-    <p>Paper trade real ASX stocks, US shares &amp; crypto.<br>Zero risk. Real-time prices. Campus leaderboards. Built for warriors.</p>
+    <h1>Sharpen your<br><em>trading edge.</em></h1>
+    <p>Paper trade real ASX stocks, US shares &amp; crypto.<br>Zero risk. Real-time prices. Campus leagues. Built for serious traders.</p>
     <button id="arenaBtn" class="btn-gold lg" onclick="enterArena()">
-      <span id="arenaBtnLabel">Enter the Arena</span>
+      <span id="arenaBtnLabel">Start trading</span>
       <i class="fa-solid fa-arrow-right"></i>
     </button>
     <div class="stats-row">
-      <div><strong class="text-green">4,872</strong> warriors online</div>
+      <div><strong class="text-green">4,872</strong> traders online</div>
       <div><strong>$2.4M</strong> paper volume today</div>
-      <div>Next campus battle: <strong class="text-gold">USYD vs UNSW</strong> in 47h</div>
+      <div>Next campus league: <strong class="text-gold">USYD vs UNSW</strong> in 47h</div>
     </div>
   </div>
 
@@ -72,12 +72,12 @@
 
 <!-- FEATURES -->
 <section>
-  <div class="section-title">Built for Australian warriors</div>
+  <div class="section-title">Built for Australian traders</div>
   <div class="features-grid">
     <div class="feature-card">
       <i class="fa-solid fa-bolt"></i>
-      <h3>Instant 6-digit OTP</h3>
-      <p class="text-muted" style="line-height:1.6;">Sign up in 8 seconds. No passwords first time. Verify with a 6-digit code we send straight to your inbox.</p>
+      <h3>Sign up in seconds</h3>
+      <p class="text-muted" style="line-height:1.6;">Verify your email once with a 6-digit code, then set a password. Log in normally from then on — no OTPs every time.</p>
     </div>
     <div class="feature-card">
       <i class="fa-solid fa-trophy"></i>
@@ -99,12 +99,12 @@
 
 <!-- LEADERBOARD -->
 <section style="background:var(--navy2);">
-  <div class="section-title">This week's Top Warriors</div>
+  <div class="section-title">This week's top traders</div>
   <div class="card-flat" style="max-width:900px;margin:0 auto;padding:36px;">
     <table class="tarena">
       <thead>
         <tr>
-          <th>Rank</th><th>Warrior</th><th>University</th><th class="text-right">P&amp;L This Week</th>
+          <th>Rank</th><th>Trader</th><th>University</th><th class="text-right">P&amp;L This Week</th>
         </tr>
       </thead>
       <tbody>
@@ -167,7 +167,7 @@
   setInterval(() => { TArenaMarket.tick(); renderTicker(); updateHeroPrice(); }, 4000);
   setInterval(updateClock, 30000);
 
-  console.log('%c⚔️ TradeArena · Welcome, warrior.', 'color:#e8c060;font-size:14px;font-weight:700;');
+  console.log('%cTradeArena · Welcome back.', 'color:#e8c060;font-size:14px;font-weight:700;');
 </script>
 </body>
 </html>

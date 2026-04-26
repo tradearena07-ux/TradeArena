@@ -61,8 +61,8 @@
 
 <div class="admin-header">
   <div>
-    <h1>Admin · War Room</h1>
-    <p>Manage warriors, monitor activity, seed demo data.</p>
+    <h1>Admin · Control Panel</h1>
+    <p>Manage members, monitor activity, seed demo data.</p>
   </div>
   <div class="actions">
     <button class="btn-ghost" onclick="seedUsers()"><i class="fa-solid fa-seedling"></i> Seed Demo Users</button>
@@ -77,7 +77,7 @@
   <div class="stat-grid">
     <div class="stat-tile">
       <div class="icon"><i class="fa-solid fa-users"></i></div>
-      <div class="lbl">Total Warriors</div>
+      <div class="lbl">Total Members</div>
       <div class="val" id="statTotal">0</div>
       <div class="sub" id="statTotalSub">All time</div>
     </div>
@@ -227,7 +227,7 @@
     render();
   }
   function clearAll() {
-    if (!confirm('This will clear ALL warriors, sessions, watchlists and orders.\n\nProceed?')) return;
+    if (!confirm('This will clear ALL members, sessions, watchlists and orders.\n\nProceed?')) return;
     TArenaAuth.clearAllData();
     render();
   }

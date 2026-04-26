@@ -173,7 +173,7 @@
         <div class="pf-name" id="displayName">—</div>
         <div class="pf-bio" id="bio">—</div>
         <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-          <span class="pf-tier"><i class="fa-solid fa-shield-halved"></i> <span id="tier">Bronze Warrior</span></span>
+          <span class="pf-tier"><i class="fa-solid fa-shield-halved"></i> <span id="tier">Member</span></span>
           <span class="badge"><span class="live-dot"></span> ASX OPEN</span>
         </div>
       </div>
@@ -234,7 +234,7 @@
     </div>
     <div class="modal-row">
       <label>Tier</label>
-      <input type="text" id="editTier" maxlength="30" placeholder="Bronze Warrior"/>
+      <input type="text" id="editTier" maxlength="30" placeholder="Member"/>
     </div>
     <div style="display:flex;gap:10px;margin-top:8px;">
       <button class="btn-ghost full" onclick="closeEdit()">Cancel</button>
@@ -389,7 +389,7 @@
     const profile = TArenaAuth.getProfile(session.user.email);
     document.getElementById('editName').value = profile.displayName || '';
     document.getElementById('editBio').value  = profile.bio || '';
-    document.getElementById('editTier').value = profile.tier || 'Bronze Warrior';
+    document.getElementById('editTier').value = profile.tier || 'Member';
     document.getElementById('editModal').classList.add('show');
   }
   function closeEdit() { document.getElementById('editModal').classList.remove('show'); }
@@ -397,7 +397,7 @@
     TArenaAuth.saveProfile(session.user.email, {
       displayName: document.getElementById('editName').value.trim() || session.user.handle,
       bio:         document.getElementById('editBio').value.trim()  || '—',
-      tier:        document.getElementById('editTier').value.trim() || 'Bronze Warrior',
+      tier:        document.getElementById('editTier').value.trim() || 'Member',
     });
     closeEdit();
     renderHeader();

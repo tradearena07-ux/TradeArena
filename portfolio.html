@@ -6,132 +6,173 @@
   <title>TradeArena · Portfolio</title>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=Cinzel+Decorative:wght@700&amp;family=DM+Sans:wght@300;400;500&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
   <link rel="stylesheet" href="assets/styles.css"/>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
-    .pf-header{padding:32px 5% 18px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:18px;}
-    .pf-title h1{font-family:'Cinzel',serif;font-size:2.4rem;letter-spacing:-1px;}
-    .pf-title p{color:var(--muted);margin-top:4px;font-size:14px;}
-    .pf-stats{display:flex;gap:24px;flex-wrap:wrap;}
-    .pf-stat{display:flex;flex-direction:column;}
-    .pf-stat .l{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-family:'Cinzel',serif;}
-    .pf-stat .v{font-family:'Cinzel',serif;font-size:1.6rem;font-weight:700;}
+    .pg{max-width:1100px;margin:0 auto;padding:24px;flex:1;width:100%;}
 
-    .pf-body{padding:0 5% 60px;display:flex;flex-direction:column;gap:24px;flex:1;}
+    /* ----- Hero / Investments header ----- */
+    .pf-hero{background:linear-gradient(135deg, var(--navy2) 0%, var(--navy3) 100%);border:1px solid var(--border);border-radius:18px;padding:28px 30px;margin-bottom:18px;}
+    .pf-hero-row{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:flex-end;}
+    .pf-hero-left{display:flex;flex-direction:column;gap:6px;}
+    .pf-hero-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-weight:600;}
+    .pf-hero-value{font-family:'DM Sans',sans-serif;font-size:2.6rem;font-weight:700;color:var(--cream);font-feature-settings:'tnum';line-height:1;}
+    .pf-hero-returns{display:flex;align-items:baseline;gap:10px;margin-top:8px;}
+    .pf-hero-returns .amt{font-family:'DM Sans',sans-serif;font-size:1.05rem;font-weight:600;font-feature-settings:'tnum';}
+    .pf-hero-returns .pct{font-size:13px;font-weight:500;}
+    .pf-hero-returns .lbl{font-size:13px;color:var(--muted);margin-left:6px;}
+    .pf-hero-right{text-align:right;}
+    .pf-today{background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.25);border-radius:12px;padding:10px 16px;display:inline-flex;flex-direction:column;align-items:flex-end;}
+    .pf-today.down{background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.25);}
+    .pf-today .lbl{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-weight:600;}
+    .pf-today .val{font-family:'DM Sans',sans-serif;font-size:1.15rem;font-weight:700;font-feature-settings:'tnum';margin-top:2px;}
 
-    .filter-row{display:flex;gap:8px;flex-wrap:wrap;}
-    .pf-pill{padding:8px 18px;border-radius:9999px;background:var(--navy3);border:1px solid var(--border);cursor:pointer;font-family:'Cinzel',serif;font-size:12px;letter-spacing:.08em;color:var(--muted);transition:all .2s;}
-    .pf-pill:hover{color:var(--cream);}
-    .pf-pill.active{background:rgba(201,160,48,.12);border-color:var(--gold);color:var(--gold2);}
+    /* ----- Time range tabs ----- */
+    .tr-tabs{display:flex;gap:4px;background:var(--navy3);border:1px solid var(--border);border-radius:10px;padding:4px;width:fit-content;margin:18px 0 14px;}
+    .tr-tab{padding:7px 16px;background:transparent;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border-radius:7px;letter-spacing:.04em;transition:all .15s;}
+    .tr-tab:hover{color:var(--cream);}
+    .tr-tab.on{background:var(--gold2);color:var(--navy);}
 
-    .perf-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:14px;}
-    .perf-row h3{font-family:'Cinzel',serif;font-size:1.05rem;letter-spacing:.04em;}
-    .perf-tabs{display:flex;gap:6px;}
-    .perf-tab{padding:6px 14px;border-radius:8px;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Cinzel',serif;font-size:11px;letter-spacing:.08em;cursor:pointer;transition:all .2s;}
-    .perf-tab:hover{color:var(--cream);}
-    .perf-tab.active{background:rgba(201,160,48,.12);border-color:var(--gold);color:var(--gold2);}
+    /* ----- Chart container ----- */
+    .pf-chart-card{background:var(--navy2);border:1px solid var(--border);border-radius:16px;padding:18px 20px 14px;height:280px;position:relative;}
 
-    .grid-portfolio{display:grid;grid-template-columns:1.6fr 1fr;gap:24px;}
-    @media(max-width:1100px){.grid-portfolio{grid-template-columns:1fr;}}
+    /* ----- Allocation bar (Groww-style segmented) ----- */
+    .alloc-card{background:var(--navy2);border:1px solid var(--border);border-radius:16px;padding:20px;margin:14px 0;}
+    .alloc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+    .alloc-head h3{font-family:'DM Sans',sans-serif;font-size:13px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700;}
+    .alloc-bar{display:flex;height:10px;border-radius:9999px;overflow:hidden;background:var(--navy3);margin-bottom:14px;}
+    .alloc-seg{height:100%;transition:width .4s;}
+    .alloc-seg.asx{background:linear-gradient(90deg,#10b981,#34d399);}
+    .alloc-seg.us{background:linear-gradient(90deg,#3b82f6,#60a5fa);}
+    .alloc-seg.crypto{background:linear-gradient(90deg,#f59e0b,#fbbf24);}
+    .alloc-seg.cash{background:linear-gradient(90deg,#a16207,#c9a030);}
+    .alloc-legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;}
+    .alloc-leg{display:flex;align-items:center;gap:10px;}
+    .alloc-leg .dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+    .alloc-leg .l1{font-size:12px;color:var(--muted);}
+    .alloc-leg .l2{font-family:'DM Sans',sans-serif;font-weight:700;font-size:14px;color:var(--cream);font-feature-settings:'tnum';}
 
-    .h-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:11px;font-weight:700;color:#fff;letter-spacing:.05em;flex-shrink:0;}
-    .h-icon.asx{background:linear-gradient(135deg,#065f46,#10b981);}
-    .h-icon.us{background:linear-gradient(135deg,#1e40af,#60a5fa);}
-    .h-icon.crypto{background:linear-gradient(135deg,#92400e,#f59e0b);}
+    /* ----- Holdings list ----- */
+    .holdings-card{background:var(--navy2);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+    .holdings-head{padding:18px 22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--bdl);}
+    .holdings-head h3{font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;color:var(--cream);}
+    .h-filter{display:flex;gap:6px;}
+    .h-pill{padding:6px 14px;background:var(--navy3);border:1px solid var(--border);color:var(--muted);font-size:12px;font-weight:600;border-radius:9999px;cursor:pointer;transition:all .15s;}
+    .h-pill:hover{color:var(--cream);}
+    .h-pill.on{background:rgba(201,160,48,.12);border-color:var(--gold);color:var(--gold2);}
 
-    .metric{padding:18px;background:var(--navy3);border:1px solid var(--bdl);border-radius:14px;}
-    .metric .lbl{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
-    .metric .val{font-family:'Cinzel',serif;font-size:1.6rem;font-weight:700;}
-    .metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    .h-row{display:grid;grid-template-columns:42px 1fr auto auto;gap:14px;align-items:center;padding:16px 22px;border-bottom:1px solid var(--bdl);cursor:pointer;transition:background .15s;}
+    .h-row:hover{background:rgba(201,160,48,.04);}
+    .h-row:last-child{border-bottom:none;}
+    .h-row .icn{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-weight:700;font-size:11px;color:#fff;letter-spacing:.04em;}
+    .h-row .icn.asx{background:linear-gradient(135deg,#065f46,#10b981);}
+    .h-row .icn.us{background:linear-gradient(135deg,#1e40af,#3b82f6);}
+    .h-row .icn.crypto{background:linear-gradient(135deg,#92400e,#f59e0b);}
+    .h-row .meta .sym{font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;color:var(--cream);}
+    .h-row .meta .name{font-size:12px;color:var(--muted);margin-top:2px;}
+    .h-row .qty{text-align:right;font-size:12.5px;color:var(--muted);font-feature-settings:'tnum';}
+    .h-row .qty b{display:block;color:var(--cream);font-weight:600;font-size:13px;margin-bottom:2px;}
+    .h-row .pnl{text-align:right;font-feature-settings:'tnum';min-width:100px;}
+    .h-row .pnl .v{font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;color:var(--cream);}
+    .h-row .pnl .p{font-size:12.5px;font-weight:600;margin-top:2px;}
+
+    /* ----- Movers cards ----- */
+    .movers{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0;}
+    @media(max-width:780px){.movers{grid-template-columns:1fr;}.pf-hero-row{grid-template-columns:1fr;}.pf-hero-right{text-align:left;}}
+    .mover-card{background:var(--navy2);border:1px solid var(--border);border-radius:14px;padding:18px;}
+    .mover-card h4{font-family:'DM Sans',sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700;margin-bottom:14px;}
+    .mover-line{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bdl);}
+    .mover-line:last-child{border-bottom:none;}
+    .mover-line .sym{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--cream);}
+    .mover-line .px{text-align:right;font-feature-settings:'tnum';}
+    .mover-line .px .a{font-size:13px;font-weight:600;color:var(--cream);}
+    .mover-line .px .b{font-size:11.5px;font-weight:600;}
+
+    .empty-row{padding:40px;text-align:center;color:var(--muted);}
   </style>
 </head>
 <body>
 
 <div id="tarena-nav"></div>
 
-<div class="pf-header">
-  <div class="pf-title">
-    <h1>Your Portfolio</h1>
-    <p>Real-time P&amp;L · Diversification · Performance vs ASX 200</p>
-  </div>
-  <div class="pf-stats">
-    <div class="pf-stat"><span class="l">Portfolio Value</span><span class="v text-green" id="totalValue">$0</span></div>
-    <div class="pf-stat"><span class="l">Total P&amp;L</span><span class="v" id="totalPnl">$0</span></div>
-    <div class="pf-stat"><span class="l">Today's P&amp;L</span><span class="v text-green" id="todayPnl">+$1,284 <span style="font-size:14px;">(+2.71%)</span></span></div>
-  </div>
-</div>
+<div class="pg">
 
-<div class="pf-body">
-
-  <div class="filter-row">
-    <span class="pf-pill active" onclick="filterPf(this,'all')">All Holdings</span>
-    <span class="pf-pill" onclick="filterPf(this,'asx')">🇦🇺 ASX</span>
-    <span class="pf-pill" onclick="filterPf(this,'us')">🇺🇸 US Stocks</span>
-    <span class="pf-pill" onclick="filterPf(this,'crypto')">₿ Crypto</span>
-    <span style="margin-left:auto;"></span>
-    <button class="btn-ghost" onclick="exportCsv()"><i class="fa-solid fa-download"></i> Export CSV</button>
-  </div>
-
-  <!-- Performance chart -->
-  <div class="card-flat">
-    <div class="perf-row">
-      <h3>Portfolio Performance vs ASX 200</h3>
-      <div class="perf-tabs">
-        <button class="perf-tab" onclick="changePeriod(this,7)">7D</button>
-        <button class="perf-tab active" onclick="changePeriod(this,30)">30D</button>
-        <button class="perf-tab" onclick="changePeriod(this,90)">90D</button>
-        <button class="perf-tab" onclick="changePeriod(this,365)">1Y</button>
-      </div>
-    </div>
-    <canvas id="performanceChart" height="100"></canvas>
-  </div>
-
-  <div class="grid-portfolio">
-
-    <!-- Holdings table -->
-    <div class="card-flat">
-      <div class="perf-row" style="margin-bottom:8px;">
-        <h3>Holdings <span class="text-muted" style="font-weight:400;font-family:'DM Sans';font-size:13px;letter-spacing:0;">· <span id="holdCount">0</span> positions</span></h3>
-        <a href="trade.html" class="text-gold" style="font-size:13px;">Trade now →</a>
-      </div>
-      <table class="tarena">
-        <thead>
-          <tr>
-            <th>Asset</th>
-            <th class="text-right">Qty</th>
-            <th class="text-right">Avg Cost</th>
-            <th class="text-right">Current</th>
-            <th class="text-right">Value</th>
-            <th class="text-right">P&amp;L</th>
-            <th class="text-right">% Return</th>
-          </tr>
-        </thead>
-        <tbody id="holdings-body"></tbody>
-      </table>
-    </div>
-
-    <!-- Allocation + metrics -->
-    <div style="display:flex;flex-direction:column;gap:24px;">
-      <div class="card-flat">
-        <div class="perf-row" style="margin-bottom:8px;">
-          <h3>Asset Allocation</h3>
+  <!-- ============== HERO: TOTAL VALUE + RETURNS ============== -->
+  <div class="pf-hero">
+    <div class="pf-hero-row">
+      <div class="pf-hero-left">
+        <div class="pf-hero-label">Investments</div>
+        <div class="pf-hero-value" id="totalValue">$0</div>
+        <div class="pf-hero-returns">
+          <span class="amt" id="totalRet">+$0</span>
+          <span class="pct" id="totalRetPct">+0.00%</span>
+          <span class="lbl">total returns</span>
         </div>
-        <canvas id="allocationChart" height="200"></canvas>
       </div>
-
-      <div class="card-flat">
-        <div class="perf-row" style="margin-bottom:14px;"><h3>Key Metrics</h3></div>
-        <div class="metric-grid">
-          <div class="metric"><div class="lbl">XIRR</div><div class="val text-green">18.4%</div><div class="text-green" style="font-size:11px;margin-top:4px;">+4.2% this month</div></div>
-          <div class="metric"><div class="lbl">Diversification</div><div class="val">92<span style="font-size:14px;color:var(--muted);">/100</span></div><div class="text-green" style="font-size:11px;margin-top:4px;">Excellent</div></div>
-          <div class="metric" style="grid-column:span 2;display:flex;justify-content:space-between;align-items:center;"><span class="text-muted" style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;">Biggest Winner</span><span id="bestPerformer" class="text-green mono" style="font-weight:600;"></span></div>
-          <div class="metric" style="grid-column:span 2;display:flex;justify-content:space-between;align-items:center;"><span class="text-muted" style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;">Biggest Loser</span><span id="worstPerformer" class="text-red mono" style="font-weight:600;"></span></div>
+      <div class="pf-hero-right">
+        <div class="pf-today" id="todayBox">
+          <div class="lbl">Today</div>
+          <div class="val" id="todayVal">+$0 (+0.00%)</div>
         </div>
       </div>
     </div>
+
+    <div class="tr-tabs" id="trTabs">
+      <button class="tr-tab" data-r="1d">1D</button>
+      <button class="tr-tab" data-r="1w">1W</button>
+      <button class="tr-tab on" data-r="1m">1M</button>
+      <button class="tr-tab" data-r="3m">3M</button>
+      <button class="tr-tab" data-r="1y">1Y</button>
+      <button class="tr-tab" data-r="all">ALL</button>
+    </div>
+
+    <div class="pf-chart-card">
+      <canvas id="perfChart"></canvas>
+    </div>
   </div>
+
+  <!-- ============== ALLOCATION ============== -->
+  <div class="alloc-card">
+    <div class="alloc-head">
+      <h3>Asset Allocation</h3>
+      <a href="trade.html" style="font-size:12px;color:var(--gold2);font-weight:600;">View markets →</a>
+    </div>
+    <div class="alloc-bar" id="allocBar"></div>
+    <div class="alloc-legend" id="allocLegend"></div>
+  </div>
+
+  <!-- ============== HOLDINGS LIST ============== -->
+  <div class="holdings-card">
+    <div class="holdings-head">
+      <h3>Your Holdings</h3>
+      <div class="h-filter" id="hFilter">
+        <button class="h-pill on" data-m="all">All</button>
+        <button class="h-pill" data-m="asx">ASX</button>
+        <button class="h-pill" data-m="us">US</button>
+        <button class="h-pill" data-m="crypto">Crypto</button>
+      </div>
+    </div>
+    <div id="holdingsList"></div>
+  </div>
+
+  <!-- ============== TOP MOVERS ============== -->
+  <div class="movers">
+    <div class="mover-card">
+      <h4><i class="fa-solid fa-arrow-trend-up text-green"></i> Top gainers</h4>
+      <div id="gainersList"></div>
+    </div>
+    <div class="mover-card">
+      <h4><i class="fa-solid fa-arrow-trend-down text-red"></i> Top losers</h4>
+      <div id="losersList"></div>
+    </div>
+    <div class="mover-card">
+      <h4><i class="fa-solid fa-fire text-gold"></i> Most active</h4>
+      <div id="activeList"></div>
+    </div>
+  </div>
+
 </div>
 
 <div id="tarena-footer"></div>
@@ -139,195 +180,219 @@
 <script src="assets/app.js"></script>
 <script src="assets/market.js"></script>
 <script>
-  if (!TArenaAuth.requireAuth()) {/* redirected */}
+  const session = TArenaAuth.requireAuth();
+  if (!session) throw new Error('redirect');
   TArenaUI.renderNav('portfolio');
   TArenaUI.renderFooter();
 
-  let pfFilter = 'all';
+  let activeRange = '1m';
+  let activeMarket = 'all';
+  let perfChart;
 
-  function filteredHoldings() {
-    return pfFilter === 'all'
-      ? TArenaMarket.holdings
-      : TArenaMarket.holdings.filter(h => h.type === pfFilter);
+  function renderHero() {
+    const total = TArenaMarket.totalValue();
+    const cost  = TArenaMarket.totalCost();
+    const pnl   = total - cost;
+    const pct   = (pnl / cost) * 100;
+    document.getElementById('totalValue').textContent = TArenaUI.fmtMoney(total, {decimals:2});
+    document.getElementById('totalRet').textContent   = TArenaUI.fmtMoney(pnl, {sign:true, decimals:2});
+    document.getElementById('totalRet').className     = 'amt ' + (pnl >= 0 ? 'text-green' : 'text-red');
+    document.getElementById('totalRetPct').textContent = '(' + TArenaUI.fmtPct(pct) + ')';
+    document.getElementById('totalRetPct').className   = 'pct ' + (pnl >= 0 ? 'text-green' : 'text-red');
+
+    // Today's change — derive from current market changes weighted by holding value
+    let todayChange = 0;
+    TArenaMarket.holdings.forEach(h => {
+      const m = TArenaMarket.find(h.symbol);
+      if (m) todayChange += h.qty * m.price * (m.change / 100);
+    });
+    const todayPct = (todayChange / total) * 100;
+    const tBox = document.getElementById('todayBox');
+    tBox.classList.toggle('down', todayChange < 0);
+    document.getElementById('todayVal').innerHTML =
+      `<span class="${todayChange >= 0 ? 'text-green' : 'text-red'}">${TArenaUI.fmtMoney(todayChange,{sign:true,decimals:0})} (${TArenaUI.fmtPct(todayPct)})</span>`;
+  }
+
+  function renderAllocation() {
+    const groups = { asx: 0, us: 0, crypto: 0, cash: 6000 };
+    TArenaMarket.holdings.forEach(h => groups[h.type] += TArenaMarket.holdingValue(h).value);
+    const total = Object.values(groups).reduce((a,b) => a+b, 0);
+    const meta = [
+      { k: 'asx',    label: 'ASX',     color: '#10b981' },
+      { k: 'us',     label: 'US',      color: '#3b82f6' },
+      { k: 'crypto', label: 'Crypto',  color: '#f59e0b' },
+      { k: 'cash',   label: 'Cash',    color: '#c9a030' },
+    ];
+    document.getElementById('allocBar').innerHTML = meta.map(m => {
+      const w = (groups[m.k] / total) * 100;
+      return `<div class="alloc-seg ${m.k}" style="width:${w}%;" title="${m.label} ${w.toFixed(1)}%"></div>`;
+    }).join('');
+    document.getElementById('allocLegend').innerHTML = meta.map(m => {
+      const w = (groups[m.k] / total) * 100;
+      return `<div class="alloc-leg">
+        <div class="dot" style="background:${m.color};"></div>
+        <div>
+          <div class="l1">${m.label} · ${w.toFixed(1)}%</div>
+          <div class="l2">${TArenaUI.fmtMoney(groups[m.k], {decimals:0})}</div>
+        </div>
+      </div>`;
+    }).join('');
   }
 
   function renderHoldings() {
-    const list = filteredHoldings();
-    document.getElementById('holdCount').textContent = list.length;
-    const tbody = document.getElementById('holdings-body');
+    let list = TArenaMarket.holdings.slice();
+    if (activeMarket !== 'all') list = list.filter(h => h.type === activeMarket);
     if (!list.length) {
-      tbody.innerHTML = '<tr><td colspan="7" class="text-muted text-right" style="text-align:center;padding:30px;">No holdings in this market.</td></tr>';
+      document.getElementById('holdingsList').innerHTML = '<div class="empty-row">No holdings in this market.</div>';
       return;
     }
-    tbody.innerHTML = list.map(h => {
+    document.getElementById('holdingsList').innerHTML = list.map(h => {
       const v = TArenaMarket.holdingValue(h);
-      const sign = v.pnl > 0 ? '+' : '';
-      return `<tr class="row" onclick="window.location.href='trade.html'">
-        <td><div style="display:flex;align-items:center;gap:12px;">
-          <div class="h-icon ${h.type}">${h.symbol.replace('.AX','').slice(0,3)}</div>
-          <div><div style="font-weight:600;">${h.symbol}</div><div class="text-muted" style="font-size:12px;">${v.name}</div></div>
-        </div></td>
-        <td class="text-right mono">${h.qty.toLocaleString('en-US', {maximumFractionDigits:6})}</td>
-        <td class="text-right mono">$${h.avgCost.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-        <td class="text-right mono">$${v.current.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-        <td class="text-right mono" style="font-weight:600;">${TArenaUI.fmtMoney(v.value, {decimals:2})}</td>
-        <td class="text-right ${v.pnl > 0 ? 'text-green' : 'text-red'} mono">${sign}${TArenaUI.fmtMoney(v.pnl, {decimals:2}).replace('-','-')}</td>
-        <td class="text-right ${v.pnlPct > 0 ? 'text-green' : 'text-red'} mono">${sign}${v.pnlPct.toFixed(2)}%</td>
-      </tr>`;
+      const initials = h.symbol.replace('.AX', '').slice(0, 3);
+      const m = TArenaMarket.find(h.symbol);
+      const todayPct = m ? m.change : 0;
+      const up = v.pnl >= 0;
+      return `<div class="h-row" onclick="window.location.href='trade.html'">
+        <div class="icn ${h.type}">${initials}</div>
+        <div class="meta">
+          <div class="sym">${h.symbol.replace('.AX','')}</div>
+          <div class="name">${v.name} · ${h.type.toUpperCase()}</div>
+        </div>
+        <div class="qty">
+          <b>${TArenaUI.fmtMoney(v.value, {decimals:0})}</b>
+          ${h.qty.toLocaleString('en-US',{maximumFractionDigits:4})} × ${TArenaUI.fmtMoney(v.current, {decimals:2})}
+        </div>
+        <div class="pnl">
+          <div class="v ${up ? 'text-green' : 'text-red'}">${TArenaUI.fmtMoney(v.pnl, {sign:true, decimals:2})}</div>
+          <div class="p ${up ? 'text-green' : 'text-red'}">${TArenaUI.fmtPct(v.pnlPct)} <span class="text-muted" style="font-weight:400;">· today ${TArenaUI.fmtPct(todayPct)}</span></div>
+        </div>
+      </div>`;
     }).join('');
-
-    // Best / worst
-    const valued = TArenaMarket.holdings.map(h => ({h, ...TArenaMarket.holdingValue(h)}));
-    valued.sort((a,b) => b.pnlPct - a.pnlPct);
-    const best = valued[0], worst = valued[valued.length - 1];
-    document.getElementById('bestPerformer').textContent = `${best.h.symbol} · +${best.pnlPct.toFixed(1)}%`;
-    document.getElementById('worstPerformer').textContent = `${worst.h.symbol} · ${worst.pnlPct.toFixed(1)}%`;
   }
 
-  function renderTotals() {
-    document.getElementById('totalValue').textContent = TArenaUI.fmtMoney(TArenaMarket.totalValue(), {decimals:2});
-    const pnl = TArenaMarket.totalPnl();
-    const pct = (pnl / TArenaMarket.totalCost()) * 100;
-    const el = document.getElementById('totalPnl');
-    el.innerHTML = `${pnl >= 0 ? '+' : '-'}${TArenaUI.fmtMoney(Math.abs(pnl), {decimals:2})} <span style="font-size:14px;">(${pnl >= 0 ? '+' : ''}${pct.toFixed(2)}%)</span>`;
-    el.className = 'v ' + (pnl >= 0 ? 'text-green' : 'text-red');
-  }
+  function renderMovers() {
+    const all = TArenaMarket.data.slice();
+    const gainers = all.slice().sort((a,b) => b.change - a.change).slice(0, 4);
+    const losers  = all.slice().sort((a,b) => a.change - b.change).slice(0, 4);
+    const active  = all.slice().sort((a,b) => Math.abs(b.change) - Math.abs(a.change)).slice(0, 4);
 
-  function filterPf(el, type) {
-    document.querySelectorAll('.pf-pill').forEach(p => p.classList.remove('active'));
-    el.classList.add('active');
-    pfFilter = type;
-    renderHoldings();
-  }
-  window.filterPf = filterPf;
-
-  // --- Charts ---
-  let perfChart, allocChart;
-  function buildPerformanceChart(days) {
-    const labels = Array.from({length: days}, (_, i) => {
-      const d = new Date();
-      d.setDate(d.getDate() - (days - 1 - i));
-      return d.toLocaleDateString('en-AU', {day: 'numeric', month: 'short'});
-    });
-
-    // Random-walk style series
-    function walk(seed, base, drift, vol) {
-      let v = base;
-      const arr = [];
-      for (let i = 0; i < days; i++) {
-        v += drift + (Math.random() - 0.5) * vol;
-        arr.push(Math.max(0, +v.toFixed(2)));
-      }
-      return arr;
+    function rows(arr) {
+      return arr.map(m => {
+        const up = m.change >= 0;
+        return `<div class="mover-line">
+          <div>
+            <div class="sym">${m.symbol.replace('.AX','')}</div>
+            <div class="text-muted" style="font-size:11px;margin-top:2px;">${m.name}</div>
+          </div>
+          <div class="px">
+            <div class="a">$${m.price < 100 ? m.price.toFixed(2) : m.price.toLocaleString()}</div>
+            <div class="b ${up ? 'text-green' : 'text-red'}">${TArenaUI.fmtPct(m.change)}</div>
+          </div>
+        </div>`;
+      }).join('');
     }
-    const portfolio = walk(1, 42500, 80, 800);
-    const benchmark = walk(2, 42500, 35, 600);
+    document.getElementById('gainersList').innerHTML = rows(gainers);
+    document.getElementById('losersList').innerHTML  = rows(losers);
+    document.getElementById('activeList').innerHTML  = rows(active);
+  }
 
-    const ctx = document.getElementById('performanceChart').getContext('2d');
+  function genPerfData(range) {
+    const points = { '1d': 24, '1w': 30, '1m': 30, '3m': 60, '1y': 52, 'all': 80 }[range] || 30;
+    const startVal = 50000;
+    const endVal   = TArenaMarket.totalValue();
+    const data = [];
+    for (let i = 0; i <= points; i++) {
+      const t = i / points;
+      const noise = Math.sin(i * 0.45) * 600 + (Math.random() - 0.5) * 400;
+      data.push(startVal + (endVal - startVal) * t + noise * (range === '1d' ? 0.2 : 1));
+    }
+    return data;
+  }
+
+  function renderChart() {
+    const data = genPerfData(activeRange);
+    const labels = data.map((_, i) => i);
+    const ctx = document.getElementById('perfChart').getContext('2d');
     if (perfChart) perfChart.destroy();
     perfChart = new Chart(ctx, {
       type: 'line',
       data: {
         labels,
-        datasets: [
-          {
-            label: 'Your Portfolio',
-            data: portfolio,
-            borderColor: '#e8c060',
-            backgroundColor: 'rgba(201,160,48,0.15)',
-            borderWidth: 2.5, tension: 0.35, pointRadius: 0, fill: true,
+        datasets: [{
+          data,
+          borderColor: '#e8c060',
+          backgroundColor: ctx => {
+            const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 250);
+            g.addColorStop(0, 'rgba(232,192,96,.25)');
+            g.addColorStop(1, 'rgba(232,192,96,0)');
+            return g;
           },
-          {
-            label: 'ASX 200',
-            data: benchmark,
-            borderColor: '#7a8aaa',
-            borderWidth: 1.5, tension: 0.35, pointRadius: 0,
-            borderDash: [4,4],
-          }
-        ]
+          fill: true,
+          borderWidth: 2,
+          tension: 0.35,
+          pointRadius: 0,
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor: '#e8c060',
+          pointHoverBorderColor: '#091528',
+          pointHoverBorderWidth: 2,
+        }],
       },
       options: {
-        responsive: true, maintainAspectRatio: false,
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: { position: 'top', align: 'end',
-            labels: { color: '#f2e8cc', usePointStyle: true, padding: 18, font: { family: 'Cinzel', size: 11 } } },
-          tooltip: { backgroundColor: '#091528', borderColor: '#c9a030', borderWidth: 1, titleColor: '#e8c060', bodyColor: '#f2e8cc' }
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#0c1d36',
+            borderColor: 'rgba(201,160,48,.3)',
+            borderWidth: 1,
+            padding: 12,
+            titleFont: { family: 'DM Sans', size: 11 },
+            bodyFont: { family: 'DM Sans', size: 13, weight: '700' },
+            displayColors: false,
+            callbacks: { title: () => '', label: (ctx) => '$' + Math.round(ctx.parsed.y).toLocaleString() },
+          },
         },
         scales: {
-          y: { grid: { color: 'rgba(201,160,48,0.06)' }, ticks: { color: '#7a8aaa', callback: v => '$' + (v/1000).toFixed(0) + 'k' } },
-          x: { grid: { color: 'rgba(201,160,48,0.04)' }, ticks: { color: '#7a8aaa', maxRotation: 0, autoSkip: true, maxTicksLimit: 10 } }
-        }
-      }
-    });
-  }
-  function buildAllocationChart() {
-    const groups = { ASX: 0, US: 0, Crypto: 0 };
-    TArenaMarket.holdings.forEach(h => {
-      const v = TArenaMarket.holdingValue(h).value;
-      if (h.type === 'asx') groups.ASX += v;
-      else if (h.type === 'us') groups.US += v;
-      else if (h.type === 'crypto') groups.Crypto += v;
-    });
-    const total = Object.values(groups).reduce((a,b)=>a+b,0);
-    const cash = total * 0.05;
-    const ctx = document.getElementById('allocationChart').getContext('2d');
-    if (allocChart) allocChart.destroy();
-    allocChart = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: ['ASX Equities', 'US Stocks', 'Crypto', 'Cash'],
-        datasets: [{
-          data: [groups.ASX, groups.US, groups.Crypto, cash],
-          backgroundColor: ['#10b981','#60a5fa','#f59e0b','#7a8aaa'],
-          borderColor: '#091528', borderWidth: 4,
-        }]
+          x: { display: false, grid: { display: false } },
+          y: {
+            position: 'right',
+            ticks: { color: 'rgba(168,193,219,.5)', font: { family: 'DM Sans', size: 10 }, callback: v => '$' + (v/1000).toFixed(0) + 'k' },
+            grid: { color: 'rgba(255,255,255,.04)' },
+            border: { display: false },
+          },
+        },
       },
-      options: {
-        responsive: true, maintainAspectRatio: false, cutout: '68%',
-        plugins: {
-          legend: { position: 'bottom', labels: { color: '#f2e8cc', boxWidth: 12, padding: 16, font: { family: 'Cinzel', size: 11 } } },
-          tooltip: { backgroundColor: '#091528', borderColor: '#c9a030', borderWidth: 1, titleColor: '#e8c060', bodyColor: '#f2e8cc',
-            callbacks: { label: c => `${c.label}: ${TArenaUI.fmtMoney(c.parsed, {decimals:0})}` } }
-        }
-      }
     });
   }
-  function changePeriod(el, n) {
-    document.querySelectorAll('.perf-tab').forEach(t => t.classList.remove('active'));
-    el.classList.add('active');
-    buildPerformanceChart(n);
-  }
-  window.changePeriod = changePeriod;
 
-  function exportCsv() {
-    const rows = [['Symbol','Name','Qty','Avg Cost','Current','Value','P&L','% Return']];
-    TArenaMarket.holdings.forEach(h => {
-      const v = TArenaMarket.holdingValue(h);
-      rows.push([h.symbol, v.name, h.qty, h.avgCost, v.current.toFixed(2), v.value.toFixed(2), v.pnl.toFixed(2), v.pnlPct.toFixed(2) + '%']);
-    });
-    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], {type: 'text/csv'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'tradearena-portfolio-' + new Date().toISOString().slice(0,10) + '.csv';
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-  window.exportCsv = exportCsv;
-
-  // --- Init ---
-  renderHoldings();
-  renderTotals();
-  buildPerformanceChart(30);
-  buildAllocationChart();
-
-  setInterval(() => {
-    TArenaMarket.tick();
+  // Wire up tabs
+  document.getElementById('trTabs').addEventListener('click', e => {
+    if (!e.target.dataset.r) return;
+    activeRange = e.target.dataset.r;
+    document.querySelectorAll('.tr-tab').forEach(b => b.classList.toggle('on', b === e.target));
+    renderChart();
+  });
+  document.getElementById('hFilter').addEventListener('click', e => {
+    if (!e.target.dataset.m) return;
+    activeMarket = e.target.dataset.m;
+    document.querySelectorAll('.h-pill').forEach(b => b.classList.toggle('on', b === e.target));
     renderHoldings();
-    renderTotals();
-  }, 4500);
+  });
 
-  console.log('%c⚔️ TradeArena · Portfolio loaded.', 'color:#e8c060;font-weight:700;');
+  function refreshAll() {
+    TArenaMarket.tick();
+    renderHero();
+    renderAllocation();
+    renderHoldings();
+    renderMovers();
+  }
+  refreshAll();
+  renderChart();
+  setInterval(refreshAll, 5000);
+
+  console.log('%cTradeArena · Portfolio loaded', 'color:#e8c060;font-weight:700;');
 </script>
 </body>
 </html>

@@ -6,90 +6,97 @@
   <title>TradeArena — Sign in</title>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=Cinzel+Decorative:wght@700&amp;family=DM+Sans:wght@300;400;500&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
   <link rel="stylesheet" href="assets/styles.css"/>
   <style>
-    .auth-wrap{flex:1;display:grid;grid-template-columns:420px 1fr;min-height:calc(100vh - 80px);}
+    .auth-wrap{flex:1;display:grid;grid-template-columns:440px 1fr;min-height:calc(100vh - 80px);}
     .auth-left{background:var(--navy2);border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:center;padding:48px;position:relative;overflow:hidden;}
     .auth-left::before{content:'';position:absolute;top:-100px;left:-100px;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(201,160,48,.08) 0%,transparent 70%);pointer-events:none;}
-    .auth-left::after{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(-55deg,transparent,transparent 40px,rgba(201,160,48,.022) 40px,rgba(201,160,48,.022) 41px);pointer-events:none;}
     .auth-left > *{position:relative;z-index:1;}
-    .auth-headline{font-family:'Cinzel',serif;font-size:1.9rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;line-height:1.1;margin-bottom:16px;}
+    .auth-headline{font-family:'Cinzel',serif;font-size:1.9rem;font-weight:600;letter-spacing:.02em;line-height:1.2;margin-bottom:14px;}
     .auth-headline em{display:block;color:var(--gold2);font-style:italic;font-weight:400;}
-    .perk{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px;font-size:.9rem;color:var(--muted);line-height:1.5;}
-    .pico{width:36px;height:36px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;clip-path:polygon(4px 0%,100% 0%,calc(100% - 4px) 100%,0% 100%);background:var(--navy3);}
+    .perk{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px;font-size:.92rem;color:var(--muted);line-height:1.5;}
+    .pico{width:34px;height:34px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;border-radius:8px;background:var(--navy3);color:var(--gold2);}
     .perk strong{color:var(--cream);}
+
     .auth-right{flex:1;display:flex;align-items:center;justify-content:center;padding:48px 32px;position:relative;}
-    .auth-right::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:600px;height:360px;background:radial-gradient(ellipse at top,rgba(201,160,48,.07) 0%,transparent 65%);pointer-events:none;}
-    .auth-card{position:relative;z-index:1;width:100%;max-width:440px;}
-    .toggle-row{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--border);margin-bottom:28px;border-radius:12px;overflow:hidden;}
-    .tbtn{padding:14px 10px;text-align:center;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);background:transparent;border:none;border-bottom:2px solid transparent;transition:all .2s;}
-    .tbtn .ticon{display:block;font-size:20px;margin-bottom:4px;}
-    .tbtn .tsub{display:block;font-family:'DM Sans',sans-serif;font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted);margin-top:3px;font-weight:300;}
+    .auth-right::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:600px;height:360px;background:radial-gradient(ellipse at top,rgba(201,160,48,.06) 0%,transparent 65%);pointer-events:none;}
+    .auth-card{position:relative;z-index:1;width:100%;max-width:420px;}
+
+    .tabbar{display:flex;background:var(--navy3);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:28px;}
+    .tabb{flex:1;padding:10px 12px;background:transparent;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:9px;transition:all .2s;}
+    .tabb.on{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);}
+
+    .auth-card h1{font-family:'Cinzel',serif;font-size:1.6rem;font-weight:600;letter-spacing:.02em;line-height:1.2;margin-bottom:8px;}
+    .sub{font-size:.92rem;color:var(--muted);line-height:1.6;margin-bottom:20px;}
+
+    .field-row{display:flex;align-items:center;background:var(--navy3);border:1px solid var(--border);border-radius:10px;padding:0 14px;transition:border-color .2s;}
+    .field-row:focus-within{border-color:var(--gold);}
+    .field-row.err{border-color:var(--red);}
+    .field-row i.lead{color:var(--muted);font-size:14px;margin-right:10px;}
+    .field-row input{flex:1;background:transparent;border:none;outline:none;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:14px;padding:14px 0;}
+    .field-row .toggle-pw{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:6px;}
+    .field-row .toggle-pw:hover{color:var(--gold2);}
+    .field-stack{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
+
+    .row-between{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin:6px 0 18px;}
+    .row-between a{color:var(--gold2);cursor:pointer;font-weight:500;}
+    .row-between a:hover{text-decoration:underline;}
+
+    .btn-prime{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);border:none;padding:14px;border-radius:10px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:14px;letter-spacing:.04em;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;justify-content:center;gap:10px;}
+    .btn-prime:hover{filter:brightness(1.06);transform:translateY(-1px);}
+    .btn-prime:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+
+    .toggle-row{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--border);margin-bottom:18px;border-radius:12px;overflow:hidden;background:var(--navy3);}
+    .tbtn{padding:14px 10px;text-align:center;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);background:transparent;border:none;transition:all .2s;border-bottom:2px solid transparent;}
+    .tbtn .ticon{display:block;font-size:18px;margin-bottom:4px;color:var(--muted);}
+    .tbtn .tsub{display:block;font-size:10.5px;font-weight:400;color:var(--muted);margin-top:3px;}
     .tbtn.as{color:var(--gold2);border-bottom-color:var(--gold);background:rgba(201,160,48,.07);}
+    .tbtn.as .ticon{color:var(--gold2);}
     .tbtn.ap{color:var(--blue);border-bottom-color:var(--blue);background:rgba(96,165,250,.07);}
-    .tbtn.ap .tsub{color:var(--blue);}
-    .stag{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:12px;margin-bottom:14px;}
-    .stag::before{content:'';display:block;width:22px;height:1px;background:var(--gold);}
-    .auth-card h1{font-family:'Cinzel',serif;font-size:1.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;line-height:1.15;margin-bottom:10px;}
-    .sub{font-size:.9rem;color:var(--muted);line-height:1.7;margin-bottom:22px;}
-    .otp-to{font-size:13px;color:var(--muted);text-align:center;margin-bottom:18px;line-height:1.6;}
-    .otp-to strong{display:block;color:var(--gold2);font-size:14px;margin-top:4px;}
-    .orow{display:flex;gap:9px;justify-content:center;margin-bottom:14px;}
-    .obox{width:54px;height:64px;text-align:center;font-family:'Cinzel',serif;font-size:1.8rem;font-weight:700;background:var(--navy3);border:1px solid var(--border);color:var(--gold2);outline:none;caret-color:var(--gold);border-radius:10px;transition:all .15s;}
+    .tbtn.ap .ticon{color:var(--blue);}
+
+    .demo-card{background:linear-gradient(135deg, rgba(201,160,48,.18), rgba(232,192,96,.08));border:2px solid var(--gold);border-radius:14px;padding:16px 16px 14px;margin-bottom:20px;text-align:center;box-shadow:0 12px 36px -10px rgba(201,160,48,.4);animation:demoPulse 2.5s ease infinite;}
+    @keyframes demoPulse{0%,100%{box-shadow:0 12px 36px -10px rgba(201,160,48,.4);}50%{box-shadow:0 16px 44px -10px rgba(201,160,48,.6);}}
+    .demo-card .demo-tag{display:inline-flex;align-items:center;gap:6px;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--navy);background:var(--gold2);padding:3px 10px;border-radius:9999px;font-weight:700;margin-bottom:8px;}
+    .demo-card .demo-msg{font-size:12.5px;color:var(--cream);margin-bottom:4px;}
+    .demo-card .demo-code{font-family:'Cinzel',serif;font-size:2rem;letter-spacing:.32em;color:var(--gold2);font-weight:700;line-height:1;margin:6px 0 8px 6px;cursor:pointer;display:inline-block;}
+    .demo-card .demo-actions{display:flex;gap:8px;justify-content:center;margin-top:4px;flex-wrap:wrap;}
+    .demo-card .mini-btn{background:var(--navy);border:1px solid var(--gold);color:var(--gold2);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:7px 14px;border-radius:9999px;cursor:pointer;font-weight:700;transition:background .2s, color .2s;}
+    .demo-card .mini-btn:hover{background:var(--gold2);color:var(--navy);}
+    .demo-card small{display:block;color:var(--muted);font-size:10px;margin-top:6px;line-height:1.5;}
+
+    .otp-to{font-size:13px;color:var(--muted);text-align:center;margin-bottom:14px;line-height:1.6;}
+    .otp-to strong{color:var(--gold2);}
+    .orow{display:flex;gap:8px;justify-content:center;margin-bottom:12px;}
+    .obox{width:48px;height:58px;text-align:center;font-family:'Cinzel',serif;font-size:1.6rem;font-weight:700;background:var(--navy3);border:1px solid var(--border);color:var(--gold2);outline:none;caret-color:var(--gold);border-radius:10px;transition:all .15s;}
     .obox:focus{border-color:var(--gold);background:var(--navy4);transform:scale(1.05);box-shadow:0 0 0 4px rgba(201,160,48,.12);}
     .obox.filled{border-color:rgba(201,160,48,.55);background:rgba(201,160,48,.06);}
     .obox.shk{border-color:var(--red);animation:shk .4s ease;}
     @keyframes shk{0%,100%{transform:translateX(0);}25%,75%{transform:translateX(-6px);}50%{transform:translateX(6px);}}
-    .otimer{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.1em;color:var(--muted);text-align:center;margin-bottom:18px;}
+    .otimer{font-size:11px;letter-spacing:.06em;color:var(--muted);text-align:center;margin-bottom:14px;}
     .otimer .tc{color:var(--gold);}
     .otimer .exp{color:var(--red);}
-    .note{margin-top:14px;font-size:11px;color:var(--muted);text-align:center;line-height:1.7;font-family:'Cinzel',serif;letter-spacing:.04em;}
-    .note a{color:var(--gold);text-decoration:none;cursor:pointer;}
-    .ustrip{margin-top:22px;padding-top:18px;border-top:1px solid var(--bdl);}
-    .ulbl{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;text-align:center;}
-    .ubadges{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;}
-    .ubadge{font-size:9px;font-family:'Cinzel',serif;letter-spacing:.05em;padding:3px 10px;border:1px solid rgba(201,160,48,.18);color:var(--muted);border-radius:9999px;}
+
     .step{display:none;}
     .step.on{display:block;}
 
-    /* SUPER VISIBLE demo banner */
-    .demo-card{
-      background:linear-gradient(135deg, rgba(201,160,48,.18), rgba(232,192,96,.08));
-      border:2px solid var(--gold);
-      border-radius:16px;padding:18px 18px 16px;margin-bottom:22px;text-align:center;
-      box-shadow:0 12px 40px -10px rgba(201,160,48,.4);
-      position:relative;
-      animation:demoPulse 2.5s ease infinite;
-    }
-    @keyframes demoPulse{0%,100%{box-shadow:0 12px 40px -10px rgba(201,160,48,.4);}50%{box-shadow:0 18px 50px -10px rgba(201,160,48,.6);}}
-    .demo-card .demo-tag{display:inline-flex;align-items:center;gap:6px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--navy);background:var(--gold2);padding:3px 10px;border-radius:9999px;font-weight:700;margin-bottom:10px;}
-    .demo-card .demo-msg{font-size:13px;color:var(--cream);margin-bottom:6px;}
-    .demo-card .demo-code{
-      font-family:'Cinzel',serif;font-size:2.4rem;letter-spacing:.4em;color:var(--gold2);
-      font-weight:700;line-height:1;margin:8px 0 10px 6px;cursor:pointer;
-      transition:transform .15s;
-      display:inline-block;
-    }
-    .demo-card .demo-code:hover{transform:scale(1.04);}
-    .demo-card .demo-actions{display:flex;gap:8px;justify-content:center;margin-top:6px;flex-wrap:wrap;}
-    .demo-card .mini-btn{
-      background:var(--navy);border:1px solid var(--gold);color:var(--gold2);
-      font-family:'Cinzel',serif;font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;
-      padding:7px 14px;border-radius:9999px;cursor:pointer;font-weight:600;
-      transition:background .2s, color .2s;
-    }
-    .demo-card .mini-btn:hover{background:var(--gold2);color:var(--navy);}
-    .demo-card small{display:block;color:var(--muted);font-size:10.5px;margin-top:8px;line-height:1.5;}
+    .pw-meter{display:flex;gap:4px;margin-top:6px;}
+    .pw-bar{flex:1;height:3px;background:var(--bdl);border-radius:2px;}
+    .pw-bar.weak{background:var(--red);}
+    .pw-bar.med{background:var(--gold);}
+    .pw-bar.strong{background:var(--green);}
+    .pw-help{font-size:11px;color:var(--muted);margin-top:6px;}
 
-    .session-banner{
-      background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);
-      border-radius:12px;padding:14px;margin-bottom:18px;
-      display:flex;align-items:center;gap:12px;
-    }
-    .session-banner .sb-text{flex:1;font-size:13px;line-height:1.5;}
-    .session-banner .sb-text strong{color:var(--green);}
+    .ustrip{margin-top:22px;padding-top:18px;border-top:1px solid var(--bdl);}
+    .ulbl{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;text-align:center;font-weight:600;}
+    .ubadges{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;}
+    .ubadge{font-size:10px;font-family:'DM Sans',sans-serif;padding:3px 10px;border:1px solid rgba(201,160,48,.18);color:var(--muted);border-radius:9999px;}
+
+    .demo-hint{margin-top:14px;font-size:12px;color:var(--muted);background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.18);border-radius:10px;padding:10px 14px;line-height:1.5;}
+    .demo-hint b{color:var(--blue);}
+    .demo-hint code{background:var(--navy3);padding:1px 6px;border-radius:4px;color:var(--gold2);font-family:monospace;font-size:11.5px;}
 
     @media(max-width:780px){.auth-wrap{grid-template-columns:1fr;}.auth-left{display:none;}}
   </style>
@@ -100,48 +107,76 @@
 
 <div class="auth-wrap">
 
-  <!-- BRAND PANEL -->
   <div class="auth-left">
-    <div class="auth-headline">Where traders<br><em>battle &amp; grow.</em></div>
-    <p class="text-muted" style="font-size:.92rem;line-height:1.7;margin-bottom:28px;">Paper trade real stocks and crypto. Compete on campus leaderboards. Zero risk. Real skills.</p>
+    <div class="auth-headline">Markets are<br><em>just the start.</em></div>
+    <p class="text-muted" style="font-size:.92rem;line-height:1.7;margin-bottom:28px;">Paper trade real ASX, US and crypto markets. Sharpen your edge before you risk a cent.</p>
     <div class="perk"><div class="pico">$1</div><div><strong>Fractional trading</strong> from $1 — own any asset, any size.</div></div>
-    <div class="perk"><div class="pico">🏆</div><div><strong>Campus leagues</strong> — USYD vs UNSW every Monday.</div></div>
-    <div class="perk"><div class="pico">🌍</div><div><strong>4 markets</strong> — ASX, US, Crypto &amp; more in one arena.</div></div>
-    <div class="perk"><div class="pico">$0</div><div><strong>Zero brokerage</strong> forever for the first 500 warriors.</div></div>
+    <div class="perk"><div class="pico">🏆</div><div><strong>Campus leagues</strong> — UNSW vs USYD, weekly competitions.</div></div>
+    <div class="perk"><div class="pico">🌍</div><div><strong>3 markets in one</strong> — ASX, US stocks &amp; crypto.</div></div>
+    <div class="perk"><div class="pico">$0</div><div><strong>Zero brokerage</strong> forever for the first 500 members.</div></div>
   </div>
 
-  <!-- FORM -->
   <div class="auth-right">
     <div class="auth-card">
 
-      <!-- Already signed in banner -->
-      <div class="session-banner" id="sessionBanner" style="display:none;">
-        <div id="sbAvatar"></div>
-        <div class="sb-text">
-          <strong>You're signed in</strong> as <span id="sbEmail">—</span><br>
-          <span class="text-muted" style="font-size:12px;">Redirecting to your profile…</span>
+      <div class="tabbar">
+        <button class="tabb on" id="tabLogin"  onclick="switchTab('login')">Log in</button>
+        <button class="tabb"    id="tabSignup" onclick="switchTab('signup')">Create account</button>
+      </div>
+
+      <!-- ========================== LOGIN ========================== -->
+      <div class="step on" id="loginStep">
+        <h1>Welcome back.</h1>
+        <p class="sub">Log in with your username or email and password.</p>
+        <div class="error-box" id="loginErr"></div>
+        <div class="field-stack">
+          <div class="field-row">
+            <i class="fa-solid fa-user lead"></i>
+            <input type="text" id="loginId" placeholder="Username or email" autocomplete="username"/>
+          </div>
+          <div class="field-row">
+            <i class="fa-solid fa-lock lead"></i>
+            <input type="password" id="loginPw" placeholder="Password" autocomplete="current-password"/>
+            <button class="toggle-pw" type="button" onclick="togglePw('loginPw',this)"><i class="fa-solid fa-eye"></i></button>
+          </div>
+        </div>
+        <div class="row-between">
+          <span class="text-muted">Don't have an account? <a onclick="switchTab('signup')">Sign up</a></span>
+          <a onclick="switchTab('forgot')">Forgot password?</a>
+        </div>
+        <button class="btn-prime" id="loginBtn" onclick="doLogin()">Log in</button>
+
+        <div class="demo-hint">
+          <b>Try a demo account →</b> username <code>liamos</code> · password <code>demo1234</code><br>
+          <span class="text-muted">All seeded demo accounts use the same password.</span>
         </div>
       </div>
 
-      <div class="step on" id="s1">
+      <!-- ========================== SIGN-UP STEP 1: email + type ========================== -->
+      <div class="step" id="signupStep1">
+        <h1>Create your account.</h1>
+        <p class="sub">We'll send a 6-digit code to verify your email. After that, you'll choose a username and password — and that's all you need to log in next time.</p>
+
         <div class="toggle-row">
-          <button class="tbtn as" id="btnS" onclick="setType('student')">
-            <span class="ticon">🎓</span>Student<span class="tsub">.edu.au required</span>
+          <button class="tbtn as" id="btnS" onclick="setSignupType('student')">
+            <span class="ticon"><i class="fa-solid fa-graduation-cap"></i></span>Student<span class="tsub">.edu.au required</span>
           </button>
-          <button class="tbtn" id="btnP" onclick="setType('public')">
-            <span class="ticon">🌐</span>Public<span class="tsub">Any email</span>
+          <button class="tbtn" id="btnP" onclick="setSignupType('public')">
+            <span class="ticon"><i class="fa-solid fa-globe"></i></span>Public<span class="tsub">Any email</span>
           </button>
         </div>
-        <div class="stag" id="stag">Student Access</div>
-        <h1>Enter<br>the Arena</h1>
-        <p class="sub" id="sub1">Pick <strong>Student</strong> for your <code>.edu.au</code> email, or <strong>Public</strong> to use any email (Gmail, etc). We'll show your verification code right here.</p>
-        <div class="error-box" id="e1"></div>
-        <div class="field">
-          <label id="elbl">University Email</label>
-          <input type="email" id="eIn" placeholder="you@student.unsw.edu.au" autocomplete="email"/>
+
+        <div class="error-box" id="signupErr1"></div>
+        <div class="field-row" style="margin-bottom:14px;">
+          <i class="fa-solid fa-envelope lead"></i>
+          <input type="email" id="signupEmail" placeholder="you@student.unsw.edu.au" autocomplete="email"/>
         </div>
-        <button class="btn-gold full" id="sendBtn" onclick="sendCode()">Send 6-Digit Code</button>
-        <p class="note" id="n1">Must be a university email (.edu.au) &nbsp;·&nbsp; <a href="index.html">← Back</a></p>
+        <button class="btn-prime" id="sendBtn" onclick="sendSignupOtp()">Send verification code</button>
+
+        <div class="row-between" style="justify-content:center;margin-top:18px;">
+          <span class="text-muted">Already have an account? <a onclick="switchTab('login')">Log in</a></span>
+        </div>
+
         <div class="ustrip" id="ustrip">
           <div class="ulbl">Accepted institutions</div>
           <div class="ubadges">
@@ -153,24 +188,22 @@
         </div>
       </div>
 
-      <div class="step" id="s2">
-
-        <!-- HUGE demo banner -->
-        <div class="demo-card" id="demoCard">
-          <div class="demo-tag">📨 Demo Mode</div>
+      <!-- ========================== SIGN-UP STEP 2: OTP ========================== -->
+      <div class="step" id="signupStep2">
+        <div class="demo-card">
+          <div class="demo-tag"><i class="fa-solid fa-envelope-open"></i> Demo Mode</div>
           <div class="demo-msg">Your verification code is</div>
           <div class="demo-code" id="demoCode" onclick="copyCode()" title="Click to copy">000000</div>
           <div class="demo-actions">
-            <button class="mini-btn" onclick="autoFillAndVerify()"><i class="fa-solid fa-bolt"></i> Use this code</button>
+            <button class="mini-btn" onclick="autoFillSignupOtp()"><i class="fa-solid fa-bolt"></i> Use this code</button>
             <button class="mini-btn" onclick="copyCode()"><i class="fa-solid fa-copy"></i> Copy</button>
           </div>
-          <small>This is a static demo — your code is shown here instead of emailed. In production it goes to your inbox.</small>
+          <small>Static demo — code is shown here instead of emailed.</small>
         </div>
 
-        <div class="stag">Verification Code</div>
-        <h1>Enter<br>Your Code</h1>
-        <p class="otp-to">6-digit code sent to<strong id="sentTo">—</strong></p>
-        <div class="error-box" id="e2"></div>
+        <h1>Verify your email.</h1>
+        <p class="otp-to">6-digit code sent to <strong id="sentTo">—</strong></p>
+        <div class="error-box" id="signupErr2"></div>
         <div class="orow">
           <input class="obox" id="d1" maxlength="1" inputmode="numeric" autocomplete="one-time-code"/>
           <input class="obox" id="d2" maxlength="1" inputmode="numeric"/>
@@ -179,17 +212,96 @@
           <input class="obox" id="d5" maxlength="1" inputmode="numeric"/>
           <input class="obox" id="d6" maxlength="1" inputmode="numeric"/>
         </div>
-        <div class="otimer" id="timerEl">Code expires in <span class="tc" id="tc">10:00</span></div>
-        <button class="btn-gold full" id="vBtn" onclick="verify()">Verify &amp; Enter Arena</button>
-        <button class="btn-ghost full" style="margin-top:12px;" onclick="goBack()">← Change Email</button>
-        <p class="note" style="margin-top:14px;">Need a fresh code? &nbsp;·&nbsp; <a onclick="resend();return false;">Resend →</a></p>
+        <div class="otimer">Code expires in <span class="tc" id="tc">10:00</span></div>
+        <button class="btn-prime" id="vBtn" onclick="verifySignupOtp()">Verify code</button>
+        <div class="row-between" style="margin-top:14px;">
+          <a onclick="goBackToSignup1()">← Change email</a>
+          <a onclick="resendSignupOtp()">Resend code</a>
+        </div>
       </div>
 
-      <div class="step" id="s3">
-        <div class="stag" style="color:var(--green);">Welcome, Warrior</div>
-        <h1>You're in!</h1>
-        <p class="sub">Loading your profile…</p>
-        <div style="text-align:center;padding:30px 0;">
+      <!-- ========================== SIGN-UP STEP 3: username + password ========================== -->
+      <div class="step" id="signupStep3">
+        <h1>Set up your profile.</h1>
+        <p class="sub">Choose a username and password. You'll use these to log in from now on.</p>
+        <div class="error-box" id="signupErr3"></div>
+        <div class="field-stack">
+          <div class="field-row">
+            <i class="fa-solid fa-at lead"></i>
+            <input type="text" id="newUsername" placeholder="username" autocomplete="username" maxlength="20"/>
+          </div>
+          <div>
+            <div class="field-row">
+              <i class="fa-solid fa-lock lead"></i>
+              <input type="password" id="newPw" placeholder="Create password (6+ chars)" autocomplete="new-password"/>
+              <button class="toggle-pw" type="button" onclick="togglePw('newPw',this)"><i class="fa-solid fa-eye"></i></button>
+            </div>
+            <div class="pw-meter">
+              <div class="pw-bar" id="pw1"></div><div class="pw-bar" id="pw2"></div><div class="pw-bar" id="pw3"></div>
+            </div>
+            <div class="pw-help" id="pwHelp">Use at least 6 characters.</div>
+          </div>
+        </div>
+        <button class="btn-prime" id="finishBtn" onclick="finishSignup()">Create account &amp; log in</button>
+      </div>
+
+      <!-- ========================== FORGOT PASSWORD ========================== -->
+      <div class="step" id="forgotStep1">
+        <h1>Reset your password.</h1>
+        <p class="sub">Enter your email or username and we'll send a code to reset your password.</p>
+        <div class="error-box" id="forgotErr1"></div>
+        <div class="field-row" style="margin-bottom:14px;">
+          <i class="fa-solid fa-user lead"></i>
+          <input type="text" id="forgotId" placeholder="Email or username"/>
+        </div>
+        <button class="btn-prime" id="forgotBtn" onclick="sendResetOtp()">Send reset code</button>
+        <div class="row-between" style="justify-content:center;margin-top:18px;">
+          <span class="text-muted">Remembered it? <a onclick="switchTab('login')">Log in</a></span>
+        </div>
+      </div>
+
+      <div class="step" id="forgotStep2">
+        <div class="demo-card">
+          <div class="demo-tag"><i class="fa-solid fa-envelope-open"></i> Demo Mode</div>
+          <div class="demo-msg">Your reset code is</div>
+          <div class="demo-code" id="resetCode">000000</div>
+          <div class="demo-actions">
+            <button class="mini-btn" onclick="autoFillResetOtp()"><i class="fa-solid fa-bolt"></i> Use this code</button>
+          </div>
+        </div>
+        <h1>Verify reset code.</h1>
+        <p class="otp-to">Code sent to <strong id="resetSentTo">—</strong></p>
+        <div class="error-box" id="forgotErr2"></div>
+        <div class="orow">
+          <input class="obox r" maxlength="1" inputmode="numeric"/>
+          <input class="obox r" maxlength="1" inputmode="numeric"/>
+          <input class="obox r" maxlength="1" inputmode="numeric"/>
+          <input class="obox r" maxlength="1" inputmode="numeric"/>
+          <input class="obox r" maxlength="1" inputmode="numeric"/>
+          <input class="obox r" maxlength="1" inputmode="numeric"/>
+        </div>
+        <button class="btn-prime" onclick="verifyResetOtpStep()">Verify code</button>
+      </div>
+
+      <div class="step" id="forgotStep3">
+        <h1>Set a new password.</h1>
+        <p class="sub">Choose a new password for your account.</p>
+        <div class="error-box" id="forgotErr3"></div>
+        <div class="field-stack">
+          <div class="field-row">
+            <i class="fa-solid fa-lock lead"></i>
+            <input type="password" id="resetNewPw" placeholder="New password (6+ chars)" autocomplete="new-password"/>
+            <button class="toggle-pw" type="button" onclick="togglePw('resetNewPw',this)"><i class="fa-solid fa-eye"></i></button>
+          </div>
+        </div>
+        <button class="btn-prime" onclick="finishReset()">Reset password &amp; log in</button>
+      </div>
+
+      <!-- Welcome step -->
+      <div class="step" id="welcomeStep">
+        <h1 style="color:var(--green);">You're in.</h1>
+        <p class="sub">Loading your account…</p>
+        <div style="text-align:center;padding:24px 0;">
           <span class="spin" style="width:32px;height:32px;border-width:3px;border-color:rgba(201,160,48,.3);border-top-color:var(--gold);"></span>
         </div>
       </div>
@@ -200,218 +312,283 @@
 
 <script src="assets/app.js"></script>
 <script>
+  TArenaAuth.seedDemoUsers();
   TArenaUI.renderNav('auth');
 
-  // If already signed in, skip straight to the arena.
+  // If already signed in, jump straight to profile
   (function () {
     const s = TArenaAuth.getSession();
     if (s) {
-      const banner = document.getElementById('sessionBanner');
-      banner.style.display = 'flex';
-      document.getElementById('sbAvatar').innerHTML = TArenaUI.avatarHtml(s.user, 38);
-      document.getElementById('sbEmail').innerHTML = `<strong>${s.user.email}</strong>`;
-      document.getElementById('s1').classList.remove('on');
-      setTimeout(() => window.location.href = 'profile.html', 1400);
+      document.getElementById('loginStep').classList.remove('on');
+      document.getElementById('welcomeStep').classList.add('on');
+      setTimeout(() => window.location.href = 'profile.html', 800);
     }
   })();
 
-  let uType = 'student';
-  let timerInterval = null;
+  let signupType = 'student';
+  let signupTimer = null;
   const DS = ['d1','d2','d3','d4','d5','d6'];
+  const RS = Array.from(document.querySelectorAll('.obox.r'));
 
-  function setType(t) {
-    uType = t;
+  // ----- Tab switching -----
+  function switchTab(name) {
+    ['loginStep','signupStep1','signupStep2','signupStep3','forgotStep1','forgotStep2','forgotStep3','welcomeStep'].forEach(id =>
+      document.getElementById(id).classList.remove('on')
+    );
+    document.getElementById('tabLogin').classList.toggle('on', name === 'login');
+    document.getElementById('tabSignup').classList.toggle('on', name === 'signup');
+    if (name === 'login')        document.getElementById('loginStep').classList.add('on');
+    else if (name === 'signup')  document.getElementById('signupStep1').classList.add('on');
+    else if (name === 'forgot')  document.getElementById('forgotStep1').classList.add('on');
+  }
+  window.__switchTab = switchTab;
+
+  // ----- Signup type toggle -----
+  function setSignupType(t) {
+    signupType = t;
     document.getElementById('btnS').className = 'tbtn' + (t === 'student' ? ' as' : '');
     document.getElementById('btnP').className = 'tbtn' + (t === 'public' ? ' ap' : '');
-    if (t === 'student') {
-      document.getElementById('stag').textContent = 'Student Access';
-      document.getElementById('elbl').textContent = 'University Email';
-      document.getElementById('eIn').placeholder = 'you@student.unsw.edu.au';
-      document.getElementById('sub1').innerHTML = 'Enter your <strong>.edu.au</strong> university email. We\'ll show your 6-digit code on the next screen — verify right here.';
-      document.getElementById('n1').innerHTML = 'Must be a university email (.edu.au) &nbsp;·&nbsp; <a href="index.html">← Back</a>';
-      document.getElementById('ustrip').style.display = 'block';
-    } else {
-      document.getElementById('stag').textContent = 'Public Access';
-      document.getElementById('elbl').textContent = 'Your Email';
-      document.getElementById('eIn').placeholder = 'you@gmail.com';
-      document.getElementById('sub1').innerHTML = 'Anyone can join TradeArena. Use <strong>any</strong> email (Gmail, Outlook, etc) — no .edu.au required.';
-      document.getElementById('n1').innerHTML = 'Open to everyone &nbsp;·&nbsp; <a href="index.html">← Back</a>';
-      document.getElementById('ustrip').style.display = 'none';
-    }
-    document.getElementById('eIn').classList.remove('err');
-    hideError('e1');
+    document.getElementById('signupEmail').placeholder = t === 'student' ? 'you@student.unsw.edu.au' : 'you@gmail.com';
+    document.getElementById('ustrip').style.display = t === 'student' ? 'block' : 'none';
+    hideError('signupErr1');
   }
 
+  // ----- Helpers -----
   function showError(id, msg) {
     const el = document.getElementById(id);
     el.innerHTML = msg;
     el.classList.add('show');
   }
-  function hideError(id) {
-    const el = document.getElementById(id);
-    el.classList.remove('show');
+  function hideError(id) { document.getElementById(id).classList.remove('show'); }
+  function togglePw(id, btn) {
+    const inp = document.getElementById(id);
+    const eye = btn.querySelector('i');
+    if (inp.type === 'password') { inp.type = 'text'; eye.className = 'fa-solid fa-eye-slash'; }
+    else { inp.type = 'password'; eye.className = 'fa-solid fa-eye'; }
   }
 
-  function sendCode() {
-    const email = document.getElementById('eIn').value.trim().toLowerCase();
-    const btn = document.getElementById('sendBtn');
-    hideError('e1');
-    document.getElementById('eIn').classList.remove('err');
-
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spin"></span>Sending Code…';
-
-    const result = TArenaAuth.sendOtp(email, uType);
+  // ----- LOGIN -----
+  function doLogin() {
+    hideError('loginErr');
+    const id = document.getElementById('loginId').value.trim();
+    const pw = document.getElementById('loginPw').value;
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Logging in…';
     setTimeout(() => {
-      btn.disabled = false;
-      btn.innerHTML = 'Send 6-Digit Code';
-      if (!result.ok) {
-        document.getElementById('eIn').classList.add('err');
-        showError('e1', result.error);
-        return;
-      }
-      // Move to OTP step
-      document.getElementById('sentTo').textContent = result.email;
-      document.getElementById('demoCode').textContent = result.code;
-      document.getElementById('s1').classList.remove('on');
-      document.getElementById('s2').classList.add('on');
-      DS.forEach(id => { document.getElementById(id).value = ''; document.getElementById(id).classList.remove('filled', 'shk'); });
-      startTimer(result.expiresAt);
-      setTimeout(() => document.getElementById('d1').focus(), 100);
-    }, 380);
+      const r = TArenaAuth.login(id, pw);
+      btn.disabled = false; btn.innerHTML = 'Log in';
+      if (!r.ok) { showError('loginErr', r.error); return; }
+      switchTab(''); document.getElementById('welcomeStep').classList.add('on');
+      setTimeout(() => window.location.href = 'profile.html', 700);
+    }, 350);
   }
 
+  // ----- SIGNUP step 1: email -----
+  function sendSignupOtp() {
+    hideError('signupErr1');
+    const email = document.getElementById('signupEmail').value.trim().toLowerCase();
+    const btn = document.getElementById('sendBtn');
+    btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Sending code…';
+    setTimeout(() => {
+      const r = TArenaAuth.startSignup(email, signupType);
+      btn.disabled = false; btn.innerHTML = 'Send verification code';
+      if (!r.ok) { showError('signupErr1', r.error); return; }
+      document.getElementById('sentTo').textContent = r.email;
+      document.getElementById('demoCode').textContent = r.code;
+      document.getElementById('signupStep1').classList.remove('on');
+      document.getElementById('signupStep2').classList.add('on');
+      DS.forEach(id => { document.getElementById(id).value = ''; document.getElementById(id).classList.remove('filled','shk'); });
+      startTimer(r.expiresAt);
+      setTimeout(() => document.getElementById('d1').focus(), 100);
+    }, 350);
+  }
+
+  // ----- SIGNUP step 2: OTP -----
   function startTimer(expiresAt) {
-    if (timerInterval) clearInterval(timerInterval);
+    if (signupTimer) clearInterval(signupTimer);
     const tc = document.getElementById('tc');
     function tick() {
       const remain = Math.max(0, expiresAt - Date.now());
       const m = Math.floor(remain / 60000);
       const s = Math.floor((remain % 60000) / 1000);
       tc.textContent = `${m}:${String(s).padStart(2,'0')}`;
-      if (remain === 0) {
-        tc.className = 'exp';
-        tc.textContent = 'EXPIRED';
-        clearInterval(timerInterval);
-      }
+      if (remain === 0) { tc.className = 'exp'; tc.textContent = 'EXPIRED'; clearInterval(signupTimer); }
     }
-    tick();
-    timerInterval = setInterval(tick, 1000);
+    tick(); signupTimer = setInterval(tick, 1000);
   }
-
-  function verify() {
+  function verifySignupOtp() {
     const code = DS.map(id => document.getElementById(id).value).join('');
     if (code.length !== 6) {
-      showError('e2', 'Please enter all 6 digits.');
+      showError('signupErr2', 'Please enter all 6 digits.');
       DS.forEach(id => document.getElementById(id).classList.add('shk'));
       setTimeout(() => DS.forEach(id => document.getElementById(id).classList.remove('shk')), 400);
       return;
     }
-    const btn = document.getElementById('vBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spin"></span>Verifying…';
-    setTimeout(() => {
-      const r = TArenaAuth.verifyOtp(code);
-      btn.disabled = false;
-      btn.innerHTML = 'Verify &amp; Enter Arena';
-      if (!r.ok) {
-        showError('e2', r.error);
-        DS.forEach(id => document.getElementById(id).classList.add('shk'));
-        setTimeout(() => DS.forEach(id => document.getElementById(id).classList.remove('shk')), 400);
-        return;
-      }
-      hideError('e2');
-      document.getElementById('s2').classList.remove('on');
-      document.getElementById('s3').classList.add('on');
-      setTimeout(() => window.location.href = 'profile.html', 900);
-    }, 350);
+    const r = TArenaAuth.verifySignupOtp(code);
+    if (!r.ok) {
+      showError('signupErr2', r.error);
+      DS.forEach(id => document.getElementById(id).classList.add('shk'));
+      setTimeout(() => DS.forEach(id => document.getElementById(id).classList.remove('shk')), 400);
+      return;
+    }
+    hideError('signupErr2');
+    // Suggest username
+    document.getElementById('newUsername').value = TArenaAuth.suggestUsername(r.email);
+    document.getElementById('signupStep2').classList.remove('on');
+    document.getElementById('signupStep3').classList.add('on');
+    setTimeout(() => document.getElementById('newPw').focus(), 100);
   }
-
-  function autoFillAndVerify() {
+  function autoFillSignupOtp() {
     const code = document.getElementById('demoCode').textContent.trim();
     if (!/^\d{6}$/.test(code)) return;
-    code.split('').forEach((ch, i) => {
-      const el = document.getElementById(DS[i]);
-      el.value = ch;
-      el.classList.add('filled');
-    });
-    setTimeout(verify, 200);
+    code.split('').forEach((ch, i) => { const el = document.getElementById(DS[i]); el.value = ch; el.classList.add('filled'); });
+    setTimeout(verifySignupOtp, 200);
   }
-
   function copyCode() {
     const code = document.getElementById('demoCode').textContent.trim();
     if (!/^\d{6}$/.test(code)) return;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(code).then(() => {
-        const c = document.getElementById('demoCode');
-        const orig = c.textContent;
-        c.style.color = 'var(--green)';
-        c.textContent = 'COPIED';
-        setTimeout(() => { c.textContent = orig; c.style.color = ''; }, 800);
-      });
-    }
+    navigator.clipboard && navigator.clipboard.writeText(code);
   }
-
-  function resend() {
+  function resendSignupOtp() {
     const email = document.getElementById('sentTo').textContent;
-    if (!email || email === '—') return;
-    const r = TArenaAuth.sendOtp(email, uType);
-    if (r.ok) {
-      document.getElementById('demoCode').textContent = r.code;
-      startTimer(r.expiresAt);
-      hideError('e2');
-      DS.forEach(id => { document.getElementById(id).value = ''; document.getElementById(id).classList.remove('filled'); });
-      document.getElementById('d1').focus();
-    }
+    const r = TArenaAuth.startSignup(email, signupType);
+    if (r.ok) { document.getElementById('demoCode').textContent = r.code; startTimer(r.expiresAt); }
+  }
+  function goBackToSignup1() {
+    if (signupTimer) clearInterval(signupTimer);
+    document.getElementById('signupStep2').classList.remove('on');
+    document.getElementById('signupStep1').classList.add('on');
   }
 
-  function goBack() {
-    if (timerInterval) clearInterval(timerInterval);
-    document.getElementById('s2').classList.remove('on');
-    document.getElementById('s1').classList.add('on');
-    document.getElementById('eIn').focus();
+  // ----- SIGNUP step 3: username + password -----
+  document.getElementById('newPw').addEventListener('input', e => {
+    const v = e.target.value;
+    const len = v.length;
+    let strength = 0;
+    if (len >= 6)  strength = 1;
+    if (len >= 9 && /[A-Z]/.test(v) && /\d/.test(v)) strength = 2;
+    if (len >= 12 && /[!@#$%^&*]/.test(v))           strength = 3;
+    document.getElementById('pw1').className = 'pw-bar ' + (strength >= 1 ? (strength >= 3 ? 'strong' : strength >= 2 ? 'med' : 'weak') : '');
+    document.getElementById('pw2').className = 'pw-bar ' + (strength >= 2 ? (strength >= 3 ? 'strong' : 'med') : '');
+    document.getElementById('pw3').className = 'pw-bar ' + (strength >= 3 ? 'strong' : '');
+    document.getElementById('pwHelp').textContent = ['Use at least 6 characters.','Add uppercase + a number for medium.','Good — add a symbol for strong.','Strong password ✓'][strength] || '';
+  });
+
+  function finishSignup() {
+    hideError('signupErr3');
+    const u = document.getElementById('newUsername').value.trim();
+    const p = document.getElementById('newPw').value;
+    const btn = document.getElementById('finishBtn');
+    btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Creating account…';
+    setTimeout(() => {
+      const r = TArenaAuth.completeSignup(u, p);
+      btn.disabled = false; btn.innerHTML = 'Create account &amp; log in';
+      if (!r.ok) { showError('signupErr3', r.error); return; }
+      document.getElementById('signupStep3').classList.remove('on');
+      document.getElementById('welcomeStep').classList.add('on');
+      setTimeout(() => window.location.href = 'profile.html', 700);
+    }, 350);
   }
 
-  // OTP input handling
-  DS.forEach((id, i) => {
-    const inp = document.getElementById(id);
-    inp.addEventListener('input', e => {
-      const v = e.target.value.replace(/\D/g, '').slice(-1);
-      e.target.value = v;
-      if (v) {
-        inp.classList.add('filled');
-        if (i < 5) document.getElementById(DS[i+1]).focus();
-        else if (DS.every(x => document.getElementById(x).value.length === 1)) verify();
-      } else {
-        inp.classList.remove('filled');
-      }
-    });
-    inp.addEventListener('keydown', e => {
-      if (e.key === 'Backspace' && !inp.value && i > 0) {
-        document.getElementById(DS[i-1]).focus();
-      }
-    });
-    inp.addEventListener('paste', e => {
-      e.preventDefault();
-      const txt = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6);
-      if (!txt) return;
-      txt.split('').forEach((ch, idx) => {
-        if (idx < 6) {
-          const el = document.getElementById(DS[idx]);
-          el.value = ch;
-          el.classList.add('filled');
+  // ----- FORGOT PASSWORD -----
+  function sendResetOtp() {
+    hideError('forgotErr1');
+    const id = document.getElementById('forgotId').value.trim();
+    const r = TArenaAuth.startReset(id);
+    if (!r.ok) { showError('forgotErr1', r.error); return; }
+    document.getElementById('resetSentTo').textContent = r.email;
+    document.getElementById('resetCode').textContent = r.code;
+    document.getElementById('forgotStep1').classList.remove('on');
+    document.getElementById('forgotStep2').classList.add('on');
+    RS.forEach(el => { el.value = ''; el.classList.remove('filled'); });
+    setTimeout(() => RS[0].focus(), 100);
+  }
+  function verifyResetOtpStep() {
+    const code = RS.map(el => el.value).join('');
+    if (code.length !== 6) { showError('forgotErr2', 'Enter all 6 digits.'); return; }
+    const r = TArenaAuth.verifyResetOtp(code);
+    if (!r.ok) { showError('forgotErr2', r.error); return; }
+    hideError('forgotErr2');
+    document.getElementById('forgotStep2').classList.remove('on');
+    document.getElementById('forgotStep3').classList.add('on');
+  }
+  function autoFillResetOtp() {
+    const code = document.getElementById('resetCode').textContent.trim();
+    if (!/^\d{6}$/.test(code)) return;
+    code.split('').forEach((ch, i) => { RS[i].value = ch; RS[i].classList.add('filled'); });
+    setTimeout(verifyResetOtpStep, 200);
+  }
+  function finishReset() {
+    hideError('forgotErr3');
+    const p = document.getElementById('resetNewPw').value;
+    const r = TArenaAuth.completeReset(p);
+    if (!r.ok) { showError('forgotErr3', r.error); return; }
+    document.getElementById('forgotStep3').classList.remove('on');
+    document.getElementById('welcomeStep').classList.add('on');
+    setTimeout(() => window.location.href = 'profile.html', 700);
+  }
+
+  // ----- OTP input handlers -----
+  function setupOtpInputs(ids, onComplete) {
+    ids.forEach((idOrEl, i) => {
+      const inp = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
+      inp.addEventListener('input', e => {
+        const v = e.target.value.replace(/\D/g, '').slice(-1);
+        e.target.value = v;
+        if (v) {
+          inp.classList.add('filled');
+          if (i < ids.length - 1) (typeof ids[i+1] === 'string' ? document.getElementById(ids[i+1]) : ids[i+1]).focus();
+          else if (ids.every(x => (typeof x === 'string' ? document.getElementById(x) : x).value.length === 1)) onComplete();
+        } else inp.classList.remove('filled');
+      });
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'Backspace' && !inp.value && i > 0) {
+          (typeof ids[i-1] === 'string' ? document.getElementById(ids[i-1]) : ids[i-1]).focus();
         }
       });
-      if (txt.length === 6) verify();
-      else document.getElementById(DS[txt.length]).focus();
+      inp.addEventListener('paste', e => {
+        e.preventDefault();
+        const txt = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, ids.length);
+        if (!txt) return;
+        txt.split('').forEach((ch, idx) => {
+          if (idx < ids.length) {
+            const el = typeof ids[idx] === 'string' ? document.getElementById(ids[idx]) : ids[idx];
+            el.value = ch; el.classList.add('filled');
+          }
+        });
+        if (txt.length === ids.length) onComplete();
+        else (typeof ids[txt.length] === 'string' ? document.getElementById(ids[txt.length]) : ids[txt.length]).focus();
+      });
     });
-  });
+  }
+  setupOtpInputs(DS, verifySignupOtp);
+  setupOtpInputs(RS, verifyResetOtpStep);
 
-  document.getElementById('eIn').addEventListener('keydown', e => {
-    if (e.key === 'Enter') sendCode();
-  });
+  // Enter key handlers
+  document.getElementById('loginId').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPw').focus(); });
+  document.getElementById('loginPw').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+  document.getElementById('signupEmail').addEventListener('keydown', e => { if (e.key === 'Enter') sendSignupOtp(); });
+  document.getElementById('newPw').addEventListener('keydown', e => { if (e.key === 'Enter') finishSignup(); });
+  document.getElementById('resetNewPw').addEventListener('keydown', e => { if (e.key === 'Enter') finishReset(); });
+  document.getElementById('forgotId').addEventListener('keydown', e => { if (e.key === 'Enter') sendResetOtp(); });
 
-  console.log('%c⚔️ TradeArena Auth ready · demo OTP visible on screen', 'color:#e8c060;font-weight:700;');
+  window.switchTab = switchTab;
+  window.setSignupType = setSignupType;
+  window.sendSignupOtp = sendSignupOtp;
+  window.verifySignupOtp = verifySignupOtp;
+  window.autoFillSignupOtp = autoFillSignupOtp;
+  window.copyCode = copyCode;
+  window.resendSignupOtp = resendSignupOtp;
+  window.goBackToSignup1 = goBackToSignup1;
+  window.finishSignup = finishSignup;
+  window.doLogin = doLogin;
+  window.sendResetOtp = sendResetOtp;
+  window.verifyResetOtpStep = verifyResetOtpStep;
+  window.autoFillResetOtp = autoFillResetOtp;
+  window.finishReset = finishReset;
+  window.togglePw = togglePw;
+
+  console.log('%cTradeArena · Auth ready (Login + Sign-up + Reset)', 'color:#e8c060;font-weight:700;');
 </script>
 </body>
 </html>
