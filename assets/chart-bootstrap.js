@@ -486,22 +486,28 @@
 
   // Lightweight Charts has no built-in screenshot; rasterize the
   // canvas ourselves. Walks every <canvas> inside the container
-  // and composites them onto a single output canvas.
+  // and composites them onto a single DPR-scaled output canvas so
+  // captures stay sharp on high-DPI / retina displays.
   async function captureLightweight(container) {
     const canvases = container.querySelectorAll('canvas');
     if (!canvases.length) return null;
+    const dpr = global.devicePixelRatio || 1;
     const w = container.clientWidth;
     const h = container.clientHeight;
     const out = document.createElement('canvas');
-    out.width  = w;
-    out.height = h;
+    out.width  = Math.round(w * dpr);
+    out.height = Math.round(h * dpr);
     const ctx = out.getContext('2d');
+    ctx.scale(dpr, dpr);
     ctx.fillStyle = THEME.bg;
     ctx.fillRect(0, 0, w, h);
+    const cRect = container.getBoundingClientRect();
     canvases.forEach((c) => {
       const rect = c.getBoundingClientRect();
-      const cRect = container.getBoundingClientRect();
-      ctx.drawImage(c, rect.left - cRect.left, rect.top - cRect.top, c.width, c.height);
+      // Source canvas is already DPR-scaled in width/height; draw it
+      // into the destination CSS rectangle so ctx.scale handles the
+      // physical pixel mapping.
+      ctx.drawImage(c, rect.left - cRect.left, rect.top - cRect.top, rect.width, rect.height);
     });
     return out.toDataURL('image/png');
   }
