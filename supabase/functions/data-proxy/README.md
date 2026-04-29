@@ -29,6 +29,10 @@ supabase functions deploy data-proxy
 
 `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are auto-injected by Supabase — do **not** set them yourself.
 
+## Rate limiting
+
+Each cold-started instance enforces a per-IP token bucket of 60 requests / 60 seconds, returning HTTP 429 when exceeded. This caps runaway client loops so a single browser can't burn through the upstream Finnhub free-tier quota. For stricter platform-level guardrails, add Supabase project-level rate limits or a Cloudflare/WAF rule in front of the function URL.
+
 ## Smoke test
 
 ```bash

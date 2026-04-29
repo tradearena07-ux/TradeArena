@@ -602,9 +602,41 @@ async function handleSearch(body: RequestBody): Promise<Response> {
 
 // ----- entry -------------------------------------------------------------
 
+// Lightweight per-IP token bucket. The function is intentionally
+// public-facing (browser → edge) so we cap a single client to RATE_LIMIT
+// requests per RATE_WINDOW_MS to protect upstream free-tier quotas.
+// State lives on the per-instance globalThis; cold-start resets counts,
+// which is fine — the cap exists to stop runaway loops, not authenticate.
+const RATE_LIMIT     = 60;
+const RATE_WINDOW_MS = 60_000;
+type Bucket = { count: number; resetAt: number };
+const rateBuckets: Map<string, Bucket> = new Map();
+
+function clientIp(req: Request): string {
+  const xf = req.headers.get("x-forwarded-for");
+  if (xf) return xf.split(",")[0].trim();
+  return req.headers.get("cf-connecting-ip") || "unknown";
+}
+
+function rateLimited(ip: string): boolean {
+  const now = Date.now();
+  const b = rateBuckets.get(ip);
+  if (!b || now >= b.resetAt) {
+    rateBuckets.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return false;
+  }
+  b.count += 1;
+  return b.count > RATE_LIMIT;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
   if (req.method !== "POST")    return jsonResponse({ s: "error", error: "POST only" }, 405);
+
+  const ip = clientIp(req);
+  if (rateLimited(ip)) {
+    return jsonResponse({ s: "error", error: "rate limit exceeded" }, 429);
+  }
 
   let body: RequestBody = {};
   try {
