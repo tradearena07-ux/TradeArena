@@ -578,11 +578,18 @@ begin
      where f.follower_id = v_uid
        and f.followee_id in (select author_id from ranked)
   ),
+  trade_qty as (
+    select pt.id as paper_trade_id, pt.qty, pt.side
+      from public.paper_trades pt
+     where pt.id in (select paper_trade_id from ranked where paper_trade_id is not null)
+  ),
   joined as (
     select
       r.id, r.symbol, r.market, r.chart_snapshot_url,
       r.thesis, r.entry, r.stop_loss, r.target, r.direction,
       r.visibility, r.created_at, r.paper_trade_id,
+      tq.qty  as paper_trade_qty,
+      tq.side as paper_trade_side,
       jsonb_build_object(
         'id',           p.id,
         'username',     p.username,
@@ -615,6 +622,7 @@ begin
     left join viewer_mirror vm on vm.reel_id    = r.id
     left join author_stats ast on ast.owner_id  = r.author_id
     left join viewer_follow vf on vf.followee_id = r.author_id
+    left join trade_qty   tq   on tq.paper_trade_id = r.paper_trade_id
   )
   -- next_cursor = the oldest created_at on this page. The client
   -- sends it back as `p_cursor` and we return rows strictly older.
@@ -668,6 +676,8 @@ begin
     'visibility',   r.visibility,
     'created_at',   r.created_at,
     'paper_trade_id', r.paper_trade_id,
+    'paper_trade_qty',  pt.qty,
+    'paper_trade_side', pt.side,
     'author', jsonb_build_object(
       'id',           p.id,
       'username',     p.username,
@@ -712,7 +722,8 @@ begin
   )
     into v_payload
     from r
-    join public.profiles p on p.id = r.author_id;
+    join public.profiles p on p.id = r.author_id
+    left join public.paper_trades pt on pt.id = r.paper_trade_id;
 
   return v_payload;
 end;

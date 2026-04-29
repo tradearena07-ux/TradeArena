@@ -770,10 +770,15 @@
     if (!r || !datafeed) return;
     const pnlEl = el.querySelector('[data-live-pnl]');
 
-    // Use the same risk-based qty the server opened the trade with so
-    // the shown P&L matches the author's actual paper trade.
-    const qty = reelsApi.positionSize({ entry: r.entry, stop: r.stop_loss, riskPct: 1, account: ACCOUNT_SIZE });
-    const side = r.direction === 'short' ? 'sell' : 'buy';
+    // Use the AUTHOR's actual paper-trade size (server-of-truth) so
+    // the displayed P&L matches the trade the publisher actually opened
+    // — qty varies by the publisher's chosen risk %. If the row was
+    // published before paper_trade_qty was added to the feed payload,
+    // recompute defensively from the same risk-based formula.
+    const qty  = (r.paper_trade_qty != null)
+      ? +r.paper_trade_qty
+      : reelsApi.positionSize({ entry: r.entry, stop: r.stop_loss, riskPct: 1, account: ACCOUNT_SIZE });
+    const side = r.paper_trade_side || (r.direction === 'short' ? 'sell' : 'buy');
 
     const update = (last) => {
       const { abs, pct } = reelsApi.livePnl({ entry: r.entry, qty, side, last });
