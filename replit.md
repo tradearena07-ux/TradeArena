@@ -14,7 +14,7 @@ Static multi-page paper-trading site for Australian uni students. ASX, US stocks
 |------|---------|
 | `index.html`     | Landing — hero, features, leaderboard, live ticker |
 | `auth.html`      | Sign-in — Tabs **Log in / Create account** + **Forgot password**. Supabase email-OTP for signup + password reset; password login (no OTP) for returning users. |
-| `profile.html`   | Profile page — gradient avatar, stats, bio, holdings/watchlist/activity tabs, edit modal. Post-login landing. |
+| `profile.html`   | Trader scorecard — header (avatar, handle, tier, university, follower stats, edit/follow), 6 stat tiles, equity-curve card with benchmark dropdown + range tabs, full quant-metrics card, verified-achievement badges, 4-tab content (Strategies / Reels / Journal / Holdings) with locked-card empty states for any section the trader has hidden. Edit modal exposes a per-section privacy toggle grid that writes to `profiles.visibility_mask`. View other traders via `?u=username`. |
 | `trade.html`     | Markets — TradingView chart, watchlist sidebar, symbol search, big symbol header, right-side order entry panel, simulated order book. |
 | `portfolio.html` | Groww-style portfolio — investments hero, time-range tabs, perf chart, allocation bar, holdings list, top movers. |
 | `admin.html`     | Admin panel — registrations, university breakdown, CSV export. **Gated by `profiles.is_admin = true`** (no shared passphrase). |
@@ -26,6 +26,7 @@ Static multi-page paper-trading site for Australian uni students. ASX, US stocks
 - `market.js`   — `TArenaMarket` static catalogue (symbol → name/market/mcap/52w). `tick()` is the fallback random simulator still used by the home ticker and portfolio page — those pages get rebuilt later. The Trade page **does not** use `tick()`; it gets live prices from `datafeed.js`.
 - `datafeed.js` — `TArenaDatafeed` market-data layer. `fetchBars`, `fetchQuotes`, `subscribeQuote` (Binance WS for crypto + 5s poll for stocks), plus a TradingView UDF adapter (`createUDF()`) and a Supabase save/load adapter (`createSaveLoadAdapter()`).
 - `chart-bootstrap.js` — `TArenaChart.mount(containerId, symbol, resolution)` — detects whether the Advanced Charts library is installed and mounts either it or the Lightweight Charts fallback.
+- `metrics.js` — `window.TArenaMetrics`, pure quant-math helpers used by the profile scorecard: `pnl`, `rMultiple`, `winRate`, `avgWin`, `avgLoss`, `avgRR`, `profitFactor`, `expectancy`, `avgHoldingDays`, `dailyReturns`, `sharpe`/`sortino` (annualized over 252 trading days), `equityCurve`, `maxDrawdown`, `recoveryFactor`, `totalReturnPct`, plus a single-shot `summarise(trades, opts)` aggregator. Empty inputs return `null` so the UI can render "—" instead of NaN.
 - `styles.css`  — design tokens (navy/gold), nav, cards, tables, buttons, modal, forms, avatar pill + dropdown menu
 - `favicon.svg` — gold shield logo
 
@@ -44,11 +45,11 @@ Static multi-page paper-trading site for Australian uni students. ASX, US stocks
 The Supabase **publishable key** in `assets/config.js` is designed to ship in client code; real authorization is enforced by RLS policies on every table. The original task spec called for the URL/key to be sourced from Replit Secrets at workspace setup time, but because this site has no build step we can't do `process.env`-style substitution — `config.js` is committed with the literal values instead. To rotate the key: regenerate it in Supabase Dashboard → Project Settings → API, paste the new value into `assets/config.js`, and redeploy. (If we move to a bundled build later, `config.js` should be regenerated from the `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY` Replit Secrets and excluded from git.)
 
 ## Database setup (one-time)
-The full schema, RLS policies, and helper functions live in `supabase/migrations/0001_init.sql`.
+The base schema, RLS policies, and helper functions live in `supabase/migrations/0001_init.sql`. The Task #4 scorecard adds visibility-aware accessors and a tighter `paper_trades` policy in `supabase/migrations/0002_profile_scorecard.sql` — run **both** files in order.
 
 To install (or reset) the database:
 1. Open the Supabase Dashboard → **SQL Editor** → **New query**.
-2. Paste the contents of `supabase/migrations/0001_init.sql` and click **Run**.
+2. Paste the contents of `supabase/migrations/0001_init.sql` and click **Run**, then repeat with `supabase/migrations/0002_profile_scorecard.sql`.
 3. Confirm the `profiles`, `strategies`, `paper_trades`, `holdings_view`, `reels`, `reel_tags`, `reel_mirrors`, `follows`, `leagues`, `league_members`, `chart_layouts`, `price_bars` tables/views exist with RLS enabled.
 4. **(Optional)** Seed the 8 legacy demo accounts so old logins (`liamos`, `alexchen`, etc. with password `demo1234`) keep working: run `select public.seed_demo_users();` in the SQL editor. Re-runnable; already-seeded accounts are skipped.
 
@@ -60,6 +61,20 @@ The migration creates these helper RPCs (callable from the client unless noted):
 - `list_registrations()` — admin-only view of all profiles + auth emails.
 - `seed_demo_users()` — one-shot demo seeder (no client grant; runs from SQL editor).
 - `refresh_holdings_view()` — admin/cron refresh for the materialized view.
+
+**Profile scorecard RPCs (added by `0002_profile_scorecard.sql`):**
+- `get_profile_card(p_username)` — public profile + the owner's `visibility_mask` so the client can decide which sub-cards to render. The `university` column is nulled out when the owner has hidden it (and the viewer is not the owner).
+- `get_journal_for(p_owner)` — full closed-trade history (with `notes`, `symbol`, `target`, etc.), gated by `visibility_mask.journal`.
+- `get_perf_trades_for(p_owner)` — minimal projection (`id, symbol, side, qty, entry_price, exit_price, stop_loss, status, opened_at, closed_at`) used to compute the equity curve and quant tiles client-side, gated by `metrics OR equity_curve`. This keeps the "publish my performance without my journal narrative" hybrid-privacy story honest.
+- `get_strategies_for(p_owner)` — strategy library, gated by `visibility_mask.strategies`.
+- `get_follow_stats(p_owner)`, `am_following(p_target)`, `follow_user(p_target)`, `unfollow_user(p_target)` — social-graph helpers.
+- `compute_badges_for(p_owner)` — auto-issues five achievement badges (`100_trades`, `6_profitable_months`, `top_sharpe_q3_26`, `mirror_master`, `strategy_curator`) computed from existing `paper_trades` / `reel_mirrors` / `strategies` data — no extra schema required.
+
+Every new SECURITY DEFINER function explicitly `REVOKE ALL ... FROM PUBLIC` before granting `EXECUTE` to `authenticated`, so anonymous callers can't invoke them even if PUBLIC retains the default privilege somewhere upstream.
+
+The `paper_trades_read` policy is also tightened in 0002: the same row is now exposed to outsiders **only** when its `status='open'` matches `visibility_mask.holdings = true` **or** its `status='closed'` matches `visibility_mask.journal = true`. (The owner still sees everything.) This means a trader can publish their journal without revealing currently-open positions, or vice-versa.
+
+The `strategies` table previously had a permissive `strategies_read_all` policy that made every user's strategy library globally enumerable. 0002 replaces it with a visibility-aware `strategies_read` policy `(owner_id = auth.uid() OR has_visibility(owner_id, 'strategies'))` so the base table now enforces the same gate as `get_strategies_for`.
 
 ## Privacy + RLS model
 - **`profiles`** is RLS-restricted to **self-only SELECT** so sensitive columns (`is_admin`, `visibility_mask`, raw `bio`) never leak to other users.
@@ -117,6 +132,18 @@ supabase functions deploy data-proxy
 ```
 
 The function fans out to Yahoo Finance (ASX), Finnhub (US), and Binance (crypto). Every history call is **read-through-cache** against `public.price_bars`: the function returns cached bars immediately only when the cache covers **both** ends of the requested window (earliest cached bar ≤ `from + one bar`, latest cached bar within one bar of `to`). Otherwise it backfills only the missing **head** (older history, when the user back-scrolls past the cached range) and/or **tail** (recent history) from upstream and merges them with the cached set. On upstream failure with cached bars present, the function returns the cached set with `stale: true` instead of erroring. This means bar-replay scrubbing and repeat history loads stay free, while back-scroll and first-load both work correctly. Source + smoke-test in `supabase/functions/data-proxy/`.
+
+## Profile page (trader scorecard)
+
+Open with `profile.html` (own scorecard) or `profile.html?u=<username>` (any trader).
+
+**Layout (top → bottom):** header (avatar + display name + handle + tier chip + optional university chip + bio + follower/following counts + Edit/Follow button) → 6 stat tiles (All-time P&L, Win rate, Sharpe, Max DD, Profit factor, Trades) → equity-curve card (Chart.js area, benchmark switch ASX200/SPX/BTC, range tabs 1M/3M/6M/1Y/ALL) → quant-metrics card (12 numbers — sharpe, sortino, recovery factor, profit factor, expectancy, avg R:R, avg holding days, etc.) → verified-achievement badges → 4 tabs (Strategies / Reels / Journal / Holdings).
+
+**Hybrid privacy.** Each numeric/visual section is gated independently by the owner's `profiles.visibility_mask` JSONB. When a section is hidden, the matching tile/card renders a `Private` lock instead of fabricating placeholder data. The Edit modal exposes one toggle per maskable field (`holdings`, `cash`, `equity_curve`, `metrics`, `strategies`, `journal`, `reels`, `university`) and writes the new mask via `TArenaAuth.saveProfile({ visibilityMask })`. RLS in `0002_profile_scorecard.sql` enforces the same gates server-side, so an attacker cannot bypass the UI by calling RPCs directly.
+
+**Benchmark line.** Until the Trade-page datafeed exposes a generic `fetchBenchmark(code)`, the equity-curve card overlays a deterministic synthetic series so the line stays stable across reloads (and the swap-in is one function — `syntheticBenchmark()` in `profile.html`). Real index data plugs in here without touching the rest of the page.
+
+**Quant math** lives in `assets/metrics.js` (pure functions, no DB access). The page calls `TArenaMetrics.summarise(trades, { startingCapital: 100000, benchmark })` once per render.
 
 ## Portfolio page (Groww-style)
 - Big "Investments" header with current value, total returns ($/%), and today's change tile.

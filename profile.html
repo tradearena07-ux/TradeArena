@@ -3,142 +3,189 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TradeArena · Your Profile</title>
+  <title>TradeArena · Trader Profile</title>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=Cinzel+Decorative:wght@700&amp;family=DM+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
   <link rel="stylesheet" href="assets/styles.css"/>
   <style>
-    .pf-shell{max-width:1040px;margin:0 auto;padding:32px 24px 60px;flex:1;width:100%;}
+    .pf-shell      { max-width:1080px;margin:0 auto;padding:32px 24px 60px;flex:1;width:100%; }
+    .num           { font-feature-settings:'tnum';font-variant-numeric:tabular-nums; }
+    .text-amber    { color:#fbbf24; }
+    .pf-stale      { font-size:11px;color:var(--muted);font-style:italic;margin-left:6px; }
 
-    /* ---- Header (Instagram-style) ---- */
-    .pf-head{display:grid;grid-template-columns:auto 1fr;gap:48px;padding-bottom:32px;border-bottom:1px solid var(--bdl);}
-    .pf-avatar-ring{
-      width:160px;height:160px;border-radius:50%;
-      padding:4px;
-      background:linear-gradient(135deg,var(--gold),var(--gold2),#f87171,var(--blue));
-      display:flex;align-items:center;justify-content:center;
-      flex-shrink:0;
+    /* ---- Header ---------------------------------------------- */
+    .pf-head{
+      display:grid;grid-template-columns:auto 1fr auto;gap:32px;align-items:center;
+      padding-bottom:28px;border-bottom:1px solid var(--bdl);
     }
-    .pf-avatar-inner{
-      width:100%;height:100%;border-radius:50%;
+    .pf-avatar{
+      width:104px;height:104px;border-radius:50%;
       display:flex;align-items:center;justify-content:center;
-      color:#fff;font-family:'Cinzel',serif;font-weight:700;
-      font-size:3.4rem;letter-spacing:.03em;
-      border:3px solid var(--navy);
-      text-shadow:0 2px 8px rgba(0,0,0,.4);
+      color:#fff;font-family:'Cinzel',serif;font-weight:700;font-size:2.4rem;letter-spacing:.03em;
+      border:3px solid rgba(201,160,48,.45);text-shadow:0 2px 6px rgba(0,0,0,.4);
     }
-    .pf-meta{display:flex;flex-direction:column;gap:18px;min-width:0;}
-    .pf-row1{display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
-    .pf-handle{font-family:'Cinzel',serif;font-size:1.8rem;font-weight:600;letter-spacing:.04em;color:var(--cream);}
-    .pf-actions{display:flex;gap:8px;flex-wrap:wrap;}
+    .pf-id .name { font-family:'Cinzel',serif;font-size:1.75rem;font-weight:700;color:var(--cream);letter-spacing:.02em; }
+    .pf-id .handle { color:var(--muted);font-size:14px;margin-top:2px; }
+    .pf-id .badges-row { margin-top:10px;display:flex;gap:8px;flex-wrap:wrap; }
+    .pf-tier{ display:inline-flex;align-items:center;gap:6px;background:rgba(201,160,48,.12);color:var(--gold2);padding:4px 12px;border-radius:9999px;font-size:11.5px;font-weight:600;letter-spacing:.04em; }
+    .pf-uni{ display:inline-flex;align-items:center;gap:6px;background:rgba(96,165,250,.10);color:var(--blue);padding:4px 12px;border-radius:9999px;font-size:11.5px;font-weight:600; }
+
+    .pf-social{ display:flex;flex-direction:column;align-items:flex-end;gap:14px; }
+    .pf-counts{ display:flex;gap:22px;font-size:13px;color:var(--muted); }
+    .pf-counts strong{ display:block;color:var(--cream);font-family:'Cinzel',serif;font-size:18px;letter-spacing:.02em; }
     .pf-actbtn{
-      padding:8px 16px;border-radius:9px;border:1px solid var(--border);
-      background:var(--navy3);color:var(--cream);font-size:13px;font-weight:600;
-      cursor:pointer;display:inline-flex;align-items:center;gap:8px;
-      transition:all .2s;font-family:'DM Sans',sans-serif;
+      padding:9px 18px;border-radius:9px;border:1px solid var(--border);
+      background:var(--navy3);color:var(--cream);font-size:13px;font-weight:600;cursor:pointer;
+      display:inline-flex;align-items:center;gap:8px;transition:all .15s;font-family:'DM Sans',sans-serif;
     }
-    .pf-actbtn:hover{border-color:var(--gold);color:var(--gold2);}
-    .pf-actbtn.primary{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);border:none;font-weight:700;}
-    .pf-actbtn.primary:hover{filter:brightness(1.08);color:var(--navy);}
-    .pf-stats{display:flex;gap:42px;flex-wrap:wrap;}
-    .pf-stat{font-size:14px;color:var(--muted);}
-    .pf-stat strong{color:var(--cream);font-weight:600;font-family:'Cinzel',serif;letter-spacing:.02em;font-size:18px;display:inline-block;margin-right:4px;}
-    .pf-stat.green strong{color:var(--green);}
-    .pf-name{font-family:'DM Sans',sans-serif;font-size:1.05rem;font-weight:600;color:var(--cream);}
-    .pf-bio{font-size:14px;color:var(--cream);line-height:1.6;max-width:520px;}
-    .pf-bio .uni{display:inline-flex;align-items:center;gap:6px;color:var(--gold2);font-weight:500;}
-    .pf-bio .joined{display:block;color:var(--muted);font-size:12.5px;margin-top:6px;}
-    .pf-tier{display:inline-flex;align-items:center;gap:8px;background:rgba(201,160,48,.12);color:var(--gold2);padding:5px 14px;border-radius:9999px;font-size:12px;font-weight:600;letter-spacing:.04em;}
+    .pf-actbtn:hover{ border-color:var(--gold);color:var(--gold2); }
+    .pf-actbtn.primary{ background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);border:none;font-weight:700; }
+    .pf-actbtn.primary:hover{ filter:brightness(1.08);color:var(--navy); }
+    .pf-actbtn.following{ background:rgba(74,222,128,.10);border-color:rgba(74,222,128,.4);color:#86efac; }
 
-    /* ---- Highlights (story circles) ---- */
-    .pf-highlights{display:flex;gap:28px;padding:30px 0;border-bottom:1px solid var(--bdl);overflow-x:auto;}
-    .pf-hl{display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;flex-shrink:0;width:78px;}
-    .pf-hl-circle{
-      width:74px;height:74px;border-radius:50%;
-      padding:3px;
-      background:linear-gradient(135deg,var(--gold),#a16207);
-      transition:transform .2s;
+    /* ---- Stats tiles ---------------------------------------- */
+    .stats-grid{ display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:24px; }
+    .stat-tile{
+      background:var(--navy3);border:1px solid var(--bdl);border-radius:12px;padding:16px 14px;
+      display:flex;flex-direction:column;gap:6px;
     }
-    .pf-hl:hover .pf-hl-circle{transform:scale(1.04);}
-    .pf-hl-inner{
-      width:100%;height:100%;border-radius:50%;
-      background:var(--navy3);border:2px solid var(--navy);
-      display:flex;align-items:center;justify-content:center;
-      font-size:24px;color:var(--gold2);
-    }
-    .pf-hl-label{font-size:11.5px;color:var(--cream);font-family:'Cinzel',serif;letter-spacing:.04em;text-align:center;line-height:1.3;}
+    .stat-tile .lbl{ font-family:'Cinzel',serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted); }
+    .stat-tile .val{ font-family:'Cinzel',serif;font-size:1.5rem;font-weight:700;color:var(--cream);letter-spacing:.02em; }
+    .stat-tile.pos .val{ color:var(--green); }
+    .stat-tile.neg .val{ color:var(--red); }
+    .stat-tile.amb .val{ color:#fbbf24; }
+    .stat-tile.lock { opacity:.55;border-style:dashed; }
+    .stat-tile.lock .val{ color:var(--muted);font-size:1rem; }
 
-    /* ---- Tabs ---- */
-    .pf-tabs{display:flex;gap:0;border-bottom:1px solid var(--bdl);justify-content:center;margin-bottom:18px;}
+    @media(max-width:980px){ .stats-grid{ grid-template-columns:repeat(3,1fr); } }
+    @media(max-width:560px){ .stats-grid{ grid-template-columns:repeat(2,1fr); } }
+
+    /* ---- Cards ----------------------------------------------- */
+    .pcard{
+      background:var(--navy3);border:1px solid var(--bdl);border-radius:14px;padding:22px;
+      margin-top:22px;
+    }
+    .pcard-head{ display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap; }
+    .pcard-title{ font-family:'Cinzel',serif;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold2); }
+    .pcard-sub{ font-size:12px;color:var(--muted); }
+
+    .range-tabs, .bench-select{ display:flex;gap:4px;background:var(--navy);padding:3px;border-radius:8px;border:1px solid var(--bdl); }
+    .range-tabs button, .bench-select button{
+      padding:5px 11px;border-radius:6px;background:transparent;border:none;color:var(--muted);
+      font-size:11.5px;font-weight:600;cursor:pointer;font-family:'Cinzel',serif;letter-spacing:.06em;
+    }
+    .range-tabs button.active, .bench-select button.active{ background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy); }
+
+    /* ---- Quant breakdown grid ------------------------------- */
+    .quant-grid{ display:grid;grid-template-columns:repeat(4,1fr);gap:18px 24px; }
+    @media(max-width:780px){ .quant-grid{ grid-template-columns:repeat(2,1fr); } }
+    .quant-row .l{ font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:4px; }
+    .quant-row .v{ font-family:'Cinzel',serif;font-size:1.05rem;font-weight:600;color:var(--cream);letter-spacing:.02em; }
+
+    /* ---- Badges row ----------------------------------------- */
+    .badge-row{ display:flex;flex-wrap:wrap;gap:10px; }
+    .badge{
+      display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:9999px;
+      background:linear-gradient(135deg,rgba(201,160,48,.12),rgba(232,192,96,.04));
+      border:1px solid rgba(201,160,48,.35);color:var(--gold2);
+      font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;
+    }
+    .badge i{ color:var(--gold); }
+
+    /* ---- Tabs ----------------------------------------------- */
+    .pf-tabs{ display:flex;gap:0;border-bottom:1px solid var(--bdl);margin:24px 0 18px; }
     .pf-tab{
-      padding:16px 30px;cursor:pointer;
+      padding:14px 22px;cursor:pointer;
       font-family:'Cinzel',serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
-      color:var(--muted);background:transparent;border:none;border-top:1px solid transparent;
-      transition:all .2s;display:inline-flex;align-items:center;gap:8px;
+      color:var(--muted);background:transparent;border:none;border-bottom:2px solid transparent;
+      transition:all .15s;display:inline-flex;align-items:center;gap:8px;
     }
-    .pf-tab:hover{color:var(--cream);}
-    .pf-tab.active{color:var(--gold2);border-top-color:var(--gold);background:linear-gradient(180deg,rgba(201,160,48,.06),transparent);}
-    .pf-tab i{font-size:13px;}
+    .pf-tab:hover{ color:var(--cream); }
+    .pf-tab.active{ color:var(--gold2);border-bottom-color:var(--gold); }
+    .pf-tab.lock-tab{ opacity:.55; }
 
-    /* ---- Grid (Instagram-style 3 cols) ---- */
-    .pf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
-    @media(max-width:780px){.pf-grid{grid-template-columns:repeat(2,1fr);}}
+    /* ---- Tab content ---------------------------------------- */
+    .strat-grid{ display:grid;grid-template-columns:repeat(2,1fr);gap:14px; }
+    @media(max-width:780px){ .strat-grid{ grid-template-columns:1fr; } }
+    .strat-card{ background:var(--navy);border:1px solid var(--bdl);border-radius:10px;padding:16px; }
+    .strat-card .name{ font-family:'Cinzel',serif;font-weight:700;color:var(--cream);font-size:1.05rem; }
+    .strat-card .desc{ color:var(--muted);font-size:13px;margin:6px 0 10px;line-height:1.5; }
+    .strat-card .stats{ display:flex;gap:18px;font-size:12px;color:var(--muted); }
+    .strat-card .stats strong{ color:var(--cream);font-family:'Cinzel',serif;font-size:14px;display:block; }
 
-    .gcard{
-      background:var(--navy3);border:1px solid var(--bdl);
-      border-radius:8px;overflow:hidden;cursor:pointer;
-      aspect-ratio:1/1;display:flex;flex-direction:column;justify-content:space-between;
-      padding:18px 16px;position:relative;
-      transition:transform .2s, border-color .2s;
+    .journal-list .jrow{ display:grid;grid-template-columns:80px 1fr auto auto;gap:14px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--bdl); }
+    .journal-list .jrow:last-child{ border-bottom:none; }
+    .jrow .jthumb{ width:80px;height:50px;border-radius:6px;background:var(--navy);border:1px solid var(--bdl);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px; }
+    .jrow .jthumb img{ width:100%;height:100%;object-fit:cover;border-radius:6px; }
+    .jrow .jbody strong{ display:block;color:var(--cream);font-weight:600;font-family:'Cinzel',serif;letter-spacing:.02em; }
+    .jrow .jbody small{ color:var(--muted);font-size:12px; }
+    .jrow .jpnl{ font-family:'Cinzel',serif;font-weight:700;text-align:right; }
+    .jrow .jpnl small{ display:block;font-size:11px;color:var(--muted);font-weight:400; }
+    .jrow .jr{ font-family:'Cinzel',serif;font-weight:600;color:var(--gold2);text-align:right; }
+
+    .holdings-grid{ display:grid;grid-template-columns:repeat(3,1fr);gap:8px; }
+    @media(max-width:780px){ .holdings-grid{ grid-template-columns:repeat(2,1fr); } }
+    .hcard{ background:var(--navy);border:1px solid var(--bdl);border-radius:10px;padding:14px; }
+    .hcard .sym{ font-family:'Cinzel',serif;font-weight:700;color:var(--cream);font-size:1.1rem; }
+    .hcard .qty{ color:var(--muted);font-size:12px;margin-top:2px; }
+    .hcard .val{ font-family:'Cinzel',serif;font-weight:600;color:var(--cream);margin-top:8px;font-size:0.95rem; }
+    .hcard .pnl{ font-size:12.5px;font-weight:600;font-family:'Cinzel',serif; }
+
+    /* ---- Locked card --------------------------------------- */
+    .locked-card{
+      text-align:center;padding:46px 20px;color:var(--muted);
+      background:repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(168,193,219,0.025) 8px, rgba(168,193,219,0.025) 16px);
+      border:1px dashed var(--bdl);border-radius:12px;
     }
-    .gcard:hover{transform:translateY(-3px);border-color:var(--gold);}
-    .gcard .gtop{display:flex;justify-content:space-between;align-items:flex-start;}
-    .gcard .gsym{font-family:'Cinzel',serif;font-size:1.2rem;font-weight:700;letter-spacing:.04em;color:var(--cream);}
-    .gcard .gname{font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.3;}
-    .gcard .gbadge{font-size:10px;padding:3px 8px;border-radius:9999px;font-weight:600;background:rgba(201,160,48,.12);color:var(--gold2);}
-    .gcard .gbadge.asx{background:rgba(16,185,129,.15);color:var(--green);}
-    .gcard .gbadge.us{background:rgba(96,165,250,.15);color:var(--blue);}
-    .gcard .gbadge.crypto{background:rgba(245,158,11,.15);color:#fbbf24;}
-    .gcard .gspark{flex:1;margin:14px 0 10px;position:relative;}
-    .gcard .gspark svg{width:100%;height:100%;display:block;}
-    .gcard .gbottom{display:flex;justify-content:space-between;align-items:flex-end;}
-    .gcard .gprice{font-family:'Cinzel',serif;font-size:1.15rem;font-weight:600;color:var(--cream);letter-spacing:.02em;}
-    .gcard .gchg{font-size:12.5px;font-weight:600;font-family:'Cinzel',serif;letter-spacing:.04em;}
+    .locked-card i{ font-size:32px;color:var(--gold);opacity:.5;margin-bottom:14px;display:block; }
+    .locked-card .lt{ color:var(--cream);font-weight:600;margin-bottom:6px; }
 
-    .activity-list .arow{
-      display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--bdl);
-    }
-    .activity-list .arow:last-child{border-bottom:none;}
-    .arow .aicon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
-    .arow .aicon.buy{background:rgba(74,222,128,.13);color:var(--green);}
-    .arow .aicon.sell{background:rgba(248,113,113,.13);color:var(--red);}
-    .arow .atxt{flex:1;}
-    .arow .atxt strong{display:block;color:var(--cream);font-weight:600;}
-    .arow .atxt small{color:var(--muted);font-size:12px;}
-    .arow .aval{text-align:right;font-family:'Cinzel',serif;font-weight:600;}
+    .empty-state{ text-align:center;padding:46px 20px;color:var(--muted); }
+    .empty-state i{ font-size:32px;color:var(--gold);opacity:.4;margin-bottom:14px;display:block; }
 
-    .empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
-    .empty-state i{font-size:42px;color:var(--gold);opacity:.4;margin-bottom:18px;display:block;}
-
-    /* Edit modal */
-    .modal-row{margin-bottom:14px;}
-    .modal-row label{display:block;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+    /* ---- Edit modal --------------------------------------- */
+    .modal{ max-width:560px; }
+    .modal-row{ margin-bottom:14px; }
+    .modal-row label{ display:block;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px; }
     .modal-row input, .modal-row textarea{
-      width:100%;padding:12px 14px;background:var(--navy3);
+      width:100%;padding:11px 13px;background:var(--navy);
       border:1px solid var(--border);color:var(--cream);
       font-family:'DM Sans',sans-serif;font-size:14px;
       border-radius:8px;outline:none;resize:vertical;
     }
-    .modal-row input:focus, .modal-row textarea:focus{border-color:var(--gold);}
+    .modal-row input:focus, .modal-row textarea:focus{ border-color:var(--gold); }
+
+    .privacy-grid{
+      background:var(--navy);border:1px solid var(--bdl);border-radius:10px;padding:14px;
+    }
+    .privacy-grid .ph{
+      font-family:'Cinzel',serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+      color:var(--gold2);margin-bottom:10px;display:flex;align-items:center;gap:8px;
+    }
+    .priv-row{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:10px 0;border-top:1px solid var(--bdl);
+    }
+    .priv-row:first-of-type{ border-top:none; }
+    .priv-row .pl{ color:var(--cream);font-size:13.5px;font-weight:500; }
+    .priv-row .pl small{ display:block;color:var(--muted);font-size:11.5px;margin-top:2px;font-weight:400; }
+    .toggle{
+      position:relative;width:42px;height:24px;background:var(--navy3);border:1px solid var(--bdl);
+      border-radius:9999px;cursor:pointer;flex-shrink:0;transition:background .15s;
+    }
+    .toggle::after{
+      content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;
+      background:var(--cream);border-radius:50%;transition:left .15s;
+    }
+    .toggle.on{ background:linear-gradient(135deg,var(--gold),var(--gold2)); }
+    .toggle.on::after{ left:20px;background:var(--navy); }
 
     @media(max-width:780px){
-      .pf-head{grid-template-columns:auto;gap:24px;text-align:center;}
-      .pf-avatar-ring{width:110px;height:110px;margin:0 auto;}
-      .pf-avatar-inner{font-size:2.4rem;}
-      .pf-row1{justify-content:center;}
-      .pf-stats{justify-content:center;}
+      .pf-head{ grid-template-columns:auto 1fr;gap:18px; }
+      .pf-social{ grid-column:1 / -1;align-items:flex-start;flex-direction:row;justify-content:space-between;width:100%; }
+      .pf-avatar{ width:72px;height:72px;font-size:1.6rem; }
     }
   </style>
 </head>
@@ -146,97 +193,41 @@
 
 <div id="tarena-nav"></div>
 
-<div class="pf-shell">
-
-  <!-- Header -->
-  <div class="pf-head">
-    <div class="pf-avatar-ring">
-      <div class="pf-avatar-inner" id="avatarInner">??</div>
-    </div>
-    <div class="pf-meta">
-      <div class="pf-row1">
-        <div class="pf-handle" id="handle">@username</div>
-        <div class="pf-actions">
-          <button class="pf-actbtn primary" onclick="openEdit()"><i class="fa-solid fa-pen"></i> Edit profile</button>
-          <button class="pf-actbtn" onclick="shareProfile()"><i class="fa-solid fa-share"></i> Share</button>
-          <button class="pf-actbtn" onclick="window.location.href='trade.html'"><i class="fa-solid fa-bolt"></i> Trade</button>
-          <button class="pf-actbtn" onclick="signOut()" title="Sign out" style="color:#fca5a5;"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
-        </div>
-      </div>
-      <div class="pf-stats">
-        <div class="pf-stat green"><strong id="statValue">$0</strong> portfolio</div>
-        <div class="pf-stat"><strong id="statHold">0</strong> holdings</div>
-        <div class="pf-stat"><strong id="statTrades">0</strong> trades</div>
-        <div class="pf-stat"><strong id="statWatch">0</strong> watching</div>
-      </div>
-      <div>
-        <div class="pf-name" id="displayName">—</div>
-        <div class="pf-bio" id="bio">—</div>
-        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-          <span class="pf-tier"><i class="fa-solid fa-shield-halved"></i> <span id="tier">Member</span></span>
-          <span class="badge"><span class="live-dot"></span> ASX OPEN</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Highlights -->
-  <div class="pf-highlights">
-    <div class="pf-hl" onclick="filterByMarket('all'); switchTab('holdings');">
-      <div class="pf-hl-circle"><div class="pf-hl-inner">📊</div></div>
-      <div class="pf-hl-label">All Assets</div>
-    </div>
-    <div class="pf-hl" onclick="filterByMarket('asx'); switchTab('holdings');">
-      <div class="pf-hl-circle"><div class="pf-hl-inner">🇦🇺</div></div>
-      <div class="pf-hl-label">ASX</div>
-    </div>
-    <div class="pf-hl" onclick="filterByMarket('us'); switchTab('holdings');">
-      <div class="pf-hl-circle"><div class="pf-hl-inner">🇺🇸</div></div>
-      <div class="pf-hl-label">US Stocks</div>
-    </div>
-    <div class="pf-hl" onclick="filterByMarket('crypto'); switchTab('holdings');">
-      <div class="pf-hl-circle"><div class="pf-hl-inner">₿</div></div>
-      <div class="pf-hl-label">Crypto</div>
-    </div>
-    <div class="pf-hl" onclick="window.location.href='portfolio.html';">
-      <div class="pf-hl-circle"><div class="pf-hl-inner">🏆</div></div>
-      <div class="pf-hl-label">Top Picks</div>
-    </div>
-    <div class="pf-hl" onclick="switchTab('activity')">
-      <div class="pf-hl-circle"><div class="pf-hl-inner">⚡</div></div>
-      <div class="pf-hl-label">Recent</div>
-    </div>
-  </div>
-
-  <!-- Tabs -->
-  <div class="pf-tabs">
-    <button class="pf-tab active" data-tab="holdings" onclick="switchTab('holdings')"><i class="fa-solid fa-grip"></i> Holdings</button>
-    <button class="pf-tab" data-tab="watchlist" onclick="switchTab('watchlist')"><i class="fa-solid fa-bookmark"></i> Watchlist</button>
-    <button class="pf-tab" data-tab="activity" onclick="switchTab('activity')"><i class="fa-solid fa-clock"></i> Activity</button>
-  </div>
-
-  <!-- Tab content -->
-  <div id="tabContent"></div>
-
+<div class="pf-shell" id="pfShell">
+  <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i><div>Loading scorecard…</div></div>
 </div>
 
 <!-- Edit Profile Modal -->
 <div class="modal-backdrop" id="editModal" onclick="if(event.target.id==='editModal') closeEdit()">
   <div class="modal">
-    <h3>Edit Profile</h3>
+    <h3 style="margin:0 0 4px;font-family:'Cinzel',serif;letter-spacing:.04em;">Edit profile</h3>
+    <div style="color:var(--muted);font-size:12.5px;margin-bottom:18px;">Update your public scorecard and choose what other traders can see.</div>
+
     <div class="modal-row">
-      <label>Display Name</label>
+      <label>Display name</label>
       <input type="text" id="editName" maxlength="40" placeholder="e.g. Alex Chen"/>
     </div>
     <div class="modal-row">
       <label>Bio</label>
-      <textarea id="editBio" rows="3" maxlength="160" placeholder="Trader at UNSW · ASX + crypto"></textarea>
+      <textarea id="editBio" rows="2" maxlength="160" placeholder="Quant-leaning swing trader · ASX + crypto"></textarea>
     </div>
-    <div class="modal-row">
-      <label>Tier</label>
-      <input type="text" id="editTier" maxlength="30" placeholder="Member"/>
+    <div class="modal-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div>
+        <label>Tier</label>
+        <input type="text" id="editTier" maxlength="30" placeholder="Member"/>
+      </div>
+      <div>
+        <label>Avatar tint (hex)</label>
+        <input type="text" id="editAvatarColor" maxlength="7" placeholder="#3aa0ff"/>
+      </div>
     </div>
-    <div style="display:flex;gap:10px;margin-top:8px;">
+
+    <div class="privacy-grid">
+      <div class="ph"><i class="fa-solid fa-shield-halved"></i> Privacy — choose what other traders see</div>
+      <div id="privRows"></div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:18px;">
       <button class="btn-ghost full" onclick="closeEdit()">Cancel</button>
       <button class="btn-gold full" onclick="saveEdit()">Save</button>
     </div>
@@ -247,199 +238,677 @@
 
 <script src="assets/config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="assets/supabase.js"></script>
 <script src="assets/app.js"></script>
 <script src="assets/market.js"></script>
+<script src="assets/metrics.js"></script>
 <script>
+(() => {
+  'use strict';
+
   const session = TArenaAuth.requireAuth();
   if (!session) throw new Error('redirect');
   TArenaUI.renderNav('profile');
   TArenaUI.renderFooter();
-  TArenaAuth.onAuthChange(s => { if (s) renderHeader(); });
 
-  let activeTab = 'holdings';
-  let marketFilter = 'all';
+  // ---- Page state ------------------------------------------------
+  const sb = window.TArenaDB;
+  const params = new URLSearchParams(location.search);
+  const wantedHandle = (params.get('u') || session.user.username).replace(/^@/, '').toLowerCase();
+  const isOwnProfile = wantedHandle === session.user.username.toLowerCase();
 
-  function renderHeader() {
-    const fresh = TArenaAuth.getSession();
-    const u = (fresh && fresh.user) || session.user;
-    const av = TArenaUI.getAvatar(u);
-    const inner = document.getElementById('avatarInner');
-    inner.textContent = av.initials;
-    inner.style.background = av.gradient;
-    document.getElementById('handle').textContent = u.handle;
-    document.getElementById('displayName').textContent = u.displayName;
-    const uniLabel = u.university === 'Public' ? '🌐 Public access' : `🎓 ${u.university}`;
-    document.getElementById('bio').innerHTML = `${u.bio || '—'}
-      <span class="joined">${uniLabel} · Joined ${new Date(u.joinedAt).toLocaleDateString('en-AU',{month:'short',year:'numeric'})}</span>`;
-    document.getElementById('tier').textContent = u.tier;
+  // Default visibility mask matches the SQL default — everything but
+  // holdings/cash starts visible. We only fall back to this when a
+  // viewer is the owner (own profile is always fully visible).
+  const DEFAULT_MASK = {
+    holdings: false, cash: false, equity_curve: true, metrics: true,
+    strategies: true, journal: true, reels: true, university: true,
+  };
 
-    // Stats
-    document.getElementById('statValue').textContent = TArenaUI.fmtMoney(TArenaMarket.totalValue(), {decimals:0});
-    document.getElementById('statHold').textContent = TArenaMarket.holdings.length;
-    document.getElementById('statTrades').textContent = TArenaMarket.getOrders().length;
-    document.getElementById('statWatch').textContent = TArenaMarket.getWatchlist().length;
+  const PRIV_FIELDS = [
+    { k: 'holdings',     l: 'Holdings',         d: 'Show open positions on your profile.' },
+    { k: 'cash',         l: 'Cash balance',     d: 'Reveal your portfolio cash buffer.' },
+    { k: 'equity_curve', l: 'Equity curve',     d: 'Account value over time vs benchmarks.' },
+    { k: 'metrics',      l: 'Quant metrics',    d: 'Sharpe, Sortino, win rate, drawdown, etc.' },
+    { k: 'strategies',   l: 'Strategies',       d: 'Your published strategy library.' },
+    { k: 'journal',      l: 'Trade journal',    d: 'Closed trade history with reasoning.' },
+    { k: 'reels',        l: 'Reels',            d: 'Trade-idea reels you have posted.' },
+    { k: 'university',   l: 'University',       d: 'Show your school on your profile.' },
+  ];
+
+  const BADGE_LABELS = {
+    '100_trades':         { i: 'fa-medal',     t: '100+ trades' },
+    '6_profitable_months':{ i: 'fa-calendar-check', t: '6 profitable months' },
+    'top_sharpe_q3_26':   { i: 'fa-trophy',    t: 'Top 1% Sharpe · Q3 2026' },
+    'mirror_master':      { i: 'fa-clone',     t: 'Mirror master · 50+ mirrors' },
+    'strategy_curator':   { i: 'fa-book-open', t: 'Strategy curator · 5+ published' },
+  };
+
+  const STARTING_CAPITAL = 100000;
+
+  let state = {
+    profile:     null,   // { id, username, display_name, tier, type, university, bio, badges, visibility_mask, joined_at }
+    follows:     { followers: 0, following: 0 },
+    amFollowing: false,
+    trades:      [],     // closed trades for journal + metrics
+    openHoldings:[],     // owner-only holdings list (empty when locked)
+    strategies:  [],
+    summary:     null,   // metrics summary
+    benchmark:   'asx200',
+    range:       'ALL',
+    activeTab:   'strategies',
+    cashBalance: null,
+    equityChart: null,
+  };
+
+  // ============================================================
+  // Data loaders
+  // ============================================================
+  function isVisible(field) {
+    if (isOwnProfile) return true;
+    const mask = (state.profile && state.profile.visibility_mask) || {};
+    if (field in mask) return !!mask[field];
+    return DEFAULT_MASK[field];
   }
 
-  function sparkline(seed, up) {
-    let pts = [];
-    let v = 50;
-    for (let i = 0; i < 24; i++) {
-      v += (Math.sin(seed + i * 0.6) * 3) + (Math.random() - 0.4 + (up ? 0.3 : -0.3)) * 4;
-      v = Math.max(10, Math.min(90, v));
-      pts.push(`${(i / 23) * 100},${100 - v}`);
-    }
-    const color = up ? '#4ade80' : '#f87171';
-    const fill = up ? 'rgba(74,222,128,.12)' : 'rgba(248,113,113,.12)';
-    return `<svg viewBox="0 0 100 100" preserveAspectRatio="none">
-      <polyline fill="${fill}" stroke="none" points="0,100 ${pts.join(' ')} 100,100"/>
-      <polyline fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round" points="${pts.join(' ')}"/>
-    </svg>`;
+  async function loadProfile() {
+    const { data, error } = await sb.rpc('get_profile_card', { p_username: wantedHandle });
+    if (error) { console.error(error); return null; }
+    if (!data || !data.length) return null;
+    return data[0];
   }
 
-  function renderHoldings() {
-    let list = TArenaMarket.holdings;
-    if (marketFilter !== 'all') list = list.filter(h => h.type === marketFilter);
-    if (!list.length) {
-      return `<div class="empty-state"><i class="fa-solid fa-folder-open"></i><div>No holdings in this market.</div>
-        <button class="btn-gold" style="margin-top:18px;" onclick="window.location.href='trade.html'">Start trading</button></div>`;
-    }
-    return `<div class="pf-grid">${list.map((h, i) => {
-      const v = TArenaMarket.holdingValue(h);
-      const m = TArenaMarket.find(h.symbol);
-      const up = v.pnl >= 0;
-      const sign = up ? '+' : '';
-      return `<div class="gcard" onclick="window.location.href='trade.html'">
-        <div class="gtop">
-          <div>
-            <div class="gsym">${h.symbol}</div>
-            <div class="gname">${v.name}</div>
-          </div>
-          <div class="gbadge ${h.type}">${h.type.toUpperCase()}</div>
-        </div>
-        <div class="gspark">${sparkline(i, up)}</div>
-        <div class="gbottom">
-          <div>
-            <div class="gprice">${TArenaUI.fmtMoney(v.value, {decimals:0})}</div>
-            <div class="text-muted" style="font-size:11px;">${h.qty.toLocaleString('en-US',{maximumFractionDigits:4})} ${h.type==='crypto'?'':'shares'}</div>
-          </div>
-          <div class="gchg ${up ? 'text-green' : 'text-red'}">${sign}${v.pnlPct.toFixed(2)}%</div>
-        </div>
-      </div>`;
-    }).join('')}</div>`;
+  async function loadFollowStats(ownerId) {
+    const { data, error } = await sb.rpc('get_follow_stats', { p_owner: ownerId });
+    if (error) { console.warn(error); return { followers: 0, following: 0 }; }
+    const r = (data && data[0]) || {};
+    return { followers: Number(r.followers) || 0, following: Number(r.following) || 0 };
   }
 
-  function renderWatchlist() {
-    let list = TArenaMarket.getWatchlist().map(s => TArenaMarket.find(s)).filter(Boolean);
-    if (marketFilter !== 'all') list = list.filter(m => m.market === marketFilter);
-    if (!list.length) {
-      return `<div class="empty-state"><i class="fa-solid fa-bookmark"></i><div>Your watchlist is empty.</div>
-        <button class="btn-gold" style="margin-top:18px;" onclick="window.location.href='trade.html'">Add symbols</button></div>`;
-    }
-    return `<div class="pf-grid">${list.map((m, i) => {
-      const up = m.change >= 0;
-      const sign = up ? '+' : '';
-      return `<div class="gcard" onclick="window.location.href='trade.html'">
-        <div class="gtop">
-          <div>
-            <div class="gsym">${m.symbol}</div>
-            <div class="gname">${m.name}</div>
-          </div>
-          <div class="gbadge ${m.market}">${m.market.toUpperCase()}</div>
-        </div>
-        <div class="gspark">${sparkline(i + 7, up)}</div>
-        <div class="gbottom">
-          <div>
-            <div class="gprice">$${m.price < 100 ? m.price.toFixed(2) : m.price.toLocaleString()}</div>
-            <div class="text-muted" style="font-size:11px;">${m.mcap}</div>
-          </div>
-          <div class="gchg ${up ? 'text-green' : 'text-red'}">${sign}${m.change.toFixed(2)}%</div>
-        </div>
-      </div>`;
-    }).join('')}</div>`;
+  async function loadAmFollowing(ownerId) {
+    if (isOwnProfile) return false;
+    const { data, error } = await sb.rpc('am_following', { p_target: ownerId });
+    if (error) { console.warn(error); return false; }
+    return !!data;
   }
 
-  function renderActivity() {
-    const orders = TArenaMarket.getOrders();
-    if (!orders.length) {
-      return `<div class="empty-state"><i class="fa-solid fa-clock"></i><div>No trades yet.</div>
-        <button class="btn-gold" style="margin-top:18px;" onclick="window.location.href='trade.html'">Place your first trade</button></div>`;
-    }
-    return `<div class="card-flat" style="padding:0;">
-      <div class="activity-list">${orders.map(o => `
-        <div class="arow">
-          <div class="aicon ${o.side}"><i class="fa-solid fa-${o.side==='buy'?'arrow-up':'arrow-down'}"></i></div>
-          <div class="atxt">
-            <strong>${o.side === 'buy' ? 'Bought' : 'Sold'} ${o.symbol}</strong>
-            <small>${o.shares.toFixed(4)} @ $${o.price.toLocaleString()} · ${new Date(o.ts).toLocaleString('en-AU')}</small>
-          </div>
-          <div class="aval">${TArenaUI.fmtMoney(o.amount, {decimals:2})}</div>
-        </div>`).join('')}
-      </div>
+  async function loadJournalTrades(ownerId) {
+    // Full journal rows (with notes / symbols) for the Journal tab.
+    // Server-side `get_journal_for` returns 0 rows when journal mask
+    // is off, so we don't need a client-side gate.
+    if (!isOwnProfile && !isVisible('journal')) return [];
+    const { data, error } = await sb.rpc('get_journal_for', { p_owner: ownerId });
+    if (error) { console.warn('journal load failed', error); return []; }
+    return data || [];
+  }
+
+  async function loadPerfTrades(ownerId) {
+    // Stripped projection for metrics / equity curve. Gated server-side
+    // by `metrics OR equity_curve OR owner`.
+    if (!isOwnProfile && !isVisible('metrics') && !isVisible('equity_curve')) return [];
+    const { data, error } = await sb.rpc('get_perf_trades_for', { p_owner: ownerId });
+    if (error) { console.warn('perf load failed', error); return []; }
+    return data || [];
+  }
+
+  async function loadStrategies(ownerId) {
+    if (!isVisible('strategies')) return [];
+    const { data, error } = await sb.rpc('get_strategies_for', { p_owner: ownerId });
+    if (error) { console.warn('strategies load failed', error); return []; }
+    return data || [];
+  }
+
+  async function loadHoldings(ownerId) {
+    if (!isVisible('holdings')) return [];
+    const { data, error } = await sb.rpc('get_holdings_for', { p_owner: ownerId });
+    if (error) { console.warn('holdings load failed', error); return []; }
+    return data || [];
+  }
+
+  // ============================================================
+  // Render helpers
+  // ============================================================
+  const fmtPct  = (n, d) => (n == null ? '—' : (n >= 0 ? '+' : '') + (n * 100).toFixed(d == null ? 2 : d) + '%');
+  const fmtNum  = (n, d) => (n == null || !isFinite(n) ? '—' : n.toFixed(d == null ? 2 : d));
+  const fmtDays = n => (n == null ? '—' : n.toFixed(1) + 'd');
+  const fmtMoney = (n) => TArenaUI.fmtMoney(n, { decimals: n == null ? 0 : (Math.abs(n) >= 1000 ? 0 : 2) });
+
+  function avatarFor(p) {
+    const fakeUser = { username: p.username, email: p.username + '@trade.local' };
+    const a = TArenaUI.getAvatar(fakeUser);
+    const bg = p.avatar_color
+      ? `linear-gradient(135deg, ${p.avatar_color}, ${p.avatar_color})`
+      : a.gradient;
+    return `<div class="pf-avatar" style="background:${bg};">${a.initials}</div>`;
+  }
+
+  function statTile(lbl, val, cls) {
+    return `<div class="stat-tile ${cls || ''}"><div class="lbl">${lbl}</div><div class="val num">${val}</div></div>`;
+  }
+
+  function lockTile(lbl) {
+    return `<div class="stat-tile lock"><div class="lbl">${lbl}</div><div class="val"><i class="fa-solid fa-lock"></i> Private</div></div>`;
+  }
+
+  function locked(field, label) {
+    const map = {
+      holdings:    'This trader keeps holdings private.',
+      cash:        'Cash balance hidden by this trader.',
+      equity_curve:'Equity curve is private.',
+      metrics:     'Quant metrics are private.',
+      strategies:  'Strategy library is private.',
+      journal:     'Trade journal is private.',
+      reels:       'Reels are private.',
+    };
+    return `<div class="locked-card"><i class="fa-solid fa-lock"></i>
+      <div class="lt">${label || 'Private'}</div>
+      <div>${map[field] || 'This section is hidden by the trader.'}</div></div>`;
+  }
+
+  function emptyState(icon, msg, action) {
+    return `<div class="empty-state"><i class="fa-solid ${icon}"></i><div>${msg}</div>
+      ${action ? `<button class="btn-gold" style="margin-top:18px;" onclick="${action.onclick}">${action.label}</button>` : ''}
     </div>`;
   }
 
-  function switchTab(name) {
-    activeTab = name;
-    document.querySelectorAll('.pf-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
-    const c = document.getElementById('tabContent');
-    if (name === 'holdings')       c.innerHTML = renderHoldings();
-    else if (name === 'watchlist') c.innerHTML = renderWatchlist();
-    else                           c.innerHTML = renderActivity();
+  function classify(n) {
+    if (n == null || !isFinite(n)) return '';
+    return n > 0 ? 'pos' : (n < 0 ? 'neg' : '');
   }
-  function filterByMarket(m) { marketFilter = m; }
 
+  // ============================================================
+  // Top-level render
+  // ============================================================
+  function render() {
+    const p = state.profile;
+    const m = state.summary || {};
+    const showMetrics = isVisible('metrics');
+    const showCurve   = isVisible('equity_curve');
+    const showStrats  = isVisible('strategies');
+    const showJournal = isVisible('journal');
+    const showReels   = isVisible('reels');
+    const showHold    = isVisible('holdings');
+
+    const headerActions = isOwnProfile
+      ? `<button class="pf-actbtn primary" onclick="openEdit()"><i class="fa-solid fa-pen"></i> Edit profile</button>
+         <button class="pf-actbtn" onclick="signOut()" title="Sign out" style="color:#fca5a5;"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>`
+      : `<button class="pf-actbtn ${state.amFollowing ? 'following' : 'primary'}" id="followBtn" onclick="toggleFollow()">
+            ${state.amFollowing ? '<i class="fa-solid fa-check"></i> Following' : '<i class="fa-solid fa-user-plus"></i> Follow'}
+         </button>`;
+
+    const uniChip = p.university
+      ? `<span class="pf-uni"><i class="fa-solid fa-graduation-cap"></i> ${p.university}</span>` : '';
+
+    // Stats tiles
+    const statsHtml = `<div class="stats-grid">
+      ${ showMetrics
+          ? statTile('All-time P&amp;L', fmtPct(m.totalReturnPct), classify(m.totalReturnPct))
+          : lockTile('All-time P&amp;L') }
+      ${ showMetrics
+          ? statTile('Win rate', m.winRate == null ? '—' : (m.winRate * 100).toFixed(1) + '%', m.winRate != null && m.winRate >= 0.5 ? 'pos' : '')
+          : lockTile('Win rate') }
+      ${ showMetrics
+          ? statTile('Sharpe', fmtNum(m.sharpe), classify(m.sharpe))
+          : lockTile('Sharpe') }
+      ${ showMetrics
+          ? statTile('Max DD', m.maxDrawdown == null ? '—' : (m.maxDrawdown * 100).toFixed(1) + '%', 'amb')
+          : lockTile('Max DD') }
+      ${ showMetrics
+          ? statTile('Profit factor', m.profitFactor == null ? '—' : (m.profitFactor === Infinity ? '∞' : m.profitFactor.toFixed(2)), classify(m.profitFactor === Infinity ? 1 : m.profitFactor - 1))
+          : lockTile('Profit factor') }
+      ${ statTile('Trades', m.tradesCount != null ? String(m.tradesCount) : '0') }
+    </div>`;
+
+    // Equity curve card
+    const curveHtml = showCurve
+      ? `<div class="pcard">
+          <div class="pcard-head">
+            <div>
+              <div class="pcard-title">Equity curve</div>
+              <div class="pcard-sub">Account value vs benchmark · starting from ${fmtMoney(STARTING_CAPITAL)}</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <div class="bench-select">
+                ${['asx200','spx','btc'].map(b => `<button class="${state.benchmark === b ? 'active' : ''}" onclick="setBenchmark('${b}')">${b.toUpperCase()}</button>`).join('')}
+              </div>
+              <div class="range-tabs">
+                ${['1M','3M','6M','1Y','ALL'].map(r => `<button class="${state.range === r ? 'active' : ''}" onclick="setRange('${r}')">${r}</button>`).join('')}
+              </div>
+            </div>
+          </div>
+          <div style="position:relative;height:240px;"><canvas id="equityChart"></canvas></div>
+        </div>`
+      : `<div class="pcard">${locked('equity_curve','Equity curve')}</div>`;
+
+    // Quant metrics card
+    const quantHtml = showMetrics
+      ? `<div class="pcard">
+          <div class="pcard-head">
+            <div class="pcard-title">Quant metrics</div>
+            <div class="pcard-sub">Computed from ${m.tradesCount || 0} closed trades</div>
+          </div>
+          <div class="quant-grid">
+            ${[
+              ['Win rate',       m.winRate == null ? '—' : (m.winRate * 100).toFixed(1) + '%'],
+              ['Avg win',        fmtMoney(m.avgWin)],
+              ['Avg loss',       fmtMoney(m.avgLoss)],
+              ['Avg R:R',        fmtNum(m.avgRR)],
+              ['Sharpe',         fmtNum(m.sharpe)],
+              ['Sortino',        fmtNum(m.sortino)],
+              ['Max drawdown',   m.maxDrawdown == null ? '—' : (m.maxDrawdown * 100).toFixed(1) + '%'],
+              ['Recovery factor',fmtNum(m.recoveryFactor)],
+              ['Profit factor',  m.profitFactor == null ? '—' : (m.profitFactor === Infinity ? '∞' : m.profitFactor.toFixed(2))],
+              ['Expectancy',     fmtMoney(m.expectancy)],
+              ['Avg holding',    fmtDays(m.avgHoldingDays)],
+              ['Total return',   fmtPct(m.totalReturnPct)],
+            ].map(([l, v]) => `<div class="quant-row"><div class="l">${l}</div><div class="v num">${v}</div></div>`).join('')}
+          </div>
+        </div>`
+      : `<div class="pcard">${locked('metrics','Quant metrics')}</div>`;
+
+    // Verified badges row
+    const allBadges = (p.badges && p.badges.length ? p.badges : []);
+    const badgesHtml = allBadges.length
+      ? `<div class="pcard">
+          <div class="pcard-head"><div class="pcard-title">Verified achievements</div></div>
+          <div class="badge-row">${allBadges.map(b => {
+            const def = BADGE_LABELS[b] || { i: 'fa-award', t: b };
+            return `<span class="badge"><i class="fa-solid ${def.i}"></i> ${def.t}</span>`;
+          }).join('')}</div>
+        </div>`
+      : '';
+
+    // Tabs
+    const tabsHtml = `
+      <div class="pf-tabs">
+        <button class="pf-tab ${state.activeTab==='strategies'?'active':''} ${showStrats?'':'lock-tab'}" onclick="switchTab('strategies')"><i class="fa-solid fa-chess-knight"></i> Strategies ${showStrats?'':'<i class="fa-solid fa-lock" style="font-size:9px;"></i>'}</button>
+        <button class="pf-tab ${state.activeTab==='reels'?'active':''} ${showReels?'':'lock-tab'}" onclick="switchTab('reels')"><i class="fa-solid fa-clapperboard"></i> Reels ${showReels?'':'<i class="fa-solid fa-lock" style="font-size:9px;"></i>'}</button>
+        <button class="pf-tab ${state.activeTab==='journal'?'active':''} ${showJournal?'':'lock-tab'}" onclick="switchTab('journal')"><i class="fa-solid fa-book"></i> Journal ${showJournal?'':'<i class="fa-solid fa-lock" style="font-size:9px;"></i>'}</button>
+        <button class="pf-tab ${state.activeTab==='holdings'?'active':''} ${showHold?'':'lock-tab'}" onclick="switchTab('holdings')"><i class="fa-solid fa-grip"></i> Holdings ${showHold?'':'<i class="fa-solid fa-lock" style="font-size:9px;"></i>'}</button>
+      </div>
+      <div id="tabContent"></div>`;
+
+    document.getElementById('pfShell').innerHTML = `
+      <div class="pf-head">
+        ${avatarFor(p)}
+        <div class="pf-id">
+          <div class="name">${escapeHtml(p.display_name || p.username)}</div>
+          <div class="handle num">@${p.username}</div>
+          <div class="badges-row">
+            <span class="pf-tier"><i class="fa-solid fa-shield-halved"></i> ${p.tier || 'Member'}</span>
+            ${uniChip}
+          </div>
+          ${p.bio ? `<div style="color:var(--cream);font-size:13.5px;line-height:1.55;margin-top:10px;max-width:560px;">${escapeHtml(p.bio)}</div>` : ''}
+        </div>
+        <div class="pf-social">
+          <div class="pf-counts">
+            <div><strong class="num">${state.follows.followers}</strong> Followers</div>
+            <div><strong class="num">${state.follows.following}</strong> Following</div>
+          </div>
+          <div style="display:flex;gap:8px;">${headerActions}</div>
+        </div>
+      </div>
+
+      ${statsHtml}
+      ${curveHtml}
+      ${quantHtml}
+      ${badgesHtml}
+      ${tabsHtml}
+    `;
+
+    renderTabContent();
+    if (showCurve) drawEquityChart();
+  }
+
+  // ============================================================
+  // Tabs
+  // ============================================================
+  function renderTabContent() {
+    const c = document.getElementById('tabContent');
+    if (!c) return;
+    const t = state.activeTab;
+    if (t === 'strategies') c.innerHTML = renderStrategiesTab();
+    else if (t === 'reels') c.innerHTML = renderReelsTab();
+    else if (t === 'journal') c.innerHTML = renderJournalTab();
+    else if (t === 'holdings') c.innerHTML = renderHoldingsTab();
+  }
+
+  function renderStrategiesTab() {
+    if (!isVisible('strategies')) return locked('strategies', 'Strategy library');
+    if (!state.strategies.length) {
+      return emptyState('fa-chess-knight',
+        isOwnProfile ? 'No published strategies yet.' : 'This trader has no published strategies.',
+        isOwnProfile ? { label: 'Open strategy editor', onclick: "alert('Strategy editor lands with the reels release.')" } : null);
+    }
+    return `<div class="strat-grid">${state.strategies.map(s => {
+      // The reels release adds strategy_id back-references to paper_trades.
+      // Until then, per-strategy stats fall back to "—" so we don't claim
+      // performance attributions we can't actually compute yet.
+      const sm = TArenaMetrics.summarise([], { startingCapital: STARTING_CAPITAL });
+      return `<div class="strat-card">
+        <div class="name">${escapeHtml(s.name || 'Untitled')}</div>
+        <div class="desc">${escapeHtml(s.description || 'No description.')}</div>
+        <div class="stats">
+          <div><strong class="num">${fmtPct(sm.totalReturnPct)}</strong>P&amp;L</div>
+          <div><strong class="num">${sm.winRate == null ? '—' : (sm.winRate * 100).toFixed(0) + '%'}</strong>Win rate</div>
+          <div><strong class="num">${sm.tradesCount}</strong>Trades</div>
+        </div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  function renderReelsTab() {
+    if (!isVisible('reels')) return locked('reels', 'Reels');
+    return emptyState('fa-clapperboard', 'Reels feed launches with the next release. Snap a chart on the Trade page to get ready.');
+  }
+
+  function renderJournalTab() {
+    if (!isVisible('journal')) return locked('journal', 'Trade journal');
+    if (!state.trades.length) {
+      return emptyState('fa-book',
+        isOwnProfile ? 'No closed trades yet.' : 'This trader has no closed trades to share.',
+        isOwnProfile ? { label: 'Place a trade', onclick: "window.location.href='trade.html'" } : null);
+    }
+    return `<div class="pcard" style="padding:0;">
+      <div class="journal-list">${state.trades.map(t => {
+        const p = TArenaMetrics.pnl(t);
+        const r = TArenaMetrics.rMultiple(t);
+        const pnlCls = p > 0 ? 'text-green' : (p < 0 ? 'text-red' : '');
+        const sign = p > 0 ? '+' : '';
+        return `<div class="jrow">
+          <div class="jthumb">${t.snapshot_url ? `<img src="${escapeAttr(t.snapshot_url)}" alt=""/>` : '<i class="fa-solid fa-chart-area"></i>'}</div>
+          <div class="jbody">
+            <strong>${escapeHtml(t.symbol)} <span style="color:var(--muted);font-size:12px;font-weight:400;">· ${t.side === 'buy' ? 'long' : 'short'} ${t.qty}</span></strong>
+            <small>${escapeHtml(t.notes || 'No notes')}</small>
+            <small>${formatRange(t.opened_at, t.closed_at)} · entry $${fmtNum(t.entry_price)} → exit $${fmtNum(t.exit_price)}</small>
+          </div>
+          <div class="jpnl ${pnlCls} num">${sign}${fmtMoney(p)}<small>${r != null ? r.toFixed(2) + 'R' : ''}</small></div>
+        </div>`;
+      }).join('')}</div>
+    </div>`;
+  }
+
+  function renderHoldingsTab() {
+    if (!isVisible('holdings')) return locked('holdings', 'Holdings');
+    if (!state.openHoldings.length) {
+      return emptyState('fa-folder-open',
+        isOwnProfile ? 'No open positions right now.' : 'This trader has no open positions.',
+        isOwnProfile ? { label: 'Open trade desk', onclick: "window.location.href='trade.html'" } : null);
+    }
+    return `<div class="holdings-grid">${state.openHoldings.map(h => {
+      const m = TArenaMarket.find(h.symbol);
+      const px = m ? m.price : Number(h.avg_cost) || 0;
+      const value = px * Number(h.net_qty);
+      const cost = Number(h.avg_cost) * Number(h.net_qty);
+      const pnl = value - cost;
+      const pnlPct = cost ? (pnl / cost) : 0;
+      const cls = pnl >= 0 ? 'text-green' : 'text-red';
+      const sign = pnl >= 0 ? '+' : '';
+      return `<div class="hcard">
+        <div class="sym">${escapeHtml(h.symbol)}</div>
+        <div class="qty">${Number(h.net_qty).toLocaleString('en-US', { maximumFractionDigits: 4 })} @ $${fmtNum(h.avg_cost)}</div>
+        <div class="val num">${fmtMoney(value)}</div>
+        <div class="pnl ${cls} num">${sign}${fmtMoney(pnl)} (${(pnlPct * 100).toFixed(2)}%)</div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  // ============================================================
+  // Equity chart (Chart.js)
+  // ============================================================
+  function rangeStartTs() {
+    const now = Date.now();
+    switch (state.range) {
+      case '1M': return now - 31 * 86400000;
+      case '3M': return now - 92 * 86400000;
+      case '6M': return now - 183 * 86400000;
+      case '1Y': return now - 365 * 86400000;
+      default:   return 0;
+    }
+  }
+
+  function drawEquityChart() {
+    const m = state.summary || {};
+    const curve = (m.equityCurve || []).filter(p => p.t >= rangeStartTs());
+    const labels = curve.map(p => new Date(p.t).toLocaleDateString('en-AU', { month: 'short', day: 'numeric' }));
+    const equityVals = curve.map(p => p.value);
+    const benchVals  = curve.map(p => p.benchmark != null ? p.benchmark : null);
+
+    const canvas = document.getElementById('equityChart');
+    if (!canvas) return;
+    if (state.equityChart) state.equityChart.destroy();
+
+    if (!labels.length) {
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#a8c1db';
+      ctx.font = '13px DM Sans';
+      ctx.textAlign = 'center';
+      ctx.fillText('No closed trades in this range yet.', canvas.width / 2, canvas.height / 2);
+      return;
+    }
+
+    state.equityChart = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Equity',
+            data: equityVals,
+            borderColor: '#e8c060',
+            backgroundColor: 'rgba(232,192,96,0.12)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.18,
+            pointRadius: 0,
+          },
+          {
+            label: state.benchmark.toUpperCase(),
+            data: benchVals,
+            borderColor: '#a8c1db',
+            borderDash: [4, 4],
+            borderWidth: 1.4,
+            fill: false,
+            tension: 0.18,
+            pointRadius: 0,
+            spanGaps: true,
+          },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: '#a8c1db', font: { family: 'DM Sans', size: 11 } } },
+          tooltip: { mode: 'index', intersect: false },
+        },
+        scales: {
+          x: { ticks: { color: '#a8c1db', maxRotation: 0 }, grid: { color: 'rgba(168,193,219,0.05)' } },
+          y: {
+            ticks: { color: '#a8c1db', callback: v => '$' + Number(v).toLocaleString() },
+            grid: { color: 'rgba(168,193,219,0.05)' },
+          },
+        },
+      },
+    });
+  }
+
+  // ============================================================
+  // Edit modal + privacy
+  // ============================================================
   function openEdit() {
-    const u = (TArenaAuth.getSession() || {user: session.user}).user;
-    document.getElementById('editName').value = u.displayName || '';
+    if (!isOwnProfile) return;
+    const u = state.profile;
+    document.getElementById('editName').value = u.display_name || '';
     document.getElementById('editBio').value  = u.bio || '';
     document.getElementById('editTier').value = u.tier || 'Member';
+    document.getElementById('editAvatarColor').value = u.avatar_color || '';
+
+    const mask = u.visibility_mask || DEFAULT_MASK;
+    const rows = PRIV_FIELDS.map(f => {
+      const on = mask[f.k] !== undefined ? !!mask[f.k] : DEFAULT_MASK[f.k];
+      return `<div class="priv-row">
+        <div class="pl">${f.l}<small>${f.d}</small></div>
+        <div class="toggle ${on ? 'on' : ''}" data-k="${f.k}" onclick="this.classList.toggle('on')"></div>
+      </div>`;
+    }).join('');
+    document.getElementById('privRows').innerHTML = rows;
+
     document.getElementById('editModal').classList.add('show');
   }
   function closeEdit() { document.getElementById('editModal').classList.remove('show'); }
+
   async function saveEdit() {
-    const r = await TArenaAuth.saveProfile({
-      displayName: document.getElementById('editName').value.trim() || session.user.handle,
-      bio:         document.getElementById('editBio').value.trim()  || '',
-      tier:        document.getElementById('editTier').value.trim() || 'Member',
+    const newMask = {};
+    document.querySelectorAll('#privRows .toggle').forEach(el => {
+      newMask[el.dataset.k] = el.classList.contains('on');
     });
+    const updates = {
+      displayName: document.getElementById('editName').value.trim() || state.profile.username,
+      bio:         document.getElementById('editBio').value.trim() || '',
+      tier:        document.getElementById('editTier').value.trim() || 'Member',
+      avatarColor: document.getElementById('editAvatarColor').value.trim() || null,
+      visibilityMask: newMask,
+    };
+    const r = await TArenaAuth.saveProfile(updates);
     if (!r.ok) { alert('Could not save: ' + r.error); return; }
     closeEdit();
-    renderHeader();
+    await bootData(); // re-render with new mask
   }
-  function shareProfile() {
-    const url = window.location.origin + '/profile.html?u=' + encodeURIComponent(session.user.handle);
-    if (navigator.clipboard) navigator.clipboard.writeText(url);
-    alert('Profile link copied!\n\n' + url);
+
+  // ============================================================
+  // Follow / unfollow
+  // ============================================================
+  async function toggleFollow() {
+    if (isOwnProfile) return;
+    const wasFollowing = state.amFollowing;
+    state.amFollowing = !wasFollowing;
+    const fn = wasFollowing ? 'unfollow_user' : 'follow_user';
+    const { error } = await sb.rpc(fn, { p_target: state.profile.id });
+    if (error) {
+      state.amFollowing = wasFollowing;
+      alert('Could not update follow: ' + error.message);
+      return;
+    }
+    state.follows = await loadFollowStats(state.profile.id);
+    render();
   }
+
+  // ============================================================
+  // Misc
+  // ============================================================
+  function escapeHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function escapeAttr(s) { return escapeHtml(s); }
+
+  function formatRange(a, b) {
+    const fmt = ts => ts ? new Date(ts).toLocaleDateString('en-AU', { month: 'short', day: 'numeric' }) : '—';
+    return `${fmt(a)} → ${fmt(b)}`;
+  }
+
   async function signOut() {
     if (!confirm('Sign out of TradeArena?')) return;
     await TArenaAuth.signOut();
     window.location.href = 'index.html';
   }
 
-  window.switchTab = switchTab;
-  window.filterByMarket = filterByMarket;
-  window.openEdit = openEdit;
-  window.closeEdit = closeEdit;
-  window.saveEdit = saveEdit;
-  window.shareProfile = shareProfile;
-  window.signOut = signOut;
-
-  // Init
-  renderHeader();
-  switchTab('holdings');
-  setInterval(() => {
-    TArenaMarket.tick();
-    renderHeader();
-    if (activeTab !== 'activity') {
-      // Re-render only the changing pieces (price-driven tabs)
-      const c = document.getElementById('tabContent');
-      c.innerHTML = activeTab === 'holdings' ? renderHoldings() : renderWatchlist();
+  function setBenchmark(b) { state.benchmark = b; bootData(); }
+  function setRange(r) { state.range = r; render(); }
+  function switchTab(t) {
+    const lockMap = { strategies:'strategies', reels:'reels', journal:'journal', holdings:'holdings' };
+    if (lockMap[t] && !isVisible(lockMap[t]) && !isOwnProfile) {
+      // still allow switching — the locked card is rendered by renderXxxTab
     }
-  }, 5000);
+    state.activeTab = t;
+    document.querySelectorAll('.pf-tab').forEach(el => el.classList.remove('active'));
+    const btn = [...document.querySelectorAll('.pf-tab')].find(el => el.textContent.toLowerCase().includes(t));
+    if (btn) btn.classList.add('active');
+    renderTabContent();
+  }
 
-  console.log('%c⚔️ TradeArena · Profile loaded for ' + session.user.email, 'color:#e8c060;font-weight:700;');
+  // Build a benchmark series — placeholder until Task #3's datafeed
+  // exposes a generic history fetcher for ASX200/SPX/BTC. We synthesise
+  // a deterministic curve from the chosen benchmark code so the line
+  // is stable across reloads. Real data swaps in here without touching
+  // the rest of the page.
+  function syntheticBenchmark(code, fromMs, toMs) {
+    const out = [];
+    const drift = code === 'btc' ? 0.0009 : (code === 'spx' ? 0.0004 : 0.00025);
+    const vol   = code === 'btc' ? 0.025  : (code === 'spx' ? 0.011  : 0.009);
+    const stepMs = 86400000;
+    let close = 1;
+    for (let t = fromMs; t <= toMs; t += stepMs) {
+      // deterministic pseudo-random seeded by (code, day)
+      const seed = (code.charCodeAt(0) * 31 + Math.floor(t / stepMs)) >>> 0;
+      const r = ((Math.sin(seed) * 10000) % 1 + 1) % 1 - 0.5;
+      close = close * (1 + drift + r * vol);
+      out.push({ t, close });
+    }
+    return out;
+  }
+
+  // ============================================================
+  // Boot
+  // ============================================================
+  async function bootData() {
+    state.profile = await loadProfile();
+    if (!state.profile) {
+      document.getElementById('pfShell').innerHTML =
+        emptyState('fa-user-slash', 'Trader not found.',
+          { label: 'Back to my profile', onclick: "window.location.href='profile.html'" });
+      return;
+    }
+
+    const id = state.profile.id;
+    const [follows, amFollowing, journalTrades, perfTrades, strategies, openHoldings] = await Promise.all([
+      loadFollowStats(id),
+      loadAmFollowing(id),
+      loadJournalTrades(id),
+      loadPerfTrades(id),
+      loadStrategies(id),
+      loadHoldings(id),
+    ]);
+    state.follows     = follows;
+    state.amFollowing = amFollowing;
+    state.trades      = journalTrades;       // for Journal tab table (status='closed', full fields)
+    state.perfTrades  = perfTrades;          // for metrics + equity curve (stripped projection)
+    state.strategies  = strategies;
+    state.openHoldings= openHoldings;
+
+    // Build benchmark series spanning the perf history (or last 90d).
+    let from = Date.now() - 90 * 86400000, to = Date.now();
+    if (perfTrades.length) {
+      const closes = perfTrades.map(t => new Date(t.closed_at).getTime()).filter(isFinite);
+      if (closes.length) {
+        from = Math.min(...closes) - 86400000;
+        to   = Math.max(...closes, to);
+      }
+    }
+    const benchSeries = syntheticBenchmark(state.benchmark, from, to);
+    state.summary = TArenaMetrics.summarise(perfTrades, { startingCapital: STARTING_CAPITAL, benchmark: benchSeries });
+
+    render();
+  }
+
+  // Public hooks for inline onclick
+  window.openEdit      = openEdit;
+  window.closeEdit     = closeEdit;
+  window.saveEdit      = saveEdit;
+  window.toggleFollow  = toggleFollow;
+  window.signOut       = signOut;
+  window.setBenchmark  = setBenchmark;
+  window.setRange      = setRange;
+  window.switchTab     = switchTab;
+
+  // Refresh every 60s (per task: real-time ticks not required on profile)
+  bootData().then(() => setInterval(bootData, 60000));
+
+  console.log('%c⚔️ TradeArena · Profile (' + (isOwnProfile ? 'own' : 'viewing @' + wantedHandle) + ')', 'color:#e8c060;font-weight:700;');
+})();
 </script>
 </body>
 </html>
