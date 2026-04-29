@@ -147,8 +147,7 @@
       },
       takeSnapshot() { return snapAdvanced(widget); },
       getDrawings() {
-        const c = widget.activeChart();
-        return (c && c.getAllShapes) ? c.getAllShapes() : [];
+        return serializeDrawings(widget.activeChart());
       },
       destroy() { widget.remove(); },
     };
@@ -174,11 +173,40 @@
     return payload;
   }
 
+  // Serialize the chart's drawing tools into a structure the reel
+  // composer can replay. Different Advanced Charts versions expose
+  // different APIs:
+  //   - `chart.exportShapes()` returns fully-serialized shape state
+  //     (preferred when present).
+  //   - Older bundles only expose `chart.getAllShapes()` which yields
+  //     `{id, name}` records; we walk each id with `getShapeById()` and
+  //     pull `getProperties()` + `getPoints()` so the persisted snap
+  //     carries enough information to reconstruct the drawing.
+  function serializeDrawings(c) {
+    if (!c) return [];
+    if (typeof c.exportShapes === "function") {
+      try { return c.exportShapes() || []; } catch (_) { /* fall through */ }
+    }
+    if (typeof c.getAllShapes !== "function") return [];
+    const ids = c.getAllShapes() || [];
+    const out = [];
+    for (const meta of ids) {
+      const id = meta && meta.id;
+      if (!id) continue;
+      const shape = (typeof c.getShapeById === "function") ? c.getShapeById(id) : null;
+      let properties = null, points = null;
+      try { properties = shape && shape.getProperties && shape.getProperties(); } catch (_) {}
+      try { points     = shape && shape.getPoints     && shape.getPoints();     } catch (_) {}
+      out.push({ id, name: meta.name, properties, points });
+    }
+    return out;
+  }
+
   async function snapAdvanced(widget) {
     const c = widget.activeChart();
     const symbol = c.symbol();
     const interval = c.resolution();
-    const drawings = (c.getAllShapes ? c.getAllShapes() : []);
+    const drawings = serializeDrawings(c);
     let png_dataurl = null;
     try {
       const canvas = await widget.takeClientScreenshot();

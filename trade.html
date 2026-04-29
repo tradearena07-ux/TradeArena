@@ -343,7 +343,9 @@
     const m = TArenaMarket.find(symbol);
     if (!m) return;
     m.price = tick.price;
-    if (typeof tick.changePct === 'number' && tick.changePct !== 0) m.change = tick.changePct;
+    // Always honour a numeric changePct, including a legitimate 0.00%
+    // (otherwise the header sticks at the last non-zero value).
+    if (typeof tick.changePct === 'number' && isFinite(tick.changePct)) m.change = tick.changePct;
     if (symbol === currentSymbol) {
       renderSymbolHeader();
       renderOrderBook();
