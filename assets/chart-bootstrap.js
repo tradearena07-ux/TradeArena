@@ -6,8 +6,13 @@
 (function (global) {
   'use strict';
 
-  const ADV_PATH       = '/charting_library/charting_library.js';
-  const LIGHTWEIGHT_JS = 'https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js';
+  const ADV_PATH = '/charting_library/charting_library.js';
+  // Lightweight Charts CDN sources, tried in order. unpkg is primary;
+  // jsdelivr is the fallback if unpkg is blocked or unreachable.
+  const LIGHTWEIGHT_CDNS = [
+    'https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js',
+    'https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js',
+  ];
 
   let mode = null;  // 'advanced' | 'lightweight'
   let detectionPromise = null;
@@ -47,7 +52,7 @@
           return mode;
         }
       }
-      await loadScript(LIGHTWEIGHT_JS);
+      await loadScriptWithFallback(LIGHTWEIGHT_CDNS);
       mode = 'lightweight';
       return mode;
     })();
@@ -65,6 +70,16 @@
       s.onerror = () => reject(new Error(`failed to load ${src}`));
       document.head.appendChild(s);
     });
+  }
+
+  // Try a list of script URLs in order; resolve on the first success.
+  async function loadScriptWithFallback(urls) {
+    let lastErr = null;
+    for (const url of urls) {
+      try { await loadScript(url); return; }
+      catch (e) { lastErr = e; }
+    }
+    throw lastErr || new Error('all script sources failed');
   }
 
   // ----- Advanced Charts mount ----------------------------------
