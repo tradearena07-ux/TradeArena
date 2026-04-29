@@ -283,37 +283,25 @@
     return m;
   }
 
-  // Hydrate a runtime symbol record into TArenaMarket.data when the
-  // user picks something from remote search that isn't in the static
-  // catalogue. Pulls price/change from a single quote call and uses
-  // the search-result description as a name. Subsequent calls are
-  // no-ops once the symbol exists.
-  async function hydrateRuntimeSymbol(sym, meta) {
-    if (TArenaMarket.find(sym)) return TArenaMarket.find(sym);
-    const kind = TArenaDatafeed.classify(sym);
-    const market = kind === 'asx' ? 'asx' : kind === 'us' ? 'us' : 'crypto';
-    let price = 0, change = 0;
+  // One-shot quote refresh that mutates the existing runtime record
+  // for `sym`. Used after a placeholder is inserted so the header
+  // shows a real price immediately rather than waiting for the live
+  // subscription to tick.
+  async function refreshRuntimeQuote(sym) {
+    const rec = TArenaMarket.find(sym);
+    if (!rec) return;
     try {
       const quotes = await TArenaDatafeed.fetchQuotes([sym]);
       const q = quotes[sym];
-      if (q) { price = q.price || 0; change = q.changePct || 0; }
+      if (q) {
+        if (typeof q.price === 'number')      rec.price  = q.price;
+        if (typeof q.changePct === 'number')  rec.change = q.changePct;
+        if (rec.high52 === 0) rec.high52 = rec.price;
+        if (rec.low52  === 0) rec.low52  = rec.price;
+      }
     } catch (e) {
-      console.warn('hydrate quote failed', sym, e.message);
+      console.warn('quote hydrate failed', sym, e.message);
     }
-    const rec = {
-      symbol:  sym,
-      name:    (meta && (meta.description || meta.name)) || sym,
-      market:  market,
-      price:   price,
-      change:  change,
-      mcap:    '—',
-      vol:     '—',
-      high52:  price,
-      low52:   price,
-      tv:      sym,
-    };
-    TArenaMarket.data.push(rec);
-    return rec;
   }
 
   function renderSymbolHeader() {
@@ -424,9 +412,10 @@
         high52: 0, low52: 0, tv: sym,
       };
       TArenaMarket.data.push(placeholder);
-      // Fire the hydration in the background and re-render once we
-      // have a real price.
-      hydrateRuntimeSymbol(sym, meta).then(() => {
+      // Refresh the placeholder with a real quote in the background;
+      // re-render once we have a price (live subs will keep it fresh
+      // afterwards).
+      refreshRuntimeQuote(sym).then(() => {
         if (currentSymbol === sym) renderSymbolHeader();
       });
     }

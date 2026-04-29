@@ -83,6 +83,24 @@
   // Live tick subscription. Consumers receive {symbol, price, change, changePct, t}.
   const wsConnections = {}; // symbol → WebSocket
   const wsListeners   = {}; // symbol → Set<callback>
+  // Cached 24h percent change per crypto symbol, refreshed periodically
+  // from the Binance ticker via the data-proxy. The trade-stream emits
+  // this value alongside each tick so consumers don't see a flat 0%
+  // change for crypto pairs.
+  const crypto24h     = {}; // symbol → { changePct, change, ts }
+  const crypto24hTimers = {}; // symbol → interval id
+
+  function refreshCrypto24h(sym) {
+    fetchQuotes([sym]).then((q) => {
+      const v = q[sym];
+      if (!v) return;
+      crypto24h[sym] = {
+        changePct: v.changePct || 0,
+        change:    v.change    || 0,
+        ts:        Date.now(),
+      };
+    }).catch((e) => console.warn('crypto 24h refresh failed', sym, e.message));
+  }
 
   // Open (or re-open) the Binance trade stream for `sym`. Listeners in
   // wsListeners[sym] are preserved across reconnects; this function only
@@ -96,7 +114,14 @@
       const d = JSON.parse(ev.data);
       const price = +d.p;
       if (!isFinite(price)) return;
-      const tick = { symbol: sym, price, change: 0, changePct: 0, t: +d.T };
+      const meta = crypto24h[sym] || { change: 0, changePct: 0 };
+      const tick = {
+        symbol:    sym,
+        price,
+        change:    meta.change    || 0,
+        changePct: meta.changePct || 0,
+        t:         +d.T,
+      };
       const set = wsListeners[sym];
       if (set) set.forEach(fn => fn(tick));
     });
@@ -121,6 +146,12 @@
     if (!wsListeners[sym]) wsListeners[sym] = new Set();
     wsListeners[sym].add(cb);
     if (!wsConnections[sym]) openBinanceSocket(sym);
+    // Prime + periodically refresh 24h percent change so the trade
+    // stream can emit a realistic changePct.
+    if (!crypto24hTimers[sym]) {
+      refreshCrypto24h(sym);
+      crypto24hTimers[sym] = setInterval(() => refreshCrypto24h(sym), 30000);
+    }
 
     return function unsubscribe() {
       const set = wsListeners[sym];
@@ -130,6 +161,11 @@
         if (wsConnections[sym]) wsConnections[sym].close();
         delete wsConnections[sym];
         delete wsListeners[sym];
+        if (crypto24hTimers[sym]) {
+          clearInterval(crypto24hTimers[sym]);
+          delete crypto24hTimers[sym];
+          delete crypto24h[sym];
+        }
       }
     };
   }
