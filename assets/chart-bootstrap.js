@@ -49,11 +49,14 @@
         await loadScript(ADV_PATH);
         if (global.TradingView && typeof global.TradingView.widget === 'function') {
           mode = 'advanced';
+          console.info('[TArenaChart] mode=advanced (charting_library detected)');
           return mode;
         }
+        console.warn('[TArenaChart] charting_library probe ok but global.TradingView.widget missing — falling back');
       }
       await loadScriptWithFallback(LIGHTWEIGHT_CDNS);
       mode = 'lightweight';
+      console.info('[TArenaChart] mode=lightweight (CDN fallback active)');
       return mode;
     })();
     return detectionPromise;
