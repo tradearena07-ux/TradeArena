@@ -80,7 +80,10 @@
       theme:                      'Dark',
       autosize:                   true,
       fullscreen:                 false,
-      enabled_features:           ['study_templates'],
+      // `chart_property_page_trading` keeps the trading tab in chart
+      // settings; replay is enabled by default in the Advanced bundle
+      // and remains available because we don't add it to disabled_features.
+      enabled_features:           ['study_templates', 'chart_property_page_trading'],
       disabled_features:          ['use_localstorage_for_settings', 'header_symbol_search', 'header_compare'],
       charts_storage_api_version: '1.1',
       client_id:                  'tradearena.app',

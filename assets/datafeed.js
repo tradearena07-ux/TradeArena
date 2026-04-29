@@ -242,8 +242,31 @@
       },
 
       searchSymbols(userInput, exchange, symbolType, onResult) {
-        search(userInput, '').then((results) => {
-          onResult(results.map(r => ({
+        // Translate the Advanced Charts exchange/symbolType filter into a
+        // proxy "market" hint so the upstream search returns relevant rows
+        // (rather than every Common Stock match across providers).
+        const exch = String(exchange || '').toUpperCase();
+        const stype = String(symbolType || '').toLowerCase();
+        let market = '';
+        if (exch === 'ASX')                    market = 'asx';
+        else if (exch === 'US' || exch === 'NASDAQ' || exch === 'NYSE') market = 'us';
+        else if (exch === 'BINANCE')           market = 'crypto';
+        else if (stype === 'crypto')           market = 'crypto';
+        else if (stype === 'stock')            market = 'us';
+
+        search(userInput, market).then((results) => {
+          let rows = results;
+          // Defense-in-depth: filter again client-side in case the proxy
+          // returns rows from another market.
+          if (exch && exch !== '') {
+            rows = rows.filter(r => String(r.exchange || '').toUpperCase() === exch
+              || (exch === 'US' && (r.exchange === 'US' || r.exchange === 'NASDAQ' || r.exchange === 'NYSE'))
+              || (exch === 'BINANCE' && r.type === 'crypto'));
+          }
+          if (stype) {
+            rows = rows.filter(r => String(r.type || '').toLowerCase() === stype);
+          }
+          onResult(rows.map(r => ({
             symbol:      r.symbol,
             full_name:   r.symbol,
             description: r.description,
