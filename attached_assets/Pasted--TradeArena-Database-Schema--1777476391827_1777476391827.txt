@@ -1,0 +1,127 @@
+-- ─────────────────────────────────────────────────────────────────
+-- TradeArena Database Schema
+-- Run this in: Supabase Dashboard → SQL Editor → New Query
+-- ─────────────────────────────────────────────────────────────────
+drop policy if exists "Users can manage own registration" on public.registrations;
+-- 1. REGISTRATIONS
+-- Stores user profile + university info
+CREATE TABLE IF NOT EXISTS registrations (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id     UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  email       TEXT NOT NULL,
+  university  TEXT,
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(email),
+  UNIQUE(user_id)
+);
+
+-- 2. PORTFOLIOS
+-- One per user, starts with $10,000 paper money
+CREATE TABLE IF NOT EXISTS portfolios (
+  id            UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id       UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
+  cash_balance  NUMERIC(12,2) DEFAULT 10000.00,
+  created_at    TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id)
+);
+
+-- 3. HOLDINGS
+-- Current positions for each user
+CREATE TABLE IF NOT EXISTS holdings (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id     UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  symbol      TEXT NOT NULL,
+  shares      NUMERIC(18,8) NOT NULL DEFAULT 0,
+  avg_price   NUMERIC(12,4) NOT NULL,
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, symbol)
+);
+
+-- 4. TRADES
+-- Full trade history
+CREATE TABLE IF NOT EXISTS trades (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id     UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  symbol      TEXT NOT NULL,
+  type        TEXT NOT NULL CHECK (type IN ('buy', 'sell')),
+  shares      NUMERIC(18,8) NOT NULL,
+  price       NUMERIC(12,4) NOT NULL,
+  total       NUMERIC(12,2) NOT NULL,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ─────────────────────────────────────────────────────────────────
+-- ROW LEVEL SECURITY
+-- Users can only see and edit their own data
+-- ─────────────────────────────────────────────────────────────────
+
+ALTER TABLE registrations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE portfolios    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE holdings      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE trades        ENABLE ROW LEVEL SECURITY;
+
+-- Registrations: users can read/write their own row
+CREATE POLICY "Users can manage own registration"
+  ON registrations FOR ALL
+  USING (auth.uid() = user_id);
+
+-- Allow insert without user_id (for pre-auth waitlist signups)
+CREATE POLICY "Allow public insert to registrations"
+  ON registrations FOR INSERT
+  WITH CHECK (true);
+
+-- Portfolios: users can read/write their own
+CREATE POLICY "Users can manage own portfolio"
+  ON portfolios FOR ALL
+  USING (auth.uid() = user_id);
+
+-- Holdings: users can read/write their own
+CREATE POLICY "Users can manage own holdings"
+  ON holdings FOR ALL
+  USING (auth.uid() = user_id);
+
+-- Trades: users can read/write their own
+CREATE POLICY "Users can manage own trades"
+  ON trades FOR ALL
+  USING (auth.uid() = user_id);
+
+-- ─────────────────────────────────────────────────────────────────
+-- ADMIN POLICY (for admin.html to read all data)
+-- Replace 'tradearena07@gmail.com' with your actual admin email(s)
+-- ─────────────────────────────────────────────────────────────────
+
+-- Allow admin to read all registrations
+CREATE POLICY "Admin reads all registrations"
+  ON registrations FOR SELECT
+  USING (
+    (SELECT email FROM auth.users WHERE id = auth.uid())
+    IN ('tradearena07@gmail.com')
+  );
+
+-- Allow admin to read all portfolios
+CREATE POLICY "Admin reads all portfolios"
+  ON portfolios FOR SELECT
+  USING (
+    (SELECT email FROM auth.users WHERE id = auth.uid())
+    IN ('tradearena07@gmail.com')
+  );
+
+-- Allow admin to read all trades
+CREATE POLICY "Admin reads all trades"
+  ON trades FOR SELECT
+  USING (
+    (SELECT email FROM auth.users WHERE id = auth.uid())
+    IN ('tradearena07@gmail.com')
+  );
+
+-- ─────────────────────────────────────────────────────────────────
+-- INDEXES for performance
+-- ─────────────────────────────────────────────────────────────────
+
+CREATE INDEX IF NOT EXISTS idx_registrations_email    ON registrations(email);
+CREATE INDEX IF NOT EXISTS idx_registrations_user_id  ON registrations(user_id);
+CREATE INDEX IF NOT EXISTS idx_portfolios_user_id     ON portfolios(user_id);
+CREATE INDEX IF NOT EXISTS idx_holdings_user_id       ON holdings(user_id);
+CREATE INDEX IF NOT EXISTS idx_trades_user_id         ON trades(user_id);
+CREATE INDEX IF NOT EXISTS idx_trades_created_at      ON trades(created_at DESC);
