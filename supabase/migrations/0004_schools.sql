@@ -869,17 +869,25 @@ as $$
 declare v_out jsonb;
 begin
   perform public.tarena_assert_admin();
+  -- Limit BEFORE aggregating — `limit` on the outer select with
+  -- jsonb_agg() collapses to one row and would not actually cap the
+  -- number of reels returned.
+  with picked as (
+    select r.id, r.symbol, r.thesis, r.created_at, p.username
+      from public.reels r
+      join public.public_profiles p on p.id = r.author_id
+     where p_q = '' or r.symbol ilike '%'||p_q||'%' or r.thesis ilike '%'||p_q||'%' or p.username ilike '%'||p_q||'%'
+     order by r.created_at desc
+     limit greatest(1, least(coalesce(p_limit, 50), 200))
+  )
   select coalesce(jsonb_agg(jsonb_build_object(
-    'id', r.id, 'symbol', r.symbol,
-    'thesis', left(r.thesis, 80),
-    'author', p.username,
-    'created_at', r.created_at
-  ) order by r.created_at desc), '[]'::jsonb)
+    'id', id, 'symbol', symbol,
+    'thesis', left(thesis, 80),
+    'author', username,
+    'created_at', created_at
+  ) order by created_at desc), '[]'::jsonb)
     into v_out
-    from public.reels r
-    join public.public_profiles p on p.id = r.author_id
-   where p_q = '' or r.symbol ilike '%'||p_q||'%' or r.thesis ilike '%'||p_q||'%' or p.username ilike '%'||p_q||'%'
-   limit greatest(1, least(coalesce(p_limit, 50), 200));
+    from picked;
   return v_out;
 end $$;
 

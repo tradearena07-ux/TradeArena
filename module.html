@@ -29,11 +29,39 @@
     .step.done{ color:#86efac; }
     .step i{ font-size:11px; }
 
-    /* Reel playlist */
+    /* Reel playlist (single-card player with auto-advance) */
+    .player-bar{
+      display:flex;align-items:center;gap:14px;background:var(--navy3);border:1px solid var(--bdl);
+      border-radius:12px;padding:10px 14px;margin-bottom:12px;
+    }
+    .player-bar .lbl{ font-family:'Cinzel',serif;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);flex-shrink:0; }
+    .player-bar .btns{ display:flex;gap:6px;flex-shrink:0; }
+    .player-bar .iconbtn{
+      width:34px;height:34px;border-radius:50%;border:1px solid var(--bdl);background:var(--navy);
+      color:var(--cream);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;
+    }
+    .player-bar .iconbtn:hover:not([disabled]){ border-color:var(--gold);color:var(--gold2); }
+    .player-bar .iconbtn[disabled]{ opacity:.35;cursor:not-allowed; }
+    .player-bar .iconbtn.play{ width:40px;height:40px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);border-color:var(--gold); }
+    .progress-track{
+      flex:1;height:6px;background:rgba(168,193,219,.12);border-radius:9999px;overflow:hidden;
+    }
+    .progress-fill{
+      height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));
+      width:0%;transition:width 250ms linear;border-radius:9999px;
+    }
+    .pip-row{display:flex;gap:6px;flex-shrink:0;}
+    .pip{
+      width:8px;height:8px;border-radius:50%;background:rgba(168,193,219,.2);cursor:pointer;transition:all .15s;
+    }
+    .pip.active{ background:var(--gold);transform:scale(1.4); }
+    .pip.played{ background:rgba(232,192,96,.5); }
+
     .reel-card{
       background:var(--navy3);border:1px solid var(--bdl);border-radius:14px;padding:20px;margin-bottom:14px;
-      display:grid;grid-template-columns:140px 1fr;gap:18px;
+      display:grid;grid-template-columns:140px 1fr;gap:18px;animation:fadeIn .25s ease;
     }
+    @keyframes fadeIn{ from{opacity:0;transform:translateY(4px);} to{opacity:1;transform:none;} }
     @media(max-width:680px){ .reel-card{ grid-template-columns:1fr; } }
     .reel-card .snap{
       background:var(--navy);border-radius:10px;border:1px solid var(--bdl);height:100px;
@@ -178,8 +206,52 @@
   let quizPassed = false;      // local pass flag (also derived from payload.attempt)
   let lastQuizResult = null;   // {score, total, passed, per_question}
 
+  // Reel-player state: one reel at a time, auto-advance after
+  // REEL_DURATION_MS unless paused. The "playlist mode" the spec asks
+  // for — three to seven reels played in sequence with auto-advance.
+  const REEL_DURATION_MS = 14000;
+  const TICK_MS = 250;
+  let reelIdx     = 0;
+  let reelPlaying = true;
+  let reelMs      = 0;          // elapsed ms in current reel
+  let reelTimer   = null;       // setInterval handle
+  let reelsPlayed = new Set();  // indices already viewed (for the pip strip)
+
+  function stopReelTimer() {
+    if (reelTimer) { clearInterval(reelTimer); reelTimer = null; }
+  }
+  function startReelTimer() {
+    stopReelTimer();
+    if (!reelPlaying) return;
+    reelTimer = setInterval(() => {
+      reelMs += TICK_MS;
+      if (reelMs >= REEL_DURATION_MS) {
+        reelMs = 0;
+        const total = (payload.reels || []).length;
+        if (reelIdx < total - 1) {
+          reelIdx++;
+          reelsPlayed.add(reelIdx);
+        } else {
+          // End of playlist — pause and let the user move on.
+          reelPlaying = false;
+          stopReelTimer();
+        }
+        render();
+        return;
+      }
+      // In-flight tick: just resize the progress bar without re-rendering.
+      const fill = document.getElementById('reelProgress');
+      if (fill) fill.style.width = Math.min(100, (reelMs / REEL_DURATION_MS) * 100) + '%';
+    }, TICK_MS);
+  }
+
   function setStage(s) {
+    stopReelTimer();
     stage = s;
+    if (stage === 'reels') {
+      // Resume playback from wherever the user left off; pick up timer.
+      startReelTimer();
+    }
     render();
   }
 
@@ -236,14 +308,43 @@
         ${payload.quiz ? `<button class="btn-gold" style="margin-top:14px;" onclick="window.__mod.go('quiz')">Skip to quiz →</button>` : ''}
       </div>`;
     }
-    return reels.map(reelCard).join('') + `
-      <div class="actions-row">
-        ${payload.quiz
-          ? `<button class="btn-gold" onclick="window.__mod.go('quiz')">Take the quiz <i class="fa-solid fa-arrow-right"></i></button>`
-          : (payload.challenge
-            ? `<button class="btn-gold" onclick="window.__mod.go('challenge')">Try the challenge <i class="fa-solid fa-arrow-right"></i></button>`
-            : '')}
-      </div>`;
+    // Clamp index in case of stale state.
+    if (reelIdx >= reels.length) reelIdx = reels.length - 1;
+    if (reelIdx < 0) reelIdx = 0;
+    reelsPlayed.add(reelIdx);
+
+    const isLast = reelIdx === reels.length - 1;
+    const allPlayed = reelsPlayed.size === reels.length;
+    const initialPct = Math.min(100, (reelMs / REEL_DURATION_MS) * 100);
+
+    const pips = reels.map((_, i) => {
+      const cls = i === reelIdx ? 'active' : (reelsPlayed.has(i) ? 'played' : '');
+      return `<div class="pip ${cls}" title="Reel ${i + 1}" onclick="window.__mod.jumpReel(${i})"></div>`;
+    }).join('');
+
+    const playerBar = `<div class="player-bar">
+      <div class="lbl">Reel ${reelIdx + 1} / ${reels.length}</div>
+      <div class="btns">
+        <button class="iconbtn" onclick="window.__mod.prevReel()" ${reelIdx === 0 ? 'disabled' : ''} title="Previous"><i class="fa-solid fa-backward-step"></i></button>
+        <button class="iconbtn play" onclick="window.__mod.togglePlay()" title="${reelPlaying ? 'Pause' : 'Play'}">
+          <i class="fa-solid ${reelPlaying ? 'fa-pause' : 'fa-play'}"></i>
+        </button>
+        <button class="iconbtn" onclick="window.__mod.nextReel()" ${isLast ? 'disabled' : ''} title="Next"><i class="fa-solid fa-forward-step"></i></button>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="reelProgress" style="width:${initialPct}%;"></div></div>
+      <div class="pip-row">${pips}</div>
+    </div>`;
+
+    const cta = `<div class="actions-row">
+      ${payload.quiz
+        ? `<button class="btn-gold" onclick="window.__mod.go('quiz')" ${!allPlayed && !isLast ? 'disabled title="Watch all reels first"' : ''}>Take the quiz <i class="fa-solid fa-arrow-right"></i></button>`
+        : (payload.challenge
+          ? `<button class="btn-gold" onclick="window.__mod.go('challenge')" ${!allPlayed && !isLast ? 'disabled title="Watch all reels first"' : ''}>Try the challenge <i class="fa-solid fa-arrow-right"></i></button>`
+          : '')}
+      ${!isLast ? `<button class="btn-ghost" onclick="window.__mod.nextReel()">Skip ahead <i class="fa-solid fa-arrow-right"></i></button>` : ''}
+    </div>`;
+
+    return playerBar + reelCard(reels[reelIdx], reelIdx) + cta;
   }
 
   function quizStage() {
@@ -407,6 +508,14 @@
   }
 
   // --- Render --------------------------------------------------------
+  // (Re)start the timer on every render that re-paints the reels stage,
+  // because innerHTML wipes the previous progress-fill node we tick on.
+  function afterRender() {
+    if (stage === 'reels' && reelPlaying && (payload.reels || []).length) {
+      startReelTimer();
+    }
+  }
+
   function render(extra) {
     const m = payload.module;
     const a = payload.attempt;
@@ -438,6 +547,7 @@
           : challengeStage(extra)}
       </div>`;
     document.getElementById('content').innerHTML = html;
+    afterRender();
   }
 
   // --- Actions -------------------------------------------------------
@@ -451,6 +561,35 @@
       }
       lastQuizResult = null;
       setStage(s);
+    },
+    nextReel() {
+      const total = (payload.reels || []).length;
+      if (reelIdx < total - 1) {
+        reelIdx++;
+        reelMs = 0;
+        reelsPlayed.add(reelIdx);
+        render();
+      }
+    },
+    prevReel() {
+      if (reelIdx > 0) {
+        reelIdx--;
+        reelMs = 0;
+        render();
+      }
+    },
+    jumpReel(i) {
+      const total = (payload.reels || []).length;
+      if (i < 0 || i >= total || i === reelIdx) return;
+      reelIdx = i;
+      reelMs = 0;
+      reelsPlayed.add(reelIdx);
+      render();
+    },
+    togglePlay() {
+      reelPlaying = !reelPlaying;
+      if (reelPlaying) startReelTimer(); else stopReelTimer();
+      render();
     },
     pickQuiz(j) {
       quizPicks[quizIdx] = j;
@@ -506,8 +645,18 @@
     document.title = 'TradeArena · ' + payload.module.title;
     quizPicks = (payload.quiz && payload.quiz.questions ? payload.quiz.questions : []).map(() => null);
     quizPassed = !!(payload.attempt && payload.attempt.passed);
+    reelIdx = 0;
+    reelMs = 0;
+    reelPlaying = true;
+    reelsPlayed = new Set([0]);
     render();
   }
+  // Stop the auto-advance timer when the user navigates away.
+  window.addEventListener('beforeunload', stopReelTimer);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stopReelTimer();
+    else if (stage === 'reels' && reelPlaying) startReelTimer();
+  });
   boot();
 })();
 </script>
