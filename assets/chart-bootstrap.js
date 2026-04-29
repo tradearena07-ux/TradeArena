@@ -80,7 +80,7 @@
       theme:                      'Dark',
       autosize:                   true,
       fullscreen:                 false,
-      enabled_features:           ['hide_left_toolbar_by_default', 'study_templates'],
+      enabled_features:           ['study_templates'],
       disabled_features:          ['use_localstorage_for_settings', 'header_symbol_search', 'header_compare'],
       charts_storage_api_version: '1.1',
       client_id:                  'tradearena.app',

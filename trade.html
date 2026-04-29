@@ -325,10 +325,13 @@
   }
 
   // Mount the chart once. Subsequent symbol selections call
-  // chartCtl.setSymbol() instead of re-mounting.
+  // chartCtl.setSymbol() instead of re-mounting. We also re-apply the
+  // current symbol after mount resolves so that any symbol switches
+  // that happened while the library was loading aren't lost.
   async function ensureChart() {
     if (chartCtl) return chartCtl;
     chartCtl = await TArenaChart.mount('tv_chart_container', currentSymbol, '60');
+    try { chartCtl.setSymbol(currentSymbol); } catch (_) {}
     return chartCtl;
   }
 
@@ -432,14 +435,21 @@
   const searchResults = document.getElementById('searchResults');
   let searchTimer = null;
   let searchSeq   = 0;
+  // Defense-in-depth: escape HTML before splicing untrusted upstream
+  // search-result fields into innerHTML.
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
   function renderSearchResults(rows) {
     if (!rows.length) {
       searchResults.innerHTML = '<div class="res"><div><div class="l">No matches</div></div></div>';
     } else {
       searchResults.innerHTML = rows.slice(0, 8).map((r, i) => {
-        const sym  = r.symbol;
-        const desc = r.description || r.name || '';
-        const exch = (r.exchange || r.market || '').toUpperCase();
+        const sym  = esc(r.symbol);
+        const desc = esc(r.description || r.name || '');
+        const exch = esc((r.exchange || r.market || '').toUpperCase());
         return `<div class="res" data-sym="${sym}" data-idx="${i}">
           <div><div class="l">${sym.replace('.AX','')}</div><div class="n">${desc}${exch ? ' · ' + exch : ''}</div></div>
         </div>`;
