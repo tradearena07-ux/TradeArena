@@ -57,16 +57,6 @@
     .tbtn.ap{color:var(--blue);border-bottom-color:var(--blue);background:rgba(96,165,250,.07);}
     .tbtn.ap .ticon{color:var(--blue);}
 
-    .demo-card{background:linear-gradient(135deg, rgba(201,160,48,.18), rgba(232,192,96,.08));border:2px solid var(--gold);border-radius:14px;padding:16px 16px 14px;margin-bottom:20px;text-align:center;box-shadow:0 12px 36px -10px rgba(201,160,48,.4);animation:demoPulse 2.5s ease infinite;}
-    @keyframes demoPulse{0%,100%{box-shadow:0 12px 36px -10px rgba(201,160,48,.4);}50%{box-shadow:0 16px 44px -10px rgba(201,160,48,.6);}}
-    .demo-card .demo-tag{display:inline-flex;align-items:center;gap:6px;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--navy);background:var(--gold2);padding:3px 10px;border-radius:9999px;font-weight:700;margin-bottom:8px;}
-    .demo-card .demo-msg{font-size:12.5px;color:var(--cream);margin-bottom:4px;}
-    .demo-card .demo-code{font-family:'Cinzel',serif;font-size:2rem;letter-spacing:.32em;color:var(--gold2);font-weight:700;line-height:1;margin:6px 0 8px 6px;cursor:pointer;display:inline-block;}
-    .demo-card .demo-actions{display:flex;gap:8px;justify-content:center;margin-top:4px;flex-wrap:wrap;}
-    .demo-card .mini-btn{background:var(--navy);border:1px solid var(--gold);color:var(--gold2);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:7px 14px;border-radius:9999px;cursor:pointer;font-weight:700;transition:background .2s, color .2s;}
-    .demo-card .mini-btn:hover{background:var(--gold2);color:var(--navy);}
-    .demo-card small{display:block;color:var(--muted);font-size:10px;margin-top:6px;line-height:1.5;}
-
     .otp-to{font-size:13px;color:var(--muted);text-align:center;margin-bottom:14px;line-height:1.6;}
     .otp-to strong{color:var(--gold2);}
     .orow{display:flex;gap:8px;justify-content:center;margin-bottom:12px;}
@@ -94,9 +84,8 @@
     .ubadges{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;}
     .ubadge{font-size:10px;font-family:'DM Sans',sans-serif;padding:3px 10px;border:1px solid rgba(201,160,48,.18);color:var(--muted);border-radius:9999px;}
 
-    .demo-hint{margin-top:14px;font-size:12px;color:var(--muted);background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.18);border-radius:10px;padding:10px 14px;line-height:1.5;}
-    .demo-hint b{color:var(--blue);}
-    .demo-hint code{background:var(--navy3);padding:1px 6px;border-radius:4px;color:var(--gold2);font-family:monospace;font-size:11.5px;}
+    .info-card{margin-top:14px;font-size:12px;color:var(--muted);background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.18);border-radius:10px;padding:10px 14px;line-height:1.5;}
+    .info-card b{color:var(--blue);}
 
     @media(max-width:780px){.auth-wrap{grid-template-columns:1fr;}.auth-left{display:none;}}
   </style>
@@ -145,17 +134,12 @@
           <a onclick="switchTab('forgot')">Forgot password?</a>
         </div>
         <button class="btn-prime" id="loginBtn" onclick="doLogin()">Log in</button>
-
-        <div class="demo-hint">
-          <b>Try a demo account →</b> username <code>liamos</code> · password <code>demo1234</code><br>
-          <span class="text-muted">All seeded demo accounts use the same password.</span>
-        </div>
       </div>
 
       <!-- ========================== SIGN-UP STEP 1: email + type ========================== -->
       <div class="step" id="signupStep1">
         <h1>Create your account.</h1>
-        <p class="sub">We'll send a 6-digit code to verify your email. After that, you'll choose a username and password — and that's all you need to log in next time.</p>
+        <p class="sub">We'll email you a 6-digit code to verify your address. After that you'll pick a username and password — and that's all you need to log in next time.</p>
 
         <div class="toggle-row">
           <button class="tbtn as" id="btnS" onclick="setSignupType('student')">
@@ -190,19 +174,8 @@
 
       <!-- ========================== SIGN-UP STEP 2: OTP ========================== -->
       <div class="step" id="signupStep2">
-        <div class="demo-card">
-          <div class="demo-tag"><i class="fa-solid fa-envelope-open"></i> Demo Mode</div>
-          <div class="demo-msg">Your verification code is</div>
-          <div class="demo-code" id="demoCode" onclick="copyCode()" title="Click to copy">000000</div>
-          <div class="demo-actions">
-            <button class="mini-btn" onclick="autoFillSignupOtp()"><i class="fa-solid fa-bolt"></i> Use this code</button>
-            <button class="mini-btn" onclick="copyCode()"><i class="fa-solid fa-copy"></i> Copy</button>
-          </div>
-          <small>Static demo — code is shown here instead of emailed.</small>
-        </div>
-
         <h1>Verify your email.</h1>
-        <p class="otp-to">6-digit code sent to <strong id="sentTo">—</strong></p>
+        <p class="otp-to">We just sent a 6-digit code to <strong id="sentTo">—</strong>. Check your inbox (and spam folder).</p>
         <div class="error-box" id="signupErr2"></div>
         <div class="orow">
           <input class="obox" id="d1" maxlength="1" inputmode="numeric" autocomplete="one-time-code"/>
@@ -248,11 +221,11 @@
       <!-- ========================== FORGOT PASSWORD ========================== -->
       <div class="step" id="forgotStep1">
         <h1>Reset your password.</h1>
-        <p class="sub">Enter your email or username and we'll send a code to reset your password.</p>
+        <p class="sub">Enter the email address you signed up with and we'll send a 6-digit code to reset your password.</p>
         <div class="error-box" id="forgotErr1"></div>
         <div class="field-row" style="margin-bottom:14px;">
-          <i class="fa-solid fa-user lead"></i>
-          <input type="text" id="forgotId" placeholder="Email or username"/>
+          <i class="fa-solid fa-envelope lead"></i>
+          <input type="email" id="forgotId" placeholder="you@example.com" autocomplete="email"/>
         </div>
         <button class="btn-prime" id="forgotBtn" onclick="sendResetOtp()">Send reset code</button>
         <div class="row-between" style="justify-content:center;margin-top:18px;">
@@ -261,16 +234,8 @@
       </div>
 
       <div class="step" id="forgotStep2">
-        <div class="demo-card">
-          <div class="demo-tag"><i class="fa-solid fa-envelope-open"></i> Demo Mode</div>
-          <div class="demo-msg">Your reset code is</div>
-          <div class="demo-code" id="resetCode">000000</div>
-          <div class="demo-actions">
-            <button class="mini-btn" onclick="autoFillResetOtp()"><i class="fa-solid fa-bolt"></i> Use this code</button>
-          </div>
-        </div>
         <h1>Verify reset code.</h1>
-        <p class="otp-to">Code sent to <strong id="resetSentTo">—</strong></p>
+        <p class="otp-to">We sent a 6-digit code to <strong id="resetSentTo">—</strong>. Check your inbox (and spam folder).</p>
         <div class="error-box" id="forgotErr2"></div>
         <div class="orow">
           <input class="obox r" maxlength="1" inputmode="numeric"/>
@@ -310,9 +275,11 @@
   </div>
 </div>
 
+<script src="assets/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="assets/supabase.js"></script>
 <script src="assets/app.js"></script>
 <script>
-  TArenaAuth.seedDemoUsers();
   TArenaUI.renderNav('auth');
 
   // If already signed in, jump straight to profile
@@ -321,7 +288,7 @@
     if (s) {
       document.getElementById('loginStep').classList.remove('on');
       document.getElementById('welcomeStep').classList.add('on');
-      setTimeout(() => window.location.href = 'profile.html', 800);
+      setTimeout(() => window.location.href = 'profile.html', 600);
     }
   })();
 
@@ -366,41 +333,44 @@
     if (inp.type === 'password') { inp.type = 'text'; eye.className = 'fa-solid fa-eye-slash'; }
     else { inp.type = 'password'; eye.className = 'fa-solid fa-eye'; }
   }
+  function setBusy(btn, label) {
+    if (!btn._origLabel) btn._origLabel = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<span class="spin"></span>' + label;
+  }
+  function setIdle(btn) {
+    btn.disabled = false; if (btn._origLabel) { btn.innerHTML = btn._origLabel; btn._origLabel = null; }
+  }
 
   // ----- LOGIN -----
-  function doLogin() {
+  async function doLogin() {
     hideError('loginErr');
     const id = document.getElementById('loginId').value.trim();
     const pw = document.getElementById('loginPw').value;
     const btn = document.getElementById('loginBtn');
-    btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Logging in…';
-    setTimeout(() => {
-      const r = TArenaAuth.login(id, pw);
-      btn.disabled = false; btn.innerHTML = 'Log in';
-      if (!r.ok) { showError('loginErr', r.error); return; }
-      switchTab(''); document.getElementById('welcomeStep').classList.add('on');
-      setTimeout(() => window.location.href = 'profile.html', 700);
-    }, 350);
+    setBusy(btn, 'Logging in…');
+    const r = await TArenaAuth.login(id, pw);
+    setIdle(btn);
+    if (!r.ok) { showError('loginErr', r.error); return; }
+    document.getElementById('loginStep').classList.remove('on');
+    document.getElementById('welcomeStep').classList.add('on');
+    setTimeout(() => window.location.href = 'profile.html', 500);
   }
 
   // ----- SIGNUP step 1: email -----
-  function sendSignupOtp() {
+  async function sendSignupOtp() {
     hideError('signupErr1');
     const email = document.getElementById('signupEmail').value.trim().toLowerCase();
     const btn = document.getElementById('sendBtn');
-    btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Sending code…';
-    setTimeout(() => {
-      const r = TArenaAuth.startSignup(email, signupType);
-      btn.disabled = false; btn.innerHTML = 'Send verification code';
-      if (!r.ok) { showError('signupErr1', r.error); return; }
-      document.getElementById('sentTo').textContent = r.email;
-      document.getElementById('demoCode').textContent = r.code;
-      document.getElementById('signupStep1').classList.remove('on');
-      document.getElementById('signupStep2').classList.add('on');
-      DS.forEach(id => { document.getElementById(id).value = ''; document.getElementById(id).classList.remove('filled','shk'); });
-      startTimer(r.expiresAt);
-      setTimeout(() => document.getElementById('d1').focus(), 100);
-    }, 350);
+    setBusy(btn, 'Sending code…');
+    const r = await TArenaAuth.startSignup(email, signupType);
+    setIdle(btn);
+    if (!r.ok) { showError('signupErr1', r.error); return; }
+    document.getElementById('sentTo').textContent = r.email;
+    document.getElementById('signupStep1').classList.remove('on');
+    document.getElementById('signupStep2').classList.add('on');
+    DS.forEach(id => { document.getElementById(id).value = ''; document.getElementById(id).classList.remove('filled','shk'); });
+    startTimer(Date.now() + 10 * 60 * 1000);
+    setTimeout(() => document.getElementById('d1').focus(), 100);
   }
 
   // ----- SIGNUP step 2: OTP -----
@@ -412,120 +382,106 @@
       const m = Math.floor(remain / 60000);
       const s = Math.floor((remain % 60000) / 1000);
       tc.textContent = `${m}:${String(s).padStart(2,'0')}`;
-      if (remain === 0) { tc.className = 'exp'; tc.textContent = 'EXPIRED'; clearInterval(signupTimer); }
+      if (remain <= 0) { clearInterval(signupTimer); tc.textContent = 'expired'; tc.className = 'exp'; }
     }
-    tick(); signupTimer = setInterval(tick, 1000);
+    tick();
+    signupTimer = setInterval(tick, 1000);
   }
-  function verifySignupOtp() {
-    const code = DS.map(id => document.getElementById(id).value).join('');
-    if (code.length !== 6) {
-      showError('signupErr2', 'Please enter all 6 digits.');
-      DS.forEach(id => document.getElementById(id).classList.add('shk'));
-      setTimeout(() => DS.forEach(id => document.getElementById(id).classList.remove('shk')), 400);
-      return;
-    }
-    const r = TArenaAuth.verifySignupOtp(code);
-    if (!r.ok) {
-      showError('signupErr2', r.error);
-      DS.forEach(id => document.getElementById(id).classList.add('shk'));
-      setTimeout(() => DS.forEach(id => document.getElementById(id).classList.remove('shk')), 400);
-      return;
-    }
+
+  async function verifySignupOtp() {
     hideError('signupErr2');
-    // Suggest username
-    document.getElementById('newUsername').value = TArenaAuth.suggestUsername(r.email);
+    const code = DS.map(id => document.getElementById(id).value).join('');
+    if (code.length !== 6) { showError('signupErr2', 'Enter all 6 digits.'); return; }
+    const btn = document.getElementById('vBtn');
+    setBusy(btn, 'Verifying…');
+    const r = await TArenaAuth.verifySignupOtp(code);
+    setIdle(btn);
+    if (!r.ok) {
+      DS.forEach(id => document.getElementById(id).classList.add('shk'));
+      setTimeout(() => DS.forEach(id => document.getElementById(id).classList.remove('shk')), 400);
+      showError('signupErr2', r.error);
+      return;
+    }
     document.getElementById('signupStep2').classList.remove('on');
     document.getElementById('signupStep3').classList.add('on');
-    setTimeout(() => document.getElementById('newPw').focus(), 100);
+    document.getElementById('newUsername').value = TArenaAuth.suggestUsername(r.email);
+    setTimeout(() => document.getElementById('newUsername').focus(), 100);
   }
-  function autoFillSignupOtp() {
-    const code = document.getElementById('demoCode').textContent.trim();
-    if (!/^\d{6}$/.test(code)) return;
-    code.split('').forEach((ch, i) => { const el = document.getElementById(DS[i]); el.value = ch; el.classList.add('filled'); });
-    setTimeout(verifySignupOtp, 200);
-  }
-  function copyCode() {
-    const code = document.getElementById('demoCode').textContent.trim();
-    if (!/^\d{6}$/.test(code)) return;
-    navigator.clipboard && navigator.clipboard.writeText(code);
-  }
-  function resendSignupOtp() {
-    const email = document.getElementById('sentTo').textContent;
-    const r = TArenaAuth.startSignup(email, signupType);
-    if (r.ok) { document.getElementById('demoCode').textContent = r.code; startTimer(r.expiresAt); }
-  }
+
   function goBackToSignup1() {
-    if (signupTimer) clearInterval(signupTimer);
     document.getElementById('signupStep2').classList.remove('on');
     document.getElementById('signupStep1').classList.add('on');
+  }
+
+  async function resendSignupOtp() {
+    const email = document.getElementById('signupEmail').value.trim().toLowerCase();
+    if (!email) return;
+    const r = await TArenaAuth.startSignup(email, signupType);
+    if (r.ok) startTimer(Date.now() + 10 * 60 * 1000);
+    else showError('signupErr2', r.error);
   }
 
   // ----- SIGNUP step 3: username + password -----
   document.getElementById('newPw').addEventListener('input', e => {
     const v = e.target.value;
-    const len = v.length;
-    let strength = 0;
-    if (len >= 6)  strength = 1;
-    if (len >= 9 && /[A-Z]/.test(v) && /\d/.test(v)) strength = 2;
-    if (len >= 12 && /[!@#$%^&*]/.test(v))           strength = 3;
-    document.getElementById('pw1').className = 'pw-bar ' + (strength >= 1 ? (strength >= 3 ? 'strong' : strength >= 2 ? 'med' : 'weak') : '');
-    document.getElementById('pw2').className = 'pw-bar ' + (strength >= 2 ? (strength >= 3 ? 'strong' : 'med') : '');
-    document.getElementById('pw3').className = 'pw-bar ' + (strength >= 3 ? 'strong' : '');
-    document.getElementById('pwHelp').textContent = ['Use at least 6 characters.','Add uppercase + a number for medium.','Good — add a symbol for strong.','Strong password ✓'][strength] || '';
+    const score = (v.length >= 6) + (v.length >= 10) + (/[A-Z]/.test(v) || /\d/.test(v));
+    ['pw1','pw2','pw3'].forEach((id, i) => {
+      document.getElementById(id).className = 'pw-bar' + (i < score ? (score === 1 ? ' weak' : score === 2 ? ' med' : ' strong') : '');
+    });
+    document.getElementById('pwHelp').textContent =
+      score === 0 ? 'Use at least 6 characters.' :
+      score === 1 ? 'Weak — add more characters.' :
+      score === 2 ? 'Decent — mix in numbers or capitals.' : 'Strong password ✓';
   });
 
-  function finishSignup() {
+  async function finishSignup() {
     hideError('signupErr3');
-    const u = document.getElementById('newUsername').value.trim();
+    const u = document.getElementById('newUsername').value.trim().toLowerCase();
     const p = document.getElementById('newPw').value;
     const btn = document.getElementById('finishBtn');
-    btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Creating account…';
-    setTimeout(() => {
-      const r = TArenaAuth.completeSignup(u, p);
-      btn.disabled = false; btn.innerHTML = 'Create account &amp; log in';
-      if (!r.ok) { showError('signupErr3', r.error); return; }
-      document.getElementById('signupStep3').classList.remove('on');
-      document.getElementById('welcomeStep').classList.add('on');
-      setTimeout(() => window.location.href = 'profile.html', 700);
-    }, 350);
+    setBusy(btn, 'Creating account…');
+    const r = await TArenaAuth.completeSignup(u, p);
+    setIdle(btn);
+    if (!r.ok) { showError('signupErr3', r.error); return; }
+    document.getElementById('signupStep3').classList.remove('on');
+    document.getElementById('welcomeStep').classList.add('on');
+    setTimeout(() => window.location.href = 'profile.html', 600);
   }
 
   // ----- FORGOT PASSWORD -----
-  function sendResetOtp() {
+  async function sendResetOtp() {
     hideError('forgotErr1');
     const id = document.getElementById('forgotId').value.trim();
-    const r = TArenaAuth.startReset(id);
+    const btn = document.getElementById('forgotBtn');
+    setBusy(btn, 'Sending code…');
+    const r = await TArenaAuth.startReset(id);
+    setIdle(btn);
     if (!r.ok) { showError('forgotErr1', r.error); return; }
     document.getElementById('resetSentTo').textContent = r.email;
-    document.getElementById('resetCode').textContent = r.code;
     document.getElementById('forgotStep1').classList.remove('on');
     document.getElementById('forgotStep2').classList.add('on');
     RS.forEach(el => { el.value = ''; el.classList.remove('filled'); });
     setTimeout(() => RS[0].focus(), 100);
   }
-  function verifyResetOtpStep() {
+
+  async function verifyResetOtpStep() {
+    hideError('forgotErr2');
     const code = RS.map(el => el.value).join('');
     if (code.length !== 6) { showError('forgotErr2', 'Enter all 6 digits.'); return; }
-    const r = TArenaAuth.verifyResetOtp(code);
+    const r = await TArenaAuth.verifyResetOtp(code);
     if (!r.ok) { showError('forgotErr2', r.error); return; }
-    hideError('forgotErr2');
     document.getElementById('forgotStep2').classList.remove('on');
     document.getElementById('forgotStep3').classList.add('on');
   }
-  function autoFillResetOtp() {
-    const code = document.getElementById('resetCode').textContent.trim();
-    if (!/^\d{6}$/.test(code)) return;
-    code.split('').forEach((ch, i) => { RS[i].value = ch; RS[i].classList.add('filled'); });
-    setTimeout(verifyResetOtpStep, 200);
-  }
-  function finishReset() {
+
+  async function finishReset() {
     hideError('forgotErr3');
     const p = document.getElementById('resetNewPw').value;
-    const r = TArenaAuth.completeReset(p);
+    const r = await TArenaAuth.completeReset(p);
     if (!r.ok) { showError('forgotErr3', r.error); return; }
     document.getElementById('forgotStep3').classList.remove('on');
     document.getElementById('welcomeStep').classList.add('on');
-    setTimeout(() => window.location.href = 'profile.html', 700);
+    setTimeout(() => window.location.href = 'profile.html', 600);
   }
 
   // ----- OTP input handlers -----
@@ -576,19 +532,16 @@
   window.setSignupType = setSignupType;
   window.sendSignupOtp = sendSignupOtp;
   window.verifySignupOtp = verifySignupOtp;
-  window.autoFillSignupOtp = autoFillSignupOtp;
-  window.copyCode = copyCode;
   window.resendSignupOtp = resendSignupOtp;
   window.goBackToSignup1 = goBackToSignup1;
   window.finishSignup = finishSignup;
   window.doLogin = doLogin;
   window.sendResetOtp = sendResetOtp;
   window.verifyResetOtpStep = verifyResetOtpStep;
-  window.autoFillResetOtp = autoFillResetOtp;
   window.finishReset = finishReset;
   window.togglePw = togglePw;
 
-  console.log('%cTradeArena · Auth ready (Login + Sign-up + Reset)', 'color:#e8c060;font-weight:700;');
+  console.log('%cTradeArena · Auth ready (Supabase)', 'color:#e8c060;font-weight:700;');
 </script>
 </body>
 </html>

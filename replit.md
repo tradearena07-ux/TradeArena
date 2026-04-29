@@ -6,70 +6,97 @@ Static multi-page paper-trading site for Australian uni students. ASX, US stocks
 - Pure static HTML/CSS/JS (no build step)
 - Served by Python `http.server` on port 5000 in dev
 - Deployed as a static site (publicDir = `.`)
+- **Auth + DB**: Supabase (Postgres + Auth, RLS-protected) — client uses the `@supabase/supabase-js` v2 UMD bundle
 - Third-party: TradingView widget, Chart.js, Font Awesome, Google Fonts (Cinzel + DM Sans)
 
 ## Pages
 | File | Purpose |
 |------|---------|
 | `index.html`     | Landing — hero, features, leaderboard, live ticker |
-| `auth.html`      | Sign-in — Instagram-style. Tabs **Log in / Create account** + **Forgot password**. New users do email→OTP→set username+password (one time). Returning users do username/email + password (no OTP). Demo OTP shown in big gold banner with auto-fill. |
-| `profile.html`   | Instagram-style profile — gradient avatar, stats row, bio, highlights, tabs (Holdings/Watchlist/Activity), Edit Profile modal. Post-login landing. |
-| `trade.html`     | **Markets** — TradingView chart (full toolbar/indicators in navy/gold theme), watchlist sidebar, symbol search with autocomplete, big symbol header, **right-side order entry panel** (Buy/Sell tabs, Market/Limit, qty quick-pick, summary, place button), simulated order book with bid/ask depth, lower tabs (Overview/Recent trades/My orders). |
-| `portfolio.html` | **Groww-style portfolio** — big "Investments" hero with current value + total returns + today's change, time-range tabs (1D/1W/1M/3M/1Y/ALL), clean perf chart, segmented allocation bar with legend, holdings list (one row per holding with qty×avg, current value, P&L $/%), top movers cards (Gainers/Losers/Active). |
-| `admin.html`     | Admin panel — registrations, university breakdown, demo-data tools (passphrase: `arena2026`) |
+| `auth.html`      | Sign-in — Tabs **Log in / Create account** + **Forgot password**. Supabase email-OTP for signup + password reset; password login (no OTP) for returning users. |
+| `profile.html`   | Profile page — gradient avatar, stats, bio, holdings/watchlist/activity tabs, edit modal. Post-login landing. |
+| `trade.html`     | Markets — TradingView chart, watchlist sidebar, symbol search, big symbol header, right-side order entry panel, simulated order book. |
+| `portfolio.html` | Groww-style portfolio — investments hero, time-range tabs, perf chart, allocation bar, holdings list, top movers. |
+| `admin.html`     | Admin panel — registrations, university breakdown, CSV export. **Gated by `profiles.is_admin = true`** (no shared passphrase). |
 
 ## Shared assets (`/assets`)
-- `styles.css` — design tokens (navy/gold), nav, cards, tables, buttons, modal, forms, avatar pill + dropdown menu
-- `app.js`    — `TArenaAuth` (full auth API: `startSignup`/`verifySignupOtp`/`completeSignup`, `login`, `startReset`/`verifyResetOtp`/`completeReset`, `getSession`/`signOut`/`requireAuth`, `getProfile`/`saveProfile`, `seedDemoUsers`, `clearAllData`) + `TArenaUI` (`renderNav`, `renderFooter`, `fmtMoney`, `fmtPct`, `getAvatar`, `avatarHtml`)
-- `market.js` — `TArenaMarket` (mock prices, holdings, watchlist, orders, tick simulator)
+- `config.js`   — Supabase URL + publishable key (safe to expose; rotate by editing this file)
+- `supabase.js` — Singleton Supabase client at `window.TArenaDB`
+- `app.js`      — `TArenaAuth` (full Supabase-backed API) + `TArenaUI` (`renderNav`, `renderFooter`, `fmtMoney`, `fmtPct`, `getAvatar`, `avatarHtml`)
+- `market.js`   — `TArenaMarket` (mock prices, holdings, watchlist, orders, tick simulator) — to be replaced by real market data in Task #3
+- `styles.css`  — design tokens (navy/gold), nav, cards, tables, buttons, modal, forms, avatar pill + dropdown menu
 - `favicon.svg` — gold shield logo
 
-## Auth model — Instagram-style
-Pure client-side demo using localStorage.
-
+## Auth model — Supabase
 **First-time sign-up (3 steps):**
-1. Choose Student/Public, enter email → OTP generated, banner shows it.
-2. Verify the 6-digit code (or click **Use this code** to auto-fill).
-3. Pick a username + create a password (with strength meter).
-→ Account created in `tarena_users`, session set, redirect to profile.
+1. Choose Student/Public, enter email → Supabase emails a 6-digit OTP via `signInWithOtp({ shouldCreateUser: true })`.
+2. Verify the 6-digit code (`verifyOtp({ type: 'email' })`) — this also signs the user in.
+3. Pick a username + create a password — `updateUser({ password, data: { username, type, university }})` plus an `INSERT` into `public.profiles` (RLS allows self-insert).
 
 **Returning user log-in (no OTP):**
-- Enter username **or** email + password → instant log-in, redirect to profile.
+- Username **or** email + password. Username login first calls the `lookup_email_by_login(p_input)` RPC to resolve the email, then `signInWithPassword`.
 
 **Forgot password (3 steps):**
-- Email/username → OTP → set new password → logged in.
+- Email/username → `signInWithOtp({ shouldCreateUser: false })` → verify OTP → `updateUser({ password })`.
 
-Demo seeded users (`seedDemoUsers()`) all share password `demo1234` so any can be used for testing. Example: username `liamos` / password `demo1234`.
+The Supabase **publishable key** in `assets/config.js` is designed to ship in client code; real authorization is enforced by RLS policies on every table. To rotate the key: regenerate it in Supabase Dashboard → Project Settings → API, paste the new value into `assets/config.js`, and redeploy.
 
-User passwords are stored plaintext in `localStorage['tarena_users']` for demo only — replace with hashed server-side storage for production. User-editable profile data is keyed by email under `localStorage['tarena_profiles']`. Avatars are deterministic gradients derived from the email hash plus initials.
+## Database setup (one-time)
+The full schema, RLS policies, and helper functions live in `supabase/migrations/0001_init.sql`.
 
-## localStorage keys
-- `tarena_session`       — current signed-in user
-- `tarena_users`         — all created accounts with passwords (`{ [email]: { email, username, password, university, type, createdAt } }`)
-- `tarena_pending_otp`   — pending OTP for signup or password-reset (auto-cleared after use)
-- `tarena_registrations` — lightweight summary for admin panel
-- `tarena_profiles`      — per-user editable profile data (display name, bio, tier)
-- `tarena_orders`        — placed orders log
-- `tarena_watchlist`     — user's watched symbols
+To install (or reset) the database:
+1. Open the Supabase Dashboard → **SQL Editor** → **New query**.
+2. Paste the contents of `supabase/migrations/0001_init.sql` and click **Run**.
+3. Confirm the `profiles`, `paper_trades`, `reels`, `reel_tags`, `reel_mirrors`, `follows`, `leagues`, `chart_layouts`, `price_bars` tables exist with RLS enabled.
+
+The migration creates these helper RPCs (callable from the client):
+- `email_for_username_login(p_username text, p_password text)` — verifies the password against `auth.users.encrypted_password` (bcrypt via `pgcrypto`) and returns the email **only on a correct credential pair**, so it cannot be used to enumerate emails.
+- `check_username_available(p_username text)` — bool
+- `check_email_available(p_email text)` — bool (treats half-finished signups as resumable)
+- `has_visibility(p_owner uuid, p_field text)` — SECURITY DEFINER helper that lets RLS policies on other tables check the owner's `visibility_mask` without granting cross-row read access to `profiles`.
+- `list_registrations()` — admin-only view of all profiles + auth emails
+
+## Privacy + RLS model
+- **`profiles`** is RLS-restricted to **self-only SELECT** so sensitive columns (`is_admin`, `visibility_mask`, raw `bio`) never leak to other users.
+- **`profiles.email` does not exist.** The canonical email lives only in `auth.users`. The previous build had it duplicated; this version drops it.
+- **`public_profiles`** is a view (with `security_invoker = false`) exposing only the safe columns: `id`, `username`, `display_name`, `university`, `tier`, `type`, `bio`, `avatar_color`, `visibility_mask`, `created_at`. Every cross-user lookup (mentions, leaderboards, reels feed) reads from this view rather than the base table.
+- **Forgot-password requires the email, not the username.** Allowing username-based reset would force the server to disclose the corresponding email, which is the same enumeration vector the password-verifying login RPC is designed to avoid.
+
+## Granting admin access
+Admin pages are gated by `profiles.is_admin = true`. To promote a user:
+```sql
+update public.profiles set is_admin = true where username = 'liamos';
+```
+
+## Email templates
+By default Supabase emails the magic-link confirmation that includes both a clickable link and a 6-digit `{{ .Token }}` code. Our flow uses the **code**, not the link, so make sure the **Magic Link** email template in Supabase Dashboard → Authentication → Email Templates contains `{{ .Token }}`. (The default template does.)
+
+## Storage keys (client-side)
+- `tarena_sb_session`        — Supabase auth session (managed by SDK)
+- `tarena_pending_email`     — multi-step signup / reset state (cleared after success)
+- `tarena_profile_cache`     — last-known profile snapshot keyed by email (for fast nav rendering)
+- `tarena_orders`            — placed orders log (mock — replaced in Task #3)
+- `tarena_watchlist`         — user's watched symbols (mock — replaced in Task #3)
 
 ## Trade page (TradingView + order entry)
-The TradingView widget is configured for a pro-trader feel: dark theme overridden to navy/gold (`#0c1d36` background, `#10b981` up, `#dc2626` down, gold grid), default studies (MA + Volume), full top + side toolbar, date-range picker. The right-side order panel mirrors a real broker: Buy/Sell colored tabs, Market/Limit toggle, quantity field with 25/50/75/Max quick-pick, live total, and a coloured submit button. Below it sits a simulated **order book with depth bars** (5 asks + 5 bids and a spread row).
+The TradingView widget is configured for a pro-trader feel: dark theme overridden to navy/gold (`#0c1d36` background, `#10b981` up, `#dc2626` down, gold grid), default studies (MA + Volume), full top + side toolbar, date-range picker. The right-side order panel mirrors a real broker. Below it sits a simulated **order book with depth bars**. *(Replaced with broker-grade Advanced Charts library in Task #3.)*
 
 ## Portfolio page (Groww-style)
 - Big "Investments" header with current value, total returns ($/%), and today's change tile.
-- Time-range tabs (1D/1W/1M/3M/1Y/ALL) above a clean Chart.js area chart with a gold gradient.
+- Time-range tabs (1D/1W/1M/3M/1Y/ALL) above a Chart.js area chart with a gold gradient.
 - Asset Allocation card with a segmented bar (ASX/US/Crypto/Cash) + legend.
-- Holdings list — one row per holding showing icon, symbol, name, market badge, qty × avg, current value, P&L $/%, and today's change %.
+- Holdings list — one row per holding showing icon, symbol, name, market badge, qty × avg, current value, P&L $/%, today's change %.
 - Top Movers tiles — Gainers / Losers / Most Active.
 
 ## Conventions
-- Every page must include `<div id="tarena-nav"></div>` and `<div id="tarena-footer"></div>` then call `TArenaUI.renderNav('<page-id>')` after loading `app.js`.
+- Every page must include `<div id="tarena-nav"></div>` and `<div id="tarena-footer"></div>` then load — in this order — `assets/config.js`, the Supabase UMD bundle, `assets/supabase.js`, `assets/app.js`, then call `TArenaUI.renderNav('<page-id>')`.
 - Page IDs: `home`, `trade`, `portfolio`, `profile`, `auth`, `admin`.
 - All `<link rel="icon">` point to `assets/favicon.svg`.
-- TradingView symbols use the broker-prefixed format (`ASX:BHP`, `NASDAQ:AAPL`, `BINANCE:BTCUSDT`) — stored in `TArenaMarket.data[i].tv`.
+- TradingView symbols use the broker-prefixed format (`ASX:BHP`, `NASDAQ:AAPL`, `BINANCE:BTCUSDT`).
 - Money formatting goes through `TArenaUI.fmtMoney` / `fmtPct` for consistency.
 - Numeric values in tables/lists use `font-feature-settings:'tnum'` for tabular alignment.
 - Tone: professional trader. Avoid "warrior", "battle", "war room" wording.
+- All `TArenaAuth` auth calls (`startSignup`, `verifySignupOtp`, `completeSignup`, `login`, `startReset`, `verifyResetOtp`, `completeReset`, `signOut`, `saveProfile`, `getRegistrations`, `isUsernameAvailable`, `reloadSession`) return Promises — `await` them. `getSession`, `requireAuth`, `getProfile`, `isStudentEmail`, `getUniversity`, `suggestUsername` stay synchronous (read from in-memory cache primed at module load).
 
 ## Local dev
 ```

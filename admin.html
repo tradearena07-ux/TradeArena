@@ -33,27 +33,24 @@
     .uni-row .count{flex:0 0 60px;text-align:right;font-family:'Cinzel',serif;color:var(--gold2);font-size:13px;}
 
     .actions{display:flex;gap:10px;flex-wrap:wrap;}
-
     .empty{text-align:center;padding:48px 18px;color:var(--muted);}
     .empty i{font-size:36px;color:var(--gold);opacity:.4;margin-bottom:14px;display:block;}
 
-    .pwgate{position:fixed;inset:0;background:rgba(6,14,28,.95);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(6px);}
-    .pwgate .gate-card{max-width:380px;width:100%;background:var(--navy2);border:1px solid var(--border);border-radius:20px;padding:34px;}
-    .pwgate.hide{display:none;}
+    .gate{position:fixed;inset:0;background:rgba(6,14,28,.95);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(6px);}
+    .gate .gate-card{max-width:420px;width:90%;background:var(--navy2);border:1px solid var(--border);border-radius:20px;padding:34px;text-align:center;}
+    .gate.hide{display:none;}
+    .gate-card h2{font-family:'Cinzel',serif;font-size:1.4rem;margin-bottom:8px;}
+    .gate-card p{color:var(--muted);font-size:13.5px;line-height:1.6;margin-bottom:16px;}
   </style>
 </head>
 <body>
 
-<!-- Password gate -->
-<div class="pwgate" id="pwgate">
+<!-- Admin gate (shown until we confirm the signed-in user has profiles.is_admin = true) -->
+<div class="gate" id="gate">
   <div class="gate-card">
-    <div class="logo" style="font-size:1.4rem;margin-bottom:18px;justify-content:center;"></div>
-    <h2 style="font-family:'Cinzel',serif;font-size:1.4rem;text-align:center;margin-bottom:8px;">Admin Access</h2>
-    <p class="text-muted" style="text-align:center;font-size:13px;margin-bottom:22px;line-height:1.6;">Restricted area. Enter the admin passphrase to continue.</p>
-    <div class="error-box" id="pwerr"></div>
-    <div class="field"><label>Passphrase</label><input type="password" id="pwInput" placeholder="••••••••" autocomplete="off"/></div>
-    <button class="btn-gold full" onclick="checkPw()">Unlock Admin</button>
-    <p class="text-muted" style="text-align:center;font-size:11px;margin-top:14px;">Demo passphrase: <strong style="color:var(--gold2);font-family:'Cinzel',serif;">arena2026</strong></p>
+    <h2 id="gateTitle">Checking access…</h2>
+    <p id="gateMsg">Verifying your account…</p>
+    <div id="gateActions" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;"></div>
   </div>
 </div>
 
@@ -62,12 +59,11 @@
 <div class="admin-header">
   <div>
     <h1>Admin · Control Panel</h1>
-    <p>Manage members, monitor activity, seed demo data.</p>
+    <p>Manage members, monitor activity.</p>
   </div>
   <div class="actions">
-    <button class="btn-ghost" onclick="seedUsers()"><i class="fa-solid fa-seedling"></i> Seed Demo Users</button>
+    <button class="btn-ghost" onclick="reload()"><i class="fa-solid fa-rotate"></i> Refresh</button>
     <button class="btn-ghost" onclick="exportRegs()"><i class="fa-solid fa-download"></i> Export CSV</button>
-    <button class="btn-ghost" onclick="clearAll()" style="border-color:rgba(248,113,113,.4);color:#fca5a5;"><i class="fa-solid fa-trash"></i> Clear All Data</button>
   </div>
 </div>
 
@@ -107,12 +103,12 @@
     <div class="card-flat">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:12px;">
         <h3 style="font-family:'Cinzel',serif;font-size:1.05rem;letter-spacing:.04em;">Registrations</h3>
-        <input type="text" id="searchReg" placeholder="Search email or university…" style="background:var(--navy3);border:1px solid var(--border);border-radius:9999px;padding:8px 18px;color:var(--cream);font-size:13px;outline:none;width:280px;max-width:100%;"/>
+        <input type="text" id="searchReg" placeholder="Search email, username or university…" style="background:var(--navy3);border:1px solid var(--border);border-radius:9999px;padding:8px 18px;color:var(--cream);font-size:13px;outline:none;width:300px;max-width:100%;"/>
       </div>
       <div style="overflow:auto;max-height:520px;">
         <table class="tarena" id="regTable">
           <thead>
-            <tr><th>Email</th><th>University</th><th>Type</th><th class="text-right">Joined</th></tr>
+            <tr><th>Email</th><th>Username</th><th>University</th><th>Type</th><th class="text-right">Joined</th></tr>
           </thead>
           <tbody id="regBody"></tbody>
         </table>
@@ -133,80 +129,91 @@
 
 <div id="tarena-footer"></div>
 
+<script src="assets/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="assets/supabase.js"></script>
 <script src="assets/app.js"></script>
 <script>
   TArenaUI.renderNav('admin');
   TArenaUI.renderFooter();
 
-  // --- Password gate ---
-  const ADMIN_PW = 'arena2026';
-  if (sessionStorage.getItem('tarena_admin_unlocked') === '1') {
-    document.getElementById('pwgate').classList.add('hide');
-  } else {
-    setTimeout(() => document.getElementById('pwInput').focus(), 50);
-  }
-  function checkPw() {
-    const v = document.getElementById('pwInput').value.trim();
-    if (v === ADMIN_PW) {
-      sessionStorage.setItem('tarena_admin_unlocked', '1');
-      document.getElementById('pwgate').classList.add('hide');
-      render();
-    } else {
-      const err = document.getElementById('pwerr');
-      err.textContent = 'Incorrect passphrase. Try again.';
-      err.classList.add('show');
-      document.getElementById('pwInput').classList.add('err');
-    }
-  }
-  document.getElementById('pwInput').addEventListener('keydown', e => { if (e.key === 'Enter') checkPw(); });
-  window.checkPw = checkPw;
-
-  // --- Render ---
+  let allRegs = [];
   let searchTerm = '';
   document.getElementById('searchReg').addEventListener('input', e => {
     searchTerm = e.target.value.toLowerCase();
     renderRegs();
   });
 
-  function render() {
+  function gate(title, msg, actions) {
+    document.getElementById('gateTitle').textContent = title;
+    document.getElementById('gateMsg').textContent = msg;
+    const wrap = document.getElementById('gateActions');
+    wrap.innerHTML = (actions || []).map(a =>
+      `<a href="${a.href}" class="${a.cls || 'btn-gold'}">${a.label}</a>`
+    ).join('');
+    document.getElementById('gate').classList.remove('hide');
+  }
+
+  async function init() {
+    // Wait briefly for the session cache to hydrate from Supabase storage
+    await TArenaAuth.reloadSession();
+    const session = TArenaAuth.getSession();
+    if (!session) {
+      gate('Sign in required', 'You need to sign in with an admin account.',
+           [{href: 'auth.html', label: 'Sign in →'}]);
+      return;
+    }
+    if (!session.user.isAdmin) {
+      gate('Admin access only', `Signed in as ${session.user.handle}, but this account is not an admin. Set profiles.is_admin = true in Supabase to grant access.`,
+           [{href: 'profile.html', label: 'Back to profile', cls: 'btn-ghost'}]);
+      return;
+    }
+    document.getElementById('gate').classList.add('hide');
+    await reload();
+  }
+
+  async function reload() {
+    allRegs = await TArenaAuth.getRegistrations();
     renderStats();
     renderRegs();
     renderUniBar();
   }
 
   function renderStats() {
-    const regs = TArenaAuth.getRegistrations();
-    const students = regs.filter(r => r.type === 'student').length;
-    const pub = regs.filter(r => r.type !== 'student').length;
-    const weekAgo = Date.now() - 7 * 86400000;
-    const recent = regs.filter(r => r.joinedAt > weekAgo).length;
-    document.getElementById('statTotal').textContent = regs.length.toLocaleString();
+    const students = allRegs.filter(r => r.type === 'student').length;
+    const pub      = allRegs.filter(r => r.type !== 'student').length;
+    const weekAgo  = Date.now() - 7 * 86400000;
+    const recent   = allRegs.filter(r => r.joinedAt > weekAgo).length;
+    document.getElementById('statTotal').textContent    = allRegs.length.toLocaleString();
     document.getElementById('statStudents').textContent = students.toLocaleString();
-    document.getElementById('statPublic').textContent = pub.toLocaleString();
-    document.getElementById('statRecent').textContent = '+' + recent.toLocaleString();
+    document.getElementById('statPublic').textContent   = pub.toLocaleString();
+    document.getElementById('statRecent').textContent   = '+' + recent.toLocaleString();
   }
 
   function renderRegs() {
-    const regs = TArenaAuth.getRegistrations()
-      .slice().sort((a,b) => b.joinedAt - a.joinedAt)
-      .filter(r => !searchTerm || r.email.toLowerCase().includes(searchTerm) || r.university.toLowerCase().includes(searchTerm));
+    const regs = allRegs
+      .slice()
+      .filter(r => !searchTerm
+        || (r.email      || '').toLowerCase().includes(searchTerm)
+        || (r.username   || '').toLowerCase().includes(searchTerm)
+        || (r.university || '').toLowerCase().includes(searchTerm));
     const body = document.getElementById('regBody');
     if (!regs.length) {
-      body.innerHTML = `<tr><td colspan="4"><div class="empty"><i class="fa-solid fa-user-plus"></i><div>No registrations yet.</div><div style="margin-top:8px;font-size:13px;">Click "Seed Demo Users" to populate sample data.</div></div></td></tr>`;
+      body.innerHTML = `<tr><td colspan="5"><div class="empty"><i class="fa-solid fa-user-plus"></i><div>No registrations yet.</div><div style="margin-top:8px;font-size:13px;">Send the link to your first testers — sign-ups will appear here in real time.</div></div></td></tr>`;
       return;
     }
     body.innerHTML = regs.map(r => `<tr>
       <td><strong>${r.email}</strong></td>
+      <td>@${r.username}</td>
       <td>${r.university}</td>
-      <td>${r.type === 'student' ? '<span class="badge-gold badge">Student</span>' : '<span class="badge-blue badge">Public</span>'}</td>
+      <td>${r.type === 'student' ? '<span class="badge-gold badge">Student</span>' : '<span class="badge-blue badge">Public</span>'}${r.isAdmin ? ' <span class="badge badge-blue" style="background:rgba(96,165,250,.15);color:#93c5fd;">admin</span>' : ''}</td>
       <td class="text-right text-muted" style="font-size:12.5px;">${new Date(r.joinedAt).toLocaleString('en-AU')}</td>
     </tr>`).join('');
   }
 
   function renderUniBar() {
-    const regs = TArenaAuth.getRegistrations();
     const counts = {};
-    regs.forEach(r => { counts[r.university] = (counts[r.university] || 0) + 1; });
+    allRegs.forEach(r => { counts[r.university || 'Public'] = (counts[r.university || 'Public'] || 0) + 1; });
     const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]).slice(0, 10);
     const max = sorted[0] ? sorted[0][1] : 1;
     const bar = document.getElementById('uniBar');
@@ -222,21 +229,11 @@
       </div>`).join('');
   }
 
-  function seedUsers() {
-    TArenaAuth.seedDemoUsers();
-    render();
-  }
-  function clearAll() {
-    if (!confirm('This will clear ALL members, sessions, watchlists and orders.\n\nProceed?')) return;
-    TArenaAuth.clearAllData();
-    render();
-  }
   function exportRegs() {
-    const regs = TArenaAuth.getRegistrations();
-    if (!regs.length) { alert('Nothing to export.'); return; }
-    const rows = [['Email','University','Type','Joined']];
-    regs.forEach(r => rows.push([r.email, r.university, r.type, new Date(r.joinedAt).toISOString()]));
-    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+    if (!allRegs.length) { alert('Nothing to export.'); return; }
+    const rows = [['Email','Username','University','Type','Admin','Joined']];
+    allRegs.forEach(r => rows.push([r.email, r.username, r.university, r.type, r.isAdmin ? 'yes' : '', new Date(r.joinedAt).toISOString()]));
+    const csv = rows.map(r => r.map(c => `"${String(c == null ? '' : c).replace(/"/g,'""')}"`).join(',')).join('\n');
     const blob = new Blob([csv], {type: 'text/csv'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -244,11 +241,10 @@
     a.click();
     URL.revokeObjectURL(url);
   }
-  window.seedUsers = seedUsers;
-  window.clearAll = clearAll;
   window.exportRegs = exportRegs;
+  window.reload = reload;
 
-  if (sessionStorage.getItem('tarena_admin_unlocked') === '1') render();
+  init();
   console.log('%c⚔️ TradeArena · Admin loaded.', 'color:#e8c060;font-weight:700;');
 </script>
 </body>

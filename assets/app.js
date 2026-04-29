@@ -1,21 +1,47 @@
-// TradeArena — shared client logic
-// Demo-mode auth using localStorage. Two flows:
-//   - Sign up: email → OTP verification → set username + password (one-time)
-//   - Log in: username/email + password (no OTP)
-//   - Forgot password: email → OTP → set new password
+// TradeArena — shared client logic (Supabase-backed).
+//
+// Public API (window.TArenaAuth):
+//   --- async ---
+//   startSignup(email, type)              -> { ok, error?, email? }
+//   verifySignupOtp(code)                 -> { ok, error?, email?, type? }
+//   completeSignup(username, password)    -> { ok, error? }
+//   login(identifier, password)           -> { ok, error? }
+//   startReset(identifier)                -> { ok, error?, email? }
+//   verifyResetOtp(code)                  -> { ok, error?, email? }
+//   completeReset(newPassword)            -> { ok, error? }
+//   signOut()                             -> Promise<void>
+//   saveProfile(updates)                  -> { ok, error? }
+//   reloadSession()                       -> Promise<session|null>
+//   isUsernameAvailable(username)         -> Promise<boolean>
+//   getRegistrations()                    -> Promise<Array>   (admin only)
+//
+//   --- sync (read from in-memory cache primed at module load) ---
+//   getSession()                          -> { user } | null
+//   requireAuth()                         -> session | null  (redirects to auth.html if no session)
+//   getProfile([email])                   -> profile (current user only)
+//   suggestUsername(email)                -> string
+//   isStudentEmail(email)                 -> boolean
+//   getUniversity(email)                  -> string
+//   onAuthChange(fn)                      -> unsubscribe function
+//
+// window.TArenaUI:  renderNav, renderFooter, fmtMoney, fmtPct, getAvatar, avatarHtml
+//
 (function (global) {
-  const SESSION_KEY  = 'tarena_session';
-  const PENDING_KEY  = 'tarena_pending_otp';
-  const USERS_KEY    = 'tarena_users';          // { [email]: { email, username, password, ... } }
-  const REGS_KEY     = 'tarena_registrations';  // lightweight summary for admin
-  const PROFILES_KEY = 'tarena_profiles';
 
-  function genCode() {
-    let c = '';
-    for (let i = 0; i < 6; i++) c += Math.floor(Math.random() * 10);
-    return c;
+  // ============================================================
+  // Config + client
+  // ============================================================
+  const sb = global.TArenaDB;
+  if (!sb) {
+    console.error('[TradeArena] window.TArenaDB missing — load assets/supabase.js before app.js.');
   }
 
+  const PENDING_KEY       = 'tarena_pending_email';
+  const PROFILE_CACHE_KEY = 'tarena_profile_cache';
+
+  // ============================================================
+  // Helpers (sync, no Supabase)
+  // ============================================================
   function isStudentEmail(email) {
     const lower = (email || '').toLowerCase();
     return lower.endsWith('.edu.au') || lower.endsWith('.ac.nz') || lower.endsWith('monash.edu');
@@ -51,240 +77,412 @@
     return 'Public';
   }
 
-  // ------- Storage helpers -------
-  function _users() {
-    try { return JSON.parse(localStorage.getItem(USERS_KEY) || '{}'); } catch (e) { return {}; }
-  }
-  function _saveUsers(u) { localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
-  function _profiles() {
-    try { return JSON.parse(localStorage.getItem(PROFILES_KEY) || '{}'); } catch (e) { return {}; }
+  function suggestUsername(email) {
+    const local = (email || '').split('@')[0] || '';
+    return local.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20) || 'trader' + Math.floor(Math.random() * 9999);
   }
 
-  function findUser(identifier) {
-    const id = (identifier || '').trim().toLowerCase();
-    if (!id) return null;
-    const all = _users();
-    if (all[id]) return all[id];                                // by email
-    for (const k in all) if (all[k].username === id) return all[k]; // by username
-    return null;
+  function _validUsername(u) {
+    return typeof u === 'string' && /^[a-z][a-z0-9_]{2,19}$/.test(u);
   }
-  function userExists(email) { return !!_users()[(email || '').trim().toLowerCase()]; }
 
-  // ------- Session -------
+  // ============================================================
+  // Pending-state helpers (for the multi-step signup / reset flows)
+  // ============================================================
+  function _pending() {
+    try { return JSON.parse(localStorage.getItem(PENDING_KEY) || 'null'); } catch (_) { return null; }
+  }
+  function _setPending(p) { localStorage.setItem(PENDING_KEY, JSON.stringify(p)); }
+  function _clearPending() { localStorage.removeItem(PENDING_KEY); }
+
+  // ============================================================
+  // Session cache (sync), primed at module load from localStorage
+  // ============================================================
+  let _sessionCache = null;
+  const _authChangeListeners = new Set();
+
+  function _toUser(authUser, profile) {
+    profile = profile || {};
+    const meta = (authUser && authUser.user_metadata) || {};
+    const email = (authUser && authUser.email) || '';
+    const username = profile.username || meta.username || (email.split('@')[0] || '').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20) || 'trader';
+    const university = profile.university || meta.university || getUniversity(email);
+    const type = profile.type || meta.type || (isStudentEmail(email) ? 'student' : 'public');
+    return {
+      id:           authUser.id,
+      email:        email,
+      username:     username,
+      handle:       '@' + username,
+      university:   university,
+      type:         type,
+      displayName:  profile.display_name || username,
+      bio:          profile.bio || '',
+      tier:         profile.tier || (type === 'student' ? 'Student' : 'Member'),
+      avatarColor:  profile.avatar_color || null,
+      isAdmin:      !!profile.is_admin,
+      visibilityMask: profile.visibility_mask || {},
+      joinedAt:     authUser.created_at ? new Date(authUser.created_at).getTime() : Date.now(),
+      profileExists: !!profile.id,
+    };
+  }
+
+  function _readProfileCache(email) {
+    try {
+      const c = JSON.parse(localStorage.getItem(PROFILE_CACHE_KEY) || '{}');
+      return c[email] || null;
+    } catch (_) { return null; }
+  }
+  function _writeProfileCache(email, profile) {
+    try {
+      const c = JSON.parse(localStorage.getItem(PROFILE_CACHE_KEY) || '{}');
+      if (profile) c[email] = profile; else delete c[email];
+      localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(c));
+    } catch (_) {}
+  }
+
+  // Sync prime: read Supabase's cached session straight from localStorage
+  // so getSession()/requireAuth() work on first paint without awaiting.
+  function _primeSyncFromStorage() {
+    try {
+      const raw = localStorage.getItem('tarena_sb_session');
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      // Supabase stores either { currentSession, expiresAt } or the session directly.
+      const session = parsed.currentSession || parsed;
+      if (!session || !session.user) return;
+      const profile = _readProfileCache(session.user.email);
+      _sessionCache = _toUser(session.user, profile || {});
+    } catch (_) {}
+  }
+
+  function _notifyAuthChange() {
+    _authChangeListeners.forEach(fn => { try { fn(_sessionCache ? { user: _sessionCache } : null); } catch (_) {} });
+    // Re-render mounted nav so the avatar pill appears/disappears immediately
+    if (global.TArenaUI && global.__tarena_nav_active) {
+      global.TArenaUI.renderNav(global.__tarena_nav_active);
+    }
+  }
+
+  async function _hydrateFromServer() {
+    if (!sb) return null;
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session || !session.user) {
+        _sessionCache = null;
+        _writeProfileCache(null);
+        _notifyAuthChange();
+        return null;
+      }
+      const { data: profile } = await sb
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .maybeSingle();
+      _sessionCache = _toUser(session.user, profile || {});
+      _writeProfileCache(session.user.email, profile);
+      _notifyAuthChange();
+      return { user: _sessionCache };
+    } catch (e) {
+      console.warn('[TradeArena] hydrate failed', e);
+      return null;
+    }
+  }
+
+  // Boot: prime sync, then kick off async hydrate, then subscribe to changes.
+  _primeSyncFromStorage();
+  if (sb) {
+    _hydrateFromServer();
+    sb.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        _sessionCache = null;
+        _writeProfileCache(null);
+        _notifyAuthChange();
+      } else if (session) {
+        _hydrateFromServer();
+      }
+    });
+  }
+
+  // ============================================================
+  // Public sync API
+  // ============================================================
   function getSession() {
-    try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch (e) { return null; }
+    return _sessionCache ? { user: _sessionCache, createdAt: Date.now() } : null;
   }
-  function setSession(user) {
-    localStorage.setItem(SESSION_KEY, JSON.stringify({ user, createdAt: Date.now() }));
-  }
-  function signOut() {
-    localStorage.removeItem(SESSION_KEY);
-    localStorage.removeItem(PENDING_KEY);
-  }
+
   function requireAuth() {
     const s = getSession();
     if (!s) { window.location.href = 'auth.html'; return null; }
     return s;
   }
 
-  function _makeSessionUser(u) {
-    return {
-      email:      u.email,
-      username:   u.username,
-      handle:     '@' + u.username,
-      university: u.university,
-      type:       u.type,
-      joinedAt:   u.createdAt,
-    };
+  function getProfile(email) {
+    // Sync — returns the in-memory profile for the current session user.
+    // Other users' profiles must be fetched via supabase directly.
+    if (!_sessionCache) return null;
+    if (email && email !== _sessionCache.email) {
+      // For now, return the cached snapshot if we have one.
+      const c = _readProfileCache(email);
+      return c ? _toUser({ id: '?', email, created_at: new Date().toISOString() }, c) : null;
+    }
+    return _sessionCache;
   }
 
-  // ------- Sign-up flow (email → OTP → set credentials) -------
-  function startSignup(email, type) {
+  function onAuthChange(fn) {
+    _authChangeListeners.add(fn);
+    return () => _authChangeListeners.delete(fn);
+  }
+
+  async function reloadSession() { return _hydrateFromServer(); }
+
+  // ============================================================
+  // Sign-up flow:  email -> OTP -> set password & username
+  // ============================================================
+  async function startSignup(email, type) {
     email = (email || '').trim().toLowerCase();
     if (!email) return { ok: false, error: 'Please enter your email address.' };
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: 'That doesn\'t look like a valid email address.' };
     if (type === 'student' && !isStudentEmail(email)) {
       return { ok: false, error: 'Please use a university email (.edu.au) or switch to <strong>Public</strong> above.' };
     }
-    if (userExists(email)) {
-      return { ok: false, error: 'An account already exists for this email. <a href="#" onclick="window.__switchTab&&window.__switchTab(\'login\');return false;">Log in instead →</a>' };
-    }
-    const code = genCode();
-    const expiresAt = Date.now() + 10 * 60 * 1000;
-    localStorage.setItem(PENDING_KEY, JSON.stringify({ email, code, expiresAt, type, purpose: 'signup' }));
-    return { ok: true, code, expiresAt, email };
+
+    // Check if account is already fully set up
+    try {
+      const { data: avail, error: rpcErr } = await sb.rpc('check_email_available', { p_email: email });
+      if (rpcErr) console.warn('check_email_available failed', rpcErr);
+      else if (avail === false) {
+        return { ok: false, error: 'An account already exists for this email. <a href="#" onclick="window.__switchTab&&window.__switchTab(\'login\');return false;">Log in instead →</a>' };
+      }
+    } catch (e) { console.warn(e); }
+
+    // Send OTP — Supabase mails the 6-digit code to the user's inbox.
+    const { error } = await sb.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: true },
+    });
+    if (error) return { ok: false, error: _friendly(error) };
+
+    _setPending({ email, type, purpose: 'signup', sentAt: Date.now() });
+    return { ok: true, email };
   }
 
-  function verifySignupOtp(code) {
-    const raw = localStorage.getItem(PENDING_KEY);
-    if (!raw) return { ok: false, error: 'No code pending. Request a new one.' };
-    let p; try { p = JSON.parse(raw); } catch (e) { return { ok: false, error: 'Pending code corrupted.' }; }
-    if (p.purpose !== 'signup') return { ok: false, error: 'Wrong context — start sign-up over.' };
-    if (Date.now() > p.expiresAt) return { ok: false, error: 'Code expired. Request a new one.' };
-    if (String(code) !== String(p.code)) return { ok: false, error: 'Incorrect code. Please try again.' };
+  async function verifySignupOtp(code) {
+    const p = _pending();
+    if (!p || p.purpose !== 'signup') return { ok: false, error: 'No verification in progress. Start over.' };
+    code = String(code || '').trim();
+    if (!/^\d{6}$/.test(code)) return { ok: false, error: 'Enter the 6-digit code.' };
+
+    const { data, error } = await sb.auth.verifyOtp({
+      email: p.email, token: code, type: 'email',
+    });
+    if (error) return { ok: false, error: _friendly(error) };
+
     p.verified = true;
-    localStorage.setItem(PENDING_KEY, JSON.stringify(p));
+    _setPending(p);
+    await _hydrateFromServer();
     return { ok: true, email: p.email, type: p.type };
   }
 
-  function suggestUsername(email) {
-    const local = (email || '').split('@')[0] || '';
-    return local.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20) || 'trader' + Math.floor(Math.random() * 9999);
-  }
-
-  function isUsernameTaken(username) {
-    username = (username || '').toLowerCase();
-    const all = _users();
-    for (const k in all) if (all[k].username === username) return true;
-    return false;
-  }
-
-  function completeSignup(username, password) {
-    const raw = localStorage.getItem(PENDING_KEY);
-    if (!raw) return { ok: false, error: 'Verification expired. Start over.' };
-    let p; try { p = JSON.parse(raw); } catch (e) { return { ok: false, error: 'Bad state.' }; }
-    if (!p.verified) return { ok: false, error: 'Email not verified yet.' };
+  async function completeSignup(username, password) {
+    const p = _pending();
+    if (!p || p.purpose !== 'signup' || !p.verified) {
+      return { ok: false, error: 'Email not verified yet.' };
+    }
     username = (username || '').trim().toLowerCase();
-    if (!/^[a-z][a-z0-9_]{2,19}$/.test(username)) {
-      return { ok: false, error: 'Username must be 3-20 chars, start with a letter (a-z, 0-9, _).' };
+    if (!_validUsername(username)) {
+      return { ok: false, error: 'Username must be 3–20 chars, start with a letter (a–z, 0–9, _).' };
     }
     if (!password || password.length < 6) return { ok: false, error: 'Password must be at least 6 characters.' };
-    if (isUsernameTaken(username)) return { ok: false, error: 'That username is already taken.' };
 
-    const all = _users();
-    const user = {
-      email: p.email,
+    // Username uniqueness check
+    const { data: free, error: rpcErr } = await sb.rpc('check_username_available', { p_username: username });
+    if (rpcErr) console.warn(rpcErr);
+    else if (free === false) return { ok: false, error: 'That username is already taken.' };
+
+    // Set password + metadata on the auth user
+    const meta = { username, type: p.type, university: getUniversity(p.email) };
+    const { data: { user }, error: upErr } = await sb.auth.updateUser({ password, data: meta });
+    if (upErr) return { ok: false, error: _friendly(upErr) };
+    if (!user) return { ok: false, error: 'Could not finalise account. Try logging in.' };
+
+    // Insert profile row (RLS allows self-insert).
+    // We deliberately do NOT store the email here — auth.users.email is the
+    // single source of truth, and duplicating it would create an enumeration
+    // surface that the public view would otherwise leak.
+    const profileRow = {
+      id:           user.id,
       username,
-      password,                         // demo only — would be hashed server-side
-      university: getUniversity(p.email),
-      type: p.type,
-      createdAt: Date.now(),
+      display_name: username,
+      university:   meta.university,
+      type:         p.type,
+      tier:         p.type === 'student' ? 'Student' : 'Member',
+      bio:          '',
     };
-    all[p.email] = user;
-    _saveUsers(all);
-
-    let regs = []; try { regs = JSON.parse(localStorage.getItem(REGS_KEY) || '[]'); } catch (_) {}
-    if (!regs.find(r => r.email === p.email)) {
-      regs.push({ email: p.email, username, university: user.university, type: p.type, joinedAt: user.createdAt });
-      localStorage.setItem(REGS_KEY, JSON.stringify(regs));
+    const { error: pErr } = await sb.from('profiles').insert(profileRow);
+    if (pErr && !/duplicate/i.test(pErr.message)) {
+      return { ok: false, error: _friendly(pErr) };
     }
-    localStorage.removeItem(PENDING_KEY);
-    setSession(_makeSessionUser(user));
+
+    _clearPending();
+    await _hydrateFromServer();
     return { ok: true };
   }
 
-  // ------- Log in (no OTP) -------
-  function login(identifier, password) {
+  async function isUsernameAvailable(username) {
+    if (!_validUsername((username || '').toLowerCase())) return false;
+    const { data, error } = await sb.rpc('check_username_available', { p_username: username });
+    if (error) return false;
+    return !!data;
+  }
+
+  // ============================================================
+  // Login (no OTP)
+  // ============================================================
+  async function login(identifier, password) {
     if (!identifier || !password) return { ok: false, error: 'Enter your email/username and password.' };
-    const u = findUser(identifier);
-    if (!u) return { ok: false, error: 'No account found with that email or username.' };
-    if (u.password !== password) return { ok: false, error: 'Incorrect password.' };
-    setSession(_makeSessionUser(u));
+
+    let email = identifier.trim();
+    if (!email.includes('@')) {
+      // Username login — resolve email server-side. The RPC verifies the
+      // password against the bcrypt hash and returns the email ONLY if the
+      // credentials are correct, so it cannot be used to enumerate emails.
+      const { data, error } = await sb.rpc('email_for_username_login', {
+        p_username: identifier.trim(),
+        p_password: password,
+      });
+      if (error)        return { ok: false, error: _friendly(error) };
+      if (!data)        return { ok: false, error: 'Incorrect email/username or password.' };
+      email = data;
+    }
+
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) {
+      const msg = (error.message || '').toLowerCase();
+      if (msg.includes('invalid login')) return { ok: false, error: 'Incorrect email/username or password.' };
+      return { ok: false, error: _friendly(error) };
+    }
+    await _hydrateFromServer();
     return { ok: true };
   }
 
-  // ------- Password reset (forgot password) -------
-  function startReset(identifier) {
-    const u = findUser(identifier);
-    if (!u) return { ok: false, error: 'No account found with that email or username.' };
-    const code = genCode();
-    const expiresAt = Date.now() + 10 * 60 * 1000;
-    localStorage.setItem(PENDING_KEY, JSON.stringify({ email: u.email, code, expiresAt, purpose: 'reset' }));
-    return { ok: true, code, expiresAt, email: u.email };
+  // ============================================================
+  // Forgot password:  identifier -> OTP -> new password
+  // (We re-use signInWithOtp + verifyOtp to sign the user in temporarily,
+  // then updateUser to set their new password.)
+  // ============================================================
+  async function startReset(identifier) {
+    if (!identifier) return { ok: false, error: 'Enter your email address.' };
+    const email = identifier.trim();
+    if (!email.includes('@')) {
+      // Username-based reset would require disclosing the email of any
+      // account by username, so we require the email here instead.
+      return { ok: false, error: 'Please enter the email address you signed up with.' };
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return { ok: false, error: 'That doesn\'t look like a valid email address.' };
+    }
+    const { error } = await sb.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: false },
+    });
+    if (error) return { ok: false, error: _friendly(error) };
+    _setPending({ email, purpose: 'reset', sentAt: Date.now() });
+    return { ok: true, email };
   }
-  function verifyResetOtp(code) {
-    const raw = localStorage.getItem(PENDING_KEY);
-    if (!raw) return { ok: false, error: 'No reset pending.' };
-    let p; try { p = JSON.parse(raw); } catch (e) { return { ok: false, error: 'Bad state.' }; }
-    if (p.purpose !== 'reset') return { ok: false, error: 'Invalid context.' };
-    if (Date.now() > p.expiresAt) return { ok: false, error: 'Code expired.' };
-    if (String(code) !== String(p.code)) return { ok: false, error: 'Incorrect code.' };
+
+  async function verifyResetOtp(code) {
+    const p = _pending();
+    if (!p || p.purpose !== 'reset') return { ok: false, error: 'No reset in progress.' };
+    code = String(code || '').trim();
+    if (!/^\d{6}$/.test(code)) return { ok: false, error: 'Enter the 6-digit code.' };
+    const { error } = await sb.auth.verifyOtp({ email: p.email, token: code, type: 'email' });
+    if (error) return { ok: false, error: _friendly(error) };
     p.verified = true;
-    localStorage.setItem(PENDING_KEY, JSON.stringify(p));
+    _setPending(p);
     return { ok: true, email: p.email };
   }
-  function completeReset(newPassword) {
-    const raw = localStorage.getItem(PENDING_KEY);
-    if (!raw) return { ok: false, error: 'Reset expired.' };
-    let p; try { p = JSON.parse(raw); } catch (e) { return { ok: false, error: 'Bad state.' }; }
-    if (!p.verified) return { ok: false, error: 'OTP not verified.' };
+
+  async function completeReset(newPassword) {
+    const p = _pending();
+    if (!p || p.purpose !== 'reset' || !p.verified) return { ok: false, error: 'Reset code not verified.' };
     if (!newPassword || newPassword.length < 6) return { ok: false, error: 'Password must be at least 6 characters.' };
-    const all = _users();
-    if (!all[p.email]) return { ok: false, error: 'User not found.' };
-    all[p.email].password = newPassword;
-    _saveUsers(all);
-    localStorage.removeItem(PENDING_KEY);
-    setSession(_makeSessionUser(all[p.email]));
+    const { error } = await sb.auth.updateUser({ password: newPassword });
+    if (error) return { ok: false, error: _friendly(error) };
+    _clearPending();
+    await _hydrateFromServer();
     return { ok: true };
   }
 
-  // ------- Profile (per-user editable data) -------
-  function getProfile(email) {
-    const all = _profiles();
-    if (all[email]) return all[email];
-    const local = (email || '').split('@')[0];
-    const user = _users()[email];
-    const display = user ? user.username : local;
-    const uni = getUniversity(email);
-    return {
-      email,
-      displayName: (display || email).replace(/_/g, ' '),
-      bio: uni === 'Public' ? 'Independent trader · Markets enthusiast' : `Trader at ${uni}`,
-      tier: 'Member',
-    };
-  }
-  function saveProfile(email, updates) {
-    const all = _profiles();
-    all[email] = Object.assign(getProfile(email), updates);
-    localStorage.setItem(PROFILES_KEY, JSON.stringify(all));
-    return all[email];
+  // ============================================================
+  // Sign out
+  // ============================================================
+  async function signOut() {
+    try { await sb.auth.signOut(); } catch (_) {}
+    _sessionCache = null;
+    _writeProfileCache(null);
+    _clearPending();
+    _notifyAuthChange();
   }
 
-  // ------- Misc -------
-  function getRegistrations() {
-    try { return JSON.parse(localStorage.getItem(REGS_KEY) || '[]'); } catch (e) { return []; }
-  }
-  function clearAllData() {
-    [SESSION_KEY, PENDING_KEY, USERS_KEY, REGS_KEY, PROFILES_KEY, 'tarena_orders', 'tarena_watchlist'].forEach(k => localStorage.removeItem(k));
-  }
-
-  function seedDemoUsers() {
-    // Seed demo accounts. All use password `demo1234`.
-    const seed = [
-      { email: 'alex.chen@student.unsw.edu.au',   username: 'alexchen',  type: 'student', days: 12 },
-      { email: 'mia.lee@usyd.edu.au',             username: 'mialee',    type: 'student', days: 9  },
-      { email: 'jordan.kim@uts.edu.au',           username: 'jkim',      type: 'student', days: 7  },
-      { email: 'sarah.patel@monash.edu',          username: 'sarahp',    type: 'student', days: 5  },
-      { email: 'noah.brown@unimelb.edu.au',       username: 'noahb',     type: 'student', days: 3  },
-      { email: 'ella.smith@anu.edu.au',           username: 'esmith',    type: 'student', days: 2  },
-      { email: 'priya.shah@uq.edu.au',            username: 'priya',     type: 'student', days: 2  },
-      { email: 'liam.osullivan@gmail.com',        username: 'liamos',    type: 'public',  days: 1  },
-    ];
-    const users = _users();
-    let regs = []; try { regs = JSON.parse(localStorage.getItem(REGS_KEY) || '[]'); } catch (_) {}
-    let dirty = false;
-    seed.forEach(s => {
-      const ts = Date.now() - 86400000 * s.days;
-      if (!users[s.email]) {
-        users[s.email] = {
-          email: s.email, username: s.username, password: 'demo1234',
-          university: getUniversity(s.email), type: s.type, createdAt: ts,
-        };
-        dirty = true;
-      }
-      if (!regs.find(r => r.email === s.email)) {
-        regs.push({ email: s.email, username: s.username, university: getUniversity(s.email), type: s.type, joinedAt: ts });
-      }
-    });
-    if (dirty) _saveUsers(users);
-    localStorage.setItem(REGS_KEY, JSON.stringify(regs));
+  // ============================================================
+  // Save profile updates  (display_name, bio, tier, visibility_mask)
+  // ============================================================
+  async function saveProfile(updates) {
+    if (!_sessionCache) return { ok: false, error: 'Not signed in.' };
+    const allowed = {};
+    if (updates.displayName != null)    allowed.display_name    = updates.displayName;
+    if (updates.bio != null)            allowed.bio             = updates.bio;
+    if (updates.tier != null)           allowed.tier            = updates.tier;
+    if (updates.avatarColor != null)    allowed.avatar_color    = updates.avatarColor;
+    if (updates.visibilityMask != null) allowed.visibility_mask = updates.visibilityMask;
+    if (!Object.keys(allowed).length) return { ok: true };
+    const { error } = await sb.from('profiles').update(allowed).eq('id', _sessionCache.id);
+    if (error) return { ok: false, error: _friendly(error) };
+    await _hydrateFromServer();
+    return { ok: true };
   }
 
-  // ------- Avatar (initials + deterministic gradient) -------
+  // ============================================================
+  // Admin: list registrations
+  // ============================================================
+  async function getRegistrations() {
+    const { data, error } = await sb.rpc('list_registrations');
+    if (error) {
+      console.warn('list_registrations failed', error);
+      return [];
+    }
+    return (data || []).map(r => ({
+      email:      r.email,
+      username:   r.username,
+      university: r.university,
+      tier:       r.tier,
+      type:       r.type,
+      isAdmin:    r.is_admin,
+      joinedAt:   r.joined_at ? new Date(r.joined_at).getTime() : Date.now(),
+    }));
+  }
+
+  // ============================================================
+  // Friendly error messages
+  // ============================================================
+  function _friendly(err) {
+    const m = (err && err.message) || String(err);
+    const low = m.toLowerCase();
+    if (low.includes('rate limit')) return 'Too many attempts. Please wait a minute and try again.';
+    if (low.includes('invalid token') || low.includes('expired'))  return 'That code is invalid or has expired. Please request a new one.';
+    if (low.includes('email not confirmed')) return 'Email not verified yet. Check your inbox.';
+    if (low.includes('user already registered')) return 'An account already exists for this email.';
+    if (low.includes('signups not allowed')) return 'New signups are temporarily disabled.';
+    return m;
+  }
+
+  // ============================================================
+  // Avatar — initials + deterministic gradient
+  // ============================================================
   function getAvatar(emailOrUser) {
     const email = typeof emailOrUser === 'string' ? emailOrUser : (emailOrUser && emailOrUser.email) || '';
-    const user = typeof emailOrUser === 'string' ? null : emailOrUser;
-    const base = (user && user.username) || (email.split('@')[0] || email || '?');
+    const user  = typeof emailOrUser === 'string' ? null : emailOrUser;
+    const base  = (user && user.username) || (email.split('@')[0] || email || '?');
     const parts = base.split(/[._-]/).filter(Boolean);
     const initials = ((parts[0] || '?')[0] + (parts[1] ? parts[1][0] : (parts[0][1] || ''))).toUpperCase();
     let hash = 0;
@@ -297,14 +495,15 @@
       hue: h1,
     };
   }
-
   function avatarHtml(emailOrUser, size) {
     size = size || 36;
     const a = getAvatar(emailOrUser);
     return `<div class="ta-avatar" style="width:${size}px;height:${size}px;background:${a.gradient};font-size:${Math.round(size*0.38)}px;">${a.initials}</div>`;
   }
 
-  // ---------- Shared NAV / FOOTER ----------
+  // ============================================================
+  // Shared NAV / FOOTER
+  // ============================================================
   function logoSvg() {
     return `<svg width="28" height="32" viewBox="0 0 40 46" fill="none" aria-hidden="true">
       <path d="M20 2L36 9V22C36 31 29 39 20 43C11 39 4 31 4 22V9L20 2Z" fill="#091528" stroke="#c9a030" stroke-width="1"/>
@@ -314,6 +513,7 @@
   }
 
   function renderNav(activePage) {
+    global.__tarena_nav_active = activePage;
     const links = [
       { id: 'trade',     href: 'trade.html',     label: 'Markets' },
       { id: 'portfolio', href: 'portfolio.html', label: 'Portfolio' },
@@ -374,8 +574,8 @@
           if (!menu.contains(e.target) && e.target !== pill) menu.classList.remove('open');
         });
       }
-      if (logoutBtn) logoutBtn.addEventListener('click', () => {
-        signOut();
+      if (logoutBtn) logoutBtn.addEventListener('click', async () => {
+        await signOut();
         window.location.href = 'index.html';
       });
     }
@@ -388,7 +588,7 @@
           <div>
             <div class="logo" style="font-size:1.5rem;margin-bottom:14px;">${logoSvg()} Trade<span>Arena</span></div>
             <p class="text-muted" style="max-width:340px;font-size:14px;line-height:1.6;">
-              Paper trading platform for Australian university students. Real markets. Zero risk. Built in Sydney.
+              Strategy-first paper trading for serious traders. Real markets. Zero risk. Built in Sydney.
             </p>
           </div>
           <div style="text-align:right;">
@@ -413,15 +613,25 @@
     return sign + n.toFixed(2) + '%';
   }
 
+  // ============================================================
+  // Exports
+  // ============================================================
   global.TArenaAuth = {
-    startSignup, verifySignupOtp, completeSignup, suggestUsername, isUsernameTaken,
+    // sign-up
+    startSignup, verifySignupOtp, completeSignup, suggestUsername, isUsernameAvailable,
+    // log in
     login,
+    // password reset
     startReset, verifyResetOtp, completeReset,
-    getSession, signOut, requireAuth,
-    isStudentEmail, getUniversity, getRegistrations,
-    clearAllData, seedDemoUsers,
+    // session
+    getSession, requireAuth, signOut, reloadSession, onAuthChange,
+    // profile
     getProfile, saveProfile,
-    findUser, userExists,
+    // helpers
+    isStudentEmail, getUniversity,
+    // admin
+    getRegistrations,
   };
   global.TArenaUI = { renderNav, renderFooter, fmtMoney, fmtPct, logoSvg, getAvatar, avatarHtml };
+
 })(window);

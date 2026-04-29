@@ -245,6 +245,9 @@
 
 <div id="tarena-footer"></div>
 
+<script src="assets/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="assets/supabase.js"></script>
 <script src="assets/app.js"></script>
 <script src="assets/market.js"></script>
 <script>
@@ -252,23 +255,24 @@
   if (!session) throw new Error('redirect');
   TArenaUI.renderNav('profile');
   TArenaUI.renderFooter();
+  TArenaAuth.onAuthChange(s => { if (s) renderHeader(); });
 
   let activeTab = 'holdings';
   let marketFilter = 'all';
 
   function renderHeader() {
-    const u = session.user;
-    const profile = TArenaAuth.getProfile(u.email);
-    const av = TArenaUI.getAvatar(u.email);
+    const fresh = TArenaAuth.getSession();
+    const u = (fresh && fresh.user) || session.user;
+    const av = TArenaUI.getAvatar(u);
     const inner = document.getElementById('avatarInner');
     inner.textContent = av.initials;
     inner.style.background = av.gradient;
     document.getElementById('handle').textContent = u.handle;
-    document.getElementById('displayName').textContent = profile.displayName;
+    document.getElementById('displayName').textContent = u.displayName;
     const uniLabel = u.university === 'Public' ? '🌐 Public access' : `🎓 ${u.university}`;
-    document.getElementById('bio').innerHTML = `${profile.bio}
+    document.getElementById('bio').innerHTML = `${u.bio || '—'}
       <span class="joined">${uniLabel} · Joined ${new Date(u.joinedAt).toLocaleDateString('en-AU',{month:'short',year:'numeric'})}</span>`;
-    document.getElementById('tier').textContent = profile.tier;
+    document.getElementById('tier').textContent = u.tier;
 
     // Stats
     document.getElementById('statValue').textContent = TArenaUI.fmtMoney(TArenaMarket.totalValue(), {decimals:0});
@@ -386,19 +390,20 @@
   function filterByMarket(m) { marketFilter = m; }
 
   function openEdit() {
-    const profile = TArenaAuth.getProfile(session.user.email);
-    document.getElementById('editName').value = profile.displayName || '';
-    document.getElementById('editBio').value  = profile.bio || '';
-    document.getElementById('editTier').value = profile.tier || 'Member';
+    const u = (TArenaAuth.getSession() || {user: session.user}).user;
+    document.getElementById('editName').value = u.displayName || '';
+    document.getElementById('editBio').value  = u.bio || '';
+    document.getElementById('editTier').value = u.tier || 'Member';
     document.getElementById('editModal').classList.add('show');
   }
   function closeEdit() { document.getElementById('editModal').classList.remove('show'); }
-  function saveEdit() {
-    TArenaAuth.saveProfile(session.user.email, {
+  async function saveEdit() {
+    const r = await TArenaAuth.saveProfile({
       displayName: document.getElementById('editName').value.trim() || session.user.handle,
-      bio:         document.getElementById('editBio').value.trim()  || '—',
+      bio:         document.getElementById('editBio').value.trim()  || '',
       tier:        document.getElementById('editTier').value.trim() || 'Member',
     });
+    if (!r.ok) { alert('Could not save: ' + r.error); return; }
     closeEdit();
     renderHeader();
   }
@@ -407,9 +412,9 @@
     if (navigator.clipboard) navigator.clipboard.writeText(url);
     alert('Profile link copied!\n\n' + url);
   }
-  function signOut() {
+  async function signOut() {
     if (!confirm('Sign out of TradeArena?')) return;
-    TArenaAuth.signOut();
+    await TArenaAuth.signOut();
     window.location.href = 'index.html';
   }
 

@@ -120,20 +120,22 @@
 
 <div id="tarena-footer"></div>
 
+<script src="assets/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="assets/supabase.js"></script>
 <script src="assets/app.js"></script>
 <script src="assets/market.js"></script>
 <script>
   TArenaUI.renderNav('home');
   TArenaUI.renderFooter();
-  TArenaAuth.seedDemoUsers();
 
-  // Update enter-arena button if signed in
-  (function () {
+  function refreshHero() {
     const session = TArenaAuth.getSession();
-    if (session) {
-      document.getElementById('arenaBtnLabel').textContent = 'Open Your Profile';
-    }
-  })();
+    const lbl = document.getElementById('arenaBtnLabel');
+    if (lbl) lbl.textContent = session ? 'Open Your Profile' : 'Enter The Arena';
+  }
+  refreshHero();
+  TArenaAuth.onAuthChange(refreshHero);
 
   function enterArena() {
     if (TArenaAuth.getSession()) window.location.href = 'profile.html';
