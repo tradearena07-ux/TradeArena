@@ -579,7 +579,7 @@ begin
        and f.followee_id in (select author_id from ranked)
   ),
   trade_qty as (
-    select pt.id as paper_trade_id, pt.qty, pt.side
+    select pt.id as paper_trade_id, pt.qty, pt.side, pt.entry_price
       from public.paper_trades pt
      where pt.id in (select paper_trade_id from ranked where paper_trade_id is not null)
   ),
@@ -588,8 +588,9 @@ begin
       r.id, r.symbol, r.market, r.chart_snapshot_url,
       r.thesis, r.entry, r.stop_loss, r.target, r.direction,
       r.visibility, r.created_at, r.paper_trade_id,
-      tq.qty  as paper_trade_qty,
-      tq.side as paper_trade_side,
+      tq.qty         as paper_trade_qty,
+      tq.side        as paper_trade_side,
+      tq.entry_price as paper_trade_entry,
       jsonb_build_object(
         'id',           p.id,
         'username',     p.username,
@@ -686,8 +687,9 @@ begin
     'visibility',   r.visibility,
     'created_at',   r.created_at,
     'paper_trade_id', r.paper_trade_id,
-    'paper_trade_qty',  pt.qty,
-    'paper_trade_side', pt.side,
+    'paper_trade_qty',   pt.qty,
+    'paper_trade_side',  pt.side,
+    'paper_trade_entry', pt.entry_price,
     'author', jsonb_build_object(
       'id',           p.id,
       'username',     p.username,
