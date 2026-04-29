@@ -274,7 +274,11 @@
       unsubLive:  null,
     };
 
-    function ema(period, source) {
+    // Incremental EMA state so we can update each indicator on every
+    // tick rather than recomputing the whole series.
+    state.ema = { v20: null, v50: null };
+
+    function emaSeries(period, source) {
       const out = [];
       const k = 2 / (period + 1);
       let prev = null;
@@ -291,7 +295,13 @@
         prev = v * k + prev * (1 - k);
         out.push(prev);
       }
-      return source.map((b, i) => out[i] == null ? null : { time: b.time, value: out[i] }).filter(Boolean);
+      return { values: out, last: prev };
+    }
+
+    function nextEma(prev, period, value) {
+      if (prev == null) return value;
+      const k = 2 / (period + 1);
+      return value * k + prev * (1 - k);
     }
 
     function applyBars(bars) {
@@ -305,8 +315,12 @@
         color:  b.c >= b.o ? 'rgba(16,185,129,0.4)' : 'rgba(220,38,38,0.4)',
       }));
       candle.setData(state.bars);
-      ema20.setData(ema(20, state.bars));
-      ema50.setData(ema(50, state.bars));
+      const e20 = emaSeries(20, state.bars);
+      const e50 = emaSeries(50, state.bars);
+      ema20.setData(state.bars.map((b, i) => e20.values[i] == null ? null : { time: b.time, value: e20.values[i] }).filter(Boolean));
+      ema50.setData(state.bars.map((b, i) => e50.values[i] == null ? null : { time: b.time, value: e50.values[i] }).filter(Boolean));
+      state.ema.v20 = e20.last;
+      state.ema.v50 = e50.last;
       volume.setData(state.bars.map(b => ({ time: b.time, value: b.value, color: b.color })));
       chart.timeScale().fitContent();
     }
@@ -335,16 +349,47 @@
         if (!state.bars.length) return;
         const last = state.bars[state.bars.length - 1];
         const barTime = Math.floor(tick.t / 1000 / resSec) * resSec;
+        let mutated = null;
+        let isNewBar = false;
         if (barTime === last.time) {
-          last.high = Math.max(last.high, tick.price);
-          last.low  = Math.min(last.low,  tick.price);
+          last.high  = Math.max(last.high, tick.price);
+          last.low   = Math.min(last.low,  tick.price);
           last.close = tick.price;
+          last.color = last.close >= last.open
+            ? 'rgba(16,185,129,0.4)' : 'rgba(220,38,38,0.4)';
           candle.update(last);
+          mutated = last;
         } else if (barTime > last.time) {
-          const bar = { time: barTime, open: last.close, high: tick.price, low: tick.price, close: tick.price, value: 0 };
+          // Bucket roll → carry the just-closed bar's EMA into the
+          // running state before opening the new one so the next
+          // EMA tick is computed off the prior close.
+          state.ema.v20 = nextEma(state.ema.v20, 20, last.close);
+          state.ema.v50 = nextEma(state.ema.v50, 50, last.close);
+          const bar = {
+            time:  barTime, open: last.close,
+            high:  tick.price, low: tick.price, close: tick.price,
+            value: 0,
+            color: tick.price >= last.close
+              ? 'rgba(16,185,129,0.4)' : 'rgba(220,38,38,0.4)',
+          };
           state.bars.push(bar);
           candle.update(bar);
+          mutated = bar;
+          isNewBar = true;
         }
+        if (mutated) {
+          // Update EMA lines incrementally — the standard EMA recurrence
+          // applied to the running last-EMA value gives a per-tick update
+          // for the active bar (and a fresh seed when a new bar opens).
+          const v20 = nextEma(state.ema.v20, 20, mutated.close);
+          const v50 = nextEma(state.ema.v50, 50, mutated.close);
+          ema20.update({ time: mutated.time, value: v20 });
+          ema50.update({ time: mutated.time, value: v50 });
+          // Volume can't be derived from a quote tick, but we still
+          // need the histogram bar to exist with the right colour.
+          volume.update({ time: mutated.time, value: mutated.value, color: mutated.color });
+        }
+        void isNewBar;
       });
     }
 
