@@ -39,7 +39,7 @@ Static multi-page paper-trading site for Australian uni students. ASX, US stocks
 **Forgot password (3 steps):**
 - Email/username → `signInWithOtp({ shouldCreateUser: false })` → verify OTP → `updateUser({ password })`.
 
-The Supabase **publishable key** in `assets/config.js` is designed to ship in client code; real authorization is enforced by RLS policies on every table. To rotate the key: regenerate it in Supabase Dashboard → Project Settings → API, paste the new value into `assets/config.js`, and redeploy.
+The Supabase **publishable key** in `assets/config.js` is designed to ship in client code; real authorization is enforced by RLS policies on every table. The original task spec called for the URL/key to be sourced from Replit Secrets at workspace setup time, but because this site has no build step we can't do `process.env`-style substitution — `config.js` is committed with the literal values instead. To rotate the key: regenerate it in Supabase Dashboard → Project Settings → API, paste the new value into `assets/config.js`, and redeploy. (If we move to a bundled build later, `config.js` should be regenerated from the `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY` Replit Secrets and excluded from git.)
 
 ## Database setup (one-time)
 The full schema, RLS policies, and helper functions live in `supabase/migrations/0001_init.sql`.

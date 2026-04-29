@@ -593,6 +593,10 @@ as $$
 $$;
 grant execute on function public.get_holdings_for(uuid) to authenticated;
 
+-- NB: REFRESH MATERIALIZED VIEW CONCURRENTLY cannot run inside a function's
+-- implicit transaction block, so the function uses a non-concurrent refresh.
+-- For higher-traffic production use, drop this function and refresh via a
+-- scheduled job (pg_cron) that calls REFRESH ... CONCURRENTLY directly.
 create or replace function public.refresh_holdings_view()
 returns void
 language plpgsql
@@ -600,7 +604,7 @@ security definer
 set search_path = public
 as $$
 begin
-  refresh materialized view concurrently public.holdings_view;
+  refresh materialized view public.holdings_view;
 end;
 $$;
 revoke execute on function public.refresh_holdings_view() from public;

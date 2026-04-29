@@ -43,8 +43,11 @@
   // Helpers (sync, no Supabase)
   // ============================================================
   function isStudentEmail(email) {
+    // Per task contract: only emails ending in `.edu.au` get Student tier.
+    // Anything else (including `.ac.nz` or `monash.edu`) falls through to
+    // Member tier even if the user toggled "Student" at signup.
     const lower = (email || '').toLowerCase();
-    return lower.endsWith('.edu.au') || lower.endsWith('.ac.nz') || lower.endsWith('monash.edu');
+    return lower.endsWith('.edu.au');
   }
 
   function getUniversity(email) {
