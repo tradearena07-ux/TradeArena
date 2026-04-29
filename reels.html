@@ -101,8 +101,16 @@
     .author-row .name a { color:var(--cream); text-decoration:none; font-weight:600; font-size:13px; }
     .author-row .name a:hover { color:var(--gold2); }
     .author-row .name .h { color:var(--muted); font-size:11.5px; }
-    .author-row .followbtn { background:transparent; border:1px solid var(--gold); color:var(--gold2); padding:6px 12px; border-radius:8px; font-size:12px; cursor:pointer; font-weight:600; }
-    .author-row .followbtn.on { background:transparent; color:var(--muted); border-color:var(--bdl); }
+    .author-row .winrate { color:var(--green); font-weight:700; }
+    .author-row .winrate.flat { color:var(--muted); font-weight:500; }
+    .author-row .followbtn { background:var(--gold); color:#091528; border:1px solid var(--gold); padding:6px 12px; border-radius:8px; font-size:12px; cursor:pointer; font-weight:700; font-family:'Cinzel',serif; letter-spacing:.06em; }
+    .author-row .followbtn:hover { background:var(--gold2); }
+    .author-row .followbtn.on { background:transparent; color:var(--muted); border-color:var(--bdl); font-weight:500; }
+    /* Pin number badges + leader lines */
+    .leader-svg { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1; }
+    .leader-svg line { stroke:var(--gold); stroke-width:1; stroke-dasharray:3 3; opacity:.55; }
+    .chip-tag.pinned { position:relative; }
+    .chip-tag .pin-num { display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; border-radius:50%; background:var(--gold); color:#091528; font-weight:700; font-size:10px; margin-right:5px; }
 
     /* Mirror sheet */
     .sheet-bg { position:fixed; inset:0; background:rgba(0,0,0,.65); display:none; align-items:flex-end; justify-content:center; z-index:50; }
@@ -453,17 +461,7 @@
   }, { rootMargin: '600px' });
   io.observe(document.getElementById('feedSentinel'));
 
-  // ----------------------------------------------------------
-  // Card rendering — windowed virtualization (±3 around viewport)
-  //
-  // Each loaded row gets a slot <article> that starts as an empty
-  // placeholder of fixed height. The slotObserver tracks which slots
-  // intersect the viewport; reconcileWindow() then mounts only those
-  // slots within ±WINDOW of the visible range and unmounts the rest
-  // (collapsing them back to a height-preserving placeholder so the
-  // scroll position doesn't jump). This keeps DOM work — and live
-  // quote subscriptions — bounded even with hundreds of loaded reels.
-  // ----------------------------------------------------------
+  // Windowed virtualization: only ±WINDOW cards mount around viewport.
   function appendSlots(rows) {
     const feed = document.getElementById('feed');
     rows.forEach((r, k) => {
@@ -478,9 +476,7 @@
       state.slots.push({ el, mounted: false, row: r, lastH: SLOT_PLACEHOLDER_H });
       slotObserver.observe(el);
     });
-    // First page: nothing is intersecting yet, so eagerly mount the
-    // first window (±WINDOW around index 0) so the user sees content
-    // immediately rather than a stack of empty placeholders.
+    // Eagerly mount the first window so the page isn't all placeholders.
     if (state.visibleIdx.size === 0 && state.slots.length) reconcileWindow(0);
   }
 
@@ -510,15 +506,33 @@
       : `<div class="chart-fallback"><i class="fa-solid fa-chart-candlestick"></i> ${escape(r.symbol)} chart</div>`;
 
     const pinsHtml = pinned.map((t, i) => `
-      <button class="pin" style="left:${t.x_pct}%;top:${t.y_pct}%;" data-pin-idx="${i}" aria-label="${escape(t.tag_value)}">${i+1}</button>`).join('');
+      <button class="pin" style="left:${t.x_pct}%;top:${t.y_pct}%;" data-pin-idx="${i}" data-pin-num="${i+1}" aria-label="${escape(t.tag_value)}">${i+1}</button>`).join('');
 
-    const chipsHtml = tags.map(t => `
-      <button class="chip-tag" data-chip-tag="${escape(t.tag_value)}">
-        <i class="fa-solid ${reelsApi.ICON_FOR_TYPE[t.tag_type] || 'fa-tag'}"></i>${escape(t.tag_value)}
-      </button>`).join('');
+    // pin index lookup so chips can claim a number badge that matches
+    // the chart pin and seed the leader-line endpoint.
+    const pinNumOf = new Map();
+    pinned.forEach((t, i) => pinNumOf.set(t.tag_value + '|' + t.tag_type, i + 1));
+    const chipsHtml = tags.map(t => {
+      const num = pinNumOf.get(t.tag_value + '|' + t.tag_type);
+      const cls = num ? 'chip-tag pinned' : 'chip-tag';
+      const badge = num ? `<span class="pin-num" data-chip-num="${num}">${num}</span>` : '';
+      return `<button class="${cls}" data-chip-tag="${escape(t.tag_value)}" ${num?`data-chip-num="${num}"`:''}>
+        ${badge}<i class="fa-solid ${reelsApi.ICON_FOR_TYPE[t.tag_type] || 'fa-tag'}"></i>${escape(t.tag_value)}
+      </button>`;
+    }).join('');
+
+    const winRate    = r.author.win_rate;
+    const winRateStr = (winRate == null) ? '— wins' : winRate + '% wins';
+    const winCls     = (winRate == null) ? 'winrate flat' : 'winrate';
+    const me         = (TArenaAuth.getSession() || {}).user;
+    const isMe       = !!(me && me.id === r.author.id);
+    const followOn   = !!(r.viewer_state && r.viewer_state.following);
+    const followBtn  = isMe
+      ? ''
+      : `<button class="followbtn ${followOn?'on':''}" data-act="follow" data-author-id="${r.author.id}">${followOn ? 'Following' : 'Follow'}</button>`;
 
     el.innerHTML = `
-      <div class="chart-wrap">${snapHtml}${pinsHtml}</div>
+      <div class="chart-wrap">${snapHtml}${pinsHtml}<svg class="leader-svg" aria-hidden="true"></svg></div>
       <div class="meta">
         <div class="head">
           <a class="ticker ${dirCls}" href="trade.html?symbol=${encodeURIComponent(r.symbol)}">$${escape(r.symbol)}</a>
@@ -556,8 +570,9 @@
           ${TArenaUI.avatarHtml({ username: r.author.username, email: r.author.username }, 36)}
           <div class="name">
             <a href="profile.html?u=${encodeURIComponent(r.author.username)}">${escape(r.author.display_name || r.author.username)}</a>
-            <div class="h">@${escape(r.author.username)} · ${escape(r.author.tier || 'Member')}</div>
+            <div class="h">@${escape(r.author.username)} · ${escape(r.author.tier || 'Member')} · <span class="${winCls}">${winRateStr}</span></div>
           </div>
+          ${followBtn}
         </div>
       </div>`;
 
@@ -580,10 +595,70 @@
       btn.addEventListener('click', () => onAction(r, btn.dataset.act, el));
     });
 
-    // Live P&L sub mounts immediately — slot is in the window so the
-    // card is by definition near the viewport; teardown happens when
-    // the window moves past it (see unmountSlot).
+    // Follow CTA
+    const fb = el.querySelector('.followbtn');
+    if (fb) fb.addEventListener('click', () => onFollowToggle(fb, r.author.id));
+
     mountLiveSub(el, r.id);
+    requestAnimationFrame(() => drawLeaders(el));
+  }
+
+  // Draw SVG leader lines from chip pin-num badges to chart pins.
+  function drawLeaders(el) {
+    const svg = el.querySelector('.leader-svg');
+    if (!svg) return;
+    const wrap = el.querySelector('.chart-wrap');
+    if (!wrap) return;
+    const wrapRect = wrap.getBoundingClientRect();
+    if (!wrapRect.width) return;
+    svg.setAttribute('viewBox', `0 0 ${wrapRect.width} ${wrapRect.height}`);
+    svg.setAttribute('width', wrapRect.width);
+    svg.setAttribute('height', wrapRect.height);
+    svg.innerHTML = '';
+    el.querySelectorAll('.chip-tag.pinned').forEach(chip => {
+      const num = chip.dataset.chipNum;
+      if (!num) return;
+      const pin = el.querySelector(`.pin[data-pin-num="${num}"]`);
+      if (!pin) return;
+      const pinR  = pin.getBoundingClientRect();
+      const chipR = chip.getBoundingClientRect();
+      const x1 = pinR.left  - wrapRect.left + pinR.width  / 2;
+      const y1 = pinR.top   - wrapRect.top  + pinR.height / 2;
+      const x2 = chipR.left - wrapRect.left + chipR.width / 2;
+      const y2 = wrapRect.height; // bottom edge of chart, pointing toward chips below
+      const ln = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      ln.setAttribute('x1', x1); ln.setAttribute('y1', y1);
+      ln.setAttribute('x2', x2); ln.setAttribute('y2', y2);
+      svg.appendChild(ln);
+    });
+  }
+
+  async function onFollowToggle(btn, authorId) {
+    const me = (TArenaAuth.getSession() || {}).user;
+    if (!me) return;
+    const wasOn = btn.classList.contains('on');
+    btn.disabled = true;
+    if (wasOn) {
+      const { error } = await sb.from('follows')
+        .delete().eq('follower_id', me.id).eq('followee_id', authorId);
+      if (!error) { btn.classList.remove('on'); btn.textContent = 'Follow'; }
+    } else {
+      const { error } = await sb.from('follows')
+        .insert({ follower_id: me.id, followee_id: authorId });
+      if (!error) { btn.classList.add('on'); btn.textContent = 'Following'; }
+    }
+    btn.disabled = false;
+    // Reflect new state on every other card by the same author currently mounted.
+    state.slots.forEach(s => {
+      if (s.mounted && s.row.author && s.row.author.id === authorId) {
+        s.row.viewer_state.following = !wasOn;
+        const otherBtn = s.el.querySelector('.followbtn');
+        if (otherBtn && otherBtn !== btn) {
+          otherBtn.classList.toggle('on', !wasOn);
+          otherBtn.textContent = wasOn ? 'Follow' : 'Following';
+        }
+      }
+    });
   }
 
   function mountSlot(idx) {
@@ -677,11 +752,7 @@
     }
   });
 
-  // ----------------------------------------------------------
-  // Slot observer — drives both windowed mount/unmount AND live PnL
-  // visibility. Replaces the old per-card observer so we have a single
-  // source of truth about which cards are on/near the screen.
-  // ----------------------------------------------------------
+  // One observer drives both windowing and live-quote subs.
   const slotObserver = new IntersectionObserver(entries => {
     let dirty = false;
     entries.forEach(e => {
@@ -821,8 +892,7 @@
     const btn = document.getElementById('confirmMirror');
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Opening trade…';
-    // Capture the viewer's live quote at click time so the mirror
-    // paper-trade fills at live, not at the author's stale entry.
+    // Capture viewer's live quote so the mirror trade fills at live.
     let livePrice = null;
     try {
       if (datafeed?.fetchQuotes) {
@@ -877,21 +947,13 @@
   document.querySelectorAll('.feed-tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === state.tab));
   resetAndLoad();
 
-  // ----------------------------------------------------------
-  // Deep link consumer — `?reel=<uuid>` resolves a single reel via
-  // get_reel and pins it to the top of the feed (so a shared link
-  // actually surfaces the reel rather than just landing on the feed).
-  // Runs after the regular feed kicks off so the placeholder slot
-  // sits above page-1 rows. If the reel is gone or the viewer can't
-  // see it, we toast and clear the param.
-  // ----------------------------------------------------------
+  // ?reel=<uuid> deep link → fetch via get_reel and pin to top of feed.
   (async function consumeDeepLink() {
     const u = new URL(window.location.href);
     const reelId = u.searchParams.get('reel');
     if (!reelId) return;
     const { data, error } = await sb.rpc('get_reel', { p_id: reelId });
     if (error || !data) {
-      // Surface a small inline note rather than a blocking alert.
       const af = document.getElementById('activeFilter');
       if (af && !af.querySelector('.deep-miss')) {
         af.insertAdjacentHTML('beforeend',
@@ -921,10 +983,18 @@
       state.visibleIdx = new Set(Array.from(state.visibleIdx).map(i => i + 1));
       slotObserver.observe(slot);
       reconcileWindow(0);
-      // Smoothly bring the deep-linked reel into view.
       setTimeout(() => slot.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
     }
   })();
+
+  // Redraw leader lines on resize for any mounted card.
+  let leaderResizeT;
+  window.addEventListener('resize', () => {
+    clearTimeout(leaderResizeT);
+    leaderResizeT = setTimeout(() => {
+      state.slots.forEach(s => { if (s.mounted) drawLeaders(s.el); });
+    }, 100);
+  });
 })();
 </script>
 </body>

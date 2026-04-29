@@ -557,6 +557,27 @@ begin
      where m.mirrored_by = v_uid
        and m.reel_id in (select id from ranked)
   ),
+  -- Author win rate from closed paper trades. Long wins when exit > entry,
+  -- short wins when exit < entry. Returns null when the author has no
+  -- closed trades yet (UI shows "—" rather than "0%").
+  author_stats as (
+    select pt.owner_id,
+           count(*) filter (where pt.status = 'closed')                      as closed_n,
+           round(100.0 * count(*) filter (
+             where pt.status = 'closed'
+               and ((pt.side = 'buy'  and pt.exit_price > pt.entry_price)
+                 or (pt.side = 'sell' and pt.exit_price < pt.entry_price))
+           )::numeric / nullif(count(*) filter (where pt.status = 'closed'), 0), 1) as win_rate
+      from public.paper_trades pt
+     where pt.owner_id in (select author_id from ranked)
+     group by pt.owner_id
+  ),
+  viewer_follow as (
+    select f.followee_id, true as following
+      from public.follows f
+     where f.follower_id = v_uid
+       and f.followee_id in (select author_id from ranked)
+  ),
   joined as (
     select
       r.id, r.symbol, r.market, r.chart_snapshot_url,
@@ -567,7 +588,9 @@ begin
         'username',     p.username,
         'display_name', p.display_name,
         'tier',         p.tier,
-        'avatar_color', p.avatar_color
+        'avatar_color', p.avatar_color,
+        'win_rate',     ast.win_rate,
+        'closed_n',     coalesce(ast.closed_n, 0)
       ) as author,
       coalesce(tl.tags, '[]'::jsonb) as tags,
       jsonb_build_object(
@@ -578,9 +601,10 @@ begin
         'mirrors', coalesce(mc.mirrors, 0)
       ) as counts,
       jsonb_build_object(
-        'liked',    coalesce(ve.liked,    false),
-        'saved',    coalesce(ve.saved,    false),
-        'mirrored', coalesce(vm.mirrored, false)
+        'liked',     coalesce(ve.liked,    false),
+        'saved',     coalesce(ve.saved,    false),
+        'mirrored',  coalesce(vm.mirrored, false),
+        'following', coalesce(vf.following, false)
       ) as viewer_state
     from ranked r
     join public.profiles p     on p.id = r.author_id
@@ -589,6 +613,8 @@ begin
     left join mirror_counts mc on mc.reel_id    = r.id
     left join viewer_eng ve    on ve.reel_id    = r.id
     left join viewer_mirror vm on vm.reel_id    = r.id
+    left join author_stats ast on ast.owner_id  = r.author_id
+    left join viewer_follow vf on vf.followee_id = r.author_id
   )
   -- next_cursor = the oldest created_at on this page. The client
   -- sends it back as `p_cursor` and we return rows strictly older.
@@ -647,7 +673,17 @@ begin
       'username',     p.username,
       'display_name', p.display_name,
       'tier',         p.tier,
-      'avatar_color', p.avatar_color
+      'avatar_color', p.avatar_color,
+      'win_rate', (
+        select round(100.0 * count(*) filter (
+                 where status = 'closed'
+                   and ((side='buy'  and exit_price > entry_price)
+                     or (side='sell' and exit_price < entry_price))
+               )::numeric / nullif(count(*) filter (where status = 'closed'), 0), 1)
+          from public.paper_trades where owner_id = p.id),
+      'closed_n', (
+        select count(*) filter (where status = 'closed')
+          from public.paper_trades where owner_id = p.id)
     ),
     'tags', coalesce((
       select jsonb_agg(jsonb_build_object(
@@ -668,9 +704,10 @@ begin
       'mirrors', (select count(*) from public.reel_mirrors    where reel_id = r.id)
     ),
     'viewer_state', jsonb_build_object(
-      'liked',    exists (select 1 from public.reel_engagement where reel_id = r.id and user_id = v_uid and kind = 'like'),
-      'saved',    exists (select 1 from public.reel_engagement where reel_id = r.id and user_id = v_uid and kind = 'save'),
-      'mirrored', exists (select 1 from public.reel_mirrors    where reel_id = r.id and mirrored_by = v_uid)
+      'liked',     exists (select 1 from public.reel_engagement where reel_id = r.id and user_id = v_uid and kind = 'like'),
+      'saved',     exists (select 1 from public.reel_engagement where reel_id = r.id and user_id = v_uid and kind = 'save'),
+      'mirrored',  exists (select 1 from public.reel_mirrors    where reel_id = r.id and mirrored_by = v_uid),
+      'following', exists (select 1 from public.follows         where follower_id = v_uid and followee_id = p.id)
     )
   )
     into v_payload
