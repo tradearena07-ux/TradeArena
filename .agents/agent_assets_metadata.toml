@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "efbj8QyyTIk3dHYZnjLnr"
+uri = "file://supabase/migrations/all_in_one.txt"
+type = "text"
+title = "TradeArena — full database bootstrap (paste into Supabase SQL editor)"
