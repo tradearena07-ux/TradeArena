@@ -43,6 +43,7 @@ create table if not exists public.profiles (
     "reels":         true,
     "university":    true
   }'::jsonb,
+  badges          text[] not null default '{}'::text[],
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now()
 );
@@ -299,6 +300,91 @@ grant execute on function public.email_for_username_login(text, text) to anon, a
 drop function if exists public.lookup_email_by_login(text);
 
 -- ============================================================
+-- RPC: seed_demo_users
+-- One-shot seeder for the 8 legacy demo accounts so the existing demo logins
+-- (e.g. liamos@... / demo1234) keep working against real Supabase Auth.
+-- All passwords are stored as bcrypt hashes via pgcrypto, the same format
+-- supabase-auth uses for real signups.
+-- Call once after the migration:  select public.seed_demo_users();
+-- Re-runnable: existing accounts are skipped.
+-- ============================================================
+create or replace function public.seed_demo_users()
+returns text
+language plpgsql
+security definer
+set search_path = public, auth, extensions
+as $$
+declare
+  rec record;
+  uid uuid;
+  inserted int := 0;
+  skipped  int := 0;
+begin
+  for rec in
+    select * from (values
+      ('alex.chen@student.unsw.edu.au', 'alexchen', 'student', 'UNSW',    'Student', 12, false),
+      ('mia.lee@usyd.edu.au',           'mialee',   'student', 'USYD',    'Student',  9, false),
+      ('jordan.kim@uts.edu.au',         'jkim',     'student', 'UTS',     'Student',  7, false),
+      ('sarah.patel@monash.edu',        'sarahp',   'student', 'Monash',  'Student',  5, false),
+      ('noah.brown@unimelb.edu.au',     'noahb',    'student', 'UniMelb', 'Student',  3, false),
+      ('ella.smith@anu.edu.au',         'esmith',   'student', 'ANU',     'Student',  2, false),
+      ('priya.shah@uq.edu.au',          'priya',    'student', 'UQ',      'Student',  2, false),
+      ('liam.osullivan@gmail.com',      'liamos',   'public',  'Public',  'Pro',      1, true)
+    ) as t(email, username, type, university, tier, days_ago, is_admin)
+  loop
+    if exists (select 1 from auth.users where lower(email) = lower(rec.email)) then
+      skipped := skipped + 1;
+      continue;
+    end if;
+
+    uid := gen_random_uuid();
+
+    insert into auth.users (
+      instance_id, id, aud, role, email,
+      encrypted_password, email_confirmed_at,
+      raw_app_meta_data, raw_user_meta_data,
+      created_at, updated_at
+    ) values (
+      '00000000-0000-0000-0000-000000000000',
+      uid, 'authenticated', 'authenticated', rec.email,
+      crypt('demo1234', gen_salt('bf')),
+      now() - (rec.days_ago || ' days')::interval,
+      '{"provider":"email","providers":["email"]}'::jsonb,
+      jsonb_build_object('username', rec.username, 'type', rec.type, 'university', rec.university),
+      now() - (rec.days_ago || ' days')::interval, now()
+    );
+
+    insert into auth.identities (
+      id, user_id, provider_id, provider, identity_data,
+      last_sign_in_at, created_at, updated_at
+    ) values (
+      gen_random_uuid(), uid, uid::text, 'email',
+      jsonb_build_object('sub', uid::text, 'email', rec.email),
+      now() - (rec.days_ago || ' days')::interval,
+      now() - (rec.days_ago || ' days')::interval, now()
+    );
+
+    insert into public.profiles (
+      id, username, display_name, university, tier, type, bio,
+      avatar_color, is_admin, badges, created_at
+    ) values (
+      uid, rec.username, initcap(rec.username), rec.university, rec.tier, rec.type,
+      'Demo account · password is demo1234',
+      '#' || substr(md5(rec.username), 1, 6),
+      rec.is_admin,
+      case when rec.is_admin then array['founder','admin'] else array['early-access'] end,
+      now() - (rec.days_ago || ' days')::interval
+    );
+
+    inserted := inserted + 1;
+  end loop;
+
+  return format('Seeded %s users (%s skipped). Demo password: demo1234', inserted, skipped);
+end;
+$$;
+revoke execute on function public.seed_demo_users() from public;
+
+-- ============================================================
 -- RPC: check_username_available
 -- ============================================================
 create or replace function public.check_username_available(p_username text)
@@ -413,16 +499,19 @@ create policy profiles_insert_self  on public.profiles for insert with check (au
 create policy profiles_update_self  on public.profiles for update using (auth.uid() = id) with check (auth.uid() = id);
 create policy profiles_delete_self  on public.profiles for delete using (auth.uid() = id);
 
--- Public view: safe columns only (no email, no is_admin).
+-- Public view: only the columns the task contract approves for the public
+-- profile surface — username, display_name, tier, avatar_color, badges.
+-- Granted to authenticated users only (NOT anon) so unauthenticated visitors
+-- cannot enumerate the user list.
 -- security_invoker = false means the view runs with the definer's privileges,
 -- bypassing the self-only RLS on profiles for read-only purposes.
 drop view if exists public.public_profiles;
 create view public.public_profiles
 with (security_invoker = false) as
-  select id, username, display_name, university, tier, type, bio, avatar_color,
-         visibility_mask, created_at
+  select id, username, display_name, tier, avatar_color, badges
     from public.profiles;
-grant select on public.public_profiles to anon, authenticated;
+revoke all on public.public_profiles from public;
+grant select on public.public_profiles to authenticated;
 
 -- ----- strategies -----
 drop policy if exists strategies_read_all     on public.strategies;
@@ -441,6 +530,71 @@ create policy paper_trades_read on public.paper_trades for select using (
 );
 create policy paper_trades_write on public.paper_trades for all
   using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+
+-- ============================================================
+-- holdings_view  (materialized roll-up of paper_trades)
+-- One row per (owner_id, symbol) summarising open positions.
+-- Note: PostgreSQL does NOT enforce RLS on materialized views, so direct
+-- SELECT is revoked from regular users. Cross-user access goes through the
+-- visibility-aware functions below; the materialized view itself is only
+-- readable by service_role (and by the wrapper functions which run
+-- SECURITY DEFINER). Refresh with: select public.refresh_holdings_view();
+-- ============================================================
+drop materialized view if exists public.holdings_view;
+create materialized view public.holdings_view as
+  select
+    owner_id,
+    symbol,
+    sum(case when side = 'buy' then qty else -qty end)             as net_qty,
+    sum(case when side = 'buy' then qty * entry_price else 0 end)
+      / nullif(sum(case when side = 'buy' then qty else 0 end), 0) as avg_cost,
+    count(*) filter (where status = 'open')                        as open_legs,
+    max(opened_at)                                                 as last_activity
+  from public.paper_trades
+  group by owner_id, symbol
+  having sum(case when side = 'buy' then qty else -qty end) <> 0;
+
+create unique index if not exists holdings_view_pk_idx
+  on public.holdings_view (owner_id, symbol);
+create index if not exists holdings_view_owner_idx
+  on public.holdings_view (owner_id);
+
+revoke all on public.holdings_view from public;
+grant select on public.holdings_view to service_role;
+
+create or replace function public.get_my_holdings()
+returns setof public.holdings_view
+language sql stable
+security definer
+set search_path = public
+as $$
+  select * from public.holdings_view where owner_id = auth.uid();
+$$;
+grant execute on function public.get_my_holdings() to authenticated;
+
+create or replace function public.get_holdings_for(p_owner uuid)
+returns setof public.holdings_view
+language sql stable
+security definer
+set search_path = public
+as $$
+  select * from public.holdings_view
+   where owner_id = p_owner
+     and (p_owner = auth.uid() or public.has_visibility(p_owner, 'holdings'));
+$$;
+grant execute on function public.get_holdings_for(uuid) to authenticated;
+
+create or replace function public.refresh_holdings_view()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  refresh materialized view concurrently public.holdings_view;
+end;
+$$;
+revoke execute on function public.refresh_holdings_view() from public;
 
 -- ----- reels -----
 drop policy if exists reels_read   on public.reels;

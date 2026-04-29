@@ -47,19 +47,23 @@ The full schema, RLS policies, and helper functions live in `supabase/migrations
 To install (or reset) the database:
 1. Open the Supabase Dashboard → **SQL Editor** → **New query**.
 2. Paste the contents of `supabase/migrations/0001_init.sql` and click **Run**.
-3. Confirm the `profiles`, `paper_trades`, `reels`, `reel_tags`, `reel_mirrors`, `follows`, `leagues`, `chart_layouts`, `price_bars` tables exist with RLS enabled.
+3. Confirm the `profiles`, `strategies`, `paper_trades`, `holdings_view`, `reels`, `reel_tags`, `reel_mirrors`, `follows`, `leagues`, `league_members`, `chart_layouts`, `price_bars` tables/views exist with RLS enabled.
+4. **(Optional)** Seed the 8 legacy demo accounts so old logins (`liamos`, `alexchen`, etc. with password `demo1234`) keep working: run `select public.seed_demo_users();` in the SQL editor. Re-runnable; already-seeded accounts are skipped.
 
-The migration creates these helper RPCs (callable from the client):
-- `email_for_username_login(p_username text, p_password text)` — verifies the password against `auth.users.encrypted_password` (bcrypt via `pgcrypto`) and returns the email **only on a correct credential pair**, so it cannot be used to enumerate emails.
-- `check_username_available(p_username text)` — bool
-- `check_email_available(p_email text)` — bool (treats half-finished signups as resumable)
-- `has_visibility(p_owner uuid, p_field text)` — SECURITY DEFINER helper that lets RLS policies on other tables check the owner's `visibility_mask` without granting cross-row read access to `profiles`.
-- `list_registrations()` — admin-only view of all profiles + auth emails
+The migration creates these helper RPCs (callable from the client unless noted):
+- `email_for_username_login(p_username, p_password)` — verifies the password against `auth.users.encrypted_password` (bcrypt via `pgcrypto`) and returns the email **only on a correct credential pair**, so it cannot be used to enumerate emails.
+- `check_username_available(p_username)` / `check_email_available(p_email)` — boolean availability checks for signup.
+- `has_visibility(p_owner, p_field)` — SECURITY DEFINER helper that lets RLS policies on other tables check the owner's `visibility_mask` without granting cross-row read access to `profiles`.
+- `get_my_holdings()` / `get_holdings_for(p_owner uuid)` — visibility-aware accessors for the materialized `holdings_view` (the view itself is not directly granted to clients).
+- `list_registrations()` — admin-only view of all profiles + auth emails.
+- `seed_demo_users()` — one-shot demo seeder (no client grant; runs from SQL editor).
+- `refresh_holdings_view()` — admin/cron refresh for the materialized view.
 
 ## Privacy + RLS model
 - **`profiles`** is RLS-restricted to **self-only SELECT** so sensitive columns (`is_admin`, `visibility_mask`, raw `bio`) never leak to other users.
-- **`profiles.email` does not exist.** The canonical email lives only in `auth.users`. The previous build had it duplicated; this version drops it.
-- **`public_profiles`** is a view (with `security_invoker = false`) exposing only the safe columns: `id`, `username`, `display_name`, `university`, `tier`, `type`, `bio`, `avatar_color`, `visibility_mask`, `created_at`. Every cross-user lookup (mentions, leaderboards, reels feed) reads from this view rather than the base table.
+- **`profiles.email` does not exist.** The canonical email lives only in `auth.users`. Duplicating it would create a PII enumeration surface.
+- **`public_profiles`** is a view (with `security_invoker = false`) exposing only the contractually-public columns: `id`, `username`, `display_name`, `tier`, `avatar_color`, `badges`. **Granted to `authenticated` only** — unauthenticated visitors cannot enumerate the user list. Every cross-user lookup (mentions, leaderboards, reels feed) reads from this view rather than the base table.
+- **`holdings_view`** is a Postgres `MATERIALIZED VIEW` rolled up from `paper_trades`. Materialized views in Postgres do not enforce RLS, so direct SELECT is granted only to `service_role`; clients access it through `get_my_holdings()` (own rows) or `get_holdings_for(owner)` (gated by `visibility_mask.holdings`).
 - **Forgot-password requires the email, not the username.** Allowing username-based reset would force the server to disclose the corresponding email, which is the same enumeration vector the password-verifying login RPC is designed to avoid.
 
 ## Granting admin access
