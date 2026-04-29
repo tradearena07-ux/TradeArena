@@ -160,21 +160,12 @@ create table if not exists public.reel_engagement (
 create index if not exists reel_engagement_reel_idx on public.reel_engagement(reel_id, kind);
 
 -- ============================================================
--- holdings  (current open position per (owner, symbol) — derived from paper_trades)
--- View, not a table. Recomputed on every read.
--- ============================================================
-create or replace view public.holdings_view as
-  select
-    owner_id,
-    symbol,
-    sum(case when side='buy'  then qty else 0 end) -
-    sum(case when side='sell' then qty else 0 end) as net_qty,
-    avg(entry_price) filter (where side='buy') as avg_entry,
-    max(opened_at) as last_trade_at
-  from public.paper_trades
-  where status = 'open'
-  group by owner_id, symbol;
-
+-- (Note: holdings_view is intentionally NOT defined here. The
+-- canonical materialized-view version is created lower in this file
+-- after RLS is configured. An earlier draft of this migration created
+-- a regular view at this point, which then collided with the matview
+-- on re-run because Postgres won't let `drop materialized view if
+-- exists` remove a regular view of the same name.)
 -- ============================================================
 -- follows  (social graph)
 -- ============================================================
@@ -545,11 +536,35 @@ create policy paper_trades_write on public.paper_trades for all
 -- SECURITY DEFINER). Refresh with: select public.refresh_holdings_view();
 -- ============================================================
 -- Drop any prior incarnation regardless of object type so the migration
--- can re-create holdings_view as a materialized view even when an earlier
--- iteration of the schema defined it as a regular view or a table.
-drop materialized view if exists public.holdings_view;
-drop view              if exists public.holdings_view;
-drop table             if exists public.holdings_view;
+-- can re-create holdings_view as a materialized view even when an
+-- earlier iteration of the schema defined it as a regular view, a
+-- table, or a foreign table. We can't just chain three IF EXISTS
+-- statements: `drop materialized view if exists` does NOT silently
+-- skip an object that exists with the wrong type — it raises
+--   ERROR 42809: "holdings_view" is not a materialized view
+-- So we look at pg_class.relkind first and emit the matching DROP.
+do $$
+declare
+  v_kind char;
+begin
+  select c.relkind into v_kind
+    from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace
+   where n.nspname = 'public' and c.relname = 'holdings_view';
+  if v_kind is null then
+    return;                         -- nothing to drop
+  elsif v_kind = 'm' then
+    execute 'drop materialized view public.holdings_view cascade';
+  elsif v_kind = 'v' then
+    execute 'drop view public.holdings_view cascade';
+  elsif v_kind in ('r','p') then
+    execute 'drop table public.holdings_view cascade';
+  elsif v_kind = 'f' then
+    execute 'drop foreign table public.holdings_view cascade';
+  else
+    raise exception 'unexpected relkind % for public.holdings_view', v_kind;
+  end if;
+end $$;
 create materialized view public.holdings_view as
   select
     owner_id,
