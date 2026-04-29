@@ -283,6 +283,39 @@
     return m;
   }
 
+  // Hydrate a runtime symbol record into TArenaMarket.data when the
+  // user picks something from remote search that isn't in the static
+  // catalogue. Pulls price/change from a single quote call and uses
+  // the search-result description as a name. Subsequent calls are
+  // no-ops once the symbol exists.
+  async function hydrateRuntimeSymbol(sym, meta) {
+    if (TArenaMarket.find(sym)) return TArenaMarket.find(sym);
+    const kind = TArenaDatafeed.classify(sym);
+    const market = kind === 'asx' ? 'asx' : kind === 'us' ? 'us' : 'crypto';
+    let price = 0, change = 0;
+    try {
+      const quotes = await TArenaDatafeed.fetchQuotes([sym]);
+      const q = quotes[sym];
+      if (q) { price = q.price || 0; change = q.changePct || 0; }
+    } catch (e) {
+      console.warn('hydrate quote failed', sym, e.message);
+    }
+    const rec = {
+      symbol:  sym,
+      name:    (meta && (meta.description || meta.name)) || sym,
+      market:  market,
+      price:   price,
+      change:  change,
+      mcap:    '—',
+      vol:     '—',
+      high52:  price,
+      low52:   price,
+      tv:      sym,
+    };
+    TArenaMarket.data.push(rec);
+    return rec;
+  }
+
   function renderSymbolHeader() {
     const m = currentMarket();
     if (!m) return;
@@ -374,8 +407,29 @@
     document.getElementById('watchlist').innerHTML = html;
   }
 
-  function selectSymbol(sym) {
+  // selectSymbol handles both catalogue symbols and remote-search
+  // symbols. For unknown symbols it hydrates a runtime record first so
+  // header / order panel / watchlist all stay coherent with the chart.
+  async function selectSymbol(sym, meta) {
     currentSymbol = sym;
+    if (!TArenaMarket.find(sym)) {
+      // Optimistic placeholder so the UI doesn't flash empty while we
+      // wait for the quote to come back.
+      const placeholder = {
+        symbol: sym,
+        name:   (meta && (meta.description || meta.name)) || sym,
+        market: TArenaDatafeed.classify(sym) === 'crypto' ? 'crypto'
+              : TArenaDatafeed.classify(sym) === 'asx'    ? 'asx' : 'us',
+        price:  0, change: 0, mcap: '—', vol: '—',
+        high52: 0, low52: 0, tv: sym,
+      };
+      TArenaMarket.data.push(placeholder);
+      // Fire the hydration in the background and re-render once we
+      // have a real price.
+      hydrateRuntimeSymbol(sym, meta).then(() => {
+        if (currentSymbol === sym) renderSymbolHeader();
+      });
+    }
     renderSymbolHeader();
     renderWatchlist();
     renderLower();
@@ -393,17 +447,18 @@
     if (!rows.length) {
       searchResults.innerHTML = '<div class="res"><div><div class="l">No matches</div></div></div>';
     } else {
-      searchResults.innerHTML = rows.slice(0, 8).map(r => {
+      searchResults.innerHTML = rows.slice(0, 8).map((r, i) => {
         const sym  = r.symbol;
         const desc = r.description || r.name || '';
         const exch = (r.exchange || r.market || '').toUpperCase();
-        return `<div class="res" data-sym="${sym}">
+        return `<div class="res" data-sym="${sym}" data-idx="${i}">
           <div><div class="l">${sym.replace('.AX','')}</div><div class="n">${desc}${exch ? ' · ' + exch : ''}</div></div>
         </div>`;
       }).join('');
       searchResults.querySelectorAll('.res[data-sym]').forEach(el => {
         el.addEventListener('click', () => {
-          selectSymbol(el.dataset.sym);
+          const meta = rows[+el.dataset.idx] || null;
+          selectSymbol(el.dataset.sym, meta);
           searchBox.value = '';
           searchResults.classList.remove('open');
         });
