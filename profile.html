@@ -107,6 +107,15 @@
     .pf-tab.lock-tab{ opacity:.55; }
 
     /* ---- Tab content ---------------------------------------- */
+    .cash-row{
+      display:flex;align-items:center;justify-content:space-between;gap:14px;
+      margin-top:14px;padding:12px 16px;border-radius:10px;
+      background:var(--navy);border:1px solid var(--bdl);
+    }
+    .cash-row .l{ font-family:'Cinzel',serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted); }
+    .cash-row .v{ font-family:'Cinzel',serif;font-size:1.15rem;font-weight:700;color:var(--cream);letter-spacing:.02em; }
+    .cash-row.lock .v{ color:var(--muted);font-size:0.95rem; }
+
     .strat-grid{ display:grid;grid-template-columns:repeat(2,1fr);gap:14px; }
     @media(max-width:780px){ .strat-grid{ grid-template-columns:1fr; } }
     .strat-card{ background:var(--navy);border:1px solid var(--bdl);border-radius:10px;padding:16px; }
@@ -460,6 +469,19 @@
       ${ statTile('Trades', m.tradesCount != null ? String(m.tradesCount) : '0') }
     </div>`;
 
+    // Cash row (gated independently by visibility_mask.cash) — sits
+    // inside the equity card so it stays close to the equity number.
+    const showCash = isVisible('cash');
+    const cashHtml = showCash
+      ? `<div class="cash-row">
+          <div class="l"><i class="fa-solid fa-wallet"></i> Cash buffer</div>
+          <div class="v num">${fmtMoney(state.cashBalance != null ? state.cashBalance : STARTING_CAPITAL)}</div>
+        </div>`
+      : `<div class="cash-row lock">
+          <div class="l"><i class="fa-solid fa-lock"></i> Cash buffer</div>
+          <div class="v">Private</div>
+        </div>`;
+
     // Equity curve card
     const curveHtml = showCurve
       ? `<div class="pcard">
@@ -478,8 +500,12 @@
             </div>
           </div>
           <div style="position:relative;height:240px;"><canvas id="equityChart"></canvas></div>
+          ${cashHtml}
         </div>`
-      : `<div class="pcard">${locked('equity_curve','Equity curve')}</div>`;
+      : `<div class="pcard">
+          ${locked('equity_curve','Equity curve')}
+          ${cashHtml}
+        </div>`;
 
     // Quant metrics card
     const quantHtml = showMetrics
@@ -890,6 +916,17 @@
     }
     const benchSeries = syntheticBenchmark(state.benchmark, from, to);
     state.summary = TArenaMetrics.summarise(perfTrades, { startingCapital: STARTING_CAPITAL, benchmark: benchSeries });
+
+    // Cash buffer = starting capital + realised P&L from closed trades
+    // − cost basis of currently-open positions. We compute it from the
+    // same data the rest of the page uses (no extra round-trip).
+    const realisedPnl = perfTrades.reduce((a, t) => a + TArenaMetrics.pnl(t), 0);
+    const openCost = (openHoldings || []).reduce((a, h) => {
+      const qty = Number(h.net_qty) || 0;
+      const cost = Number(h.avg_cost) || 0;
+      return a + Math.max(qty, 0) * cost;
+    }, 0);
+    state.cashBalance = STARTING_CAPITAL + realisedPnl - openCost;
 
     render();
   }
