@@ -246,35 +246,50 @@ async function handleHistory(body: any): Promise<Response> {
   // ----- Cache read --------------------------------------------------
   // Try to satisfy the request from `public.price_bars` first so the
   // bar-replay UI and repeated history loads don't re-hit upstream.
-  const resSec = resolutionSeconds(resolution);
-  const cached = force ? [] : await readCache(symbol, resolution, fromSec, toSec);
-  const nowSec = Math.floor(Date.now() / 1000);
+  const resSec  = resolutionSeconds(resolution);
+  const cached  = force ? [] : await readCache(symbol, resolution, fromSec, toSec);
+  const nowSec  = Math.floor(Date.now() / 1000);
 
-  // If the most recent cached bar covers (toSec - one bar period) AND
-  // we have at least a handful of bars, the cache is fresh enough — no
-  // upstream call needed. This is the hot path for replay scrubbing.
-  if (cached.length >= 5) {
-    const latest = cached[cached.length - 1].t / 1000;
-    const targetEdge = Math.min(toSec, nowSec) - resSec;
-    if (latest >= targetEdge) {
-      return jsonResponse({ s: "ok", bars: cached, cached: true });
-    }
+  async function fetchUpstream(fromS: number, toS: number): Promise<Bar[]> {
+    if (toS <= fromS) return [];
+    if (kind === "asx")    return fetchYahooHistory(symbol, resolution, fromS, toS);
+    if (kind === "us")     return fetchFinnhubHistory(symbol, resolution, fromS, toS);
+    if (kind === "crypto") return fetchBinanceHistory(symbol, resolution, fromS, toS);
+    return [];
+  }
+
+  // Identify head/tail gaps. The cache fully covers the request when
+  // the earliest cached bar is at or before `from + 1 bar` AND the
+  // latest cached bar is within one bar of the request's `to` (or now,
+  // whichever is earlier). Otherwise we fetch only the missing window
+  // on each side.
+  const earliestCachedSec = cached.length ? Math.floor(cached[0].t / 1000)                  : null;
+  const latestCachedSec   = cached.length ? Math.floor(cached[cached.length - 1].t / 1000)  : null;
+  const targetEdge        = Math.min(toSec, nowSec) - resSec;
+
+  const headCovered = earliestCachedSec !== null && earliestCachedSec <= fromSec + resSec;
+  const tailCovered = latestCachedSec   !== null && latestCachedSec   >= targetEdge;
+
+  if (cached.length >= 5 && headCovered && tailCovered) {
+    // Cache fully satisfies the request — hot path for replay scrubbing.
+    return jsonResponse({ s: "ok", bars: cached, cached: true });
   }
 
   // ----- Incremental upstream fetch ----------------------------------
-  // If we have ANY cached bars, only fetch from the latest cached bar
-  // forward. Otherwise fetch the full requested range.
-  const upstreamFrom = cached.length
-    ? Math.floor(cached[cached.length - 1].t / 1000)
-    : fromSec;
-
-  let upstream: Bar[] = [];
+  // Fill missing head and tail separately so back-scroll into older
+  // history works even when the cache only holds the recent window.
+  let head: Bar[] = [];
+  let tail: Bar[] = [];
   try {
-    if (kind === "asx")    upstream = await fetchYahooHistory(symbol, resolution, upstreamFrom, toSec);
-    if (kind === "us")     upstream = await fetchFinnhubHistory(symbol, resolution, upstreamFrom, toSec);
-    if (kind === "crypto") upstream = await fetchBinanceHistory(symbol, resolution, upstreamFrom, toSec);
+    if (cached.length === 0) {
+      // Cold cache → single full-range fetch.
+      tail = await fetchUpstream(fromSec, toSec);
+    } else {
+      if (!headCovered) head = await fetchUpstream(fromSec, earliestCachedSec! - 1);
+      if (!tailCovered) tail = await fetchUpstream(latestCachedSec!,  toSec);
+    }
   } catch (err) {
-    // If we have cached data, fall back to it instead of erroring out
+    // If we have any cached data, fall back to it rather than erroring out
     // — partial data beats no data when upstream is rate-limited.
     if (cached.length) {
       console.warn("upstream failed, serving cached", symbol, err);
@@ -283,11 +298,14 @@ async function handleHistory(body: any): Promise<Response> {
     return jsonResponse({ s: "error", error: String(err) }, 502);
   }
 
-  // Fire-and-forget cache write of the new upstream bars only.
-  writeCache(symbol, resolution, upstream).catch(e => console.error("writeCache", e));
+  // Fire-and-forget write of the new upstream bars (both head and tail).
+  const fresh = head.concat(tail);
+  if (fresh.length) {
+    writeCache(symbol, resolution, fresh).catch(e => console.error("writeCache", e));
+  }
 
-  const merged = mergeBars(cached, upstream);
-  return jsonResponse({ s: "ok", bars: merged, cached: cached.length > 0, partial: false });
+  const merged = mergeBars(cached, fresh);
+  return jsonResponse({ s: "ok", bars: merged, cached: cached.length > 0 });
 }
 
 async function handleQuote(body: any): Promise<Response> {

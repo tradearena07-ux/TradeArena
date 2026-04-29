@@ -116,7 +116,7 @@ supabase secrets set FINNHUB_API_KEY=YOUR_KEY    # https://finnhub.io/register
 supabase functions deploy data-proxy
 ```
 
-The function fans out to Yahoo Finance (ASX), Finnhub (US), and Binance (crypto). Every history call is **read-through-cache** against `public.price_bars`: cached bars are returned immediately when their most recent timestamp is within one bar-period of the requested `to`, otherwise only the missing tail is fetched from upstream and merged in (so bar-replay scrubbing and repeat history loads don't re-hit upstream). On upstream failure with cached bars present, the function returns the cached set with `stale: true` instead of erroring. Source + smoke-test in `supabase/functions/data-proxy/`.
+The function fans out to Yahoo Finance (ASX), Finnhub (US), and Binance (crypto). Every history call is **read-through-cache** against `public.price_bars`: the function returns cached bars immediately only when the cache covers **both** ends of the requested window (earliest cached bar ≤ `from + one bar`, latest cached bar within one bar of `to`). Otherwise it backfills only the missing **head** (older history, when the user back-scrolls past the cached range) and/or **tail** (recent history) from upstream and merges them with the cached set. On upstream failure with cached bars present, the function returns the cached set with `stale: true` instead of erroring. This means bar-replay scrubbing and repeat history loads stay free, while back-scroll and first-load both work correctly. Source + smoke-test in `supabase/functions/data-proxy/`.
 
 ## Portfolio page (Groww-style)
 - Big "Investments" header with current value, total returns ($/%), and today's change tile.
