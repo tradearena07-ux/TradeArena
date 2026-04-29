@@ -463,8 +463,14 @@
             ${state.amFollowing ? '<i class="fa-solid fa-check"></i> Following' : '<i class="fa-solid fa-user-plus"></i> Follow'}
          </button>`;
 
-    const uniChip = p.university
-      ? `<span class="pf-uni"><i class="fa-solid fa-graduation-cap"></i> ${p.university}</span>` : '';
+    // University chip is a Student-tier signal — hide it for working
+    // pros, alumni, fund accounts, etc. so the chip isn't misread as
+    // "still studying". Server already nulls `university` when the
+    // owner has hidden it, so this is purely a tier display rule.
+    const isStudent = (p.tier || '').toLowerCase().includes('student')
+                   || (p.type || '').toLowerCase() === 'student';
+    const uniChip = (p.university && isStudent)
+      ? `<span class="pf-uni"><i class="fa-solid fa-graduation-cap"></i> ${escapeHtml(p.university)}</span>` : '';
 
     // Stats tiles
     const statsHtml = `<div class="stats-grid">
@@ -483,7 +489,9 @@
       ${ showMetrics
           ? statTile('Profit factor', m.profitFactor == null ? '—' : (m.profitFactor === Infinity ? '∞' : m.profitFactor.toFixed(2)), classify(m.profitFactor === Infinity ? 1 : m.profitFactor - 1))
           : lockTile('Profit factor') }
-      ${ statTile('Trades', m.tradesCount != null ? String(m.tradesCount) : '0') }
+      ${ (showMetrics || showCurve)
+          ? statTile('Trades', m.tradesCount != null ? String(m.tradesCount) : '0')
+          : lockTile('Trades') }
     </div>`;
 
     // Cash row (gated independently by visibility_mask.cash) — sits
