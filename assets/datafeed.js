@@ -15,15 +15,40 @@
   const FN_URL = `${SUPABASE_URL.replace(/\/$/, '')}/functions/v1/data-proxy`;
 
   // ----- Symbol classification ---------------------------------
+  // Recognise a broad set of crypto bases so users can type tickers
+  // like "MATIC" or "DOT" without misclassification, and accept
+  // exchange-style suffixes (BTCUSDT, ETH-USD, ETH/USDT) that the
+  // chart library may pass through.
+  const CRYPTO_BASES = new Set([
+    'BTC','ETH','SOL','XRP','ADA','DOGE','LTC','BNB','AVAX','MATIC',
+    'DOT','LINK','TRX','SHIB','UNI','XLM','ATOM','ETC','FIL','NEAR',
+    'APT','ARB','OP','SUI','HBAR','ICP','INJ','RNDR','TON','PEPE',
+  ]);
+  const CRYPTO_QUOTES = ['USDT','USDC','BUSD','USD','AUD','EUR','BTC','ETH'];
+
+  function stripCryptoQuote(symbol) {
+    const s = String(symbol || '').toUpperCase().replace(/[-/]/g, '');
+    for (const q of CRYPTO_QUOTES) {
+      if (s.length > q.length && s.endsWith(q)) {
+        const base = s.slice(0, -q.length);
+        if (CRYPTO_BASES.has(base)) return base;
+      }
+    }
+    return null;
+  }
+
   function classify(symbol) {
     const s = String(symbol || '').toUpperCase();
     if (s.endsWith('.AX')) return 'asx';
-    if (['BTC','ETH','SOL','XRP','ADA','DOGE','LTC','BNB','AVAX','MATIC'].includes(s)) return 'crypto';
+    if (CRYPTO_BASES.has(s)) return 'crypto';
+    if (stripCryptoQuote(s)) return 'crypto';
     return 'us';
   }
 
   function binancePair(symbol) {
-    return `${String(symbol).toUpperCase()}USDT`;
+    const s = String(symbol).toUpperCase();
+    const base = CRYPTO_BASES.has(s) ? s : (stripCryptoQuote(s) || s);
+    return `${base}USDT`;
   }
 
   // Resolution ↔ seconds (so we can round timestamps to bar boundaries).

@@ -105,10 +105,29 @@ function num(v: unknown, fallback = NaN): number {
 
 // ----- helpers -----------------------------------------------------------
 
+const CRYPTO_BASES = new Set([
+  "BTC","ETH","SOL","XRP","ADA","DOGE","LTC","BNB","AVAX","MATIC",
+  "DOT","LINK","TRX","SHIB","UNI","XLM","ATOM","ETC","FIL","NEAR",
+  "APT","ARB","OP","SUI","HBAR","ICP","INJ","RNDR","TON","PEPE",
+]);
+const CRYPTO_QUOTES = ["USDT","USDC","BUSD","USD","AUD","EUR","BTC","ETH"];
+
+function stripCryptoQuote(symbol: string): string | null {
+  const s = symbol.toUpperCase().replace(/[-/]/g, "");
+  for (const q of CRYPTO_QUOTES) {
+    if (s.length > q.length && s.endsWith(q)) {
+      const base = s.slice(0, -q.length);
+      if (CRYPTO_BASES.has(base)) return base;
+    }
+  }
+  return null;
+}
+
 function classify(symbol: string): Kind {
   const s = symbol.toUpperCase();
   if (s.endsWith(".AX")) return "asx";
-  if (["BTC", "ETH", "SOL", "XRP", "ADA", "DOGE", "LTC", "BNB", "AVAX", "MATIC"].includes(s)) return "crypto";
+  if (CRYPTO_BASES.has(s)) return "crypto";
+  if (stripCryptoQuote(s)) return "crypto";
   return "us";
 }
 
@@ -237,8 +256,10 @@ async function fetchFinnhubQuote(symbol: string): Promise<Quote | null> {
   return { price: c, change: num(j.d, 0), changePct: num(j.dp, 0) };
 }
 
-function binanceSymbol(base: string): string {
-  return `${base.toUpperCase()}USDT`;
+function binanceSymbol(symbol: string): string {
+  const s = symbol.toUpperCase();
+  const base = CRYPTO_BASES.has(s) ? s : (stripCryptoQuote(s) ?? s);
+  return `${base}USDT`;
 }
 
 // Binance kline rows are positional arrays of mixed string/number values:
@@ -443,18 +464,60 @@ async function handleQuote(body: RequestBody): Promise<Response> {
   return jsonResponse({ s: "ok", quotes: out });
 }
 
-type FinnhubSearchRow = { symbol?: string; description?: string; type?: string };
+type FinnhubSearchRow      = { symbol?: string; description?: string; type?: string };
 type FinnhubSearchResponse = { result?: FinnhubSearchRow[] };
 
+type YahooSearchQuote   = {
+  symbol?:             string;
+  shortname?:          string;
+  longname?:           string;
+  exchDisp?:           string;
+  exchange?:           string;
+  quoteType?:          string;
+};
+type YahooSearchResponse = { quotes?: YahooSearchQuote[] };
+
+async function searchYahooAsx(query: string): Promise<SearchResult[]> {
+  // Yahoo's search endpoint is unauthenticated and returns ASX listings
+  // with `.AX` suffixes. We filter to those so the ASX exchange branch
+  // returns real results instead of an empty list.
+  try {
+    const url = `https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(query)}&quotesCount=10&newsCount=0`;
+    const r = await fetch(url, { headers: { "user-agent": "Mozilla/5.0 TradeArena" } });
+    if (!r.ok) return [];
+    const j = await r.json() as YahooSearchResponse;
+    const out: SearchResult[] = [];
+    for (const q of j.quotes ?? []) {
+      const sym = asString(q.symbol).toUpperCase();
+      if (!sym.endsWith(".AX")) continue;
+      out.push({
+        symbol:      sym,
+        description: asString(q.shortname || q.longname || sym),
+        exchange:    "ASX",
+        type:        "stock",
+      });
+      if (out.length >= 10) break;
+    }
+    return out;
+  } catch (_) {
+    return [];
+  }
+}
+
 async function handleSearch(body: RequestBody): Promise<Response> {
-  // Lightweight search — Finnhub for symbols, Binance for crypto. Yahoo's
-  // search endpoint is unauthenticated but rate-limited; for ASX we just
-  // pattern-match against a small static catalogue on the client.
+  // Lightweight search — Yahoo for ASX, Finnhub for US, Binance/static
+  // catalogue for crypto. Each provider is gated by the optional
+  // `market` filter so callers can scope results to one exchange.
   const query  = asString(body.query).trim();
   const market = asString(body.market).trim().toLowerCase();
   if (!query) return jsonResponse({ s: "ok", results: [] });
 
   const results: SearchResult[] = [];
+
+  if (!market || market === "asx") {
+    const asx = await searchYahooAsx(query);
+    results.push(...asx);
+  }
 
   if ((!market || market === "us") && FINNHUB_API_KEY) {
     try {
@@ -473,7 +536,7 @@ async function handleSearch(body: RequestBody): Promise<Response> {
 
   if (!market || market === "crypto") {
     const upper = query.toUpperCase();
-    for (const s of ["BTC", "ETH", "SOL", "XRP", "ADA", "DOGE", "BNB", "AVAX", "MATIC", "LTC"]) {
+    for (const s of CRYPTO_BASES) {
       if (s.startsWith(upper) || upper === s) {
         results.push({ symbol: s, description: `${s}/USDT`, exchange: "Binance", type: "crypto" });
       }
