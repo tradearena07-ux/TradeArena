@@ -384,27 +384,70 @@
   }
   window.selectSymbol = selectSymbol;
 
-  // ----- Search -----
+  // ----- Search (debounced; uses TArenaDatafeed.search → data-proxy) -----
   const searchBox = document.getElementById('searchBox');
   const searchResults = document.getElementById('searchResults');
-  searchBox.addEventListener('input', () => {
-    const q = searchBox.value.trim().toLowerCase();
-    if (!q) { searchResults.classList.remove('open'); return; }
-    let list = TArenaMarket.data.filter(d =>
-      d.symbol.toLowerCase().includes(q) || d.name.toLowerCase().includes(q));
-    if (activeMkt !== 'all') list = list.filter(d => d.market === activeMkt);
-    if (!list.length) { searchResults.innerHTML = '<div class="res"><div><div class="l">No matches</div></div></div>'; }
-    else {
-      searchResults.innerHTML = list.slice(0, 8).map(d => {
-        const up = d.change >= 0;
-        return `<div class="res" onclick="selectSymbol('${d.symbol}');document.getElementById('searchBox').value='';document.getElementById('searchResults').classList.remove('open');">
-          <div><div class="l">${d.symbol.replace('.AX','')}</div><div class="n">${d.name} · ${d.market.toUpperCase()}</div></div>
-          <div class="p ${up ? 'text-green' : 'text-red'}">$${d.price < 100 ? d.price.toFixed(2) : d.price.toLocaleString()}</div>
+  let searchTimer = null;
+  let searchSeq   = 0;
+  function renderSearchResults(rows) {
+    if (!rows.length) {
+      searchResults.innerHTML = '<div class="res"><div><div class="l">No matches</div></div></div>';
+    } else {
+      searchResults.innerHTML = rows.slice(0, 8).map(r => {
+        const sym  = r.symbol;
+        const desc = r.description || r.name || '';
+        const exch = (r.exchange || r.market || '').toUpperCase();
+        return `<div class="res" data-sym="${sym}">
+          <div><div class="l">${sym.replace('.AX','')}</div><div class="n">${desc}${exch ? ' · ' + exch : ''}</div></div>
         </div>`;
       }).join('');
+      searchResults.querySelectorAll('.res[data-sym]').forEach(el => {
+        el.addEventListener('click', () => {
+          selectSymbol(el.dataset.sym);
+          searchBox.value = '';
+          searchResults.classList.remove('open');
+        });
+      });
     }
     searchResults.classList.add('open');
+  }
+  searchBox.addEventListener('input', () => {
+    const q = searchBox.value.trim();
+    clearTimeout(searchTimer);
+    if (!q) { searchResults.classList.remove('open'); return; }
+    const seq = ++searchSeq;
+    searchTimer = setTimeout(async () => {
+      try {
+        // Real-data search via the edge function. Fall back to the
+        // local TArenaMarket catalogue if the proxy isn't deployed yet
+        // so the page never looks broken in dev.
+        let rows = await global_TArenaDatafeed_search(q, activeMkt === 'all' ? '' : activeMkt);
+        if (seq !== searchSeq) return; // a newer keystroke superseded us
+        if (!rows.length) {
+          rows = TArenaMarket.data
+            .filter(d => d.symbol.toLowerCase().includes(q.toLowerCase())
+                      || d.name.toLowerCase().includes(q.toLowerCase()))
+            .filter(d => activeMkt === 'all' || d.market === activeMkt)
+            .map(d => ({ symbol: d.symbol, description: d.name, exchange: d.market }));
+        }
+        renderSearchResults(rows);
+      } catch (_) {
+        // Proxy unreachable → use the local catalogue.
+        const ql = q.toLowerCase();
+        const rows = TArenaMarket.data
+          .filter(d => d.symbol.toLowerCase().includes(ql) || d.name.toLowerCase().includes(ql))
+          .filter(d => activeMkt === 'all' || d.market === activeMkt)
+          .map(d => ({ symbol: d.symbol, description: d.name, exchange: d.market }));
+        if (seq === searchSeq) renderSearchResults(rows);
+      }
+    }, 220);
   });
+  // Tiny shim so the inline async caller above stays readable.
+  function global_TArenaDatafeed_search(q, market) {
+    return (window.TArenaDatafeed && window.TArenaDatafeed.search)
+      ? window.TArenaDatafeed.search(q, market)
+      : Promise.resolve([]);
+  }
   document.addEventListener('click', e => {
     if (!searchBox.contains(e.target) && !searchResults.contains(e.target)) searchResults.classList.remove('open');
   });

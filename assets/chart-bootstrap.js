@@ -30,11 +30,13 @@
   function detectLibrary() {
     if (detectionPromise) return detectionPromise;
     detectionPromise = (async () => {
-      // HEAD-check the licensed library; a 404 here is the normal
-      // "not installed yet" path, so we only catch network failures.
+      // Probe the licensed library. We try HEAD first, then GET if the
+      // server returned 405 (some static hosts disallow HEAD on assets).
+      // A 404 from either is the normal "not installed yet" path.
       let advancedPresent = false;
       try {
-        const r = await fetch(ADV_PATH, { method: 'HEAD' });
+        let r = await fetch(ADV_PATH, { method: 'HEAD' });
+        if (r.status === 405) r = await fetch(ADV_PATH, { method: 'GET', headers: { range: 'bytes=0-0' } });
         advancedPresent = r.ok;
       } catch (_) { /* network error → fall back */ }
 
@@ -361,7 +363,7 @@
     bar.style.cssText = 'position:absolute;top:8px;left:8px;right:8px;display:flex;gap:6px;align-items:center;z-index:5;pointer-events:none;';
     bar.innerHTML = `
       <div style="display:flex;gap:4px;background:rgba(15,37,71,0.85);border:1px solid rgba(168,193,219,0.15);border-radius:8px;padding:4px;pointer-events:auto;">
-        ${['1','5','15','60','240','D','W'].map(r => `<button data-r="${r}" style="background:transparent;border:none;color:#a8c1db;font:600 11px 'DM Sans',sans-serif;padding:4px 10px;border-radius:5px;cursor:pointer;letter-spacing:.04em;">${r === 'D' ? '1D' : r === 'W' ? '1W' : (parseInt(r,10) >= 60 ? (parseInt(r,10)/60)+'h' : r+'m')}</button>`).join('')}
+        ${['1','5','15','60','240','D','W','M'].map(r => `<button data-r="${r}" style="background:transparent;border:none;color:#a8c1db;font:600 11px 'DM Sans',sans-serif;padding:4px 10px;border-radius:5px;cursor:pointer;letter-spacing:.04em;">${r === 'D' ? '1D' : r === 'W' ? '1W' : r === 'M' ? '1M' : (parseInt(r,10) >= 60 ? (parseInt(r,10)/60)+'h' : r+'m')}</button>`).join('')}
       </div>
       <div style="margin-left:auto;pointer-events:auto;">
         <button id="snapBtn" style="background:rgba(232,192,96,0.12);border:1px solid rgba(232,192,96,0.4);color:#e8c060;font:700 11px 'DM Sans',sans-serif;padding:6px 12px;border-radius:8px;cursor:pointer;letter-spacing:.04em;">📸 Snap to reel</button>
