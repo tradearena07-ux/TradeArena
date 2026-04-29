@@ -623,18 +623,28 @@ begin
     left join author_stats ast on ast.owner_id  = r.author_id
     left join viewer_follow vf on vf.followee_id = r.author_id
     left join trade_qty   tq   on tq.paper_trade_id = r.paper_trade_id
+  ),
+  -- We pulled v_limit+1 rows in `ranked` so we can tell whether
+  -- there's a next page. `page` keeps only the first v_limit; the
+  -- extra row (if present) signals "more rows exist" without ever
+  -- shipping it to the client. next_cursor = oldest created_at on
+  -- the trimmed page, set only when an extra row exists. If two
+  -- reels share an exact created_at across a page boundary the
+  -- second one is briefly skipped — acceptable for v1 (resolved on
+  -- next refresh) and avoids a composite-cursor API change.
+  page as (
+    select * from joined order by created_at desc limit v_limit
   )
-  -- next_cursor = the oldest created_at on this page. The client
-  -- sends it back as `p_cursor` and we return rows strictly older.
-  -- If two reels share an exact created_at across a page boundary,
-  -- the second one is briefly skipped — acceptable for v1 (resolved
-  -- on next refresh) and avoids a composite-cursor API change.
   select jsonb_build_object(
     'rows',        coalesce(jsonb_agg(j order by j.created_at desc), '[]'::jsonb),
-    'next_cursor', (select min(created_at) from joined)
+    'next_cursor', case
+                     when (select count(*) from joined) > v_limit
+                     then (select min(created_at) from page)
+                     else null
+                   end
   )
     into v_rows
-    from joined j;
+    from page j;
 
   return v_rows;
 end;

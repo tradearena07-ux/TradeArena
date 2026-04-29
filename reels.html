@@ -446,7 +446,10 @@
     fresh.forEach(r => { state.seen.add(r.id); state.rows.push(r); });
     appendSlots(fresh);
 
-    if (rows.length < 12) {
+    // The server sets next_cursor=null when there's no more data, so
+    // that's the authoritative "done" signal. (Row count is no longer
+    // a reliable proxy now that the server trims to exactly v_limit.)
+    if (!data.next_cursor) {
       state.done = true;
       document.getElementById('feedSentinel').innerHTML = '<i class="fa-solid fa-flag-checkered"></i> Caught up.';
     } else {
