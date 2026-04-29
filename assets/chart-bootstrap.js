@@ -1,20 +1,8 @@
-// ============================================================
-// TArenaChart — chart bootstrap with graceful fallback
-// ============================================================
-// Detection rules (run once at module load):
-//   1. If `/charting_library/charting_library.js` HEAD's 200,
-//      treat it as the licensed Advanced Charts library and
-//      mount the full broker-grade widget.
-//   2. Otherwise, lazy-load TradingView's MIT-licensed
-//      Lightweight Charts library from CDN and render a
-//      simpler-but-pro candle + EMA + Volume chart.
-//
-// Public API (returned by `mount()`):
-//   chart.setSymbol(symbol, resolution?) → swap the active symbol
-//   chart.takeSnapshot()                 → Promise<{symbol, resolution, drawings, png}>
-//   chart.getDrawings()                  → drawing JSON (Advanced) | [] (fallback)
-//   chart.destroy()                      → tear down
-// ============================================================
+// TArenaChart — chart bootstrap. Mounts the licensed Advanced Charts
+// library if /charting_library/charting_library.js is installed, and
+// otherwise lazy-loads TradingView's MIT-licensed Lightweight Charts
+// from CDN and renders a navy/gold candle + EMA + Volume chart.
+// mount() returns {setSymbol, takeSnapshot, getDrawings, destroy}.
 (function (global) {
   'use strict';
 
@@ -39,21 +27,24 @@
     volume:     'rgba(168,193,219,0.35)',
   };
 
-  // ----- Detect which library to use ---------------------------
   function detectLibrary() {
     if (detectionPromise) return detectionPromise;
     detectionPromise = (async () => {
+      // HEAD-check the licensed library; a 404 here is the normal
+      // "not installed yet" path, so we only catch network failures.
+      let advancedPresent = false;
       try {
         const r = await fetch(ADV_PATH, { method: 'HEAD' });
-        if (r.ok) {
-          await loadScript(ADV_PATH);
-          if (global.TradingView && typeof global.TradingView.widget === 'function'
-              && global.TradingView.widget.length /* Advanced library constructor takes 1 arg = options */) {
-            mode = 'advanced';
-            return mode;
-          }
+        advancedPresent = r.ok;
+      } catch (_) { /* network error → fall back */ }
+
+      if (advancedPresent) {
+        await loadScript(ADV_PATH);
+        if (global.TradingView && typeof global.TradingView.widget === 'function') {
+          mode = 'advanced';
+          return mode;
         }
-      } catch (_) { /* fall through */ }
+      }
       await loadScript(LIGHTWEIGHT_JS);
       mode = 'lightweight';
       return mode;
@@ -63,7 +54,6 @@
 
   function loadScript(src) {
     return new Promise((resolve, reject) => {
-      // Avoid double-loading.
       if ([...document.scripts].some(s => s.src === src || s.src.endsWith(src))) {
         return resolve();
       }
@@ -75,9 +65,7 @@
     });
   }
 
-  // ============================================================
-  // Advanced Charts mount
-  // ============================================================
+  // ----- Advanced Charts mount ----------------------------------
   function mountAdvanced(containerId, symbol, resolution) {
     const widget = new global.TradingView.widget({
       container:                  containerId,
@@ -122,22 +110,28 @@
 
     widget.onChartReady(() => {
       const c = widget.activeChart();
-      // Default studies: EMA20, EMA50, Volume, RSI(14).
-      try { c.createStudy('Moving Average Exponential', false, false, [20], null, { 'plot.color': THEME.ema20 }); } catch (_) {}
-      try { c.createStudy('Moving Average Exponential', false, false, [50], null, { 'plot.color': THEME.ema50 }); } catch (_) {}
-      try { c.createStudy('Volume', false, false); } catch (_) {}
-      try { c.createStudy('Relative Strength Index', false, false, [14]); } catch (_) {}
+      // Default studies: EMA20, EMA50, Volume, RSI(14). Library can throw
+      // here if a study isn't bundled in this build, so we log and continue.
+      const studies = [
+        ['Moving Average Exponential', [20], { 'plot.color': THEME.ema20 }],
+        ['Moving Average Exponential', [50], { 'plot.color': THEME.ema50 }],
+        ['Volume',                     [],   null],
+        ['Relative Strength Index',    [14], null],
+      ];
+      for (const [name, inputs, overrides] of studies) {
+        try { c.createStudy(name, false, false, inputs, null, overrides || undefined); }
+        catch (e) { console.warn('createStudy failed', name, e); }
+      }
 
-      // Inject a "Snap to reel" toolbar button.
-      try {
+      if (typeof widget.headerReady === 'function') {
         widget.headerReady().then(() => {
           const btn = widget.createButton();
           btn.setAttribute('title', 'Capture chart for a strategy reel');
           btn.classList.add('apply-common-tooltip');
           btn.innerHTML = '📸 Snap to reel';
           btn.addEventListener('click', () => snapAdvanced(widget));
-        });
-      } catch (_) { /* no headerReady in some library versions */ }
+        }, (e) => console.warn('headerReady rejected', e));
+      }
     });
 
     return {
@@ -146,31 +140,31 @@
       setSymbol(sym, res) {
         widget.activeChart().setSymbol(sym, res || widget.activeChart().resolution());
       },
-      async takeSnapshot() {
-        return snapAdvanced(widget);
-      },
+      takeSnapshot() { return snapAdvanced(widget); },
       getDrawings() {
-        try {
-          const c = widget.activeChart();
-          return c.getAllShapes ? c.getAllShapes() : [];
-        } catch (_) { return []; }
+        const c = widget.activeChart();
+        return (c && c.getAllShapes) ? c.getAllShapes() : [];
       },
-      destroy() {
-        try { widget.remove(); } catch (_) {}
-      },
+      destroy() { widget.remove(); },
     };
   }
 
-  // 10-minute TTL on the pending snap. The reel composer consumes
-  // this through `TArenaChart.consumePendingSnap()` which validates
-  // and auto-evicts expired entries.
+  // 10-minute TTL on the pending snap; reel composer reads via
+  // TArenaChart.consumePendingSnap() which validates and evicts.
   const SNAP_TTL_MS = 10 * 60 * 1000;
 
+  // Snap payload shape matches the task contract:
+  //   { symbol, interval, drawings, png_dataurl }
+  // plus the TTL bookkeeping fields ts / expiresAt.
   function persistSnap(snap) {
-    const payload = Object.assign({}, snap, {
-      ts:        Date.now(),
-      expiresAt: Date.now() + SNAP_TTL_MS,
-    });
+    const payload = {
+      symbol:      snap.symbol,
+      interval:    snap.interval,
+      drawings:    snap.drawings || [],
+      png_dataurl: snap.png_dataurl || null,
+      ts:          Date.now(),
+      expiresAt:   Date.now() + SNAP_TTL_MS,
+    };
     localStorage.setItem('pending_chart_snap', JSON.stringify(payload));
     return payload;
   }
@@ -178,24 +172,24 @@
   async function snapAdvanced(widget) {
     const c = widget.activeChart();
     const symbol = c.symbol();
-    const resolution = c.resolution();
-    let drawings = [];
-    try { drawings = c.getAllShapes ? c.getAllShapes() : []; } catch (_) {}
-    let png = null;
+    const interval = c.resolution();
+    const drawings = (c.getAllShapes ? c.getAllShapes() : []);
+    let png_dataurl = null;
     try {
       const canvas = await widget.takeClientScreenshot();
-      png = canvas.toDataURL('image/png');
+      png_dataurl = canvas.toDataURL('image/png');
     } catch (e) {
+      // Screenshot can legitimately fail (cross-origin canvas, library
+      // version mismatch). Save the snap without the image rather than
+      // dropping the whole capture.
       console.warn('takeClientScreenshot failed', e);
     }
-    const snap = persistSnap({ symbol, resolution, drawings, png });
+    const snap = persistSnap({ symbol, interval, drawings, png_dataurl });
     flashToast('Chart captured — open the reel composer to attach it (expires in 10 min).');
     return snap;
   }
 
-  // ============================================================
-  // Lightweight Charts mount (fallback)
-  // ============================================================
+  // ----- Lightweight Charts mount (fallback) ---------------------
   function mountLightweight(containerId, symbol, resolution) {
     const container = document.getElementById(containerId);
     container.innerHTML = '';
@@ -327,8 +321,8 @@
       loadHistory().then(startLive);
     };
     toolbar.onSnap = async () => {
-      const png = await captureLightweight(container);
-      persistSnap({ symbol: state.symbol, resolution: state.resolution, drawings: [], png });
+      const png_dataurl = await captureLightweight(container);
+      persistSnap({ symbol: state.symbol, interval: state.resolution, drawings: [], png_dataurl });
       flashToast('Chart captured — open the reel composer to attach it (expires in 10 min).');
     };
 
@@ -343,13 +337,13 @@
         loadHistory().then(startLive);
       },
       async takeSnapshot() {
-        const png = await captureLightweight(container);
-        return persistSnap({ symbol: state.symbol, resolution: state.resolution, drawings: [], png });
+        const png_dataurl = await captureLightweight(container);
+        return persistSnap({ symbol: state.symbol, interval: state.resolution, drawings: [], png_dataurl });
       },
       getDrawings() { return []; },
       destroy() {
-        try { if (state.unsubLive) state.unsubLive(); } catch (_) {}
-        try { chart.remove(); } catch (_) {}
+        if (state.unsubLive) state.unsubLive();
+        chart.remove();
       },
     };
   }
@@ -435,38 +429,31 @@
     setTimeout(() => t.remove(), 2800);
   }
 
-  // ============================================================
-  // Public mount
-  // ============================================================
   async function mount(containerId, symbol, resolution) {
-    // Opportunistically evict any expired snap on every chart mount
-    // so stale captures don't leak into a brand-new session.
+    // Opportunistically evict an expired snap so stale captures
+    // don't leak into a brand-new session.
     consumePendingSnap({ peek: true });
     await detectLibrary();
-    if (mode === 'advanced')   return mountAdvanced(containerId, symbol, resolution);
-    /* lightweight */          return mountLightweight(containerId, symbol, resolution);
+    return mode === 'advanced'
+      ? mountAdvanced(containerId, symbol, resolution)
+      : mountLightweight(containerId, symbol, resolution);
   }
 
-  // ============================================================
-  // Pending-snap consumer API
-  // ============================================================
-  // The reel composer (Task #5) calls `consumePendingSnap()` to
-  // grab the most recent capture and clear it. With `{peek: true}`
-  // the snap is returned without being removed (used internally to
-  // auto-evict expired entries on chart mount).
-  // Returns null when no valid snap is present.
-  // ============================================================
+  // Reel composer (Task #5) uses this to grab the most recent capture
+  // and clear it. With {peek:true} the snap is returned without being
+  // removed (used internally to evict expired entries). Returns null
+  // when no valid (non-expired) snap is present.
   function consumePendingSnap(opts) {
     const peek = !!(opts && opts.peek);
-    let raw;
-    try { raw = localStorage.getItem('pending_chart_snap'); }
-    catch (_) { return null; }
+    const raw = localStorage.getItem('pending_chart_snap');
     if (!raw) return null;
     let snap;
     try { snap = JSON.parse(raw); }
-    catch (_) { localStorage.removeItem('pending_chart_snap'); return null; }
-    // Backfill expiresAt for any pre-TTL snap left behind by an
-    // older build of this file.
+    catch (e) {
+      console.warn('pending_chart_snap was not valid JSON; clearing', e);
+      localStorage.removeItem('pending_chart_snap');
+      return null;
+    }
     if (typeof snap.expiresAt !== 'number') {
       snap.expiresAt = (snap.ts || 0) + SNAP_TTL_MS;
     }

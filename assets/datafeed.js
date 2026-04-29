@@ -1,18 +1,6 @@
-// ============================================================
-// TArenaDatafeed — market data layer
-// ============================================================
-// Two consumers:
-//   1. TradingView Advanced Charts library, via the UDF datafeed
-//      object returned by `TArenaDatafeed.createUDF()`.
-//   2. The Lightweight Charts fallback, the watchlist, the
-//      symbol header, and the order panel — they call the
-//      simpler helpers below.
-//
-// Live ticks:
-//   - Crypto:  Binance public WebSocket (true real-time).
-//   - Stocks:  poll the Edge Function `/data-proxy?action=quote`
-//              on a 5-second interval (free tier, no WS).
-// ============================================================
+// TArenaDatafeed — market data layer used by the chart, watchlist,
+// symbol header and order panel. Crypto ticks come from Binance WS,
+// stock ticks are polled from the data-proxy edge function every 5s.
 (function (global) {
   'use strict';
 
@@ -92,48 +80,56 @@
     return j.results || [];
   }
 
-  // ----- Live tick subscription --------------------------------
-  // Returns an unsubscribe function.
-  // Consumers receive a normalized {symbol, price, change, changePct, t}.
-  const wsConnections = {}; // symbol → WebSocket (shared)
+  // Live tick subscription. Consumers receive {symbol, price, change, changePct, t}.
+  const wsConnections = {}; // symbol → WebSocket
   const wsListeners   = {}; // symbol → Set<callback>
+
+  // Open (or re-open) the Binance trade stream for `sym`. Listeners in
+  // wsListeners[sym] are preserved across reconnects; this function only
+  // touches wsConnections so reconnect doesn't accumulate phantom callbacks.
+  function openBinanceSocket(sym) {
+    const pair = binancePair(sym).toLowerCase();
+    const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${pair}@trade`);
+    wsConnections[sym] = ws;
+
+    ws.addEventListener('message', (ev) => {
+      const d = JSON.parse(ev.data);
+      const price = +d.p;
+      if (!isFinite(price)) return;
+      const tick = { symbol: sym, price, change: 0, changePct: 0, t: +d.T };
+      const set = wsListeners[sym];
+      if (set) set.forEach(fn => fn(tick));
+    });
+
+    ws.addEventListener('close', () => {
+      // Only clear if we're still the registered socket — guards against
+      // a manual close() racing with an upstream-initiated close.
+      if (wsConnections[sym] === ws) delete wsConnections[sym];
+      // Reconnect only if there are still listeners that want ticks.
+      if (wsListeners[sym] && wsListeners[sym].size) {
+        setTimeout(() => {
+          if (wsListeners[sym] && wsListeners[sym].size && !wsConnections[sym]) {
+            openBinanceSocket(sym);
+          }
+        }, 2000);
+      }
+    });
+  }
 
   function subscribeBinance(symbol, cb) {
     const sym = symbol.toUpperCase();
-    const pair = binancePair(sym).toLowerCase();
-
     if (!wsListeners[sym]) wsListeners[sym] = new Set();
     wsListeners[sym].add(cb);
-
-    if (!wsConnections[sym]) {
-      const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${pair}@trade`);
-      wsConnections[sym] = ws;
-      ws.addEventListener('message', (ev) => {
-        try {
-          const d = JSON.parse(ev.data);
-          const price = +d.p;
-          if (!isFinite(price)) return;
-          const tick = { symbol: sym, price, change: 0, changePct: 0, t: +d.T };
-          (wsListeners[sym] || []).forEach(fn => { try { fn(tick); } catch (_) {} });
-        } catch (_) {}
-      });
-      ws.addEventListener('close', () => {
-        delete wsConnections[sym];
-        // If listeners remain, reconnect after a beat.
-        if (wsListeners[sym] && wsListeners[sym].size) {
-          setTimeout(() => subscribeBinance(sym, () => {}), 2000);
-        }
-      });
-    }
+    if (!wsConnections[sym]) openBinanceSocket(sym);
 
     return function unsubscribe() {
-      if (wsListeners[sym]) {
-        wsListeners[sym].delete(cb);
-        if (!wsListeners[sym].size) {
-          try { wsConnections[sym] && wsConnections[sym].close(); } catch (_) {}
-          delete wsConnections[sym];
-          delete wsListeners[sym];
-        }
+      const set = wsListeners[sym];
+      if (!set) return;
+      set.delete(cb);
+      if (!set.size) {
+        if (wsConnections[sym]) wsConnections[sym].close();
+        delete wsConnections[sym];
+        delete wsListeners[sym];
       }
     };
   }
@@ -147,17 +143,15 @@
     pollTimer = setInterval(async () => {
       const symbols = Object.keys(pollListeners);
       if (!symbols.length) { clearInterval(pollTimer); pollTimer = null; return; }
-      try {
-        const quotes = await fetchQuotes(symbols);
-        for (const sym of symbols) {
-          const q = quotes[sym];
-          if (!q) continue;
-          const tick = { symbol: sym, price: q.price, change: q.change, changePct: q.changePct, t: Date.now() };
-          (pollListeners[sym] || []).forEach(fn => { try { fn(tick); } catch (_) {} });
-        }
-      } catch (e) {
-        // Silent — next interval will retry.
-        console.warn('quote poll failed', e.message);
+      let quotes;
+      try { quotes = await fetchQuotes(symbols); }
+      catch (e) { console.warn('quote poll failed', e.message); return; }
+      for (const sym of symbols) {
+        const q = quotes[sym];
+        if (!q) continue;
+        const tick = { symbol: sym, price: q.price, change: q.change, changePct: q.changePct, t: Date.now() };
+        const set = pollListeners[sym];
+        if (set) set.forEach(fn => fn(tick));
       }
     }, 5000);
   }
@@ -166,10 +160,10 @@
     if (!pollListeners[symbol]) pollListeners[symbol] = new Set();
     pollListeners[symbol].add(cb);
     ensurePollLoop();
-    // Fire one immediate fetch so the UI doesn't wait 5s for first paint.
+    // Prime with one immediate fetch so the UI doesn't wait 5s for first paint.
     fetchQuotes([symbol]).then((q) => {
       if (q[symbol]) cb({ symbol, price: q[symbol].price, change: q[symbol].change, changePct: q[symbol].changePct, t: Date.now() });
-    }).catch(() => {});
+    }).catch((e) => console.warn('quote prime failed', symbol, e.message));
     return function unsubscribe() {
       if (pollListeners[symbol]) {
         pollListeners[symbol].delete(cb);
@@ -184,13 +178,9 @@
       : subscribePoll(symbol, cb);
   }
 
-  // ============================================================
-  // TradingView UDF datafeed adapter
-  // ============================================================
-  // Implements the bits of the UDF spec that the Advanced Charts
-  // library actually calls. See:
+  // UDF datafeed adapter for the TradingView Advanced Charts library.
+  // Implements only the methods the library actually calls; spec at
   // https://github.com/tradingview/charting_library/wiki/JS-Api
-  // ============================================================
   function createUDF() {
     const subs = {}; // subscriberUID → { symbol, resolution, lastBar, unsubscribe }
 
@@ -312,16 +302,14 @@
     };
   }
 
-  // ============================================================
-  // Save/load adapter for chart_layouts (used by Advanced Charts
-  // library's `save_load_adapter` option). Falls back to no-op
-  // if the user is not signed in.
-  // ============================================================
+  // Save/load adapter for the Advanced Charts library's `save_load_adapter`
+  // option. Persists to public.chart_layouts scoped to the signed-in user;
+  // returns empty results when no user is present.
   function createSaveLoadAdapter() {
     const db = global.TArenaDB;
     async function uid() {
-      try { return (await db.auth.getSession()).data?.session?.user?.id || null; }
-      catch (_) { return null; }
+      const r = await db.auth.getSession();
+      return r.data?.session?.user?.id || null;
     }
     return {
       async getAllCharts() {
