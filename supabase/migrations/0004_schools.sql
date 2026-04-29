@@ -134,7 +134,13 @@ drop policy if exists user_perks_read        on public.user_perks;
 create policy schools_read          on public.schools          for select using (auth.role() = 'authenticated');
 create policy school_modules_read   on public.school_modules   for select using (auth.role() = 'authenticated');
 create policy module_reels_read     on public.module_reels     for select using (auth.role() = 'authenticated');
-create policy quizzes_read          on public.quizzes          for select using (auth.role() = 'authenticated');
+-- NB: NO direct select policy on `quizzes`. The `correct` answer
+-- indices are sensitive — exposing them through table RLS would let
+-- an authenticated user trivially cheat, even though `get_module`
+-- strips them on the way out. All quiz reads must go through:
+--   * public.get_module     — strips correct + explain (player path)
+--   * public.admin_get_quiz — admin-only round-trip (curator path)
+-- Both are SECURITY DEFINER and therefore bypass RLS legitimately.
 create policy challenges_read       on public.challenges       for select using (auth.role() = 'authenticated');
 
 -- Personal tables: owner-only. All writes happen through SECURITY DEFINER RPCs.
@@ -168,7 +174,11 @@ begin
      group by s.id
   ),
   done as (
-    select m.school_id, count(*) as done_count
+    -- count DISTINCT module ids — without this, a learner with two
+    -- passing quiz attempts on the same module would have done_count
+    -- bumped twice (joining qa once per row), which broke the progress
+    -- ring (could exceed 100%).
+    select m.school_id, count(distinct m.id) as done_count
       from public.school_modules m
       join public.quiz_attempts qa
         on qa.module_id = m.id and qa.user_id = v_uid and qa.passed
@@ -493,11 +503,38 @@ declare
   v_trade_ids uuid[];
   v_streak int := 0;
   v_t record;
+  v_has_quiz boolean;
+  v_quiz_passed boolean;
 begin
   if v_uid is null then raise exception 'not authenticated'; end if;
 
   select spec into v_spec from public.challenges where module_id = p_module_id;
   if v_spec is null then raise exception 'no challenge for module'; end if;
+
+  -- Module-completion gate: a learner must pass the quiz BEFORE the
+  -- challenge can grant a completion / perk. This RPC is callable
+  -- directly by any authenticated user — without this gate they could
+  -- skip straight from the reels stage to validate_challenge.
+  -- (Modules without a quiz are allowed to bypass this check.)
+  select exists(select 1 from public.quizzes q where q.module_id = p_module_id)
+    into v_has_quiz;
+  if v_has_quiz then
+    select exists(select 1 from public.quiz_attempts qa
+                   where qa.module_id = p_module_id
+                     and qa.user_id  = v_uid
+                     and qa.passed)
+      into v_quiz_passed;
+    if not v_quiz_passed then
+      return jsonb_build_object(
+        'passed',  false,
+        'evidence', '{}'::jsonb,
+        'perk',     null,
+        'already_completed', false,
+        'gate',     'quiz_required',
+        'message',  'Pass the quiz first to unlock the challenge.'
+      );
+    end if;
+  end if;
 
   v_kind   := v_spec ->> 'kind';
   v_params := coalesce(v_spec -> 'params', '{}'::jsonb);

@@ -459,17 +459,27 @@
     const passed   = !!(payload.challenge_passed || (extra && extra.passed));
     const evidence = extra && extra.evidence;
     const perk     = c.spec && c.spec.perk;
+    const gated    = extra && extra.gate === 'quiz_required';
 
     let evHtml = '';
     if (extra) {
-      evHtml = `<div class="ch-evidence ${passed ? 'pass' : 'fail'}">
-        ${passed
-          ? `<div style="color:#86efac;font-weight:700;margin-bottom:6px;"><i class="fa-solid fa-check"></i> Challenge passed.</div>`
-          : `<div style="color:#fca5a5;font-weight:700;margin-bottom:6px;"><i class="fa-solid fa-xmark"></i> Not yet — keep trading.</div>`}
-        ${evidence ? Object.entries(evidence).filter(([k]) => k !== 'trade_ids').map(([k, v]) =>
-          `<div class="row"><span>${sanitize(k)}</span><strong>${sanitize(typeof v === 'object' ? JSON.stringify(v) : v)}</strong></div>`
-        ).join('') : ''}
-      </div>`;
+      if (gated) {
+        evHtml = `<div class="ch-evidence fail">
+          <div style="color:#fbbf24;font-weight:700;margin-bottom:6px;">
+            <i class="fa-solid fa-lock"></i> ${sanitize(extra.message || 'Pass the quiz first to unlock the challenge.')}
+          </div>
+          <div style="font-size:12.5px;color:var(--muted);">Once your quiz pass is on file, your challenge progress will count.</div>
+        </div>`;
+      } else {
+        evHtml = `<div class="ch-evidence ${passed ? 'pass' : 'fail'}">
+          ${passed
+            ? `<div style="color:#86efac;font-weight:700;margin-bottom:6px;"><i class="fa-solid fa-check"></i> Challenge passed.</div>`
+            : `<div style="color:#fca5a5;font-weight:700;margin-bottom:6px;"><i class="fa-solid fa-xmark"></i> Not yet — keep trading.</div>`}
+          ${evidence ? Object.entries(evidence).filter(([k]) => k !== 'trade_ids').map(([k, v]) =>
+            `<div class="row"><span>${sanitize(k)}</span><strong>${sanitize(typeof v === 'object' ? JSON.stringify(v) : v)}</strong></div>`
+          ).join('') : ''}
+        </div>`;
+      }
     }
 
     let perkHtml = '';
