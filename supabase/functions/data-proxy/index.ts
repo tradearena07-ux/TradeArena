@@ -268,19 +268,36 @@ type BinanceKlineRow = (string | number)[];
 
 async function fetchBinanceHistory(symbol: string, resolution: string, fromSec: number, toSec: number): Promise<Bar[]> {
   const interval = mapResolution(resolution, "binance");
-  const url = `https://api.binance.com/api/v3/klines?symbol=${binanceSymbol(symbol)}&interval=${interval}&startTime=${fromSec * 1000}&endTime=${toSec * 1000}&limit=1000`;
-  const r   = await fetch(url);
-  if (!r.ok) throw new Error(`Binance ${r.status}`);
-  const j = await r.json() as BinanceKlineRow[];
-  if (!Array.isArray(j)) return [];
-  return j.map((row) => ({
-    t: num(row[0]),
-    o: num(row[1]),
-    h: num(row[2]),
-    l: num(row[3]),
-    c: num(row[4]),
-    v: num(row[5], 0),
-  }));
+  const pair     = binanceSymbol(symbol);
+  // Binance caps each call at 1000 bars. Loop forward by the last
+  // returned bar's timestamp so long ranges (e.g. 1m over multi-day
+  // windows) return complete history rather than the first 1000 bars.
+  const all: Bar[] = [];
+  let cursorMs = fromSec * 1000;
+  const endMs  = toSec * 1000;
+  // Cap the loop at 20 pages (≤20k bars) as a safety stop.
+  for (let page = 0; page < 20 && cursorMs < endMs; page++) {
+    const url = `https://api.binance.com/api/v3/klines?symbol=${pair}&interval=${interval}&startTime=${cursorMs}&endTime=${endMs}&limit=1000`;
+    const r   = await fetch(url);
+    if (!r.ok) throw new Error(`Binance ${r.status}`);
+    const j = await r.json() as BinanceKlineRow[];
+    if (!Array.isArray(j) || j.length === 0) break;
+    for (const row of j) {
+      all.push({
+        t: num(row[0]),
+        o: num(row[1]),
+        h: num(row[2]),
+        l: num(row[3]),
+        c: num(row[4]),
+        v: num(row[5], 0),
+      });
+    }
+    if (j.length < 1000) break;
+    const lastT = num(j[j.length - 1][0]);
+    if (!isFinite(lastT) || lastT <= cursorMs) break;
+    cursorMs = lastT + 1;
+  }
+  return all;
 }
 
 type BinanceTicker24h = {
@@ -364,6 +381,35 @@ function mergeBars(a: Bar[], b: Bar[]): Bar[] {
   return [...m.values()].sort((p, q) => p.t - q.t);
 }
 
+// Aggregate finer-grained bars into a coarser timeframe. Used when an
+// upstream provider doesn't natively expose the requested resolution
+// (e.g. Yahoo/Finnhub return 1h candles, not native 4h). `bucketSec`
+// is the size of each output bar in seconds; bars are bucketed by
+// `floor(t / bucketSec)` and aggregated O = first.O, H = max(H),
+// L = min(L), C = last.C, V = sum.
+function aggregateBars(bars: Bar[], bucketSec: number): Bar[] {
+  if (!bars.length || bucketSec <= 0) return bars;
+  const bucketMs = bucketSec * 1000;
+  const out: Bar[] = [];
+  let cur: Bar | null = null;
+  let curBucket = -1;
+  for (const b of bars) {
+    const bucket = Math.floor(b.t / bucketMs);
+    if (bucket !== curBucket) {
+      if (cur) out.push(cur);
+      cur = { t: bucket * bucketMs, o: b.o, h: b.h, l: b.l, c: b.c, v: b.v };
+      curBucket = bucket;
+    } else if (cur) {
+      if (b.h > cur.h) cur.h = b.h;
+      if (b.l < cur.l) cur.l = b.l;
+      cur.c  = b.c;
+      cur.v += b.v;
+    }
+  }
+  if (cur) out.push(cur);
+  return out;
+}
+
 // ----- handlers ----------------------------------------------------------
 
 async function handleHistory(body: RequestBody): Promise<Response> {
@@ -385,12 +431,20 @@ async function handleHistory(body: RequestBody): Promise<Response> {
   const cached  = force ? [] : await readCache(symbol, resolution, fromSec, toSec);
   const nowSec  = Math.floor(Date.now() / 1000);
 
+  // Equity providers (Yahoo + Finnhub) don't expose a native 4h
+  // candle, so we request 1h bars and aggregate to 4h client-side.
+  // Crypto goes straight through because Binance has native 4h.
+  const isFourHour = resolution.toUpperCase() === "240";
+  const equityResForRequest = (isFourHour && kind !== "crypto") ? "60" : resolution;
+
   async function fetchUpstream(fromS: number, toS: number): Promise<Bar[]> {
     if (toS <= fromS) return [];
-    if (kind === "asx")    return fetchYahooHistory(symbol, resolution, fromS, toS);
-    if (kind === "us")     return fetchFinnhubHistory(symbol, resolution, fromS, toS);
-    if (kind === "crypto") return fetchBinanceHistory(symbol, resolution, fromS, toS);
-    return [];
+    let raw: Bar[] = [];
+    if (kind === "asx")    raw = await fetchYahooHistory(symbol, equityResForRequest, fromS, toS);
+    else if (kind === "us")     raw = await fetchFinnhubHistory(symbol, equityResForRequest, fromS, toS);
+    else if (kind === "crypto") raw = await fetchBinanceHistory(symbol, resolution, fromS, toS);
+    if (isFourHour && kind !== "crypto") raw = aggregateBars(raw, 4 * 3600);
+    return raw;
   }
 
   // Identify head/tail gaps. The cache fully covers the request when

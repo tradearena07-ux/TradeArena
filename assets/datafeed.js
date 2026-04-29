@@ -423,6 +423,16 @@
           resolution: payload.resolution,
           layout:     payload.content,
         };
+        // The Advanced Charts library calls saveChart with payload.id
+        // for "Save" on an existing layout and without it for "Save As".
+        // Update in place when an id is supplied so we don't accumulate
+        // duplicate rows for the same logical layout.
+        if (payload.id) {
+          const { error } = await db.from('chart_layouts')
+            .update(row).eq('id', payload.id).eq('owner_id', u);
+          if (error) throw error;
+          return payload.id;
+        }
         const { data, error } = await db.from('chart_layouts')
           .insert(row).select('id').single();
         if (error) throw error;
