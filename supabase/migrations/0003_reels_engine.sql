@@ -152,6 +152,8 @@ declare
   v_visibility text;
   v_direction text;
   v_entry     numeric;
+  v_live      numeric;   -- last quote at publish time (used for paper_trades.entry_price)
+  v_fill      numeric;   -- price the auto trade actually fills at
   v_stop      numeric;
   v_target    numeric;
   v_risk_pct  numeric;
@@ -165,9 +167,10 @@ begin
   v_thesis     := nullif(trim(p_payload->>'thesis'), '');
   v_direction  := lower(coalesce(p_payload->>'direction', 'long'));
   v_visibility := lower(coalesce(p_payload->>'visibility', 'public'));
-  v_entry      := nullif((p_payload->>'entry'),     '')::numeric;
-  v_stop       := nullif((p_payload->>'stop_loss'), '')::numeric;
-  v_target     := nullif((p_payload->>'target'),    '')::numeric;
+  v_entry      := nullif((p_payload->>'entry'),      '')::numeric;
+  v_live       := nullif((p_payload->>'live_price'), '')::numeric;
+  v_stop       := nullif((p_payload->>'stop_loss'),  '')::numeric;
+  v_target     := nullif((p_payload->>'target'),     '')::numeric;
   v_risk_pct   := coalesce(nullif((p_payload->>'risk_pct'), '')::numeric, 1.0);
 
   if v_thesis is null then raise exception 'Thesis is required'; end if;
@@ -227,8 +230,15 @@ begin
     end loop;
   end if;
 
-  -- 4c. Auto paper trade — risk-sized
-  v_qty := public.tarena_position_size(v_entry, v_stop, v_risk_pct, v_account);
+  -- 4c. Auto paper trade — risk-sized, opens silently at LIVE PRICE.
+  -- The reel itself stores the user's intended `entry` (for the chart
+  -- annotation and R:R math), but the back-linked paper_trade fills
+  -- at the live quote the client captured immediately before posting.
+  -- We fall back to the user-typed entry only when the client didn't
+  -- send a live snapshot — keeps the function backwards-compatible
+  -- if a future caller skips the field.
+  v_fill := coalesce(v_live, v_entry);
+  v_qty  := public.tarena_position_size(v_entry, v_stop, v_risk_pct, v_account);
   if v_qty > 0 then
     insert into public.paper_trades (
       owner_id, symbol, market, side, qty,
@@ -240,7 +250,7 @@ begin
       nullif(p_payload->>'market', ''),
       case when v_direction = 'long' then 'buy' else 'sell' end,
       v_qty,
-      v_entry, v_stop, v_target,
+      v_fill, v_stop, v_target,
       'open', v_reel_id
     )
     returning id into v_trade_id;
@@ -268,7 +278,8 @@ grant execute on function public.publish_reel(jsonb) to authenticated;
 create or replace function public.mirror_reel(
   p_reel_id      uuid,
   p_risk_pct     numeric default 1.0,
-  p_account_size numeric default 100000.0
+  p_account_size numeric default 100000.0,
+  p_live_price   numeric default null     -- viewer's live quote at click time
 )
 returns uuid
 language plpgsql
@@ -279,6 +290,7 @@ declare
   v_uid      uuid := auth.uid();
   v_reel     public.reels%rowtype;
   v_qty      numeric;
+  v_fill     numeric;
   v_trade_id uuid;
   v_mirror_id uuid;
   v_existing  uuid;
@@ -311,6 +323,10 @@ begin
     raise exception 'Cannot size position from this reel';
   end if;
 
+  -- Mirror trades fill at the viewer's live quote (matches publish_reel
+  -- semantics — neither caller is allowed to backdate the fill price).
+  v_fill := coalesce(p_live_price, v_reel.entry);
+
   insert into public.paper_trades (
     owner_id, symbol, market, side, qty,
     entry_price, stop_loss, target,
@@ -320,7 +336,7 @@ begin
     v_reel.symbol, v_reel.market,
     case when v_reel.direction = 'long' then 'buy' else 'sell' end,
     v_qty,
-    v_reel.entry, v_reel.stop_loss, v_reel.target,
+    v_fill, v_reel.stop_loss, v_reel.target,
     'open', v_reel.id
   )
   returning id into v_trade_id;
@@ -335,8 +351,11 @@ begin
   return v_mirror_id;
 end;
 $$;
-revoke all on function public.mirror_reel(uuid, numeric, numeric) from public;
-grant execute on function public.mirror_reel(uuid, numeric, numeric) to authenticated;
+-- Drop the old 3-arg signature in case this migration is re-run after
+-- an earlier deploy of 0003 that didn't include p_live_price.
+drop function if exists public.mirror_reel(uuid, numeric, numeric);
+revoke all on function public.mirror_reel(uuid, numeric, numeric, numeric) from public;
+grant execute on function public.mirror_reel(uuid, numeric, numeric, numeric) to authenticated;
 
 
 -- ============================================================
@@ -425,18 +444,23 @@ grant execute on function public.toggle_engagement(uuid, text) to authenticated;
 --
 -- Filters (optional, all default null):
 --   p_tag    — exact tag_value match (any tag_type)
---   p_ticker — exact symbol or @handle
+--   p_ticker — exact symbol match  (fed by `$TICKER` in the search box)
+--   p_user   — exact author username match (fed by `@user` in the search box)
 --   p_q      — substring match against thesis or tag_value
 --
 -- Cursor: any reel where created_at < p_cursor (NULL = first page).
 -- ============================================================
+-- Drop the older 6-arg signature so re-running the migration after a
+-- previous deploy doesn't leave two ambiguous overloads.
+drop function if exists public.feed_reels(timestamptz, int, text, text, text, text);
 create or replace function public.feed_reels(
   p_cursor   timestamptz default null,
   p_limit    int         default 12,
   p_tab      text        default 'fy',
   p_tag      text        default null,
   p_ticker   text        default null,
-  p_q        text        default null
+  p_q        text        default null,
+  p_user     text        default null
 )
 returns jsonb
 language plpgsql
@@ -461,6 +485,10 @@ begin
             select 1 from public.reel_tags t
              where t.reel_id = r.id and lower(t.tag_value) = lower(p_tag)))
        and (p_ticker is null or lower(r.symbol) = lower(p_ticker))
+       and (p_user is null or exists (
+            select 1 from public.public_profiles pp
+             where pp.id = r.author_id
+               and lower(pp.username) = lower(p_user)))
        and (p_q is null or
             r.thesis ilike '%' || p_q || '%' or
             exists (select 1 from public.reel_tags t
@@ -577,8 +605,8 @@ begin
   return v_rows;
 end;
 $$;
-revoke all on function public.feed_reels(timestamptz, int, text, text, text, text) from public;
-grant execute on function public.feed_reels(timestamptz, int, text, text, text, text) to authenticated;
+revoke all on function public.feed_reels(timestamptz, int, text, text, text, text, text) from public;
+grant execute on function public.feed_reels(timestamptz, int, text, text, text, text, text) to authenticated;
 
 
 -- ============================================================

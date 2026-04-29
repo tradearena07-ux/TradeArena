@@ -421,9 +421,13 @@
         const k = s.dataset.k;
         state.pins[i][k] = s.value;
         if (k === 'tag_type') {
+          // Reset tag_value to the first option of the NEW tag_type
+          // (previous code switched on the field name `k` instead of
+          // the chosen value, which always picked STRATEGIES[0]).
+          const newType = s.value;
           state.pins[i].tag_value = (
-            k === 'indicator' ? reelsApi.INDICATORS :
-            k === 'pattern'   ? reelsApi.PATTERNS   :
+            newType === 'indicator' ? reelsApi.INDICATORS :
+            newType === 'pattern'   ? reelsApi.PATTERNS   :
             reelsApi.STRATEGIES
           )[0];
           refreshPins();
@@ -543,12 +547,30 @@
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Publishing…';
 
+    // Capture live quote NOW so the auto paper-trade fills at the live
+    // price (server requirement), not at the user's intended limit
+    // entry. Falls back to the static catalogue price, then to entry,
+    // so a brief datafeed outage doesn't block publishing.
+    let livePrice = null;
+    try {
+      if (window.TArenaDatafeed?.fetchQuotes) {
+        const q = await window.TArenaDatafeed.fetchQuotes([state.symbol]);
+        const r = Array.isArray(q) ? q[0] : (q && q[state.symbol]);
+        livePrice = +(r?.last ?? r?.price ?? r) || null;
+      }
+    } catch (_) { /* ignore — falls back below */ }
+    if (!livePrice) {
+      const m = (window.TArenaMarket?.data || []).find(d => d.symbol === state.symbol);
+      livePrice = m?.price || state.entry;
+    }
+
     const payload = {
       symbol:     state.symbol,
       market:     state.market || classifyMarket(state.symbol),
       thesis:     state.thesis,
       direction:  state.direction,
       entry:      state.entry,
+      live_price: livePrice,
       stop_loss:  state.stop,
       target:     state.target,
       visibility: state.visibility,

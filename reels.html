@@ -43,6 +43,10 @@
     /* Reel card */
     .feed { display:flex; flex-direction:column; gap:24px; align-items:center; }
     .reel { width: 100%; max-width: 520px; background:var(--navy3); border:1px solid var(--bdl); border-radius:18px; overflow:hidden; position:relative; }
+    /* Virtualized placeholder — rendered when a slot's card is currently
+       unmounted (only ±3 around the viewport are mounted at any time). */
+    .reel.reel-collapsed { background:transparent; border:1px dashed rgba(255,255,255,0.04); }
+    .reel-placeholder { width:100%; height:100%; min-height: inherit; }
     .reel .chart-wrap { position:relative; aspect-ratio: 16 / 11; background:#091528; }
     .reel .chart-wrap img { width:100%; height:100%; object-fit:cover; display:block; }
     .reel .chart-fallback { width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--muted); font-family:'Cinzel',serif; letter-spacing:.18em; font-size:13px; gap:10px; }
@@ -223,9 +227,12 @@
     tab:        'fy',
     filterTag:  null,
     filterTicker: null,
+    filterUser: null,    // @user search filter
     filterQ:    null,
     cursor:     null,
-    rows:       [],
+    rows:       [],      // every loaded reel (data only)
+    slots:      [],      // [{ el, mounted, row, lastH }] — one slot per row
+    visibleIdx: new Set(),
     seen:       new Set(),  // id de-dupe across pages
     loading:    false,
     done:       false,
@@ -236,6 +243,13 @@
   // Live-tick cleanup registry per reel (so we unsubscribe when the
   // card scrolls offscreen — keeps the WS / poll fan-out tight).
   const liveSubs = new Map();
+
+  // Each slot collapses to this height when its card is unmounted, so
+  // the scrollbar position stays stable as the user windows past it.
+  const SLOT_PLACEHOLDER_H = 540;
+  // Window radius — keep at most (2*WINDOW + 1) cards mounted at any
+  // time. Task spec calls for ±3 around the focused card.
+  const WINDOW = 3;
 
   // ----------------------------------------------------------
   // Sidebar rails
@@ -283,34 +297,39 @@
   }
 
   function setTagFilter(tag) {
-    state.filterTag    = (state.filterTag === tag) ? null : tag;
-    state.filterTicker = null;
-    state.filterQ      = null;
+    const same = state.filterTag === tag;
+    clearAllFilters();
+    if (!same) state.filterTag = tag;
     document.getElementById('feedSearch').value = '';
     syncUrl(); highlightRail(); renderActiveFilter(); resetAndLoad();
   }
 
   function setTickerFilter(t) {
-    state.filterTicker = (state.filterTicker === t) ? null : t;
-    state.filterTag    = null;
-    state.filterQ      = null;
+    const same = state.filterTicker === t;
+    clearAllFilters();
+    if (!same) state.filterTicker = t;
     document.getElementById('feedSearch').value = '';
     syncUrl(); highlightRail(); renderActiveFilter(); resetAndLoad();
   }
 
   function clearFilter() {
-    state.filterTag = state.filterTicker = state.filterQ = null;
+    clearAllFilters();
     document.getElementById('feedSearch').value = '';
     syncUrl(); highlightRail(); renderActiveFilter(); resetAndLoad();
   }
 
   function syncUrl() {
     const u = new URL(window.location.href);
+    // Preserve a `?reel=` deep-link param across filter edits so a
+    // shared link doesn't get stripped when the visitor types a search.
+    const keepReel = u.searchParams.get('reel');
     u.search = '';
     if (state.filterTag)    u.searchParams.set('tag',    state.filterTag);
     if (state.filterTicker) u.searchParams.set('ticker', state.filterTicker);
+    if (state.filterUser)   u.searchParams.set('user',   state.filterUser);
     if (state.filterQ)      u.searchParams.set('q',      state.filterQ);
     if (state.tab !== 'fy') u.searchParams.set('tab',    state.tab);
+    if (keepReel)           u.searchParams.set('reel',   keepReel);
     history.replaceState(null, '', u);
   }
 
@@ -318,18 +337,25 @@
     const u = new URL(window.location.href);
     state.filterTag    = u.searchParams.get('tag');
     state.filterTicker = u.searchParams.get('ticker');
+    state.filterUser   = u.searchParams.get('user');
     state.filterQ      = u.searchParams.get('q');
     const t            = u.searchParams.get('tab');
     if (t && ['fy','following','trending'].includes(t)) state.tab = t;
-    if (state.filterQ) document.getElementById('feedSearch').value = state.filterQ;
+    if (state.filterQ)    document.getElementById('feedSearch').value = state.filterQ;
+    else if (state.filterUser) document.getElementById('feedSearch').value = '@' + state.filterUser;
+  }
+
+  function clearAllFilters() {
+    state.filterTag = state.filterTicker = state.filterUser = state.filterQ = null;
   }
 
   function renderActiveFilter() {
     const el = document.getElementById('activeFilter');
-    const f = state.filterTag || state.filterTicker || state.filterQ;
+    const f = state.filterTag || state.filterTicker || state.filterUser || state.filterQ;
     if (!f) { el.innerHTML = ''; return; }
-    const lbl = state.filterTag ? `Tag · ${state.filterTag}` :
+    const lbl = state.filterTag    ? `Tag · ${state.filterTag}` :
                 state.filterTicker ? `Ticker · ${state.filterTicker}` :
+                state.filterUser   ? `Author · @${state.filterUser}` :
                 `Search · "${state.filterQ}"`;
     el.innerHTML = `<div style="margin-bottom:14px;">
       <span class="filter-pill">${lbl} <button onclick="window.__clearFilter()" title="Clear filter"><i class="fa-solid fa-xmark"></i></button></span>
@@ -345,11 +371,14 @@
     clearTimeout(searchDebounce);
     const v = e.target.value.trim();
     searchDebounce = setTimeout(() => {
-      // $TICKER and #tag shortcuts feel like Twitter — power users
-      // don't want to click the rail to filter by AAPL.
-      if (/^\$[A-Za-z0-9.]+$/.test(v))      { state.filterTicker = v.slice(1).toUpperCase(); state.filterTag = null; state.filterQ = null; }
-      else if (/^#[A-Za-z0-9 _-]+$/.test(v)){ state.filterTag    = v.slice(1);                state.filterTicker = null; state.filterQ = null; }
-      else                                   { state.filterQ      = v || null;                 state.filterTag = null; state.filterTicker = null; }
+      // $TICKER, #tag, and @user shortcuts feel like Twitter — power
+      // users don't want to click the rail to filter by AAPL or by a
+      // specific author. Anything else falls through to free-text.
+      const reset = () => { state.filterTicker = state.filterTag = state.filterUser = state.filterQ = null; };
+      if      (/^\$[A-Za-z0-9.]+$/.test(v))      { reset(); state.filterTicker = v.slice(1).toUpperCase(); }
+      else if (/^#[A-Za-z0-9 _-]+$/.test(v))     { reset(); state.filterTag    = v.slice(1); }
+      else if (/^@[A-Za-z0-9_]+$/.test(v))       { reset(); state.filterUser   = v.slice(1); }
+      else                                       { reset(); state.filterQ      = v || null; }
       syncUrl(); highlightRail(); renderActiveFilter(); resetAndLoad();
     }, 280);
   });
@@ -358,7 +387,12 @@
   // Feed loading
   // ----------------------------------------------------------
   function resetAndLoad() {
-    state.cursor = null; state.rows = []; state.seen.clear(); state.done = false;
+    state.cursor = null;
+    state.rows = [];
+    state.slots = [];
+    state.visibleIdx.clear();
+    state.seen.clear();
+    state.done = false;
     document.getElementById('feed').innerHTML = '';
     teardownAllSubs();
     loadMore();
@@ -376,6 +410,7 @@
       p_tag:    state.filterTag,
       p_ticker: state.filterTicker,
       p_q:      state.filterQ,
+      p_user:   state.filterUser,
     });
     state.loading = false;
 
@@ -401,7 +436,7 @@
     // or someone publishes mid-scroll).
     const fresh = rows.filter(r => !state.seen.has(r.id));
     fresh.forEach(r => { state.seen.add(r.id); state.rows.push(r); });
-    appendCards(fresh);
+    appendSlots(fresh);
 
     if (rows.length < 12) {
       state.done = true;
@@ -419,11 +454,34 @@
   io.observe(document.getElementById('feedSentinel'));
 
   // ----------------------------------------------------------
-  // Card rendering
+  // Card rendering — windowed virtualization (±3 around viewport)
+  //
+  // Each loaded row gets a slot <article> that starts as an empty
+  // placeholder of fixed height. The slotObserver tracks which slots
+  // intersect the viewport; reconcileWindow() then mounts only those
+  // slots within ±WINDOW of the visible range and unmounts the rest
+  // (collapsing them back to a height-preserving placeholder so the
+  // scroll position doesn't jump). This keeps DOM work — and live
+  // quote subscriptions — bounded even with hundreds of loaded reels.
   // ----------------------------------------------------------
-  function appendCards(rows) {
+  function appendSlots(rows) {
     const feed = document.getElementById('feed');
-    rows.forEach(r => feed.appendChild(buildCard(r)));
+    rows.forEach((r, k) => {
+      const idx = state.slots.length;  // global index into state.rows
+      const el = document.createElement('article');
+      el.className = 'reel reel-slot';
+      el.dataset.slotIdx = String(idx);
+      el.dataset.reelId  = r.id;
+      el.style.minHeight = SLOT_PLACEHOLDER_H + 'px';
+      el.innerHTML = `<div class="reel-placeholder" aria-hidden="true"></div>`;
+      feed.appendChild(el);
+      state.slots.push({ el, mounted: false, row: r, lastH: SLOT_PLACEHOLDER_H });
+      slotObserver.observe(el);
+    });
+    // First page: nothing is intersecting yet, so eagerly mount the
+    // first window (±WINDOW around index 0) so the user sees content
+    // immediately rather than a stack of empty placeholders.
+    if (state.visibleIdx.size === 0 && state.slots.length) reconcileWindow(0);
   }
 
   function escape(s) {
@@ -434,10 +492,9 @@
     return Number(n).toLocaleString('en-US', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 4 });
   }
 
-  function buildCard(r) {
-    const el = document.createElement('article');
-    el.className = 'reel';
-    el.dataset.reelId = r.id;
+  // Renders the inner HTML + handlers of a card into an EXISTING slot
+  // element (does not create a new <article>). Returns nothing.
+  function renderCardInto(el, r) {
     const dirCls = r.direction === 'short' ? 'short' : 'long';
     const tags   = (r.tags || []).slice().sort((a,b) => {
       const [ka, kb] = [reelsApi.tagSortKey(a), reelsApi.tagSortKey(b)];
@@ -523,10 +580,61 @@
       btn.addEventListener('click', () => onAction(r, btn.dataset.act, el));
     });
 
-    // Live P&L subscription tied to viewport visibility
-    cardObserver.observe(el);
+    // Live P&L sub mounts immediately — slot is in the window so the
+    // card is by definition near the viewport; teardown happens when
+    // the window moves past it (see unmountSlot).
+    mountLiveSub(el, r.id);
+  }
 
-    return el;
+  function mountSlot(idx) {
+    const slot = state.slots[idx];
+    if (!slot || slot.mounted) return;
+    slot.el.classList.remove('reel-collapsed');
+    slot.el.style.minHeight = '';
+    slot.el.innerHTML = '';
+    renderCardInto(slot.el, slot.row);
+    slot.mounted = true;
+  }
+
+  function unmountSlot(idx) {
+    const slot = state.slots[idx];
+    if (!slot || !slot.mounted) return;
+    // Capture the rendered height first so the placeholder preserves
+    // scroll position when we collapse the slot.
+    const h = slot.el.offsetHeight || slot.lastH || SLOT_PLACEHOLDER_H;
+    slot.lastH = h;
+    teardownSub(slot.row.id);
+    slot.el.innerHTML = `<div class="reel-placeholder" aria-hidden="true"></div>`;
+    slot.el.classList.add('reel-collapsed');
+    slot.el.style.minHeight = h + 'px';
+    slot.mounted = false;
+  }
+
+  // Picks the focal slot index, then mounts [focal-WINDOW..focal+WINDOW]
+  // and unmounts everything else. `focal` defaults to the median of the
+  // currently-visible slots, falling back to the supplied hint or 0.
+  let reconcileScheduled = false;
+  function reconcileWindow(focalHint) {
+    if (reconcileScheduled) return;
+    reconcileScheduled = true;
+    requestAnimationFrame(() => {
+      reconcileScheduled = false;
+      const total = state.slots.length;
+      if (!total) return;
+      let focal;
+      if (state.visibleIdx.size > 0) {
+        const arr = Array.from(state.visibleIdx).sort((a,b) => a - b);
+        focal = arr[Math.floor(arr.length / 2)];
+      } else {
+        focal = (focalHint != null ? focalHint : 0);
+      }
+      const lo = Math.max(0, focal - WINDOW);
+      const hi = Math.min(total - 1, focal + WINDOW);
+      for (let i = 0; i < total; i++) {
+        if (i >= lo && i <= hi) mountSlot(i);
+        else                    unmountSlot(i);
+      }
+    });
   }
 
   // ----------------------------------------------------------
@@ -570,14 +678,19 @@
   });
 
   // ----------------------------------------------------------
-  // Live P&L subscription (mounted only when card is visible)
+  // Slot observer — drives both windowed mount/unmount AND live PnL
+  // visibility. Replaces the old per-card observer so we have a single
+  // source of truth about which cards are on/near the screen.
   // ----------------------------------------------------------
-  const cardObserver = new IntersectionObserver(entries => {
+  const slotObserver = new IntersectionObserver(entries => {
+    let dirty = false;
     entries.forEach(e => {
-      const id = e.target.dataset.reelId;
-      if (e.isIntersecting) mountLiveSub(e.target, id);
-      else                  teardownSub(id);
+      const idx = +e.target.dataset.slotIdx;
+      if (Number.isNaN(idx)) return;
+      if (e.isIntersecting) { if (!state.visibleIdx.has(idx)) { state.visibleIdx.add(idx);    dirty = true; } }
+      else                  { if (state.visibleIdx.has(idx))  { state.visibleIdx.delete(idx); dirty = true; } }
     });
+    if (dirty) reconcileWindow();
   }, { rootMargin: '120px' });
 
   function mountLiveSub(el, reelId) {
@@ -633,7 +746,7 @@
       return;
     }
     if (act === 'share') {
-      const url = window.location.origin + '/reels.html?reel=' + r.id;
+      const url = window.location.origin + '/reels.html?reel=' + encodeURIComponent(r.id);
       try {
         if (navigator.share) await navigator.share({ title: '$'+r.symbol+' on TradeArena', url });
         else { await navigator.clipboard.writeText(url); flashShare(el); }
@@ -708,10 +821,26 @@
     const btn = document.getElementById('confirmMirror');
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Opening trade…';
+    // Capture the viewer's live quote at click time so the mirror
+    // paper-trade fills at live, not at the author's stale entry.
+    let livePrice = null;
+    try {
+      if (datafeed?.fetchQuotes) {
+        const q = await datafeed.fetchQuotes([r.symbol]);
+        const v = Array.isArray(q) ? q[0] : (q && q[r.symbol]);
+        livePrice = +(v?.last ?? v?.price ?? v) || null;
+      }
+    } catch (_) { /* fall through */ }
+    if (!livePrice) {
+      const m = window.TArenaMarket?.find ? window.TArenaMarket.find(r.symbol) : null;
+      livePrice = m?.price || r.entry;
+    }
+
     const { data, error } = await sb.rpc('mirror_reel', {
       p_reel_id: r.id,
       p_risk_pct: risk,
       p_account_size: ACCOUNT_SIZE,
+      p_live_price: livePrice,
     });
     btn.disabled = false;
     if (error) {
@@ -747,6 +876,55 @@
   // Apply persisted tab to UI before first load
   document.querySelectorAll('.feed-tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === state.tab));
   resetAndLoad();
+
+  // ----------------------------------------------------------
+  // Deep link consumer — `?reel=<uuid>` resolves a single reel via
+  // get_reel and pins it to the top of the feed (so a shared link
+  // actually surfaces the reel rather than just landing on the feed).
+  // Runs after the regular feed kicks off so the placeholder slot
+  // sits above page-1 rows. If the reel is gone or the viewer can't
+  // see it, we toast and clear the param.
+  // ----------------------------------------------------------
+  (async function consumeDeepLink() {
+    const u = new URL(window.location.href);
+    const reelId = u.searchParams.get('reel');
+    if (!reelId) return;
+    const { data, error } = await sb.rpc('get_reel', { p_id: reelId });
+    if (error || !data) {
+      // Surface a small inline note rather than a blocking alert.
+      const af = document.getElementById('activeFilter');
+      if (af && !af.querySelector('.deep-miss')) {
+        af.insertAdjacentHTML('beforeend',
+          `<div class="deep-miss" style="margin:6px 0 14px;color:var(--muted);font-size:12px;">
+             <i class="fa-solid fa-circle-info"></i> The shared reel is no longer available.
+           </div>`);
+      }
+      u.searchParams.delete('reel');
+      history.replaceState(null, '', u);
+      return;
+    }
+    // De-dupe against the live feed and prepend.
+    if (!state.seen.has(data.id)) {
+      state.seen.add(data.id);
+      state.rows.unshift(data);
+      const feed = document.getElementById('feed');
+      const slot = document.createElement('article');
+      slot.className = 'reel reel-slot';
+      slot.dataset.slotIdx = '0';
+      slot.dataset.reelId  = data.id;
+      slot.style.minHeight = SLOT_PLACEHOLDER_H + 'px';
+      slot.innerHTML = `<div class="reel-placeholder" aria-hidden="true"></div>`;
+      feed.insertBefore(slot, feed.firstChild);
+      // Re-index every existing slot so visibleIdx tracking stays sane.
+      state.slots.forEach((s, i) => { s.el.dataset.slotIdx = String(i + 1); });
+      state.slots.unshift({ el: slot, mounted: false, row: data, lastH: SLOT_PLACEHOLDER_H });
+      state.visibleIdx = new Set(Array.from(state.visibleIdx).map(i => i + 1));
+      slotObserver.observe(slot);
+      reconcileWindow(0);
+      // Smoothly bring the deep-linked reel into view.
+      setTimeout(() => slot.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+    }
+  })();
 })();
 </script>
 </body>
