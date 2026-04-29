@@ -273,11 +273,11 @@
         const exch = String(exchange || '').toUpperCase();
         const stype = String(symbolType || '').toLowerCase();
         let market = '';
-        if (exch === 'ASX')                    market = 'asx';
-        else if (exch === 'US' || exch === 'NASDAQ' || exch === 'NYSE') market = 'us';
-        else if (exch === 'BINANCE')           market = 'crypto';
-        else if (stype === 'crypto')           market = 'crypto';
-        else if (stype === 'stock')            market = 'us';
+        if (exch === 'ASX')                                              market = 'asx';
+        else if (exch === 'US' || exch === 'NASDAQ' || exch === 'NYSE')  market = 'us';
+        else if (exch === 'BINANCE' || exch === 'CRYPTO')                market = 'crypto';
+        else if (stype === 'crypto')                                     market = 'crypto';
+        else if (stype === 'stock')                                      market = 'us';
 
         search(userInput, market).then((results) => {
           let rows = results;
@@ -286,7 +286,7 @@
           if (exch && exch !== '') {
             rows = rows.filter(r => String(r.exchange || '').toUpperCase() === exch
               || (exch === 'US' && (r.exchange === 'US' || r.exchange === 'NASDAQ' || r.exchange === 'NYSE'))
-              || (exch === 'BINANCE' && r.type === 'crypto'));
+              || ((exch === 'BINANCE' || exch === 'CRYPTO') && r.type === 'crypto'));
           }
           if (stype) {
             rows = rows.filter(r => String(r.type || '').toLowerCase() === stype);
