@@ -68,7 +68,8 @@ The migration creates these helper RPCs (callable from the client unless noted):
 - `get_perf_trades_for(p_owner)` — minimal projection (`id, symbol, side, qty, entry_price, exit_price, stop_loss, status, opened_at, closed_at`) used to compute the equity curve and quant tiles client-side, gated by `metrics OR equity_curve`. This keeps the "publish my performance without my journal narrative" hybrid-privacy story honest.
 - `get_strategies_for(p_owner)` — strategy library, gated by `visibility_mask.strategies`.
 - `get_follow_stats(p_owner)`, `am_following(p_target)`, `follow_user(p_target)`, `unfollow_user(p_target)` — social-graph helpers.
-- `compute_badges_for(p_owner)` — auto-issues five achievement badges (`100_trades`, `6_profitable_months`, `top_sharpe_q3_26`, `mirror_master`, `strategy_curator`) computed from existing `paper_trades` / `reel_mirrors` / `strategies` data — no extra schema required.
+- `compute_badges_for(p_owner)` — auto-issues five achievement badges (`100_trades`, `6_profitable_months`, `top_sharpe_q3_26`, `mirror_master`, `strategy_curator`) computed from existing `paper_trades` / `reel_mirrors` / `strategies` data — no extra schema required. `profile.html` calls this on every render and unions the result with the curated `profiles.badges` array, so newly-earned badges show up immediately without waiting on a backfill job.
+- `get_cash_balance_for(p_owner)` — server-computed cash balance (`100_000 + Σ realised P&L − Σ open-position cost basis`). Gated **only** by `visibility_mask.cash`, so a trader can advertise their cash buffer while keeping every other section private (or vice-versa). Returns `null` when private.
 
 Every new SECURITY DEFINER function explicitly `REVOKE ALL ... FROM PUBLIC` before granting `EXECUTE` to `authenticated`, so anonymous callers can't invoke them even if PUBLIC retains the default privilege somewhere upstream.
 

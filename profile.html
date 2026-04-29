@@ -361,6 +361,23 @@
     return data || [];
   }
 
+  async function loadCashBalance(ownerId) {
+    // Server-side gate uses visibility_mask.cash only — independent of
+    // metrics / equity_curve / holdings. Returns null when private.
+    if (!isOwnProfile && !isVisible('cash')) return null;
+    const { data, error } = await sb.rpc('get_cash_balance_for', { p_owner: ownerId });
+    if (error) { console.warn('cash load failed', error); return null; }
+    return data == null ? null : Number(data);
+  }
+
+  async function loadComputedBadges(ownerId) {
+    // Always safe to call — it returns a public-ish list of achievement
+    // tokens (no PII, no numerics). Failures fall through to curated.
+    const { data, error } = await sb.rpc('compute_badges_for', { p_owner: ownerId });
+    if (error) { console.warn('badges load failed', error); return []; }
+    return Array.isArray(data) ? data : [];
+  }
+
   async function loadStrategies(ownerId) {
     if (!isVisible('strategies')) return [];
     const { data, error } = await sb.rpc('get_strategies_for', { p_owner: ownerId });
@@ -472,10 +489,10 @@
     // Cash row (gated independently by visibility_mask.cash) — sits
     // inside the equity card so it stays close to the equity number.
     const showCash = isVisible('cash');
-    const cashHtml = showCash
+    const cashHtml = (showCash && state.cashBalance != null)
       ? `<div class="cash-row">
           <div class="l"><i class="fa-solid fa-wallet"></i> Cash buffer</div>
-          <div class="v num">${fmtMoney(state.cashBalance != null ? state.cashBalance : STARTING_CAPITAL)}</div>
+          <div class="v num">${fmtMoney(state.cashBalance)}</div>
         </div>`
       : `<div class="cash-row lock">
           <div class="l"><i class="fa-solid fa-lock"></i> Cash buffer</div>
@@ -533,8 +550,13 @@
         </div>`
       : `<div class="pcard">${locked('metrics','Quant metrics')}</div>`;
 
-    // Verified badges row
-    const allBadges = (p.badges && p.badges.length ? p.badges : []);
+    // Verified badges row — union of admin-curated badges on the
+    // profile row and the live, computed badge set returned by
+    // compute_badges_for(). Computed first so they appear immediately
+    // after a closed trade without waiting on a backfill job.
+    const computed = state.computedBadges || [];
+    const curated  = (p.badges && p.badges.length ? p.badges : []);
+    const allBadges = Array.from(new Set([...computed, ...curated]));
     const badgesHtml = allBadges.length
       ? `<div class="pcard">
           <div class="pcard-head"><div class="pcard-title">Verified achievements</div></div>
@@ -890,20 +912,24 @@
     }
 
     const id = state.profile.id;
-    const [follows, amFollowing, journalTrades, perfTrades, strategies, openHoldings] = await Promise.all([
+    const [follows, amFollowing, journalTrades, perfTrades, strategies, openHoldings, cashBalance, computedBadges] = await Promise.all([
       loadFollowStats(id),
       loadAmFollowing(id),
       loadJournalTrades(id),
       loadPerfTrades(id),
       loadStrategies(id),
       loadHoldings(id),
+      loadCashBalance(id),
+      loadComputedBadges(id),
     ]);
-    state.follows     = follows;
-    state.amFollowing = amFollowing;
-    state.trades      = journalTrades;       // for Journal tab table (status='closed', full fields)
-    state.perfTrades  = perfTrades;          // for metrics + equity curve (stripped projection)
-    state.strategies  = strategies;
-    state.openHoldings= openHoldings;
+    state.follows        = follows;
+    state.amFollowing    = amFollowing;
+    state.trades         = journalTrades;     // for Journal tab table (status='closed', full fields)
+    state.perfTrades     = perfTrades;        // for metrics + equity curve (stripped projection)
+    state.strategies     = strategies;
+    state.openHoldings   = openHoldings;
+    state.cashBalance    = cashBalance;       // server-side, gated by visibility_mask.cash only
+    state.computedBadges = computedBadges;
 
     // Build benchmark series spanning the perf history (or last 90d).
     let from = Date.now() - 90 * 86400000, to = Date.now();
@@ -916,17 +942,6 @@
     }
     const benchSeries = syntheticBenchmark(state.benchmark, from, to);
     state.summary = TArenaMetrics.summarise(perfTrades, { startingCapital: STARTING_CAPITAL, benchmark: benchSeries });
-
-    // Cash buffer = starting capital + realised P&L from closed trades
-    // − cost basis of currently-open positions. We compute it from the
-    // same data the rest of the page uses (no extra round-trip).
-    const realisedPnl = perfTrades.reduce((a, t) => a + TArenaMetrics.pnl(t), 0);
-    const openCost = (openHoldings || []).reduce((a, h) => {
-      const qty = Number(h.net_qty) || 0;
-      const cost = Number(h.avg_cost) || 0;
-      return a + Math.max(qty, 0) * cost;
-    }, 0);
-    state.cashBalance = STARTING_CAPITAL + realisedPnl - openCost;
 
     render();
   }

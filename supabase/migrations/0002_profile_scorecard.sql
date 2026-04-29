@@ -331,3 +331,57 @@ end;
 $$;
 revoke all on function public.compute_badges_for(uuid) from public;
 grant execute on function public.compute_badges_for(uuid) to authenticated;
+
+
+-- ============================================================
+-- 7. Cash balance accessor
+--
+-- The profile page shows a "Cash buffer" line whose visibility is
+-- gated **only** by visibility_mask.cash. Computing it client-side
+-- from get_perf_trades_for + holdings would conflate the cash mask
+-- with the metrics / holdings masks (a trader with cash=true but
+-- metrics=false would see a fabricated number). This RPC computes
+-- it server-side and ignores every other mask.
+--
+-- Convention: starting capital is $100,000.
+--   cash = 100000
+--        + Σ realised P&L on closed trades
+--        − Σ cost basis of currently open long positions
+-- ============================================================
+
+create or replace function public.get_cash_balance_for(p_owner uuid)
+returns numeric
+language sql stable
+security definer
+set search_path = public
+as $$
+  with realised as (
+    select coalesce(sum(
+      (coalesce(exit_price, 0) - entry_price) * qty *
+      case when side = 'buy' then 1 else -1 end
+    ), 0) as pnl
+      from public.paper_trades
+     where owner_id = p_owner
+       and status = 'closed'
+  ),
+  open_cost as (
+    -- Cost basis of currently-open long positions. We compute this
+    -- directly from paper_trades rather than the materialised view
+    -- so a stale refresh doesn't drift cash.
+    select coalesce(sum(
+      case when side = 'buy' then qty * entry_price else 0 end
+      - case when side = 'sell' then qty * entry_price else 0 end
+    ), 0) as cost
+      from public.paper_trades
+     where owner_id = p_owner
+       and status = 'open'
+  )
+  select case
+    when p_owner = auth.uid()
+      or public.has_visibility(p_owner, 'cash')
+    then 100000::numeric + (select pnl from realised) - (select cost from open_cost)
+    else null
+  end;
+$$;
+revoke all on function public.get_cash_balance_for(uuid) from public;
+grant execute on function public.get_cash_balance_for(uuid) to authenticated;
