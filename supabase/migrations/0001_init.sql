@@ -505,7 +505,11 @@ create policy profiles_delete_self  on public.profiles for delete using (auth.ui
 -- cannot enumerate the user list.
 -- security_invoker = false means the view runs with the definer's privileges,
 -- bypassing the self-only RLS on profiles for read-only purposes.
-drop view if exists public.public_profiles;
+-- Drop any prior incarnation regardless of object type (regular view,
+-- materialized view, or table) so the migration is safely re-runnable.
+drop materialized view if exists public.public_profiles;
+drop view              if exists public.public_profiles;
+drop table             if exists public.public_profiles;
 create view public.public_profiles
 with (security_invoker = false) as
   select id, username, display_name, tier, avatar_color, badges
@@ -540,7 +544,12 @@ create policy paper_trades_write on public.paper_trades for all
 -- readable by service_role (and by the wrapper functions which run
 -- SECURITY DEFINER). Refresh with: select public.refresh_holdings_view();
 -- ============================================================
+-- Drop any prior incarnation regardless of object type so the migration
+-- can re-create holdings_view as a materialized view even when an earlier
+-- iteration of the schema defined it as a regular view or a table.
 drop materialized view if exists public.holdings_view;
+drop view              if exists public.holdings_view;
+drop table             if exists public.holdings_view;
 create materialized view public.holdings_view as
   select
     owner_id,
