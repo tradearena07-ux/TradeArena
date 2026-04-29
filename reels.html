@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reels — TradeArena</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;700&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <style>
+    body { background: #060e1c; }
+
+    .reels-shell { max-width: 1200px; margin: 0 auto; padding: 30px 5% 80px; display:grid; grid-template-columns: 260px 1fr 280px; gap:32px; }
+    @media (max-width: 1080px) { .reels-shell { grid-template-columns: 1fr; padding: 18px 4% 60px; gap: 18px; } .reels-side { display:none; } }
+
+    /* Filters rail */
+    .reels-side { position:sticky; top: 96px; align-self:start; }
+    .reels-side h3 { font-family:'Cinzel',serif; font-size:11px; letter-spacing:.22em; color: var(--gold2); text-transform:uppercase; margin-bottom:10px; }
+    .chip-stack { display:flex; flex-direction:column; gap:6px; }
+    .chip-stack button { background:transparent; border:1px solid var(--bdl); color:var(--cream); padding:7px 12px; border-radius:9999px; text-align:left; font-size:13px; cursor:pointer; transition:.15s; }
+    .chip-stack button:hover { border-color:var(--gold); }
+    .chip-stack button.active { background:var(--gold); color:#091528; border-color:var(--gold); font-weight:700; }
+
+    /* Composer cta */
+    .compose-cta { display:flex; flex-direction:column; gap:14px; padding:18px; background:linear-gradient(135deg,#0a1830,#091528); border:1px solid var(--gold); border-radius:14px; margin-bottom:22px; }
+    .compose-cta h4 { font-family:'Cinzel',serif; color:var(--gold2); margin:0; font-size:15px; letter-spacing:.04em; }
+    .compose-cta p { color:var(--muted); font-size:12.5px; margin:0; line-height:1.5; }
+    .compose-cta a { display:inline-flex;align-items:center;justify-content:center;gap:8px; padding:10px 14px; background:var(--gold); color:#091528; border-radius:8px; text-decoration:none; font-weight:700; font-size:13px; }
+
+    /* Top bar */
+    .feed-head { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:18px; }
+    .feed-tabs { display:inline-flex; background:var(--navy2); border:1px solid var(--bdl); border-radius:10px; padding:4px; }
+    .feed-tabs button { background:transparent; border:0; color:var(--muted); font-family:'Cinzel',serif; font-size:12px; letter-spacing:.14em; padding:8px 14px; border-radius:7px; cursor:pointer; text-transform:uppercase; }
+    .feed-tabs button.active { background:var(--gold); color:#091528; }
+    .feed-search { flex:1; min-width:220px; display:flex; align-items:center; background:var(--navy2); border:1px solid var(--bdl); border-radius:10px; padding:0 12px; }
+    .feed-search input { flex:1; background:transparent; border:0; color:var(--cream); padding:10px 8px; font-size:13.5px; outline:none; font-family:inherit; }
+    .feed-search i { color:var(--muted); }
+    .filter-pill { display:inline-flex;align-items:center;gap:6px; background:rgba(201,160,48,.1); border:1px solid var(--gold); color:var(--gold2); padding:6px 12px; border-radius:9999px; font-size:12px; }
+    .filter-pill button { background:transparent; border:0; color:inherit; cursor:pointer; }
+
+    /* Reel card */
+    .feed { display:flex; flex-direction:column; gap:24px; align-items:center; }
+    .reel { width: 100%; max-width: 520px; background:var(--navy3); border:1px solid var(--bdl); border-radius:18px; overflow:hidden; position:relative; }
+    .reel .chart-wrap { position:relative; aspect-ratio: 16 / 11; background:#091528; }
+    .reel .chart-wrap img { width:100%; height:100%; object-fit:cover; display:block; }
+    .reel .chart-fallback { width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--muted); font-family:'Cinzel',serif; letter-spacing:.18em; font-size:13px; gap:10px; }
+    .reel .chart-fallback i { font-size:28px; color:var(--gold2); }
+
+    .pin { position:absolute; transform:translate(-50%,-50%); width:28px; height:28px; border-radius:50%; background:var(--gold); color:#091528; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; border:2px solid #fff; box-shadow:0 4px 12px rgba(0,0,0,.4); cursor:pointer; z-index:2; transition:.15s; }
+    .pin:hover { transform:translate(-50%,-50%) scale(1.15); }
+
+    .pin-popover { position:absolute; z-index:10; background:#0a1830; border:1px solid var(--gold); border-radius:10px; padding:12px 14px; width:240px; color:var(--cream); font-size:12.5px; box-shadow:0 8px 24px rgba(0,0,0,.5); }
+    .pin-popover .pop-title { font-family:'Cinzel',serif; color:var(--gold2); font-size:13px; letter-spacing:.06em; margin-bottom:6px; }
+    .pin-popover .pop-def { color:var(--muted); line-height:1.5; margin-bottom:10px; font-size:12px; }
+    .pin-popover .pop-actions { display:flex; flex-direction:column; gap:6px; }
+    .pin-popover .pop-actions a, .pin-popover .pop-actions button { width:100%; text-align:left; background:transparent; border:0; color:var(--gold2); padding:5px 0; font-size:12px; cursor:pointer; text-decoration:none; }
+    .pin-popover .pop-actions a:hover, .pin-popover .pop-actions button:hover { color:var(--cream); }
+    .pin-close { position:absolute; top:6px; right:8px; background:transparent; border:0; color:var(--muted); cursor:pointer; }
+
+    .reel .meta { padding: 14px 16px 16px; }
+    .reel .head { display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+    .reel .ticker { background:var(--gold); color:#091528; padding:4px 10px; border-radius:6px; font-weight:700; font-size:12px; text-decoration:none; font-family:'Cinzel',serif; }
+    .reel .ticker.short { background:var(--red); color:#fff; }
+    .reel .dir { font-size:11px; padding:3px 8px; border-radius:6px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; }
+    .reel .dir.long  { background:rgba(74,222,128,.12); color:var(--green); }
+    .reel .dir.short { background:rgba(248,113,113,.12); color:var(--red); }
+    .reel .pnl { margin-left:auto; font-family:'Cinzel',serif; font-weight:700; font-size:14.5px; }
+    .reel .pnl.pos { color:var(--green); }
+    .reel .pnl.neg { color:var(--red); }
+    .reel .pnl.flat { color:var(--muted); }
+
+    .chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+    .chip-tag { background:var(--navy2); border:1px solid var(--bdl); color:var(--cream); padding:4px 9px; border-radius:9999px; font-size:11.5px; cursor:pointer; transition:.15s; }
+    .chip-tag:hover { border-color:var(--gold); color:var(--gold2); }
+    .chip-tag i { color:var(--gold); margin-right:4px; font-size:10px; }
+
+    .reel .thesis { color:var(--cream); line-height:1.55; font-size:14px; margin-bottom:12px; white-space:pre-wrap; }
+
+    .levels { display:grid; grid-template-columns: repeat(4,1fr); gap:8px; padding:10px 12px; background:var(--navy2); border:1px solid var(--bdl); border-radius:10px; margin-bottom:12px; font-family:'Cinzel',serif; }
+    .levels div { font-size:11px; color:var(--muted); letter-spacing:.06em; text-transform:uppercase; }
+    .levels strong { display:block; font-size:13.5px; color:var(--cream); margin-top:2px; letter-spacing:0; text-transform:none; font-weight:700; }
+    .levels .stop strong { color:var(--red); }
+    .levels .target strong { color:var(--green); }
+    .levels .rr strong { color:var(--gold2); }
+
+    .actions { display:flex; gap:6px; margin-bottom:14px; }
+    .actions button { flex:1; background:var(--navy2); border:1px solid var(--bdl); color:var(--cream); padding:9px 0; border-radius:8px; cursor:pointer; font-size:12.5px; transition:.15s; display:flex; align-items:center; justify-content:center; gap:6px; }
+    .actions button:hover { border-color:var(--gold); color:var(--gold2); }
+    .actions button.primary { background:var(--gold); color:#091528; border-color:var(--gold); font-weight:700; }
+    .actions button.primary:hover { background:#e8c060; color:#091528; }
+    .actions button.on { color:var(--gold2); border-color:var(--gold); }
+
+    .author-row { display:flex; align-items:center; gap:10px; padding-top:12px; border-top:1px solid var(--bdl); }
+    .author-row .name { flex:1; min-width:0; }
+    .author-row .name a { color:var(--cream); text-decoration:none; font-weight:600; font-size:13px; }
+    .author-row .name a:hover { color:var(--gold2); }
+    .author-row .name .h { color:var(--muted); font-size:11.5px; }
+    .author-row .followbtn { background:transparent; border:1px solid var(--gold); color:var(--gold2); padding:6px 12px; border-radius:8px; font-size:12px; cursor:pointer; font-weight:600; }
+    .author-row .followbtn.on { background:transparent; color:var(--muted); border-color:var(--bdl); }
+
+    /* Mirror sheet */
+    .sheet-bg { position:fixed; inset:0; background:rgba(0,0,0,.65); display:none; align-items:flex-end; justify-content:center; z-index:50; }
+    .sheet-bg.show { display:flex; }
+    .sheet { width:100%; max-width:480px; background:#0a1830; border:1px solid var(--bdl); border-radius:18px 18px 0 0; padding:24px 22px 28px; }
+    @media (min-width: 700px) { .sheet-bg { align-items:center; } .sheet { border-radius:18px; } }
+    .sheet h3 { font-family:'Cinzel',serif; color:var(--cream); margin:0 0 4px; font-size:1.25rem; }
+    .sheet .sub { color:var(--muted); font-size:13px; margin-bottom:18px; }
+    .slider-row { margin: 16px 0 8px; }
+    .slider-row label { display:flex; justify-content:space-between; color:var(--cream); font-size:12.5px; margin-bottom:6px; font-family:'Cinzel',serif; letter-spacing:.04em; }
+    .slider-row input[type=range] { width:100%; accent-color: var(--gold); }
+    .preview-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; padding:12px; background:var(--navy2); border:1px solid var(--bdl); border-radius:10px; margin:14px 0 18px; font-size:12.5px; }
+    .preview-grid div { color:var(--muted); }
+    .preview-grid strong { display:block; color:var(--cream); font-family:'Cinzel',serif; margin-top:3px; font-size:14px; }
+    .sheet-actions { display:flex; gap:10px; }
+    .sheet-actions button { flex:1; padding:12px; border-radius:10px; border:1px solid var(--bdl); background:transparent; color:var(--cream); cursor:pointer; font-weight:600; }
+    .sheet-actions button.primary { background:var(--gold); color:#091528; border-color:var(--gold); }
+    .sheet-actions button.danger { color:var(--red); border-color:var(--red); }
+
+    /* Empty / loading */
+    .feed-msg { width:100%; max-width:520px; text-align:center; padding:60px 20px; color:var(--muted); }
+    .feed-msg i { font-size:32px; color:var(--gold2); margin-bottom:14px; display:block; }
+    .feed-msg .h { font-family:'Cinzel',serif; color:var(--cream); font-size:1.05rem; margin-bottom:6px; }
+  </style>
+</head>
+<body>
+
+<div id="tarena-nav"></div>
+
+<div class="reels-shell">
+
+  <!-- ────────  LEFT: filter rail  ──────── -->
+  <aside class="reels-side">
+    <div class="compose-cta">
+      <h4><i class="fa-solid fa-clapperboard"></i> Drop a reel</h4>
+      <p>Snap a chart, pin the indicators, share your thesis. Auto paper-trade opens on publish.</p>
+      <a href="reels-new.html"><i class="fa-solid fa-plus"></i> New reel</a>
+    </div>
+    <h3>Indicators</h3>
+    <div class="chip-stack" id="indicatorRail"></div>
+    <h3 style="margin-top:18px;">Patterns</h3>
+    <div class="chip-stack" id="patternRail"></div>
+    <h3 style="margin-top:18px;">Strategies</h3>
+    <div class="chip-stack" id="strategyRail"></div>
+  </aside>
+
+  <!-- ────────  CENTER: feed  ──────── -->
+  <main>
+    <div class="feed-head">
+      <div class="feed-tabs">
+        <button data-tab="fy"        class="active">For You</button>
+        <button data-tab="following">Following</button>
+        <button data-tab="trending">Trending</button>
+      </div>
+      <div class="feed-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input id="feedSearch" placeholder="$TICKER, #strategy, @user, or text…"/>
+      </div>
+    </div>
+    <div id="activeFilter"></div>
+    <div class="feed" id="feed"></div>
+    <div class="feed-msg" id="feedSentinel" style="display:none;">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      Loading more…
+    </div>
+  </main>
+
+  <!-- ────────  RIGHT: hot tickers (placeholder, lightweight) ──────── -->
+  <aside class="reels-side">
+    <h3>Hot symbols</h3>
+    <div class="chip-stack" id="tickerRail"></div>
+    <p style="font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.55;">
+      Tap a symbol to filter the feed for reels trading it.
+    </p>
+  </aside>
+</div>
+
+<!-- Mirror sheet -->
+<div class="sheet-bg" id="sheetBg" onclick="if(event.target===this)closeSheet()">
+  <div class="sheet">
+    <h3>Mirror this trade</h3>
+    <div class="sub" id="sheetSub"></div>
+    <div class="slider-row">
+      <label><span>Risk per trade</span><span id="riskLbl" style="color:var(--gold2);">1.00%</span></label>
+      <input id="riskSlider" type="range" min="0.25" max="5" step="0.25" value="1"/>
+    </div>
+    <div class="preview-grid" id="sheetPreview"></div>
+    <div class="sheet-actions">
+      <button onclick="closeSheet()">Cancel</button>
+      <button class="primary" id="confirmMirror" onclick="confirmMirror()">
+        <i class="fa-solid fa-arrows-rotate"></i> Mirror
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="tarena-footer"></div>
+
+<script src="assets/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="assets/supabase.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/market.js"></script>
+<script src="assets/datafeed.js"></script>
+<script src="assets/reels.js"></script>
+<script>
+(function () {
+  TArenaUI.renderNav('reels');
+  TArenaUI.renderFooter();
+
+  // Auth gate — feed needs auth.uid() for follows/mirrors/likes.
+  const session = TArenaAuth.requireAuth();
+  if (!session) return;
+
+  const sb = window.TArenaDB;
+  const reelsApi = window.TArenaReels;
+  const datafeed = window.TArenaDatafeed;
+
+  const ACCOUNT_SIZE = 100000;
+
+  const state = {
+    tab:        'fy',
+    filterTag:  null,
+    filterTicker: null,
+    filterQ:    null,
+    cursor:     null,
+    rows:       [],
+    seen:       new Set(),  // id de-dupe across pages
+    loading:    false,
+    done:       false,
+    pinPopoverFor: null,
+    sheetReel:  null,
+  };
+
+  // Live-tick cleanup registry per reel (so we unsubscribe when the
+  // card scrolls offscreen — keeps the WS / poll fan-out tight).
+  const liveSubs = new Map();
+
+  // ----------------------------------------------------------
+  // Sidebar rails
+  // ----------------------------------------------------------
+  function renderRails() {
+    const make = (containerId, items, type) => {
+      const el = document.getElementById(containerId);
+      el.innerHTML = items.map(t => `<button data-tag="${t}" data-type="${type}">${t}</button>`).join('');
+      el.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => setTagFilter(btn.dataset.tag));
+      });
+    };
+    make('indicatorRail', reelsApi.INDICATORS, 'indicator');
+    make('patternRail',   reelsApi.PATTERNS,   'pattern');
+    make('strategyRail',  reelsApi.STRATEGIES, 'strategy');
+
+    // Hot tickers — pulled from the live mock book for now; the feed
+    // is filtered server-side regardless of which symbols we surface.
+    const tickers = (window.TArenaMarket?.data || []).slice(0, 8);
+    const rail = document.getElementById('tickerRail');
+    rail.innerHTML = tickers.map(m =>
+      `<button data-ticker="${m.symbol}">${m.symbol} <span style="color:var(--muted);font-size:11px;">${m.name}</span></button>`
+    ).join('');
+    rail.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => setTickerFilter(btn.dataset.ticker));
+    });
+  }
+
+  function highlightRail() {
+    document.querySelectorAll('.chip-stack button').forEach(btn => {
+      btn.classList.toggle('active',
+        (btn.dataset.tag    && btn.dataset.tag    === state.filterTag) ||
+        (btn.dataset.ticker && btn.dataset.ticker === state.filterTicker)
+      );
+    });
+  }
+
+  // ----------------------------------------------------------
+  // Filter management
+  // ----------------------------------------------------------
+  function setTab(t) {
+    state.tab = t;
+    document.querySelectorAll('.feed-tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === t));
+    resetAndLoad();
+  }
+
+  function setTagFilter(tag) {
+    state.filterTag    = (state.filterTag === tag) ? null : tag;
+    state.filterTicker = null;
+    state.filterQ      = null;
+    document.getElementById('feedSearch').value = '';
+    syncUrl(); highlightRail(); renderActiveFilter(); resetAndLoad();
+  }
+
+  function setTickerFilter(t) {
+    state.filterTicker = (state.filterTicker === t) ? null : t;
+    state.filterTag    = null;
+    state.filterQ      = null;
+    document.getElementById('feedSearch').value = '';
+    syncUrl(); highlightRail(); renderActiveFilter(); resetAndLoad();
+  }
+
+  function clearFilter() {
+    state.filterTag = state.filterTicker = state.filterQ = null;
+    document.getElementById('feedSearch').value = '';
+    syncUrl(); highlightRail(); renderActiveFilter(); resetAndLoad();
+  }
+
+  function syncUrl() {
+    const u = new URL(window.location.href);
+    u.search = '';
+    if (state.filterTag)    u.searchParams.set('tag',    state.filterTag);
+    if (state.filterTicker) u.searchParams.set('ticker', state.filterTicker);
+    if (state.filterQ)      u.searchParams.set('q',      state.filterQ);
+    if (state.tab !== 'fy') u.searchParams.set('tab',    state.tab);
+    history.replaceState(null, '', u);
+  }
+
+  function readUrlFilters() {
+    const u = new URL(window.location.href);
+    state.filterTag    = u.searchParams.get('tag');
+    state.filterTicker = u.searchParams.get('ticker');
+    state.filterQ      = u.searchParams.get('q');
+    const t            = u.searchParams.get('tab');
+    if (t && ['fy','following','trending'].includes(t)) state.tab = t;
+    if (state.filterQ) document.getElementById('feedSearch').value = state.filterQ;
+  }
+
+  function renderActiveFilter() {
+    const el = document.getElementById('activeFilter');
+    const f = state.filterTag || state.filterTicker || state.filterQ;
+    if (!f) { el.innerHTML = ''; return; }
+    const lbl = state.filterTag ? `Tag · ${state.filterTag}` :
+                state.filterTicker ? `Ticker · ${state.filterTicker}` :
+                `Search · "${state.filterQ}"`;
+    el.innerHTML = `<div style="margin-bottom:14px;">
+      <span class="filter-pill">${lbl} <button onclick="window.__clearFilter()" title="Clear filter"><i class="fa-solid fa-xmark"></i></button></span>
+    </div>`;
+  }
+  window.__clearFilter = clearFilter;
+
+  // ----------------------------------------------------------
+  // Search
+  // ----------------------------------------------------------
+  let searchDebounce;
+  document.getElementById('feedSearch').addEventListener('input', e => {
+    clearTimeout(searchDebounce);
+    const v = e.target.value.trim();
+    searchDebounce = setTimeout(() => {
+      // $TICKER and #tag shortcuts feel like Twitter — power users
+      // don't want to click the rail to filter by AAPL.
+      if (/^\$[A-Za-z0-9.]+$/.test(v))      { state.filterTicker = v.slice(1).toUpperCase(); state.filterTag = null; state.filterQ = null; }
+      else if (/^#[A-Za-z0-9 _-]+$/.test(v)){ state.filterTag    = v.slice(1);                state.filterTicker = null; state.filterQ = null; }
+      else                                   { state.filterQ      = v || null;                 state.filterTag = null; state.filterTicker = null; }
+      syncUrl(); highlightRail(); renderActiveFilter(); resetAndLoad();
+    }, 280);
+  });
+
+  // ----------------------------------------------------------
+  // Feed loading
+  // ----------------------------------------------------------
+  function resetAndLoad() {
+    state.cursor = null; state.rows = []; state.seen.clear(); state.done = false;
+    document.getElementById('feed').innerHTML = '';
+    teardownAllSubs();
+    loadMore();
+  }
+
+  async function loadMore() {
+    if (state.loading || state.done) return;
+    state.loading = true;
+    document.getElementById('feedSentinel').style.display = 'block';
+
+    const { data, error } = await sb.rpc('feed_reels', {
+      p_cursor: state.cursor,
+      p_limit:  12,
+      p_tab:    state.tab,
+      p_tag:    state.filterTag,
+      p_ticker: state.filterTicker,
+      p_q:      state.filterQ,
+    });
+    state.loading = false;
+
+    if (error) {
+      console.warn('feed_reels failed', error);
+      document.getElementById('feedSentinel').innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Could not load feed.';
+      return;
+    }
+
+    const rows = (data && data.rows) || [];
+    if (rows.length === 0 && state.rows.length === 0) {
+      document.getElementById('feed').innerHTML = `<div class="feed-msg">
+        <i class="fa-solid fa-clapperboard"></i>
+        <div class="h">No reels yet.</div>
+        <div>Try switching tabs, clearing your filter, or <a href="reels-new.html" style="color:var(--gold2);">drop the first reel</a>.</div>
+      </div>`;
+      document.getElementById('feedSentinel').style.display = 'none';
+      state.done = true;
+      return;
+    }
+
+    // De-dupe (same created_at can produce overlap when network races
+    // or someone publishes mid-scroll).
+    const fresh = rows.filter(r => !state.seen.has(r.id));
+    fresh.forEach(r => { state.seen.add(r.id); state.rows.push(r); });
+    appendCards(fresh);
+
+    if (rows.length < 12) {
+      state.done = true;
+      document.getElementById('feedSentinel').innerHTML = '<i class="fa-solid fa-flag-checkered"></i> Caught up.';
+    } else {
+      state.cursor = data.next_cursor;
+      document.getElementById('feedSentinel').style.display = 'none';
+    }
+  }
+
+  // Infinite scroll — sentinel triggers loadMore when in viewport.
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) loadMore(); });
+  }, { rootMargin: '600px' });
+  io.observe(document.getElementById('feedSentinel'));
+
+  // ----------------------------------------------------------
+  // Card rendering
+  // ----------------------------------------------------------
+  function appendCards(rows) {
+    const feed = document.getElementById('feed');
+    rows.forEach(r => feed.appendChild(buildCard(r)));
+  }
+
+  function escape(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]);
+  }
+  function fmt(n, d) {
+    if (n == null || !isFinite(n)) return '—';
+    return Number(n).toLocaleString('en-US', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 4 });
+  }
+
+  function buildCard(r) {
+    const el = document.createElement('article');
+    el.className = 'reel';
+    el.dataset.reelId = r.id;
+    const dirCls = r.direction === 'short' ? 'short' : 'long';
+    const tags   = (r.tags || []).slice().sort((a,b) => {
+      const [ka, kb] = [reelsApi.tagSortKey(a), reelsApi.tagSortKey(b)];
+      for (let i=0;i<ka.length;i++) if (ka[i] !== kb[i]) return ka[i] < kb[i] ? -1 : 1;
+      return 0;
+    });
+    const pinned = tags.filter(t => t.x_pct != null && t.y_pct != null);
+    const rr     = reelsApi.riskReward({ entry: r.entry, stop: r.stop_loss, target: r.target, direction: r.direction });
+
+    // Chart snapshot (or fallback)
+    const snapHtml = r.chart_snapshot_url
+      ? `<img src="${escape(r.chart_snapshot_url)}" alt="chart snapshot of ${escape(r.symbol)}" loading="lazy"/>`
+      : `<div class="chart-fallback"><i class="fa-solid fa-chart-candlestick"></i> ${escape(r.symbol)} chart</div>`;
+
+    const pinsHtml = pinned.map((t, i) => `
+      <button class="pin" style="left:${t.x_pct}%;top:${t.y_pct}%;" data-pin-idx="${i}" aria-label="${escape(t.tag_value)}">${i+1}</button>`).join('');
+
+    const chipsHtml = tags.map(t => `
+      <button class="chip-tag" data-chip-tag="${escape(t.tag_value)}">
+        <i class="fa-solid ${reelsApi.ICON_FOR_TYPE[t.tag_type] || 'fa-tag'}"></i>${escape(t.tag_value)}
+      </button>`).join('');
+
+    el.innerHTML = `
+      <div class="chart-wrap">${snapHtml}${pinsHtml}</div>
+      <div class="meta">
+        <div class="head">
+          <a class="ticker ${dirCls}" href="trade.html?symbol=${encodeURIComponent(r.symbol)}">$${escape(r.symbol)}</a>
+          <span class="dir ${dirCls}">${dirCls === 'long' ? '▲ Long' : '▼ Short'}</span>
+          <span class="pnl flat" data-live-pnl>—</span>
+        </div>
+        <div class="chips">${chipsHtml}</div>
+        <div class="thesis">${escape(r.thesis)}</div>
+        <div class="levels">
+          <div>Entry<strong>${fmt(r.entry, 2)}</strong></div>
+          <div class="stop">Stop<strong>${fmt(r.stop_loss, 2)}</strong></div>
+          <div class="target">Target<strong>${fmt(r.target, 2)}</strong></div>
+          <div class="rr">R:R<strong>${rr == null ? '—' : rr.toFixed(2)}</strong></div>
+        </div>
+        <div class="actions">
+          <button class="primary" data-act="mirror">
+            <i class="fa-solid fa-arrows-rotate"></i>
+            Mirror${(r.counts.mirrors||0)>0 ? ' ('+r.counts.mirrors+')' : ''}
+          </button>
+          <button data-act="like" class="${r.viewer_state.liked?'on':''}">
+            <i class="fa-${r.viewer_state.liked?'solid':'regular'} fa-heart"></i>
+            ${r.counts.likes||0}
+          </button>
+          <button data-act="save" class="${r.viewer_state.saved?'on':''}">
+            <i class="fa-${r.viewer_state.saved?'solid':'regular'} fa-bookmark"></i>
+          </button>
+          <button data-act="share">
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
+          <button data-act="comment" title="Comments — coming soon">
+            <i class="fa-regular fa-comment"></i>
+          </button>
+        </div>
+        <div class="author-row">
+          ${TArenaUI.avatarHtml({ username: r.author.username, email: r.author.username }, 36)}
+          <div class="name">
+            <a href="profile.html?u=${encodeURIComponent(r.author.username)}">${escape(r.author.display_name || r.author.username)}</a>
+            <div class="h">@${escape(r.author.username)} · ${escape(r.author.tier || 'Member')}</div>
+          </div>
+        </div>
+      </div>`;
+
+    // Pin popovers (delegated)
+    el.querySelectorAll('.pin').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const idx = +btn.dataset.pinIdx;
+        openPinPopover(el, pinned[idx], btn);
+      });
+    });
+
+    // Chip click → filter
+    el.querySelectorAll('.chip-tag').forEach(btn => {
+      btn.addEventListener('click', () => setTagFilter(btn.dataset.chipTag));
+    });
+
+    // Action buttons
+    el.querySelectorAll('.actions button').forEach(btn => {
+      btn.addEventListener('click', () => onAction(r, btn.dataset.act, el));
+    });
+
+    // Live P&L subscription tied to viewport visibility
+    cardObserver.observe(el);
+
+    return el;
+  }
+
+  // ----------------------------------------------------------
+  // Pin popover (one at a time)
+  // ----------------------------------------------------------
+  function openPinPopover(cardEl, tag, anchorBtn) {
+    closePinPopover();
+    const wrap = cardEl.querySelector('.chart-wrap');
+    const pop  = document.createElement('div');
+    pop.className = 'pin-popover';
+    pop.innerHTML = `
+      <button class="pin-close" aria-label="Close">&times;</button>
+      <div class="pop-title"><i class="fa-solid ${reelsApi.ICON_FOR_TYPE[tag.tag_type] || 'fa-tag'}"></i> ${escape(tag.tag_value)}</div>
+      <div class="pop-def">${escape(reelsApi.defineTag(tag.tag_value))}</div>
+      <div class="pop-actions">
+        <a href="schools.html?lesson=${encodeURIComponent(tag.tag_value)}"><i class="fa-solid fa-graduation-cap"></i> Learn this in Schools</a>
+        <button data-filter-tag><i class="fa-solid fa-filter"></i> Show all reels using this</button>
+      </div>`;
+    // Position next to the pin, but keep inside the chart-wrap.
+    const x = Math.min(Math.max(tag.x_pct, 10), 70);
+    const y = Math.min(Math.max(tag.y_pct, 0),  60);
+    pop.style.left = x + '%';
+    pop.style.top  = (y + 6) + '%';
+    wrap.appendChild(pop);
+    state.pinPopoverFor = pop;
+
+    pop.querySelector('.pin-close').addEventListener('click', closePinPopover);
+    pop.querySelector('[data-filter-tag]').addEventListener('click', () => {
+      closePinPopover();
+      setTagFilter(tag.tag_value);
+    });
+  }
+
+  function closePinPopover() {
+    if (state.pinPopoverFor) { state.pinPopoverFor.remove(); state.pinPopoverFor = null; }
+  }
+  document.addEventListener('click', e => {
+    if (state.pinPopoverFor && !state.pinPopoverFor.contains(e.target) && !e.target.classList.contains('pin')) {
+      closePinPopover();
+    }
+  });
+
+  // ----------------------------------------------------------
+  // Live P&L subscription (mounted only when card is visible)
+  // ----------------------------------------------------------
+  const cardObserver = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      const id = e.target.dataset.reelId;
+      if (e.isIntersecting) mountLiveSub(e.target, id);
+      else                  teardownSub(id);
+    });
+  }, { rootMargin: '120px' });
+
+  function mountLiveSub(el, reelId) {
+    if (liveSubs.has(reelId)) return;
+    const r = state.rows.find(x => x.id === reelId);
+    if (!r || !datafeed) return;
+    const pnlEl = el.querySelector('[data-live-pnl]');
+
+    // Use the same risk-based qty the server opened the trade with so
+    // the shown P&L matches the author's actual paper trade.
+    const qty = reelsApi.positionSize({ entry: r.entry, stop: r.stop_loss, riskPct: 1, account: ACCOUNT_SIZE });
+    const side = r.direction === 'short' ? 'sell' : 'buy';
+
+    const update = (last) => {
+      const { abs, pct } = reelsApi.livePnl({ entry: r.entry, qty, side, last });
+      const cls = abs > 0.5 ? 'pos' : (abs < -0.5 ? 'neg' : 'flat');
+      pnlEl.className = 'pnl ' + cls;
+      const sign = abs > 0 ? '+' : (abs < 0 ? '' : '');
+      pnlEl.textContent = `${sign}${TArenaUI.fmtMoney(abs)} (${pct.toFixed(2)}%)`;
+    };
+
+    let unsub = () => {};
+    try {
+      unsub = datafeed.subscribeQuote(r.symbol, q => {
+        const last = +(q?.price ?? q?.last ?? q);
+        if (isFinite(last)) update(last);
+      });
+    } catch (err) {
+      console.warn('live sub failed for', r.symbol, err);
+      // Fallback to mock market
+      const m = window.TArenaMarket?.find(r.symbol);
+      if (m) update(m.price);
+    }
+    liveSubs.set(reelId, unsub);
+  }
+
+  function teardownSub(reelId) {
+    const fn = liveSubs.get(reelId);
+    if (fn) { try { fn(); } catch (_){}; liveSubs.delete(reelId); }
+  }
+  function teardownAllSubs() {
+    liveSubs.forEach(fn => { try { fn(); } catch (_){} });
+    liveSubs.clear();
+  }
+
+  // ----------------------------------------------------------
+  // Action buttons
+  // ----------------------------------------------------------
+  async function onAction(r, act, el) {
+    if (act === 'mirror') return openSheet(r);
+    if (act === 'comment') {
+      alert('Comments thread is coming with the social release. For now, mirror or save.');
+      return;
+    }
+    if (act === 'share') {
+      const url = window.location.origin + '/reels.html?reel=' + r.id;
+      try {
+        if (navigator.share) await navigator.share({ title: '$'+r.symbol+' on TradeArena', url });
+        else { await navigator.clipboard.writeText(url); flashShare(el); }
+        await sb.rpc('toggle_engagement', { p_reel_id: r.id, p_kind: 'share' });
+      } catch (_) {}
+      return;
+    }
+    // like / save toggles
+    const { data, error } = await sb.rpc('toggle_engagement', { p_reel_id: r.id, p_kind: act });
+    if (error) { console.warn(error); return; }
+    const btn = el.querySelector(`[data-act="${act}"]`);
+    btn.classList.toggle('on', !!data?.on);
+    if (act === 'like') {
+      r.counts.likes = data.count;
+      r.viewer_state.liked = !!data.on;
+      btn.innerHTML = `<i class="fa-${data.on?'solid':'regular'} fa-heart"></i> ${data.count||0}`;
+    } else if (act === 'save') {
+      r.counts.saves = data.count;
+      r.viewer_state.saved = !!data.on;
+      btn.innerHTML = `<i class="fa-${data.on?'solid':'regular'} fa-bookmark"></i>`;
+    }
+  }
+
+  function flashShare(el) {
+    const btn = el.querySelector('[data-act="share"]');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied';
+    setTimeout(() => { btn.innerHTML = orig; }, 1400);
+  }
+
+  // ----------------------------------------------------------
+  // Mirror sheet
+  // ----------------------------------------------------------
+  function openSheet(r) {
+    state.sheetReel = r;
+    document.getElementById('sheetSub').textContent =
+      `${r.author.display_name || r.author.username} · $${r.symbol} ${r.direction === 'short' ? 'short' : 'long'} · entry ${fmt(r.entry,2)}`;
+    document.getElementById('riskSlider').value = '1';
+    document.getElementById('riskLbl').textContent = '1.00%';
+    updateSheetPreview();
+    document.getElementById('sheetBg').classList.add('show');
+  }
+  function closeSheet() {
+    state.sheetReel = null;
+    document.getElementById('sheetBg').classList.remove('show');
+  }
+  window.closeSheet = closeSheet;
+
+  document.getElementById('riskSlider').addEventListener('input', e => {
+    document.getElementById('riskLbl').textContent = (+e.target.value).toFixed(2) + '%';
+    updateSheetPreview();
+  });
+
+  function updateSheetPreview() {
+    const r = state.sheetReel; if (!r) return;
+    const risk = +document.getElementById('riskSlider').value;
+    const qty  = reelsApi.positionSize({ entry: r.entry, stop: r.stop_loss, riskPct: risk, account: ACCOUNT_SIZE });
+    const cost = qty * r.entry;
+    const dollarRisk = ACCOUNT_SIZE * (risk/100);
+    const rr   = reelsApi.riskReward({ entry: r.entry, stop: r.stop_loss, target: r.target, direction: r.direction });
+    const projected = rr != null ? dollarRisk * rr : null;
+    document.getElementById('sheetPreview').innerHTML = `
+      <div>Quantity<strong>${fmt(qty, 4)}</strong></div>
+      <div>Cost basis<strong>${TArenaUI.fmtMoney(cost)}</strong></div>
+      <div>Risk on this trade<strong style="color:var(--red);">${TArenaUI.fmtMoney(dollarRisk)}</strong></div>
+      <div>Projected reward<strong style="color:var(--green);">${projected==null?'—':TArenaUI.fmtMoney(projected)}</strong></div>`;
+  }
+
+  async function confirmMirror() {
+    const r = state.sheetReel; if (!r) return;
+    const risk = +document.getElementById('riskSlider').value;
+    const btn = document.getElementById('confirmMirror');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Opening trade…';
+    const { data, error } = await sb.rpc('mirror_reel', {
+      p_reel_id: r.id,
+      p_risk_pct: risk,
+      p_account_size: ACCOUNT_SIZE,
+    });
+    btn.disabled = false;
+    if (error) {
+      const msg = (error.message || 'Mirror failed').replace(/^.*:\s*/,'');
+      alert('Could not mirror: ' + msg);
+      btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Mirror';
+      return;
+    }
+    // Bump the count locally
+    r.counts.mirrors = (r.counts.mirrors || 0) + 1;
+    r.viewer_state.mirrored = true;
+    const card = document.querySelector(`[data-reel-id="${r.id}"]`);
+    if (card) {
+      const mb = card.querySelector('[data-act="mirror"]');
+      if (mb) mb.innerHTML = `<i class="fa-solid fa-check"></i> Mirrored (${r.counts.mirrors})`;
+    }
+    closeSheet();
+  }
+  window.confirmMirror = confirmMirror;
+
+  // ----------------------------------------------------------
+  // Tabs
+  // ----------------------------------------------------------
+  document.querySelectorAll('.feed-tabs button').forEach(b => {
+    b.addEventListener('click', () => setTab(b.dataset.tab));
+  });
+
+  // Boot
+  readUrlFilters();
+  renderRails();
+  highlightRail();
+  renderActiveFilter();
+  // Apply persisted tab to UI before first load
+  document.querySelectorAll('.feed-tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === state.tab));
+  resetAndLoad();
+})();
+</script>
+</body>
+</html>

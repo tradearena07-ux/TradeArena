@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>New reel — TradeArena</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;700&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <style>
+    body { background:#060e1c; }
+    .compose { max-width: 920px; margin: 24px auto 90px; padding: 0 5%; display:grid; grid-template-columns: 1fr 320px; gap:28px; }
+    @media (max-width: 880px) { .compose { grid-template-columns: 1fr; } .preview-rail { order:-1; } }
+
+    .step-pill { display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
+    .step-pill div { flex:1; min-width:90px; padding:8px 10px; border-radius:8px; border:1px solid var(--bdl); background:var(--navy2); color:var(--muted); font-size:12px; font-family:'Cinzel',serif; letter-spacing:.06em; text-align:center; }
+    .step-pill div.active { background:var(--gold); color:#091528; border-color:var(--gold); font-weight:700; }
+    .step-pill div.done { color:var(--gold2); border-color:var(--gold); }
+
+    .panel { background:var(--navy3); border:1px solid var(--bdl); border-radius:14px; padding:22px 22px 24px; margin-bottom:16px; }
+    .panel h2 { font-family:'Cinzel',serif; font-size:1.15rem; color:var(--cream); letter-spacing:.04em; margin-bottom:6px; }
+    .panel .h-sub { color:var(--muted); font-size:13px; margin-bottom:16px; line-height:1.55; }
+
+    .field { margin-bottom:14px; }
+    .field label { display:block; font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.14em; font-family:'Cinzel',serif; margin-bottom:6px; }
+    .field input, .field textarea, .field select { width:100%; background:var(--navy2); border:1px solid var(--bdl); color:var(--cream); padding:10px 12px; border-radius:8px; font-size:14px; font-family:inherit; outline:none; transition:.15s; }
+    .field input:focus, .field textarea:focus { border-color:var(--gold); }
+    .field .row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .field .hint { color:var(--muted); font-size:11.5px; margin-top:6px; }
+    .field .err  { color:var(--red); font-size:12px; margin-top:6px; min-height:1em; }
+
+    .symbol-suggest { position:relative; }
+    .symbol-suggest .drop { position:absolute; top:100%; left:0; right:0; background:#0a1830; border:1px solid var(--bdl); border-radius:8px; max-height:240px; overflow-y:auto; z-index:5; margin-top:4px; display:none; }
+    .symbol-suggest .drop.show { display:block; }
+    .symbol-suggest .drop button { display:block; width:100%; text-align:left; background:transparent; border:0; color:var(--cream); padding:9px 12px; cursor:pointer; font-size:13px; }
+    .symbol-suggest .drop button:hover, .symbol-suggest .drop button.cursor { background:var(--navy2); }
+    .symbol-suggest .drop .name { color:var(--muted); font-size:11.5px; margin-left:6px; }
+
+    .snap-shell { aspect-ratio: 16/11; background:#091528; border:1px solid var(--bdl); border-radius:10px; position:relative; overflow:hidden; }
+    .snap-shell img { width:100%; height:100%; object-fit:cover; cursor:crosshair; user-select:none; }
+    .snap-empty { width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--muted); gap:10px; padding:0 20px; text-align:center; }
+    .snap-empty i { font-size:32px; color:var(--gold2); }
+    .snap-empty a { background:var(--gold); color:#091528; padding:10px 14px; border-radius:8px; text-decoration:none; font-weight:700; margin-top:6px; font-size:13px; }
+    .pin-overlay { position:absolute; inset:0; pointer-events:none; }
+    .pin-overlay .pin { position:absolute; transform:translate(-50%,-50%); width:30px; height:30px; border-radius:50%; background:var(--gold); color:#091528; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; border:2px solid #fff; pointer-events:auto; cursor:pointer; }
+    .snap-shell.placing img { cursor:crosshair; }
+
+    .pin-list { display:flex; flex-direction:column; gap:6px; margin-top:12px; }
+    .pin-list .item { display:flex; align-items:center; gap:8px; padding:8px 10px; background:var(--navy2); border:1px solid var(--bdl); border-radius:8px; }
+    .pin-list .num { width:22px; height:22px; border-radius:50%; background:var(--gold); color:#091528; font-weight:700; font-size:11px; display:inline-flex; align-items:center; justify-content:center; }
+    .pin-list select { flex:1; background:transparent; border:0; color:var(--cream); font-size:13px; outline:none; padding:4px 0; }
+    .pin-list .del { background:transparent; border:0; color:var(--red); cursor:pointer; }
+
+    .vis-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .vis-grid label { display:flex; flex-direction:column; gap:4px; padding:12px; background:var(--navy2); border:1px solid var(--bdl); border-radius:10px; cursor:pointer; transition:.15s; }
+    .vis-grid label.on { border-color:var(--gold); background:rgba(201,160,48,.08); }
+    .vis-grid input { display:none; }
+    .vis-grid .v-name { font-family:'Cinzel',serif; color:var(--cream); font-size:13px; letter-spacing:.04em; }
+    .vis-grid .v-sub  { color:var(--muted); font-size:11px; line-height:1.45; }
+
+    .footer { display:flex; gap:10px; justify-content:flex-end; }
+    .footer button { padding:12px 22px; border-radius:10px; border:1px solid var(--bdl); background:transparent; color:var(--cream); cursor:pointer; font-weight:600; font-size:14px; }
+    .footer button.primary { background:var(--gold); color:#091528; border-color:var(--gold); }
+    .footer button:disabled { opacity:.5; cursor:not-allowed; }
+
+    .preview-rail { position:sticky; top:96px; align-self:start; }
+    .preview-rail h3 { font-family:'Cinzel',serif; font-size:11px; letter-spacing:.22em; color:var(--gold2); margin-bottom:10px; text-transform:uppercase; }
+    .preview-card { background:var(--navy3); border:1px solid var(--bdl); border-radius:12px; padding:14px; }
+    .preview-card .row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; font-size:12.5px; color:var(--muted); border-bottom:1px solid var(--bdl); }
+    .preview-card .row:last-child { border-bottom:0; }
+    .preview-card .row strong { color:var(--cream); font-family:'Cinzel',serif; font-size:13.5px; }
+    .preview-card .row.neg strong { color:var(--red); }
+    .preview-card .row.pos strong { color:var(--green); }
+    .preview-card .rr   strong { color:var(--gold2); }
+
+    .thesis-counter { color:var(--muted); font-size:11.5px; text-align:right; margin-top:4px; }
+    .thesis-counter.warn { color:var(--red); }
+
+    .add-pin-btn { background:transparent; border:1px dashed var(--gold); color:var(--gold2); padding:8px 14px; border-radius:8px; cursor:pointer; font-size:12.5px; margin-top:10px; }
+    .add-pin-btn.active { background:var(--gold); color:#091528; }
+
+    .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#0a1830; border:1px solid var(--gold); color:var(--cream); padding:14px 24px; border-radius:10px; z-index:99; display:none; }
+    .toast.show { display:block; }
+  </style>
+</head>
+<body>
+
+<div id="tarena-nav"></div>
+
+<div class="compose">
+
+  <main>
+    <div class="step-pill">
+      <div data-step="1" class="active">1 · Symbol</div>
+      <div data-step="2">2 · Snap</div>
+      <div data-step="3">3 · Pin tags</div>
+      <div data-step="4">4 · Thesis &amp; risk</div>
+      <div data-step="5">5 · Visibility</div>
+    </div>
+
+    <!-- ─── Symbol ──────────────────────────────────────── -->
+    <div class="panel">
+      <h2><i class="fa-solid fa-tag"></i> Pick a symbol</h2>
+      <div class="h-sub">Type a ticker (BHP.AX, AAPL, BTC) or a company name. ASX, US, and crypto supported.</div>
+      <div class="field symbol-suggest">
+        <input id="symInput" autocomplete="off" placeholder="$BHP.AX"/>
+        <div class="drop" id="symDrop"></div>
+      </div>
+    </div>
+
+    <!-- ─── Snap ───────────────────────────────────────── -->
+    <div class="panel">
+      <h2><i class="fa-solid fa-camera"></i> Snap a chart</h2>
+      <div class="h-sub">Open the trade chart, tweak timeframe + drawings, hit "Snap chart" — the snap is held for 30 minutes for use here.</div>
+      <div class="snap-shell" id="snapShell">
+        <div class="snap-empty" id="snapEmpty">
+          <i class="fa-solid fa-camera"></i>
+          <div>No chart snap yet. Open the trade page, set up your chart, then click "Snap chart" to grab it.</div>
+          <a id="openTradeLink" href="trade.html?snap=1" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open chart</a>
+        </div>
+        <img id="snapImg" alt="" style="display:none;"/>
+        <div class="pin-overlay" id="pinOverlay"></div>
+      </div>
+      <div class="hint" style="margin-top:8px;color:var(--muted);font-size:12px;">
+        <i class="fa-solid fa-circle-info"></i>
+        Already snapped? <button onclick="reloadSnap()" style="background:transparent;border:0;color:var(--gold2);cursor:pointer;text-decoration:underline;">Refresh from chart</button>.
+      </div>
+    </div>
+
+    <!-- ─── Pin tags ──────────────────────────────────── -->
+    <div class="panel">
+      <h2><i class="fa-solid fa-thumbtack"></i> Pin indicators &amp; patterns</h2>
+      <div class="h-sub">Click anywhere on the chart to drop a numbered pin, then pick what it's pointing at. Pins teach the trade.</div>
+      <button id="addPinBtn" class="add-pin-btn"><i class="fa-solid fa-plus"></i> Click chart to add a pin</button>
+      <div class="pin-list" id="pinList"></div>
+    </div>
+
+    <!-- ─── Thesis & risk ─────────────────────────────── -->
+    <div class="panel">
+      <h2><i class="fa-solid fa-pen"></i> Thesis &amp; price levels</h2>
+      <div class="field">
+        <label>Direction</label>
+        <select id="dirInput">
+          <option value="long">Long (bullish)</option>
+          <option value="short">Short (bearish)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Thesis (max 280 chars)</label>
+        <textarea id="thesisInput" rows="3" placeholder="Why does this setup work? Keep it tight."></textarea>
+        <div class="thesis-counter" id="thesisCount">0 / 280</div>
+      </div>
+      <div class="field">
+        <label>Entry / Stop loss / Target</label>
+        <div class="row">
+          <input id="entryInput"  type="number" step="any" placeholder="Entry"/>
+          <input id="stopInput"   type="number" step="any" placeholder="Stop loss"/>
+          <input id="targetInput" type="number" step="any" placeholder="Target"/>
+        </div>
+        <div class="hint">Position size is auto-computed from your risk %.</div>
+      </div>
+      <div class="field">
+        <label>Risk on this trade</label>
+        <input id="riskInput" type="range" min="0.25" max="5" step="0.25" value="1" style="accent-color:var(--gold);"/>
+        <div class="hint" id="riskLabel">1.00% of $100,000 — paper account.</div>
+      </div>
+    </div>
+
+    <!-- ─── Visibility ────────────────────────────────── -->
+    <div class="panel">
+      <h2><i class="fa-solid fa-eye"></i> Who can see this?</h2>
+      <div class="vis-grid" id="visGrid">
+        <label data-v="public" class="on"><input type="radio" name="vis" value="public" checked/>
+          <span class="v-name"><i class="fa-solid fa-globe"></i> Public</span>
+          <span class="v-sub">Visible in For You and to anyone with the link.</span>
+        </label>
+        <label data-v="followers"><input type="radio" name="vis" value="followers"/>
+          <span class="v-name"><i class="fa-solid fa-user-group"></i> Followers</span>
+          <span class="v-sub">Only people who follow you can see this reel.</span>
+        </label>
+        <label data-v="private"><input type="radio" name="vis" value="private"/>
+          <span class="v-name"><i class="fa-solid fa-lock"></i> Private</span>
+          <span class="v-sub">Only you. Useful for journal practice.</span>
+        </label>
+      </div>
+      <div class="hint" style="margin-top:8px;color:var(--muted);font-size:11.5px;">
+        <i class="fa-solid fa-circle-info"></i>
+        League-only sharing arrives with the Schools release. Pick Followers in the meantime.
+      </div>
+    </div>
+
+    <div class="footer">
+      <button onclick="window.location.href='reels.html'">Cancel</button>
+      <button class="primary" id="publishBtn"><i class="fa-solid fa-paper-plane"></i> Publish reel</button>
+    </div>
+  </main>
+
+  <!-- ────  Live preview rail ──── -->
+  <aside class="preview-rail">
+    <h3>Reel preview</h3>
+    <div class="preview-card">
+      <div class="row"><span>Symbol</span><strong id="pvSymbol">—</strong></div>
+      <div class="row"><span>Direction</span><strong id="pvDir">Long</strong></div>
+      <div class="row"><span>Entry</span><strong id="pvEntry">—</strong></div>
+      <div class="row neg"><span>Stop loss</span><strong id="pvStop">—</strong></div>
+      <div class="row pos"><span>Target</span><strong id="pvTarget">—</strong></div>
+      <div class="row rr"><span>R:R</span><strong id="pvRR">—</strong></div>
+      <div class="row"><span>Position size</span><strong id="pvQty">—</strong></div>
+      <div class="row neg"><span>Risk on trade</span><strong id="pvRisk">—</strong></div>
+      <div class="row"><span>Pins</span><strong id="pvPins">0</strong></div>
+    </div>
+    <div style="color:var(--muted);font-size:11.5px;margin-top:10px;line-height:1.5;">
+      An auto paper-trade opens at entry the moment you publish.
+    </div>
+  </aside>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div id="tarena-footer"></div>
+
+<script src="assets/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="assets/supabase.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/market.js"></script>
+<script src="assets/reels.js"></script>
+<script>
+(function () {
+  TArenaUI.renderNav('reels');
+  TArenaUI.renderFooter();
+  if (!TArenaAuth.requireAuth()) return;
+
+  const sb = window.TArenaDB;
+  const reelsApi = window.TArenaReels;
+  const ACCOUNT = 100000;
+
+  const state = {
+    symbol: '',
+    market: '',
+    snap:   null,
+    pins:   [],            // [{ x, y, tag_type, tag_value }]
+    placing: false,
+    thesis: '',
+    direction: 'long',
+    entry: null, stop: null, target: null,
+    riskPct: 1.0,
+    visibility: 'public',
+  };
+
+  // ============================================================
+  // Symbol autocomplete
+  // ============================================================
+  const symInput = document.getElementById('symInput');
+  const symDrop  = document.getElementById('symDrop');
+  let cursorIdx = -1;
+
+  function searchSymbols(q) {
+    q = (q || '').toLowerCase().replace(/^\$/, '');
+    const all = (window.TArenaMarket?.data || []);
+    if (!q) return all.slice(0, 8);
+    return all.filter(m =>
+      m.symbol.toLowerCase().includes(q) ||
+      m.name.toLowerCase().includes(q)
+    ).slice(0, 12);
+  }
+  function renderDrop(items) {
+    if (!items.length) { symDrop.classList.remove('show'); return; }
+    symDrop.innerHTML = items.map((m, i) =>
+      `<button data-sym="${m.symbol}" data-mkt="${m.market}" data-idx="${i}">
+        <strong>${m.symbol}</strong><span class="name">${m.name}</span>
+      </button>`).join('');
+    symDrop.classList.add('show');
+    symDrop.querySelectorAll('button').forEach(b => {
+      b.addEventListener('mousedown', e => {
+        e.preventDefault();
+        pickSymbol(b.dataset.sym, b.dataset.mkt);
+      });
+    });
+  }
+  function pickSymbol(sym, mkt) {
+    state.symbol = sym;
+    state.market = mkt || classifyMarket(sym);
+    symInput.value = sym;
+    symDrop.classList.remove('show');
+    refreshPreview();
+    autoPriceFromMarket();
+    updateOpenLink();
+    advanceStep();
+  }
+  function classifyMarket(sym) {
+    if (/\.AX$/i.test(sym)) return 'asx';
+    if (/^(BTC|ETH|SOL|XRP|ADA|DOGE)/i.test(sym)) return 'crypto';
+    return 'us';
+  }
+  function autoPriceFromMarket() {
+    const m = (window.TArenaMarket?.data || []).find(d => d.symbol === state.symbol);
+    if (!m) return;
+    if (!state.entry)  { state.entry  = m.price;       document.getElementById('entryInput').value  = m.price; }
+    if (!state.stop)   { state.stop   = +(m.price * 0.96).toFixed(2); document.getElementById('stopInput').value   = state.stop; }
+    if (!state.target) { state.target = +(m.price * 1.06).toFixed(2); document.getElementById('targetInput').value = state.target; }
+  }
+
+  symInput.addEventListener('input', e => {
+    cursorIdx = -1;
+    renderDrop(searchSymbols(e.target.value));
+  });
+  symInput.addEventListener('focus', () => renderDrop(searchSymbols(symInput.value)));
+  symInput.addEventListener('blur',  () => setTimeout(() => symDrop.classList.remove('show'), 120));
+  symInput.addEventListener('keydown', e => {
+    const items = symDrop.querySelectorAll('button');
+    if (!items.length) return;
+    if (e.key === 'ArrowDown') { cursorIdx = Math.min(cursorIdx+1, items.length-1); }
+    else if (e.key === 'ArrowUp') { cursorIdx = Math.max(cursorIdx-1, 0); }
+    else if (e.key === 'Enter' && cursorIdx >= 0) { e.preventDefault(); items[cursorIdx].dispatchEvent(new MouseEvent('mousedown')); return; }
+    else { return; }
+    items.forEach((b,i) => b.classList.toggle('cursor', i===cursorIdx));
+    items[cursorIdx]?.scrollIntoView({ block:'nearest' });
+  });
+
+  // ============================================================
+  // Snap loading
+  // ============================================================
+  function loadSnap() {
+    let raw;
+    try { raw = JSON.parse(localStorage.getItem('pending_chart_snap') || 'null'); }
+    catch (_) { raw = null; }
+    const expired = raw && raw.expiresAt && Date.now() > raw.expiresAt;
+    if (!raw || expired || !raw.png_dataurl) {
+      state.snap = null;
+      document.getElementById('snapEmpty').style.display = 'flex';
+      document.getElementById('snapImg').style.display = 'none';
+      return;
+    }
+    state.snap = raw;
+    if (raw.symbol && !state.symbol) {
+      pickSymbol(raw.symbol, classifyMarket(raw.symbol));
+    }
+    const img = document.getElementById('snapImg');
+    img.src = raw.png_dataurl;
+    img.style.display = 'block';
+    document.getElementById('snapEmpty').style.display = 'none';
+    refreshPins();
+    refreshPreview();
+  }
+  function reloadSnap() { loadSnap(); }
+  window.reloadSnap = reloadSnap;
+
+  function updateOpenLink() {
+    const a = document.getElementById('openTradeLink');
+    if (state.symbol) a.href = `trade.html?symbol=${encodeURIComponent(state.symbol)}&snap=1`;
+  }
+
+  // ============================================================
+  // Pin placement
+  // ============================================================
+  const snapShell = document.getElementById('snapShell');
+  const pinOverlay = document.getElementById('pinOverlay');
+  const addPinBtn = document.getElementById('addPinBtn');
+  addPinBtn.addEventListener('click', () => {
+    if (!state.snap) { toast('Snap a chart first.'); return; }
+    state.placing = !state.placing;
+    addPinBtn.classList.toggle('active', state.placing);
+    addPinBtn.innerHTML = state.placing
+      ? '<i class="fa-solid fa-crosshairs"></i> Click on the chart…'
+      : '<i class="fa-solid fa-plus"></i> Click chart to add a pin';
+    snapShell.classList.toggle('placing', state.placing);
+  });
+
+  snapShell.addEventListener('click', e => {
+    if (!state.placing || !state.snap) return;
+    if (e.target.classList.contains('pin')) return;
+    const rect = snapShell.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top)  / rect.height) * 100;
+    state.pins.push({
+      x: +x.toFixed(2),
+      y: +y.toFixed(2),
+      tag_type: 'indicator',
+      tag_value: reelsApi.INDICATORS[0],
+    });
+    state.placing = false;
+    addPinBtn.classList.remove('active');
+    addPinBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Click chart to add a pin';
+    snapShell.classList.remove('placing');
+    refreshPins(); refreshPreview();
+  });
+
+  function refreshPins() {
+    pinOverlay.innerHTML = state.pins.map((p, i) =>
+      `<div class="pin" data-i="${i}" style="left:${p.x}%;top:${p.y}%;">${i+1}</div>`).join('');
+    pinOverlay.querySelectorAll('.pin').forEach(el => {
+      el.addEventListener('click', e => {
+        e.stopPropagation();
+        const idx = +el.dataset.i;
+        document.querySelector(`.pin-list .item[data-pi="${idx}"] select`)?.focus();
+      });
+    });
+
+    // Editor list
+    const list = document.getElementById('pinList');
+    list.innerHTML = state.pins.map((p, i) => `
+      <div class="item" data-pi="${i}">
+        <span class="num">${i+1}</span>
+        <select data-i="${i}" data-k="tag_type" style="flex:0 0 110px;">
+          <option value="indicator" ${p.tag_type==='indicator'?'selected':''}>Indicator</option>
+          <option value="pattern"   ${p.tag_type==='pattern'?'selected':''}>Pattern</option>
+          <option value="strategy"  ${p.tag_type==='strategy'?'selected':''}>Strategy</option>
+        </select>
+        <select data-i="${i}" data-k="tag_value">
+          ${tagOptions(p.tag_type, p.tag_value)}
+        </select>
+        <button class="del" data-i="${i}" title="Delete pin"><i class="fa-solid fa-trash"></i></button>
+      </div>
+    `).join('');
+    list.querySelectorAll('select').forEach(s => {
+      s.addEventListener('change', () => {
+        const i = +s.dataset.i;
+        const k = s.dataset.k;
+        state.pins[i][k] = s.value;
+        if (k === 'tag_type') {
+          state.pins[i].tag_value = (
+            k === 'indicator' ? reelsApi.INDICATORS :
+            k === 'pattern'   ? reelsApi.PATTERNS   :
+            reelsApi.STRATEGIES
+          )[0];
+          refreshPins();
+        }
+        refreshPreview();
+      });
+    });
+    list.querySelectorAll('.del').forEach(b => {
+      b.addEventListener('click', () => {
+        const i = +b.dataset.i;
+        state.pins.splice(i, 1);
+        refreshPins(); refreshPreview();
+      });
+    });
+  }
+  function tagOptions(type, current) {
+    const opts = type === 'indicator' ? reelsApi.INDICATORS
+              : type === 'pattern'    ? reelsApi.PATTERNS
+              : reelsApi.STRATEGIES;
+    return opts.map(o => `<option value="${o}" ${o===current?'selected':''}>${o}</option>`).join('');
+  }
+
+  // ============================================================
+  // Thesis + price levels + risk
+  // ============================================================
+  const thesisInput = document.getElementById('thesisInput');
+  thesisInput.addEventListener('input', () => {
+    state.thesis = thesisInput.value;
+    const c = document.getElementById('thesisCount');
+    c.textContent = `${state.thesis.length} / 280`;
+    c.classList.toggle('warn', state.thesis.length > 280);
+    refreshPreview();
+  });
+  document.getElementById('dirInput').addEventListener('change', e => { state.direction = e.target.value; refreshPreview(); });
+  document.getElementById('entryInput').addEventListener('input', e => { state.entry  = +e.target.value || null; refreshPreview(); });
+  document.getElementById('stopInput').addEventListener('input',  e => { state.stop   = +e.target.value || null; refreshPreview(); });
+  document.getElementById('targetInput').addEventListener('input',e => { state.target = +e.target.value || null; refreshPreview(); });
+  document.getElementById('riskInput').addEventListener('input',  e => {
+    state.riskPct = +e.target.value;
+    document.getElementById('riskLabel').textContent =
+      `${state.riskPct.toFixed(2)}% of $100,000 — paper account.`;
+    refreshPreview();
+  });
+
+  // ============================================================
+  // Visibility
+  // ============================================================
+  document.querySelectorAll('input[name="vis"]').forEach(r => {
+    r.addEventListener('change', () => {
+      state.visibility = r.value;
+      document.querySelectorAll('#visGrid label').forEach(l => l.classList.toggle('on', l.dataset.v === state.visibility));
+    });
+  });
+
+  // ============================================================
+  // Preview rail
+  // ============================================================
+  function refreshPreview() {
+    const fmt = (n, d) => (n == null || !isFinite(n)) ? '—' : Number(n).toLocaleString('en-US', { minimumFractionDigits: d||0, maximumFractionDigits: d||4 });
+    document.getElementById('pvSymbol').textContent = state.symbol ? '$'+state.symbol : '—';
+    document.getElementById('pvDir').textContent    = state.direction === 'short' ? 'Short' : 'Long';
+    document.getElementById('pvEntry').textContent  = fmt(state.entry, 2);
+    document.getElementById('pvStop').textContent   = fmt(state.stop, 2);
+    document.getElementById('pvTarget').textContent = fmt(state.target, 2);
+    const rr = reelsApi.riskReward({ entry: state.entry, stop: state.stop, target: state.target, direction: state.direction });
+    document.getElementById('pvRR').textContent     = rr == null ? '—' : rr.toFixed(2);
+    const qty = reelsApi.positionSize({ entry: state.entry, stop: state.stop, riskPct: state.riskPct, account: ACCOUNT });
+    document.getElementById('pvQty').textContent    = qty ? fmt(qty, 4) : '—';
+    document.getElementById('pvRisk').textContent   = TArenaUI.fmtMoney(ACCOUNT * (state.riskPct/100));
+    document.getElementById('pvPins').textContent   = String(state.pins.length);
+    advanceStep();
+  }
+
+  function advanceStep() {
+    const steps = document.querySelectorAll('.step-pill div');
+    const done = [
+      !!state.symbol,
+      !!state.snap,
+      state.pins.length > 0,
+      !!(state.thesis && state.entry && state.stop && state.target),
+      true,
+    ];
+    let activeIdx = done.findIndex(d => !d);
+    if (activeIdx === -1) activeIdx = steps.length - 1;
+    steps.forEach((el, i) => {
+      el.classList.toggle('done',   done[i] && i !== activeIdx);
+      el.classList.toggle('active', i === activeIdx);
+    });
+  }
+
+  // ============================================================
+  // Toast
+  // ============================================================
+  let toastTimer;
+  function toast(msg, kind) {
+    const el = document.getElementById('toast');
+    el.style.borderColor = kind === 'err' ? 'var(--red)' : 'var(--gold)';
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+  }
+
+  // ============================================================
+  // Publish
+  // ============================================================
+  document.getElementById('publishBtn').addEventListener('click', publish);
+
+  async function publish() {
+    if (!state.symbol)              return toast('Pick a symbol first.', 'err');
+    if (!state.thesis)              return toast('Write a quick thesis.', 'err');
+    if (state.thesis.length > 280)  return toast('Thesis is over 280 characters.', 'err');
+    if (!state.entry || !state.stop || !state.target) return toast('Set entry, stop, and target.', 'err');
+    if (state.entry <= 0 || state.stop <= 0)          return toast('Prices must be positive.', 'err');
+
+    const btn = document.getElementById('publishBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Publishing…';
+
+    const payload = {
+      symbol:     state.symbol,
+      market:     state.market || classifyMarket(state.symbol),
+      thesis:     state.thesis,
+      direction:  state.direction,
+      entry:      state.entry,
+      stop_loss:  state.stop,
+      target:     state.target,
+      visibility: state.visibility,
+      risk_pct:   state.riskPct,
+      snapshot:   state.snap?.png_dataurl || null,
+      tags:       state.pins.map((p, i) => ({
+        tag_type:  p.tag_type,
+        tag_value: p.tag_value,
+        x_pct:     p.x,
+        y_pct:     p.y,
+        ordinal:   i,
+      })),
+    };
+
+    const { data, error } = await sb.rpc('publish_reel', { p_payload: payload });
+    if (error) {
+      toast('Publish failed: ' + (error.message || 'unknown error'), 'err');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Publish reel';
+      return;
+    }
+    // Snap is single-use — clear so the next composer doesn't reuse it.
+    localStorage.removeItem('pending_chart_snap');
+    toast('Reel published! Redirecting to your feed…');
+    setTimeout(() => { window.location.href = `reels.html?reel=${encodeURIComponent(data)}`; }, 900);
+  }
+
+  // ============================================================
+  // Boot
+  // ============================================================
+  loadSnap();
+  refreshPreview();
+
+  // Re-load the snap if the user comes back from the trade page in
+  // another tab and snaps something.
+  window.addEventListener('storage', e => { if (e.key === 'pending_chart_snap') loadSnap(); });
+})();
+</script>
+</body>
+</html>

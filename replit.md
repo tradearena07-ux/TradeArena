@@ -16,6 +16,8 @@ Static multi-page paper-trading site for Australian uni students. ASX, US stocks
 | `auth.html`      | Sign-in — Tabs **Log in / Create account** + **Forgot password**. Supabase email-OTP for signup + password reset; password login (no OTP) for returning users. |
 | `profile.html`   | Trader scorecard — header (avatar, handle, tier, university, follower stats, edit/follow), 6 stat tiles, equity-curve card with benchmark dropdown + range tabs, full quant-metrics card, verified-achievement badges, 4-tab content (Strategies / Reels / Journal / Holdings) with locked-card empty states for any section the trader has hidden. Edit modal exposes a per-section privacy toggle grid that writes to `profiles.visibility_mask`. View other traders via `?u=username`. |
 | `trade.html`     | Markets — TradingView chart, watchlist sidebar, symbol search, big symbol header, right-side order entry panel, simulated order book. |
+| `reels.html`     | Strategy reels feed — For You / Following / Trending tabs, search ($ticker, #tag, free text), indicator/pattern/strategy filter rails, live P&L per card, mirror sheet, on-chart pin popovers. Auth-gated. |
+| `reels-new.html` | Reel composer — 5-step flow (symbol → snap → pin tags → thesis & risk → visibility), live R:R + position-sizing preview, click-to-drop pins, publishes via `publish_reel` RPC which also auto-opens a paper trade. |
 | `portfolio.html` | Groww-style portfolio — investments hero, time-range tabs, perf chart, allocation bar, holdings list, top movers. |
 | `admin.html`     | Admin panel — registrations, university breakdown, CSV export. **Gated by `profiles.is_admin = true`** (no shared passphrase). |
 
@@ -27,6 +29,7 @@ Static multi-page paper-trading site for Australian uni students. ASX, US stocks
 - `datafeed.js` — `TArenaDatafeed` market-data layer. `fetchBars`, `fetchQuotes`, `subscribeQuote` (Binance WS for crypto + 5s poll for stocks), plus a TradingView UDF adapter (`createUDF()`) and a Supabase save/load adapter (`createSaveLoadAdapter()`).
 - `chart-bootstrap.js` — `TArenaChart.mount(containerId, symbol, resolution)` — detects whether the Advanced Charts library is installed and mounts either it or the Lightweight Charts fallback.
 - `metrics.js` — `window.TArenaMetrics`, pure quant-math helpers used by the profile scorecard: `pnl`, `rMultiple`, `winRate`, `avgWin`, `avgLoss`, `avgRR`, `profitFactor`, `expectancy`, `avgHoldingDays`, `dailyReturns`, `sharpe`/`sortino` (annualized over 252 trading days), `equityCurve`, `maxDrawdown`, `recoveryFactor`, `totalReturnPct`, plus a single-shot `summarise(trades, opts)` aggregator. Empty inputs return `null` so the UI can render "—" instead of NaN.
+- `reels.js` — `window.TArenaReels`, taxonomy + math helpers shared by the feed and composer: `INDICATORS` / `PATTERNS` / `STRATEGIES` arrays, a `DEFINITIONS` map (one-line description per tag for the on-chart pin popover), `ICON_FOR_TYPE` (Font Awesome class per tag type), `positionSize({entry,stop,riskPct,account})` (mirrors the SQL `tarena_position_size` so client + server agree), `riskReward({entry,stop,target,direction})`, `livePnl({entry,qty,side,last})`, `defineTag(value)`, `tagSortKey(tag)`. Pure functions, no DOM, no network.
 - `styles.css`  — design tokens (navy/gold), nav, cards, tables, buttons, modal, forms, avatar pill + dropdown menu
 - `favicon.svg` — gold shield logo
 
@@ -45,12 +48,12 @@ Static multi-page paper-trading site for Australian uni students. ASX, US stocks
 The Supabase **publishable key** in `assets/config.js` is designed to ship in client code; real authorization is enforced by RLS policies on every table. The original task spec called for the URL/key to be sourced from Replit Secrets at workspace setup time, but because this site has no build step we can't do `process.env`-style substitution — `config.js` is committed with the literal values instead. To rotate the key: regenerate it in Supabase Dashboard → Project Settings → API, paste the new value into `assets/config.js`, and redeploy. (If we move to a bundled build later, `config.js` should be regenerated from the `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY` Replit Secrets and excluded from git.)
 
 ## Database setup (one-time)
-The base schema, RLS policies, and helper functions live in `supabase/migrations/0001_init.sql`. The Task #4 scorecard adds visibility-aware accessors and a tighter `paper_trades` policy in `supabase/migrations/0002_profile_scorecard.sql` — run **both** files in order.
+The base schema, RLS policies, and helper functions live in `supabase/migrations/0001_init.sql`. The Task #4 scorecard adds visibility-aware accessors and a tighter `paper_trades` policy in `supabase/migrations/0002_profile_scorecard.sql`. The Task #5 reels engine adds publish/mirror/feed RPCs in `supabase/migrations/0003_reels_engine.sql` — run **all three** files in order.
 
 To install (or reset) the database:
 1. Open the Supabase Dashboard → **SQL Editor** → **New query**.
-2. Paste the contents of `supabase/migrations/0001_init.sql` and click **Run**, then repeat with `supabase/migrations/0002_profile_scorecard.sql`.
-3. Confirm the `profiles`, `strategies`, `paper_trades`, `holdings_view`, `reels`, `reel_tags`, `reel_mirrors`, `follows`, `leagues`, `league_members`, `chart_layouts`, `price_bars` tables/views exist with RLS enabled.
+2. Paste the contents of `supabase/migrations/0001_init.sql` and click **Run**, then repeat with `0002_profile_scorecard.sql`, then `0003_reels_engine.sql`.
+3. Confirm the `profiles`, `strategies`, `paper_trades`, `holdings_view`, `reels`, `reel_tags`, `reel_mirrors`, `reel_engagement`, `follows`, `leagues`, `league_members`, `chart_layouts`, `price_bars` tables/views exist with RLS enabled.
 4. **(Optional)** Seed the 8 legacy demo accounts so old logins (`liamos`, `alexchen`, etc. with password `demo1234`) keep working: run `select public.seed_demo_users();` in the SQL editor. Re-runnable; already-seeded accounts are skipped.
 
 The migration creates these helper RPCs (callable from the client unless noted):
@@ -146,6 +149,28 @@ Open with `profile.html` (own scorecard) or `profile.html?u=<username>` (any tra
 
 **Quant math** lives in `assets/metrics.js` (pure functions, no DB access). The page calls `TArenaMetrics.summarise(trades, { startingCapital: 100000, benchmark })` once per render.
 
+## Reels (strategy feed + composer)
+
+Two pages, one shared client module (`assets/reels.js`), and one migration (`supabase/migrations/0003_reels_engine.sql`).
+
+**Server (`0003_reels_engine.sql`).** Every client read/write goes through SECURITY DEFINER RPCs so the visibility logic, position sizing, and atomic publish/trade pairing all live in one hardened code path.
+
+- `tarena_position_size(entry, stop, risk_pct, account)` — risk-based qty math. The exact same formula is implemented in JS (`TArenaReels.positionSize`) so the composer's preview matches what the server will open.
+- `can_read_reel(visibility, author_id)` — mirrors `reels_read` policy logic. `'league'` visibility is treated as **private until leagues ship** so users who pick "League only" today don't accidentally broadcast publicly when leagues launch with different rules.
+- `publish_reel(p_payload jsonb)` — atomic insert: validates payload (thesis ≤ 280, direction ∈ {long,short}, entry/stop > 0, risk_pct ∈ [0.05, 25]), inserts the reel, inserts each pin into `reel_tags`, opens a `paper_trades` row sized to `risk_pct` of a $100k paper account, then back-links `reels.paper_trade_id`. Returns the new reel id.
+- `mirror_reel(p_reel_id, p_risk_pct, p_account_size)` — opens a paper trade in the **viewer's** account using their own risk %, inserts a `reel_mirrors` row. **Idempotent** on `(reel_id, mirrored_by)` — second press returns the existing mirror id instead of erroring. Rejects self-mirror and gates on `can_read_reel`.
+- `toggle_engagement(p_reel_id, p_kind)` — like/save toggle, share/view as one-shot inserts (unique constraint on `(reel_id, user_id, kind)`). Returns `{on, count, kind}` so the UI can update the chip without a follow-up read.
+- `feed_reels(p_cursor, p_limit, p_tab, p_tag, p_ticker, p_q)` — the single read-side feed query. Tabs: `'fy'` (chronological), `'following'` (joined to `follows`), `'trending'` (engagement-weighted in last 24h). Filters: exact tag match, exact symbol match, substring search across thesis + tag values. Returns `{rows, next_cursor}` — each row carries the author profile, tag list with pin coords, engagement counts (`likes/saves/shares/views/mirrors`), and viewer state (`liked/saved/mirrored`).
+- `get_reel(p_id)` — single-reel fetch with the same shape (used for share-link deep-loads).
+
+All Task #5 RPCs `REVOKE ALL FROM PUBLIC` then `GRANT EXECUTE TO authenticated`.
+
+**Feed page (`reels.html`).** Three-column shell on desktop (filter rail + feed + hot tickers), single column on mobile. Each card mounts/unmounts its live-quote subscription via an `IntersectionObserver` so off-screen cards don't keep WebSockets / polls open. Pin popover renders the tag definition from `TArenaReels.DEFINITIONS` and offers a "Show all reels using this" filter that round-trips through `?tag=…`. Search recognises Twitter-style `$TICKER` and `#tag` shortcuts and falls back to free-text. Mirror sheet renders a live position-size + risk + projected-reward preview as the user moves the risk slider.
+
+**Composer (`reels-new.html`).** Five steps with a stepper pill that auto-advances as the user fills in each section. Symbol step uses `TArenaMarket` for autocomplete (keyboard-navigable) and prefills entry/stop/target from the live mock price. Snap step reads `localStorage.pending_chart_snap` (produced by the chart's "Snap to reel" button — see Trade page section); a `storage` event listener auto-refreshes the snap if the user takes a new one in another tab. Pin step toggles a placement mode — clicks on the snapshot drop a numbered pin and open an editor row with type/value selects backed by `TArenaReels.INDICATORS / PATTERNS / STRATEGIES`. The right-rail preview card recomputes R:R + qty + dollar risk on every keystroke. League visibility is intentionally hidden in the v1 UI (since `can_read_reel` treats it as private until leagues ship). On publish, the snap entry is cleared so the next composer doesn't reuse it.
+
+**Position sizing convention.** All sizing assumes a $100,000 paper account (matches `profile.html`). `qty = (account × risk_pct/100) ÷ |entry − stop|`. The mirror sheet exposes risk %; the composer's preview uses the author's chosen risk %. Both client and server clamp risk_pct to [0.05%, 25%].
+
 ## Portfolio page (Groww-style)
 - Big "Investments" header with current value, total returns ($/%), and today's change tile.
 - Time-range tabs (1D/1W/1M/3M/1Y/ALL) above a Chart.js area chart with a gold gradient.
@@ -155,7 +180,7 @@ Open with `profile.html` (own scorecard) or `profile.html?u=<username>` (any tra
 
 ## Conventions
 - Every page must include `<div id="tarena-nav"></div>` and `<div id="tarena-footer"></div>` then load — in this order — `assets/config.js`, the Supabase UMD bundle, `assets/supabase.js`, `assets/app.js`, then call `TArenaUI.renderNav('<page-id>')`.
-- Page IDs: `home`, `trade`, `portfolio`, `profile`, `auth`, `admin`.
+- Page IDs: `home`, `trade`, `reels`, `portfolio`, `profile`, `auth`, `admin`.
 - All `<link rel="icon">` point to `assets/favicon.svg`.
 - TradingView symbols use the broker-prefixed format (`ASX:BHP`, `NASDAQ:AAPL`, `BINANCE:BTCUSDT`).
 - Money formatting goes through `TArenaUI.fmtMoney` / `fmtPct` for consistency.
