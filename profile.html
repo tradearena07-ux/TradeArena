@@ -494,6 +494,22 @@
           : lockTile('Trades') }
     </div>`;
 
+    // Learning tile — public-safe counts (schools/modules/streak),
+    // not gated by visibility_mask. Matches the spec wording for the
+    // Schools task ("Profile shows a Learning stats tile").
+    const ls = state.learning || { schools_completed: 0, modules_completed: 0, streak: 0 };
+    const learningHtml = `<div class="pcard" style="margin-top:18px;">
+      <div class="pcard-head">
+        <div class="pcard-title"><i class="fa-solid fa-graduation-cap"></i> Learning</div>
+        <a href="schools.html" class="pcard-sub" style="color:var(--gold2);text-decoration:none;">Browse schools →</a>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;">
+        ${statTile('Schools completed', String(ls.schools_completed || 0))}
+        ${statTile('Modules completed', String(ls.modules_completed || 0))}
+        ${statTile('Streak', (ls.streak || 0) + (ls.streak === 1 ? ' day' : ' days'))}
+      </div>
+    </div>`;
+
     // Cash row (gated independently by visibility_mask.cash) — sits
     // inside the equity card so it stays close to the equity number.
     const showCash = isVisible('cash');
@@ -607,6 +623,7 @@
       </div>
 
       ${statsHtml}
+      ${learningHtml}
       ${curveHtml}
       ${quantHtml}
       ${badgesHtml}
@@ -920,7 +937,7 @@
     }
 
     const id = state.profile.id;
-    const [follows, amFollowing, journalTrades, perfTrades, strategies, openHoldings, cashBalance, computedBadges] = await Promise.all([
+    const [follows, amFollowing, journalTrades, perfTrades, strategies, openHoldings, cashBalance, computedBadges, learningStats] = await Promise.all([
       loadFollowStats(id),
       loadAmFollowing(id),
       loadJournalTrades(id),
@@ -929,6 +946,8 @@
       loadHoldings(id),
       loadCashBalance(id),
       loadComputedBadges(id),
+      // learning_stats is public-safe (counts only, no PII) — no privacy mask
+      sb.rpc('learning_stats', { p_owner: id }).then(r => r.error ? null : r.data),
     ]);
     state.follows        = follows;
     state.amFollowing    = amFollowing;
@@ -938,6 +957,7 @@
     state.openHoldings   = openHoldings;
     state.cashBalance    = cashBalance;       // server-side, gated by visibility_mask.cash only
     state.computedBadges = computedBadges;
+    state.learning       = learningStats;     // {schools_completed, modules_completed, streak} or null
 
     // Build benchmark series spanning the perf history (or last 90d).
     let from = Date.now() - 90 * 86400000, to = Date.now();

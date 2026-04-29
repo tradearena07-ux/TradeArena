@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TradeArena · Module</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <style>
+    .m-shell{ max-width:880px;margin:0 auto;padding:32px 24px 60px;flex:1;width:100%; }
+    .m-back{ display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;text-decoration:none;margin-bottom:18px; }
+    .m-back:hover{ color:var(--gold2); }
+    .m-head{ margin-bottom:20px; }
+    .m-head .crumb{ color:var(--muted);font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-family:'Cinzel',serif;margin-bottom:6px; }
+    .m-head h1{ font-family:'Cinzel',serif;font-size:1.7rem;letter-spacing:-.02em;margin-bottom:6px; }
+    .m-head p{ color:var(--muted);font-size:14px;line-height:1.6;max-width:620px; }
+
+    /* Stepper */
+    .stepper{ display:flex;gap:6px;margin:24px 0 18px;background:var(--navy3);padding:6px;border-radius:12px;border:1px solid var(--bdl); }
+    .step{
+      flex:1;padding:10px 14px;border-radius:8px;background:transparent;border:none;cursor:pointer;color:var(--muted);
+      font-family:'Cinzel',serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;
+      display:flex;align-items:center;justify-content:center;gap:8px;transition:all .12s;
+    }
+    .step.active{ background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy); }
+    .step.done{ color:#86efac; }
+    .step i{ font-size:11px; }
+
+    /* Reel playlist */
+    .reel-card{
+      background:var(--navy3);border:1px solid var(--bdl);border-radius:14px;padding:20px;margin-bottom:14px;
+      display:grid;grid-template-columns:140px 1fr;gap:18px;
+    }
+    @media(max-width:680px){ .reel-card{ grid-template-columns:1fr; } }
+    .reel-card .snap{
+      background:var(--navy);border-radius:10px;border:1px solid var(--bdl);height:100px;
+      display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;text-align:center;padding:8px;
+      position:relative;overflow:hidden;
+    }
+    .reel-card .snap img{ width:100%;height:100%;object-fit:cover; }
+    .reel-card .snap .pin{
+      position:absolute;width:22px;height:22px;border-radius:50%;background:var(--gold);color:var(--navy);
+      font-family:'Cinzel',serif;font-weight:700;font-size:11px;
+      display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%);
+      border:2px solid var(--navy);box-shadow:0 2px 6px rgba(0,0,0,.4);
+    }
+    .reel-card .body .sym{ font-family:'Cinzel',serif;font-weight:700;color:var(--cream);font-size:1.05rem; }
+    .reel-card .body .dir{ font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;padding:2px 8px;border-radius:9999px;margin-left:8px; }
+    .reel-card .body .dir.long{ background:rgba(74,222,128,.12);color:#86efac; }
+    .reel-card .body .dir.short{ background:rgba(248,113,113,.12);color:#fca5a5; }
+    .reel-card .thesis{ color:var(--cream);font-size:13.5px;line-height:1.55;margin:8px 0 10px; }
+    .reel-card .lvl{ display:flex;gap:14px;font-size:12px;color:var(--muted);margin-bottom:8px;font-family:'DM Sans',sans-serif; }
+    .reel-card .lvl strong{ color:var(--cream);font-family:'Cinzel',serif;font-weight:600;display:block; }
+    .reel-card .tags{ display:flex;flex-wrap:wrap;gap:6px; }
+    .tag-chip{ display:inline-flex;align-items:center;gap:5px;padding:3px 9px;background:rgba(201,160,48,.1);color:var(--gold2);border:1px solid rgba(201,160,48,.25);border-radius:9999px;font-size:11px; }
+    .tag-chip .num{
+      width:14px;height:14px;border-radius:50%;background:var(--gold);color:var(--navy);
+      font-family:'Cinzel',serif;font-weight:700;font-size:9px;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .reel-card .author{ display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--muted); }
+
+    /* Quiz */
+    .quiz-card{ background:var(--navy3);border:1px solid var(--bdl);border-radius:14px;padding:24px;margin-bottom:14px; }
+    .qc-h{ display:flex;justify-content:space-between;align-items:center;margin-bottom:8px; }
+    .qc-h .ttl{ font-family:'Cinzel',serif;font-size:13.5px;font-weight:700;color:var(--gold2);letter-spacing:.04em; }
+    .qc-h .meta{ font-size:11.5px;color:var(--muted);font-family:'Cinzel',serif;letter-spacing:.1em; }
+    .qc-q{ color:var(--cream);font-size:14px;line-height:1.6;margin:6px 0 14px; }
+    .qc-choices{ display:flex;flex-direction:column;gap:8px; }
+    .qc-choice{
+      background:var(--navy);border:1px solid var(--bdl);border-radius:9px;padding:11px 14px;
+      cursor:pointer;color:var(--cream);font-size:13.5px;display:flex;align-items:center;gap:10px;transition:all .1s;
+      text-align:left;font-family:'DM Sans',sans-serif;
+    }
+    .qc-choice:hover:not([disabled]){ border-color:var(--gold); }
+    .qc-choice.picked{ border-color:var(--gold);background:rgba(201,160,48,.08); }
+    .qc-choice.right{ border-color:rgba(74,222,128,.6);background:rgba(74,222,128,.08);color:#86efac; }
+    .qc-choice.wrong{ border-color:rgba(248,113,113,.6);background:rgba(248,113,113,.08);color:#fca5a5; }
+    .qc-choice .dot{ width:18px;height:18px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0; }
+    .qc-explain{ margin-top:10px;color:var(--muted);font-size:12.5px;font-style:italic;padding-left:10px;border-left:2px solid var(--gold);line-height:1.55; }
+
+    .qc-result{
+      background:var(--navy3);border-radius:12px;padding:24px;text-align:center;border:1px solid var(--bdl);
+      margin-top:14px;
+    }
+    .qc-result.pass{ border-color:rgba(74,222,128,.5); }
+    .qc-result.fail{ border-color:rgba(248,113,113,.5); }
+    .qc-result .big{ font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;letter-spacing:.02em; }
+    .qc-result.pass .big{ color:#86efac; }
+    .qc-result.fail .big{ color:#fca5a5; }
+    .qc-result .lbl{ color:var(--muted);font-size:13px;margin-top:6px; }
+
+    /* Challenge */
+    .ch-card{ background:var(--navy3);border:1px solid var(--bdl);border-radius:14px;padding:24px;margin-bottom:14px; }
+    .ch-h{ display:flex;justify-content:space-between;align-items:center;margin-bottom:10px; }
+    .ch-h .ttl{ font-family:'Cinzel',serif;font-size:13.5px;font-weight:700;color:var(--gold2);letter-spacing:.04em; }
+    .ch-card h3{ font-family:'Cinzel',serif;font-size:1.2rem;color:var(--cream);margin-bottom:6px; }
+    .ch-card p{ color:var(--muted);font-size:13.5px;line-height:1.55;margin-bottom:14px; }
+    .ch-spec{
+      background:var(--navy);border:1px solid var(--bdl);border-radius:9px;padding:12px 14px;
+      font-size:12.5px;color:var(--cream);margin-bottom:14px;
+    }
+    .ch-spec strong{ color:var(--gold2);font-family:'Cinzel',serif;letter-spacing:.04em; }
+    .ch-evidence{
+      background:var(--navy);border:1px solid var(--bdl);border-radius:9px;padding:12px 14px;
+      font-size:12.5px;color:var(--cream);margin-top:14px;font-family:'DM Sans',sans-serif;
+    }
+    .ch-evidence.pass{ border-color:rgba(74,222,128,.4); }
+    .ch-evidence.fail{ border-color:rgba(248,113,113,.4); }
+    .ch-evidence .row{ display:flex;justify-content:space-between;padding:4px 0;border-top:1px solid var(--bdl); }
+    .ch-evidence .row:first-child{ border-top:none; }
+    .ch-evidence strong{ color:var(--gold2);font-family:'Cinzel',serif; }
+
+    .perk-banner{
+      background:linear-gradient(135deg, rgba(201,160,48,.15), rgba(232,192,96,.05));
+      border:1px solid var(--gold);border-radius:12px;padding:18px;margin-top:14px;
+      display:flex;align-items:center;gap:14px;
+    }
+    .perk-banner .icn{
+      width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--gold),var(--gold2));
+      color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;
+    }
+    .perk-banner .ttl{ font-family:'Cinzel',serif;color:var(--cream);font-weight:700;font-size:14px;letter-spacing:.04em; }
+    .perk-banner .desc{ color:var(--muted);font-size:12.5px;margin-top:2px; }
+
+    .actions-row{ display:flex;gap:10px;margin-top:18px;flex-wrap:wrap; }
+
+    .empty-state{ text-align:center;padding:48px 20px;color:var(--muted);background:var(--navy3);border:1px dashed var(--bdl);border-radius:12px; }
+    .empty-state i{ font-size:32px;color:var(--gold);opacity:.5;margin-bottom:14px;display:block; }
+
+    .stage{ display:none; }
+    .stage.active{ display:block; }
+  </style>
+</head>
+<body>
+
+<div id="tarena-nav"></div>
+
+<div class="m-shell">
+  <a class="m-back" href="schools.html"><i class="fa-solid fa-arrow-left"></i> Schools</a>
+  <div id="content">
+    <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i><div>Loading module…</div></div>
+  </div>
+</div>
+
+<div id="tarena-footer"></div>
+
+<script src="assets/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="assets/supabase.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/reels.js"></script>
+<script>
+(() => {
+  'use strict';
+  TArenaUI.renderNav('schools');
+  TArenaUI.renderFooter();
+
+  const session = TArenaAuth.requireAuth();
+  if (!session) throw new Error('redirect');
+  const sb = window.TArenaDB;
+
+  const id = new URLSearchParams(location.search).get('id');
+  if (!id) {
+    document.getElementById('content').innerHTML =
+      `<div class="empty-state"><i class="fa-solid fa-link-slash"></i><div>No module specified.</div></div>`;
+    return;
+  }
+
+  // --- Page state ----------------------------------------------------
+  let payload   = null;        // get_module response
+  let stage     = 'reels';     // reels | quiz | challenge
+  let quizIdx   = 0;
+  let quizPicks = [];          // index per question (-1 if not yet answered)
+  let quizPassed = false;      // local pass flag (also derived from payload.attempt)
+  let lastQuizResult = null;   // {score, total, passed, per_question}
+
+  function setStage(s) {
+    stage = s;
+    render();
+  }
+
+  // --- Helpers -------------------------------------------------------
+  const fmtMoney = (n) => TArenaUI.fmtMoney(n);
+  const sanitize = (s) => String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  function reelCard(item, idx) {
+    const r = item.reel;
+    const tags = (r.tags || []).slice().sort((a, b) => a.ordinal - b.ordinal);
+    const pinTags = tags.filter(t => t.x_pct != null && t.y_pct != null);
+    const dir = (r.direction || 'long').toLowerCase();
+    const author = r.author || {};
+    return `<div class="reel-card">
+      <div class="snap">
+        ${r.chart_snapshot_url
+          ? `<img src="${r.chart_snapshot_url}" alt="snapshot"/>`
+          : `<div><i class="fa-solid fa-image" style="font-size:24px;opacity:.4;display:block;margin-bottom:6px;"></i>No snapshot</div>`}
+        ${pinTags.map((t, i) => `<div class="pin" style="left:${t.x_pct}%;top:${t.y_pct}%;">${i + 1}</div>`).join('')}
+      </div>
+      <div class="body">
+        <div>
+          <span class="sym">${sanitize(r.symbol)}</span>
+          <span class="dir ${dir}">${dir}</span>
+          <span class="text-muted" style="font-size:11.5px;margin-left:8px;">Reel ${idx + 1}</span>
+        </div>
+        <div class="thesis">${sanitize(r.thesis)}</div>
+        <div class="lvl">
+          <div><strong>${r.entry != null ? r.entry : '—'}</strong>Entry</div>
+          <div><strong>${r.stop_loss != null ? r.stop_loss : '—'}</strong>Stop</div>
+          <div><strong>${r.target != null ? r.target : '—'}</strong>Target</div>
+        </div>
+        ${tags.length ? `<div class="tags">${tags.map((t, i) => {
+          const isPin = t.x_pct != null && t.y_pct != null;
+          const pinIdx = isPin ? pinTags.findIndex(x => x === t) : -1;
+          return `<span class="tag-chip">${pinIdx >= 0 ? `<span class="num">${pinIdx + 1}</span>` : ''}<i class="fa-solid ${(window.TArenaReels && window.TArenaReels.ICON_FOR_TYPE && window.TArenaReels.ICON_FOR_TYPE[t.tag_type]) || 'fa-tag'}"></i>${sanitize(t.tag_value)}</span>`;
+        }).join('')}</div>` : ''}
+        <div class="author">
+          by <strong style="color:var(--cream);">@${sanitize(author.username || 'unknown')}</strong>
+          ${author.tier ? `· ${sanitize(author.tier)}` : ''}
+          ${r.created_at ? `· ${new Date(r.created_at).toLocaleDateString('en-AU')}` : ''}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function reelsStage() {
+    const reels = payload.reels || [];
+    if (!reels.length) {
+      return `<div class="empty-state"><i class="fa-solid fa-clapperboard"></i>
+        <div>No reels in this module yet.</div>
+        <div style="font-size:12px;margin-top:8px;">An admin can attach reels from the curator UI on the Admin page.</div>
+        ${payload.quiz ? `<button class="btn-gold" style="margin-top:14px;" onclick="window.__mod.go('quiz')">Skip to quiz →</button>` : ''}
+      </div>`;
+    }
+    return reels.map(reelCard).join('') + `
+      <div class="actions-row">
+        ${payload.quiz
+          ? `<button class="btn-gold" onclick="window.__mod.go('quiz')">Take the quiz <i class="fa-solid fa-arrow-right"></i></button>`
+          : (payload.challenge
+            ? `<button class="btn-gold" onclick="window.__mod.go('challenge')">Try the challenge <i class="fa-solid fa-arrow-right"></i></button>`
+            : '')}
+      </div>`;
+  }
+
+  function quizStage() {
+    const q = payload.quiz;
+    if (!q || !q.questions || !q.questions.length) {
+      return `<div class="empty-state"><i class="fa-solid fa-clipboard-question"></i>
+        <div>No quiz published for this module.</div>
+        <button class="btn-gold" style="margin-top:14px;" onclick="window.__mod.go('challenge')">Continue to challenge →</button>
+      </div>`;
+    }
+
+    if (lastQuizResult) {
+      const r = lastQuizResult;
+      const pct = r.total ? Math.round((r.score / r.total) * 100) : 0;
+      const breakdown = (q.questions || []).map((qq, i) => {
+        const per = (r.per_question || []).find(p => p.idx === i) || {};
+        const right = per.right;
+        return `<div class="quiz-card">
+          <div class="qc-h"><div class="ttl">Q${i + 1}</div>
+            <div class="meta">${right ? '<span style="color:#86efac;"><i class="fa-solid fa-check"></i> Correct</span>'
+                                       : '<span style="color:#fca5a5;"><i class="fa-solid fa-xmark"></i> Wrong</span>'}</div></div>
+          <div class="qc-q">${sanitize(qq.q)}</div>
+          <div class="qc-choices">
+            ${(qq.choices || []).map((c, j) => {
+              let cls = '';
+              if (j === per.correct) cls = 'right';
+              else if (j === per.picked) cls = 'wrong';
+              return `<div class="qc-choice ${cls}" disabled><div class="dot">${String.fromCharCode(65 + j)}</div>${sanitize(c)}</div>`;
+            }).join('')}
+          </div>
+          ${per.explain ? `<div class="qc-explain">${sanitize(per.explain)}</div>` : ''}
+        </div>`;
+      }).join('');
+
+      return `<div class="qc-result ${r.passed ? 'pass' : 'fail'}">
+          <div class="big">${r.score} / ${r.total}</div>
+          <div class="lbl">${pct}% — pass mark ${r.pass_pct}%${r.passed ? ' · You passed!' : ' · Not quite — review and retry.'}</div>
+          <div class="actions-row" style="justify-content:center;">
+            ${r.passed
+              ? `<button class="btn-gold" onclick="window.__mod.go('challenge')">Continue to challenge <i class="fa-solid fa-arrow-right"></i></button>`
+              : `<button class="btn-gold" onclick="window.__mod.retryQuiz()">Try again</button>`}
+            <button class="btn-ghost" onclick="window.__mod.go('reels')">Back to reels</button>
+          </div>
+        </div>
+        <div style="margin-top:16px;">${breakdown}</div>`;
+    }
+
+    const i = quizIdx;
+    const total = q.questions.length;
+    const qq = q.questions[i];
+    const picked = quizPicks[i];
+
+    return `<div class="quiz-card">
+      <div class="qc-h">
+        <div class="ttl">Question ${i + 1} of ${total}</div>
+        <div class="meta">Pass mark ${q.pass_pct}%</div>
+      </div>
+      <div class="qc-q">${sanitize(qq.q)}</div>
+      <div class="qc-choices">
+        ${(qq.choices || []).map((c, j) => `
+          <button class="qc-choice ${picked === j ? 'picked' : ''}" onclick="window.__mod.pickQuiz(${j})">
+            <div class="dot">${String.fromCharCode(65 + j)}</div>${sanitize(c)}
+          </button>`).join('')}
+      </div>
+      <div class="actions-row">
+        ${i > 0 ? `<button class="btn-ghost" onclick="window.__mod.quizPrev()"><i class="fa-solid fa-arrow-left"></i> Back</button>` : ''}
+        ${i < total - 1
+          ? `<button class="btn-gold" onclick="window.__mod.quizNext()" ${picked == null || picked < 0 ? 'disabled' : ''}>Next <i class="fa-solid fa-arrow-right"></i></button>`
+          : `<button class="btn-gold" onclick="window.__mod.submitQuiz()" ${quizPicks.length < total || quizPicks.includes(undefined) || quizPicks.includes(null) ? 'disabled' : ''}>Submit <i class="fa-solid fa-paper-plane"></i></button>`}
+      </div>
+    </div>`;
+  }
+
+  // Human-readable challenge spec.
+  function describeSpec(spec) {
+    if (!spec) return '';
+    const p = spec.params || {};
+    switch (spec.kind) {
+      case 'min_trades':
+        return `Open at least <strong>${p.n}</strong> closed paper trade${p.n === 1 ? '' : 's'}${p.market ? ` on the ${p.market.toUpperCase()} market` : ''}.`;
+      case 'consecutive_wins':
+        return `Achieve <strong>${p.n}</strong> consecutive winning trade${p.n === 1 ? '' : 's'}${p.tag ? ` tagged <strong>#${p.tag}</strong>` : ''}.`;
+      case 'min_rr':
+        return `Open <strong>${p.n}</strong> trade${p.n === 1 ? '' : 's'} with realised R:R ≥ <strong>${p.ratio}</strong>${p.min_hold_days ? ` held at least <strong>${p.min_hold_days}</strong> day${p.min_hold_days === 1 ? '' : 's'}` : ''}${p.market ? ` on the ${p.market.toUpperCase()} market` : ''}.`;
+      case 'journal_count':
+        return `Document your reasoning on at least <strong>${p.n}</strong> paper trade${p.n === 1 ? '' : 's'} in the last <strong>${p.days}</strong> day${p.days === 1 ? '' : 's'}.`;
+      default: return '';
+    }
+  }
+
+  function describePerk(perk) {
+    if (!perk) return '';
+    const v = perk.value || {};
+    switch (perk.kind) {
+      case 'extra_capital':    return `+${fmtMoney(v.amount || 0)} extra paper capital`;
+      case 'indicator_unlock': return `Unlock the <strong>${(v.label || v.indicator || '').toString().toUpperCase()}</strong> indicator`;
+      case 'badge':            return `Earn the <strong>${v.label || v.key}</strong> badge`;
+      default:                 return 'Unlock perk';
+    }
+  }
+
+  function challengeStage(extra) {
+    const c = payload.challenge;
+    if (!c) {
+      return `<div class="empty-state"><i class="fa-solid fa-bullseye"></i>
+        <div>No challenge for this module.</div>
+        ${payload.attempt && payload.attempt.passed
+          ? `<div style="margin-top:8px;font-size:12.5px;">Quiz passed — module complete.</div>`
+          : ''}
+      </div>`;
+    }
+    const passed   = !!(payload.challenge_passed || (extra && extra.passed));
+    const evidence = extra && extra.evidence;
+    const perk     = c.spec && c.spec.perk;
+
+    let evHtml = '';
+    if (extra) {
+      evHtml = `<div class="ch-evidence ${passed ? 'pass' : 'fail'}">
+        ${passed
+          ? `<div style="color:#86efac;font-weight:700;margin-bottom:6px;"><i class="fa-solid fa-check"></i> Challenge passed.</div>`
+          : `<div style="color:#fca5a5;font-weight:700;margin-bottom:6px;"><i class="fa-solid fa-xmark"></i> Not yet — keep trading.</div>`}
+        ${evidence ? Object.entries(evidence).filter(([k]) => k !== 'trade_ids').map(([k, v]) =>
+          `<div class="row"><span>${sanitize(k)}</span><strong>${sanitize(typeof v === 'object' ? JSON.stringify(v) : v)}</strong></div>`
+        ).join('') : ''}
+      </div>`;
+    }
+
+    let perkHtml = '';
+    if (passed && perk) {
+      const v = perk.value || {};
+      const ico = perk.kind === 'badge' ? (v.icon || 'fa-award')
+                : perk.kind === 'extra_capital' ? 'fa-sack-dollar'
+                : 'fa-chart-line';
+      perkHtml = `<div class="perk-banner">
+        <div class="icn"><i class="fa-solid ${ico}"></i></div>
+        <div>
+          <div class="ttl">Perk granted</div>
+          <div class="desc">${describePerk(perk)}</div>
+        </div>
+      </div>`;
+    }
+
+    return `<div class="ch-card">
+      <div class="ch-h"><div class="ttl">Paper-trade challenge</div>
+        ${passed ? `<span class="text-muted" style="color:#86efac;font-size:12px;"><i class="fa-solid fa-circle-check"></i> Passed</span>` : ''}
+      </div>
+      <h3>${sanitize(c.title)}</h3>
+      <p>${sanitize(c.summary || '')}</p>
+      <div class="ch-spec"><strong>Pass criteria:</strong> ${describeSpec(c.spec)}</div>
+      ${perk && !passed ? `<div class="ch-spec" style="border-color:rgba(201,160,48,.4);">
+        <strong>Reward:</strong> ${describePerk(perk)}.
+      </div>` : ''}
+      ${evHtml}
+      ${perkHtml}
+      <div class="actions-row">
+        <button class="btn-gold" onclick="window.__mod.checkChallenge()">${passed ? 'Re-check' : 'Check progress'} <i class="fa-solid fa-arrows-rotate"></i></button>
+        <a class="btn-ghost" href="trade.html"><i class="fa-solid fa-chart-line"></i> Open Markets</a>
+        ${passed ? `<a class="btn-ghost" href="school.html?id=${encodeURIComponent(payload.module.school_id)}">Next module →</a>` : ''}
+      </div>
+    </div>`;
+  }
+
+  // --- Render --------------------------------------------------------
+  function render(extra) {
+    const m = payload.module;
+    const a = payload.attempt;
+    const quizDone = (a && a.passed) || quizPassed;
+    const challengeDone = !!payload.challenge_passed;
+
+    const stepCls = (s) =>
+      s === stage ? 'active'
+        : (s === 'reels' ? '' :
+           s === 'quiz' ? (quizDone ? 'done' : '') :
+           challengeDone ? 'done' : '');
+
+    const html = `
+      <div class="m-head">
+        <div class="crumb"><a href="school.html?id=${encodeURIComponent(m.school_id)}" style="color:inherit;text-decoration:none;">${sanitize(m.school_title)}</a> · Module ${m.ordinal}</div>
+        <h1>${sanitize(m.title)}</h1>
+        <p>${sanitize(m.summary || '')}</p>
+      </div>
+      <div class="stepper">
+        <button class="step ${stepCls('reels')}" onclick="window.__mod.go('reels')"><i class="fa-solid fa-clapperboard"></i> Reels</button>
+        <button class="step ${stepCls('quiz')}" onclick="window.__mod.go('quiz')"
+          ${payload.quiz ? '' : 'disabled'}><i class="fa-solid ${quizDone ? 'fa-check' : 'fa-clipboard-question'}"></i> Quiz</button>
+        <button class="step ${stepCls('challenge')}" onclick="window.__mod.go('challenge')"
+          ${payload.challenge && quizDone ? '' : 'disabled'}><i class="fa-solid ${challengeDone ? 'fa-check' : 'fa-bullseye'}"></i> Challenge</button>
+      </div>
+      <div class="stage active">
+        ${stage === 'reels' ? reelsStage()
+          : stage === 'quiz' ? quizStage()
+          : challengeStage(extra)}
+      </div>`;
+    document.getElementById('content').innerHTML = html;
+  }
+
+  // --- Actions -------------------------------------------------------
+  window.__mod = {
+    go(s) {
+      const a = payload.attempt;
+      const quizDone = (a && a.passed) || quizPassed;
+      if (s === 'challenge' && !quizDone && payload.quiz) {
+        alert('Pass the quiz first to unlock the challenge.');
+        return;
+      }
+      lastQuizResult = null;
+      setStage(s);
+    },
+    pickQuiz(j) {
+      quizPicks[quizIdx] = j;
+      render();
+    },
+    quizNext() {
+      if (quizPicks[quizIdx] == null) return;
+      quizIdx = Math.min(quizIdx + 1, payload.quiz.questions.length - 1);
+      render();
+    },
+    quizPrev() {
+      quizIdx = Math.max(0, quizIdx - 1);
+      render();
+    },
+    async submitQuiz() {
+      const total = payload.quiz.questions.length;
+      if (quizPicks.length < total || quizPicks.some(p => p == null || p < 0)) {
+        alert('Answer every question before submitting.');
+        return;
+      }
+      const { data, error } = await sb.rpc('submit_quiz',
+        { p_module_id: id, p_answers: quizPicks });
+      if (error) { alert('Quiz submit failed: ' + error.message); return; }
+      lastQuizResult = data;
+      quizPassed = !!(data && data.passed);
+      render();
+    },
+    retryQuiz() {
+      quizIdx = 0;
+      quizPicks = [];
+      lastQuizResult = null;
+      render();
+    },
+    async checkChallenge() {
+      const { data, error } = await sb.rpc('validate_challenge', { p_module_id: id });
+      if (error) { alert('Challenge check failed: ' + error.message); return; }
+      if (data && data.passed) payload.challenge_passed = true;
+      render(data);
+    },
+  };
+
+  // --- Boot ----------------------------------------------------------
+  async function boot() {
+    const { data, error } = await sb.rpc('get_module', { p_id: id });
+    if (error || !data || !data.module) {
+      document.getElementById('content').innerHTML =
+        `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>
+         <div>Couldn't load this module.</div>
+         <div style="font-size:12px;margin-top:6px;">${(error && error.message) || 'Not found'}</div></div>`;
+      return;
+    }
+    payload = data;
+    document.title = 'TradeArena · ' + payload.module.title;
+    quizPicks = (payload.quiz && payload.quiz.questions ? payload.quiz.questions : []).map(() => null);
+    quizPassed = !!(payload.attempt && payload.attempt.passed);
+    render();
+  }
+  boot();
+})();
+</script>
+</body>
+</html>

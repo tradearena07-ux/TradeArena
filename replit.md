@@ -19,7 +19,10 @@ Static multi-page paper-trading site for Australian uni students. ASX, US stocks
 | `reels.html`     | Strategy reels feed — For You / Following / Trending tabs, search ($ticker, #tag, free text), indicator/pattern/strategy filter rails, live P&L per card, mirror sheet, on-chart pin popovers. Auth-gated. |
 | `reels-new.html` | Reel composer — 5-step flow (symbol → snap → pin tags → thesis & risk → visibility), live R:R + position-sizing preview, click-to-drop pins, publishes via `publish_reel` RPC which also auto-opens a paper trade. |
 | `portfolio.html` | Groww-style portfolio — investments hero, time-range tabs, perf chart, allocation bar, holdings list, top movers. |
-| `admin.html`     | Admin panel — registrations, university breakdown, CSV export. **Gated by `profiles.is_admin = true`** (no shared passphrase). |
+| `schools.html`   | TradeArena Schools index — grid of curated schools with progress rings (% of modules completed for the signed-in user). Auth-gated. |
+| `school.html`    | School detail — ordered module list with lock icons; a module unlocks once the previous module's quiz **and** challenge are passed. Shows reel count + quiz/challenge status per row. |
+| `module.html`    | Module player — 3-stage stepper (**Reels playlist → Quiz → Challenge**). Reel cards mirror the feed shape (symbol/direction/levels/tags/author). Quiz answers are scored server-side via `submit_quiz` (correct indices never sent to client). Challenge passes call `validate_challenge` and surface the granted perk inline. |
+| `admin.html`     | Admin panel — registrations, university breakdown, CSV export, **plus the Schools curator** (create/edit schools + modules, attach/reorder reels via search, edit quizzes & challenges as JSON with one-click templates for each spec kind). **Gated by `profiles.is_admin = true`** (no shared passphrase). |
 
 ## Shared assets (`/assets`)
 - `config.js`   — Supabase URL + publishable key (safe to expose; rotate by editing this file)
@@ -148,6 +151,19 @@ Open with `profile.html` (own scorecard) or `profile.html?u=<username>` (any tra
 **Benchmark line.** Until the Trade-page datafeed exposes a generic `fetchBenchmark(code)`, the equity-curve card overlays a deterministic synthetic series so the line stays stable across reloads (and the swap-in is one function — `syntheticBenchmark()` in `profile.html`). Real index data plugs in here without touching the rest of the page.
 
 **Quant math** lives in `assets/metrics.js` (pure functions, no DB access). The page calls `TArenaMetrics.summarise(trades, { startingCapital: 100000, benchmark })` once per render.
+
+## Schools (learning playlists)
+Curated playlists of reels with quizzes and paper-trade challenges, gated so each module unlocks the next. Schema lives in `supabase/migrations/0004_schools.sql`. Tables: `schools`, `school_modules`, `module_reels` (link table with ordinal), `quizzes` (one per module, JSONB questions), `quiz_attempts`, `challenges` (one per module, JSONB spec), `challenge_completions`, `user_perks` (granted perks). RLS: read tables are world-readable for signed-in users; write tables are owner-only with `auth.uid()`.
+
+Reader RPCs: `list_schools()` (grid + per-user progress), `get_school(p_id)` (modules + per-user lock/complete status via `lag()` over ordinal), `get_module(p_id)` (reels + quiz **with `correct` stripped** + challenge spec + most-recent attempt + completion flag), `learning_stats(p_owner)` (counts for the Profile tile), `list_my_perks()`.
+
+Submission RPCs: `submit_quiz(p_module_id, p_answers)` scores server-side and inserts a `quiz_attempts` row regardless of pass/fail. `validate_challenge(p_module_id)` runs the spec against `paper_trades` / `quiz_attempts` and on a fresh pass inserts the completion + grants the configured perk in the same transaction. **Note:** the original spec called for an Edge Function for the validator; we kept it as a `SECURITY DEFINER` RPC because (a) the rest of the reels engine is RPC-based, (b) all data lives in Postgres so the HTTP hop adds latency without isolation benefit, (c) the gating + perk grant must be transactional with the completion insert.
+
+Supported `challenge.spec.kind`: `min_trades` (`{n, market?}`), `consecutive_wins` (`{n, tag?}`), `min_rr` (`{n, ratio, min_hold_days?, market?}`), `journal_count` (`{n, days}`). Perk shape `{kind, value}` with kinds `extra_capital` (`value.amount`), `indicator_unlock` (`value.indicator + label`), `badge` (`value.key + label + icon`).
+
+Curator RPCs (admin-only via `tarena_assert_admin()`): `admin_upsert_school(p)`, `admin_delete_school(p_id)`, `admin_upsert_module(p)`, `admin_delete_module(p_id)`, `admin_set_module_reels(p_module_id, p_reel_ids[])`, `admin_upsert_quiz(p_module_id, p_questions, p_pass_pct)`, `admin_upsert_challenge(p_module_id, p_title, p_summary, p_spec)`, `admin_list_reels(p_q, p_limit)`. Run `select public.seed_starter_schools();` once in the SQL editor to load the two starter schools (Risk 101 + Pattern Recognition) with full quizzes, challenges, and perks.
+
+Profile shows a **Learning** stats tile (schools completed, modules completed, day-streak) below the main metrics — public-safe, not gated by `visibility_mask`.
 
 ## Reels (strategy feed + composer)
 

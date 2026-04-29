@@ -520,9 +520,9 @@
     const links = [
       { id: 'trade',     href: 'trade.html',     label: 'Markets' },
       { id: 'reels',     href: 'reels.html',     label: 'Reels' },
+      { id: 'schools',   href: 'schools.html',   label: 'Schools' },
       { id: 'portfolio', href: 'portfolio.html', label: 'Portfolio' },
       { id: 'profile',   href: 'profile.html',   label: 'Profile' },
-      { id: 'leagues',   href: '#leagues',       label: 'Leagues' },
     ];
     const session = getSession();
     const linksHtml = links.map(l =>
@@ -552,6 +552,7 @@
             <a href="portfolio.html" class="ta-menu-link"><i class="fa-solid fa-briefcase"></i> Portfolio</a>
             <a href="trade.html" class="ta-menu-link"><i class="fa-solid fa-chart-line"></i> Markets</a>
             <a href="reels.html" class="ta-menu-link"><i class="fa-solid fa-clapperboard"></i> Reels</a>
+            <a href="schools.html" class="ta-menu-link"><i class="fa-solid fa-graduation-cap"></i> Schools</a>
             <div class="ta-menu-sep"></div>
             <button class="ta-menu-link ta-menu-logout" id="logoutBtn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out</button>
           </div>

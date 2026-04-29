@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TradeArena · School</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <style>
+    .s-shell{ max-width:900px;margin:0 auto;padding:32px 24px 60px;flex:1;width:100%; }
+    .s-back{ display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;text-decoration:none;margin-bottom:18px; }
+    .s-back:hover{ color:var(--gold2); }
+    .s-head{ display:flex;align-items:center;gap:18px;padding-bottom:24px;border-bottom:1px solid var(--bdl);margin-bottom:24px; }
+    .s-head .icn{ width:60px;height:60px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;color:var(--navy); }
+    .s-head h1{ font-family:'Cinzel',serif;font-size:1.75rem;letter-spacing:-.02em;margin-bottom:4px; }
+    .s-head p{ color:var(--muted);font-size:14px;line-height:1.55;max-width:580px; }
+
+    .mod-list{ display:flex;flex-direction:column;gap:12px; }
+    .mod-row{
+      background:var(--navy3);border:1px solid var(--bdl);border-radius:12px;padding:18px 20px;
+      display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;
+      text-decoration:none;color:inherit;transition:border-color .12s, background .12s;
+    }
+    .mod-row.unlocked:hover{ border-color:var(--gold);background:rgba(201,160,48,.04); }
+    .mod-row.locked{ opacity:.55;cursor:not-allowed; }
+    .mod-row.complete{ border-color:rgba(74,222,128,.4);background:rgba(74,222,128,.04); }
+
+    .mod-num{
+      width:42px;height:42px;border-radius:50%;background:var(--navy);
+      border:1px solid var(--bdl);display:flex;align-items:center;justify-content:center;
+      font-family:'Cinzel',serif;font-weight:700;color:var(--gold2);font-size:1.05rem;
+    }
+    .mod-row.complete .mod-num{ background:rgba(74,222,128,.15);border-color:rgba(74,222,128,.5);color:#86efac; }
+    .mod-row.locked .mod-num{ color:var(--muted); }
+
+    .mod-body .ttl{ font-family:'Cinzel',serif;font-size:1.05rem;font-weight:700;color:var(--cream);letter-spacing:.02em; }
+    .mod-body .sum{ color:var(--muted);font-size:13px;line-height:1.5;margin-top:4px; }
+    .mod-body .meta{ display:flex;gap:14px;font-size:11.5px;color:var(--muted);margin-top:8px;font-family:'DM Sans',sans-serif; }
+    .mod-body .meta .ok{ color:#86efac; }
+    .mod-body .meta i{ margin-right:4px; }
+
+    .mod-cta{ font-family:'Cinzel',serif;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2); }
+    .mod-row.complete .mod-cta{ color:#86efac; }
+    .mod-row.locked .mod-cta{ color:var(--muted); }
+
+    .empty-state{ text-align:center;padding:48px 20px;color:var(--muted);background:var(--navy3);border:1px dashed var(--bdl);border-radius:12px; }
+    .empty-state i{ font-size:32px;color:var(--gold);opacity:.5;margin-bottom:14px;display:block; }
+  </style>
+</head>
+<body>
+
+<div id="tarena-nav"></div>
+
+<div class="s-shell">
+  <a class="s-back" href="schools.html"><i class="fa-solid fa-arrow-left"></i> All schools</a>
+  <div id="content">
+    <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i><div>Loading school…</div></div>
+  </div>
+</div>
+
+<div id="tarena-footer"></div>
+
+<script src="assets/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="assets/supabase.js"></script>
+<script src="assets/app.js"></script>
+<script>
+(() => {
+  'use strict';
+  TArenaUI.renderNav('schools');
+  TArenaUI.renderFooter();
+
+  const session = TArenaAuth.requireAuth();
+  if (!session) throw new Error('redirect');
+  const sb = window.TArenaDB;
+
+  const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  const id = new URLSearchParams(location.search).get('id');
+  if (!id) {
+    document.getElementById('content').innerHTML =
+      `<div class="empty-state"><i class="fa-solid fa-link-slash"></i><div>No school specified.</div>
+       <a href="schools.html" class="btn-gold" style="margin-top:14px;">Browse schools</a></div>`;
+    return;
+  }
+
+  function moduleRow(m) {
+    const cls = m.is_complete ? 'complete' : (m.is_unlocked ? 'unlocked' : 'locked');
+    const inner = `
+      <div class="mod-num">${m.is_complete ? '<i class="fa-solid fa-check"></i>' :
+                              (m.is_unlocked ? m.ordinal : '<i class="fa-solid fa-lock"></i>')}</div>
+      <div class="mod-body">
+        <div class="ttl">${esc(m.title)}</div>
+        <div class="sum">${esc(m.summary || '')}</div>
+        <div class="meta">
+          <span><i class="fa-solid fa-clapperboard"></i> ${m.reel_count} reel${m.reel_count === 1 ? '' : 's'}</span>
+          <span class="${m.quiz_passed ? 'ok' : ''}"><i class="fa-solid ${m.quiz_passed ? 'fa-circle-check' : 'fa-circle-question'}"></i> Quiz ${m.quiz_passed ? 'passed' : (m.has_quiz ? 'pending' : 'n/a')}</span>
+          <span class="${m.challenge_passed ? 'ok' : ''}"><i class="fa-solid ${m.challenge_passed ? 'fa-circle-check' : 'fa-bullseye'}"></i> Challenge ${m.challenge_passed ? 'passed' : (m.has_challenge ? 'pending' : 'n/a')}</span>
+        </div>
+      </div>
+      <div class="mod-cta">${m.is_complete ? 'Complete' : (m.is_unlocked ? 'Open →' : 'Locked')}</div>`;
+    return m.is_unlocked
+      ? `<a class="mod-row ${cls}" href="module.html?id=${encodeURIComponent(m.id)}">${inner}</a>`
+      : `<div class="mod-row ${cls}" title="Complete the previous module to unlock.">${inner}</div>`;
+  }
+
+  async function load() {
+    const { data, error } = await sb.rpc('get_school', { p_id: id });
+    const c = document.getElementById('content');
+    if (error || !data || !data.school) {
+      c.innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>
+        <div>Couldn't load this school.</div>
+        <div style="font-size:12px;margin-top:6px;">${(error && error.message) || 'Not found'}</div></div>`;
+      return;
+    }
+    const s = data.school;
+    const mods = Array.isArray(data.modules) ? data.modules : [];
+    // Whitelist admin-supplied accent + icon (same rationale as schools.html).
+    const accent = /^#[0-9a-fA-F]{3,8}$/.test(s.accent_color || '') ? s.accent_color : '#c9a030';
+    const icon = /^fa-[a-z0-9-]+$/.test(s.icon || '') ? s.icon : 'fa-graduation-cap';
+    document.title = 'TradeArena · ' + s.title;
+
+    c.innerHTML = `
+      <div class="s-head">
+        <div class="icn" style="background:linear-gradient(135deg, ${accent}, ${accent}cc);">
+          <i class="fa-solid ${icon}"></i>
+        </div>
+        <div>
+          <h1>${esc(s.title)}</h1>
+          <p>${esc(s.summary || '')}</p>
+        </div>
+      </div>
+      <div class="mod-list">
+        ${mods.length ? mods.map(moduleRow).join('') :
+          `<div class="empty-state"><i class="fa-solid fa-list-ol"></i><div>No modules yet in this school.</div></div>`}
+      </div>`;
+  }
+
+  load();
+})();
+</script>
+</body>
+</html>

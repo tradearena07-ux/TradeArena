@@ -36,6 +36,78 @@
     .empty{text-align:center;padding:48px 18px;color:var(--muted);}
     .empty i{font-size:36px;color:var(--gold);opacity:.4;margin-bottom:14px;display:block;}
 
+    /* ---- Schools curator ---- */
+    .sec-h{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:14px;}
+    .sec-h h2{font-family:'Cinzel',serif;font-size:1.5rem;letter-spacing:-.5px;}
+    .sec-h p{color:var(--muted);font-size:13px;margin-top:2px;}
+    .cur-grid{display:grid;grid-template-columns:340px 1fr;gap:18px;}
+    @media(max-width:1100px){.cur-grid{grid-template-columns:1fr;}}
+    .cur-list{display:flex;flex-direction:column;gap:8px;max-height:520px;overflow:auto;}
+    .cur-item{
+      background:var(--navy);border:1px solid var(--bdl);border-radius:10px;padding:12px 14px;cursor:pointer;
+      display:flex;justify-content:space-between;align-items:center;gap:10px;transition:border-color .12s;
+    }
+    .cur-item:hover{border-color:var(--gold);}
+    .cur-item.selected{border-color:var(--gold);background:rgba(201,160,48,.06);}
+    .cur-item .ttl{font-family:'Cinzel',serif;font-weight:600;color:var(--cream);font-size:13.5px;}
+    .cur-item .meta{font-size:11px;color:var(--muted);margin-top:2px;}
+    .cur-add{
+      background:transparent;border:1px dashed var(--gold);color:var(--gold2);
+      border-radius:10px;padding:10px;cursor:pointer;font-family:'Cinzel',serif;font-size:12px;letter-spacing:.1em;text-transform:uppercase;
+    }
+    .cur-add:hover{background:rgba(201,160,48,.08);}
+
+    .cur-form{display:grid;grid-template-columns:repeat(2, 1fr);gap:10px;margin-bottom:14px;}
+    .cur-form label{display:flex;flex-direction:column;gap:4px;font-size:11.5px;color:var(--muted);font-family:'Cinzel',serif;letter-spacing:.08em;text-transform:uppercase;}
+    .cur-form label.full{grid-column:1/-1;}
+    .cur-form input, .cur-form textarea, .cur-form select{
+      background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--cream);
+      font-family:'DM Sans',sans-serif;font-size:13px;outline:none;
+    }
+    .cur-form textarea{resize:vertical;min-height:80px;font-family:'JetBrains Mono', ui-monospace, monospace;font-size:12px;}
+    .cur-row-btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+
+    .cur-sub-h{font-family:'Cinzel',serif;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);
+                margin:18px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--bdl);}
+
+    .reel-search{display:flex;gap:8px;margin-bottom:10px;}
+    .reel-search input{flex:1;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--cream);font-size:13px;outline:none;}
+    .reel-pick{
+      background:var(--navy);border:1px solid var(--bdl);border-radius:8px;padding:8px 12px;
+      display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12.5px;cursor:pointer;
+    }
+    .reel-pick:hover{border-color:var(--gold);}
+    .reel-pick .sym{font-family:'Cinzel',serif;font-weight:700;color:var(--gold2);}
+    .reel-pick .by{color:var(--muted);font-size:11px;}
+    .reel-pick .th{color:var(--cream);font-size:12px;flex:1;margin:0 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .reel-results{display:flex;flex-direction:column;gap:6px;max-height:240px;overflow:auto;margin-bottom:14px;}
+
+    .attached-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+    .attached-item{
+      background:rgba(201,160,48,.06);border:1px solid rgba(201,160,48,.3);border-radius:8px;padding:8px 12px;
+      display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12.5px;
+    }
+    .attached-item .ord{
+      width:22px;height:22px;border-radius:50%;background:var(--gold);color:var(--navy);
+      display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-weight:700;font-size:11px;flex-shrink:0;
+    }
+    .attached-item .icn-btn{
+      background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:4px 6px;
+    }
+    .attached-item .icn-btn:hover{color:var(--gold2);}
+
+    .json-help{
+      background:var(--navy3);border:1px solid var(--bdl);border-radius:8px;padding:10px 14px;font-size:11.5px;
+      color:var(--muted);line-height:1.55;margin-bottom:10px;
+    }
+    .json-help code{background:var(--navy);padding:1px 6px;border-radius:4px;color:var(--gold2);font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11px;}
+    .tpl-btns{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+    .tpl-btns button{
+      background:var(--navy3);border:1px solid var(--bdl);color:var(--gold2);border-radius:9999px;padding:5px 12px;
+      font-size:11px;font-family:'Cinzel',serif;letter-spacing:.06em;cursor:pointer;
+    }
+    .tpl-btns button:hover{border-color:var(--gold);}
+
     .gate{position:fixed;inset:0;background:rgba(6,14,28,.95);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(6px);}
     .gate .gate-card{max-width:420px;width:90%;background:var(--navy2);border:1px solid var(--border);border-radius:20px;padding:34px;text-align:center;}
     .gate.hide{display:none;}
@@ -125,6 +197,34 @@
     </div>
 
   </div>
+
+  <!-- Schools curator -->
+  <div class="card-flat">
+    <div class="sec-h">
+      <div>
+        <h2><i class="fa-solid fa-graduation-cap" style="color:var(--gold);margin-right:8px;"></i> Schools curator</h2>
+        <p>Build curated playlists of reels with quizzes and paper-trade challenges. Run <code>select public.seed_starter_schools();</code> in the SQL editor to load the two starter schools.</p>
+      </div>
+      <button class="btn-ghost" onclick="reloadSchools()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+    </div>
+
+    <div class="cur-grid">
+      <!-- LEFT: school list -->
+      <div>
+        <div class="cur-sub-h" style="margin-top:0;">Schools</div>
+        <div id="curSchools" class="cur-list"></div>
+        <button class="cur-add" style="margin-top:10px;width:100%;" onclick="newSchool()">
+          <i class="fa-solid fa-plus"></i> New school
+        </button>
+      </div>
+
+      <!-- RIGHT: editor -->
+      <div id="curEditor">
+        <div class="empty"><i class="fa-solid fa-arrow-left"></i><div>Select a school on the left, or click <strong>New school</strong> to create one.</div></div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <div id="tarena-footer"></div>
@@ -244,7 +344,420 @@
   window.exportRegs = exportRegs;
   window.reload = reload;
 
-  init();
+  // ============================================================
+  // Schools curator
+  // ============================================================
+  const sb = window.TArenaDB;
+  const cur = {
+    schools: [],
+    selSchoolId: null,
+    school: null,        // {school, modules}
+    selModuleId: null,
+    moduleData: null,    // get_module response
+    reelResults: [],
+  };
+
+  function escAttr(s) { return String(s == null ? '' : s).replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+  function escHtml(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+  async function reloadSchools() {
+    const { data, error } = await sb.rpc('list_schools');
+    if (error) { alert('Load schools failed: ' + error.message); return; }
+    cur.schools = Array.isArray(data) ? data : [];
+    renderSchoolList();
+    if (cur.selSchoolId) await selectSchool(cur.selSchoolId);
+  }
+
+  function renderSchoolList() {
+    const wrap = document.getElementById('curSchools');
+    if (!cur.schools.length) {
+      wrap.innerHTML = '<div class="empty" style="padding:24px 12px;"><i class="fa-solid fa-graduation-cap"></i><div>No schools yet.</div></div>';
+      return;
+    }
+    wrap.innerHTML = cur.schools.map(s => `
+      <div class="cur-item ${cur.selSchoolId === s.id ? 'selected' : ''}" onclick="selectSchool('${s.id}')">
+        <div>
+          <div class="ttl">${escHtml(s.title)}</div>
+          <div class="meta">${escHtml(s.slug)} · ${s.module_count || 0} modules</div>
+        </div>
+        <i class="fa-solid fa-chevron-right text-muted"></i>
+      </div>`).join('');
+  }
+
+  function newSchool() {
+    cur.selSchoolId = null;
+    cur.school = null;
+    cur.selModuleId = null;
+    cur.moduleData = null;
+    renderSchoolList();
+    document.getElementById('curEditor').innerHTML = schoolFormHtml({});
+  }
+
+  async function selectSchool(id) {
+    cur.selSchoolId = id;
+    cur.selModuleId = null;
+    cur.moduleData = null;
+    renderSchoolList();
+    const { data, error } = await sb.rpc('get_school', { p_id: id });
+    if (error) { alert('Load school failed: ' + error.message); return; }
+    cur.school = data;
+    renderEditor();
+  }
+
+  function schoolFormHtml(s) {
+    const isNew = !s.id;
+    return `<div class="cur-sub-h" style="margin-top:0;">${isNew ? 'New school' : 'Edit school'}</div>
+      <div class="cur-form">
+        <label class="full">Title<input id="schTitle" value="${escAttr(s.title)}" placeholder="e.g. Risk 101"/></label>
+        <label>Slug<input id="schSlug" value="${escAttr(s.slug)}" placeholder="risk-101"/></label>
+        <label>Ordinal<input id="schOrdinal" type="number" value="${s.ordinal != null ? s.ordinal : ''}" placeholder="1"/></label>
+        <label>Icon (Font Awesome)<input id="schIcon" value="${escAttr(s.icon || 'fa-graduation-cap')}"/></label>
+        <label>Accent colour<input id="schAccent" value="${escAttr(s.accent_color || '#c9a030')}"/></label>
+        <label class="full">Summary<textarea id="schSummary" placeholder="One-line pitch shown on the card.">${escHtml(s.summary)}</textarea></label>
+      </div>
+      <div class="cur-row-btns">
+        <button class="btn-gold" onclick="saveSchool()"><i class="fa-solid fa-save"></i> ${isNew ? 'Create' : 'Save'}</button>
+        ${!isNew ? `<button class="btn-ghost" onclick="deleteSchool()"><i class="fa-solid fa-trash"></i> Delete</button>` : ''}
+        <button class="btn-ghost" onclick="cancelEditSchool()">Cancel</button>
+      </div>
+      ${!isNew ? renderModulesSection(s.id) : ''}`;
+  }
+
+  function renderEditor() {
+    const s = (cur.school && cur.school.school) || {};
+    document.getElementById('curEditor').innerHTML = schoolFormHtml(s);
+    if (cur.selModuleId) renderModuleEditor();
+  }
+
+  function cancelEditSchool() {
+    cur.selSchoolId = null;
+    cur.school = null;
+    document.getElementById('curEditor').innerHTML =
+      '<div class="empty"><i class="fa-solid fa-arrow-left"></i><div>Select a school on the left.</div></div>';
+    renderSchoolList();
+  }
+
+  async function saveSchool() {
+    const s = (cur.school && cur.school.school) || {};
+    const payload = {
+      id: s.id || null,
+      slug:  document.getElementById('schSlug').value.trim(),
+      title: document.getElementById('schTitle').value.trim(),
+      summary: document.getElementById('schSummary').value,
+      icon: document.getElementById('schIcon').value.trim(),
+      accent_color: document.getElementById('schAccent').value.trim(),
+      ordinal: parseInt(document.getElementById('schOrdinal').value, 10) || 0,
+    };
+    if (!payload.title || !payload.slug) { alert('Title and slug are required.'); return; }
+    const { data, error } = await sb.rpc('admin_upsert_school', { p: payload });
+    if (error) { alert('Save failed: ' + error.message); return; }
+    cur.selSchoolId = data;
+    await reloadSchools();
+  }
+
+  async function deleteSchool() {
+    const s = cur.school && cur.school.school;
+    if (!s) return;
+    if (!confirm(`Delete school "${s.title}" and all its modules / quizzes / challenges? This cannot be undone.`)) return;
+    const { error } = await sb.rpc('admin_delete_school', { p_id: s.id });
+    if (error) { alert('Delete failed: ' + error.message); return; }
+    cancelEditSchool();
+    await reloadSchools();
+  }
+
+  function renderModulesSection(schoolId) {
+    const mods = (cur.school && cur.school.modules) || [];
+    return `<div class="cur-sub-h">Modules</div>
+      <div class="cur-list" style="max-height:none;">
+        ${mods.length ? mods.map(m => `
+          <div class="cur-item ${cur.selModuleId === m.id ? 'selected' : ''}" onclick="selectModule('${m.id}')">
+            <div>
+              <div class="ttl">M${m.ordinal} · ${escHtml(m.title)}</div>
+              <div class="meta">${m.reel_count} reels · ${m.has_quiz ? 'quiz' : 'no quiz'} · ${m.has_challenge ? 'challenge' : 'no challenge'}</div>
+            </div>
+            <i class="fa-solid fa-chevron-right text-muted"></i>
+          </div>`).join('') : '<div class="text-muted" style="font-size:12.5px;padding:10px 0;">No modules yet.</div>'}
+      </div>
+      <button class="cur-add" style="margin-top:10px;width:100%;" onclick="newModule('${schoolId}')">
+        <i class="fa-solid fa-plus"></i> New module
+      </button>
+      <div id="modEditor"></div>`;
+  }
+
+  function newModule(schoolId) {
+    cur.selModuleId = null;
+    cur.moduleData = null;
+    const nextOrd = ((cur.school && cur.school.modules) || []).reduce((mx, m) => Math.max(mx, m.ordinal), 0) + 1;
+    document.getElementById('modEditor').innerHTML = moduleFormHtml({ school_id: schoolId, ordinal: nextOrd });
+  }
+
+  async function selectModule(id) {
+    cur.selModuleId = id;
+    const { data, error } = await sb.rpc('get_module', { p_id: id });
+    if (error) { alert('Load module failed: ' + error.message); return; }
+    cur.moduleData = data;
+    renderEditor();
+  }
+
+  function moduleFormHtml(m) {
+    const isNew = !m.id;
+    return `<div class="cur-sub-h">${isNew ? 'New module' : 'Edit module'}</div>
+      <div class="cur-form">
+        <label class="full">Title<input id="modTitle" value="${escAttr(m.title)}" placeholder="e.g. Position sizing"/></label>
+        <label>Ordinal<input id="modOrdinal" type="number" value="${m.ordinal != null ? m.ordinal : ''}"/></label>
+        <label class="full">Summary<textarea id="modSummary" placeholder="One-line summary.">${escHtml(m.summary)}</textarea></label>
+      </div>
+      <div class="cur-row-btns">
+        <button class="btn-gold" onclick="saveModule()"><i class="fa-solid fa-save"></i> ${isNew ? 'Create' : 'Save'}</button>
+        ${!isNew ? `<button class="btn-ghost" onclick="deleteModule()"><i class="fa-solid fa-trash"></i> Delete</button>` : ''}
+      </div>
+      ${!isNew ? `
+        <div class="cur-sub-h">Reels playlist</div>
+        <div id="reelsAttached"></div>
+        <div class="reel-search">
+          <input id="reelQ" placeholder="Search reels by symbol, thesis or author…" onkeyup="if(event.key==='Enter') searchReels()"/>
+          <button class="btn-ghost" onclick="searchReels()"><i class="fa-solid fa-search"></i></button>
+        </div>
+        <div id="reelResults" class="reel-results"></div>
+
+        <div class="cur-sub-h">Quiz</div>
+        <div class="json-help">
+          JSON array. Each question: <code>{"q":"…","choices":["A","B","C"],"correct":0,"explain":"…"}</code>.
+          <code>correct</code> is the 0-based index. Submit to update or create the quiz.
+        </div>
+        <label style="display:block;font-size:11.5px;color:var(--muted);font-family:'Cinzel',serif;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;">Pass mark (%)</label>
+        <input id="quizPass" type="number" value="${(cur.moduleData && cur.moduleData.quiz && cur.moduleData.quiz.pass_pct) || 70}" style="background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--cream);font-size:13px;width:100px;margin-bottom:8px;"/>
+        <textarea id="quizJson" style="width:100%;min-height:160px;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--cream);font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;outline:none;"></textarea>
+        <div class="cur-row-btns" style="margin-top:8px;">
+          <button class="btn-gold" onclick="saveQuiz()"><i class="fa-solid fa-save"></i> Save quiz</button>
+        </div>
+
+        <div class="cur-sub-h">Challenge</div>
+        <div class="cur-form">
+          <label class="full">Title<input id="chTitle" value="${escAttr(cur.moduleData && cur.moduleData.challenge && cur.moduleData.challenge.title)}"/></label>
+          <label class="full">Summary<textarea id="chSummary">${escHtml(cur.moduleData && cur.moduleData.challenge && cur.moduleData.challenge.summary)}</textarea></label>
+        </div>
+        <div class="json-help">
+          Spec JSON shape: <code>{"kind":"min_trades","params":{"n":3,"market":"asx"},"perk":{"kind":"extra_capital","value":{"amount":5000}}}</code>.
+          Kinds: <code>min_trades</code>, <code>consecutive_wins</code> (params.tag optional), <code>min_rr</code> (params.ratio, params.min_hold_days), <code>journal_count</code> (params.n, params.days).
+          Perk kinds: <code>extra_capital</code> (value.amount), <code>indicator_unlock</code> (value.indicator + value.label), <code>badge</code> (value.key + value.label + value.icon).
+        </div>
+        <div class="tpl-btns">
+          <button onclick="chTemplate('min_trades')">+ min_trades</button>
+          <button onclick="chTemplate('consecutive_wins')">+ consecutive_wins</button>
+          <button onclick="chTemplate('min_rr')">+ min_rr</button>
+          <button onclick="chTemplate('journal_count')">+ journal_count</button>
+        </div>
+        <textarea id="chSpec" style="width:100%;min-height:140px;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--cream);font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;outline:none;"></textarea>
+        <div class="cur-row-btns" style="margin-top:8px;">
+          <button class="btn-gold" onclick="saveChallenge()"><i class="fa-solid fa-save"></i> Save challenge</button>
+        </div>
+      ` : ''}`;
+  }
+
+  function renderModuleEditor() {
+    const m = cur.moduleData && cur.moduleData.module;
+    if (!m) return;
+    const wrap = document.getElementById('modEditor');
+    if (!wrap) return;
+    wrap.innerHTML = moduleFormHtml(m);
+    renderAttachedReels();
+    // Pre-fill quiz JSON. The public get_module strips correct + explain,
+    // so we round-trip through the admin-only admin_get_quiz RPC to avoid
+    // silently zero-ing answers when an admin re-saves an existing quiz.
+    const qta = document.getElementById('quizJson');
+    if (qta) {
+      qta.value = '[\n  { "q": "Loading…", "choices": [], "correct": 0, "explain": "" }\n]';
+      sb.rpc('admin_get_quiz', { p_module_id: cur.selModuleId }).then(({ data, error }) => {
+        if (error) { qta.value = '// admin_get_quiz failed: ' + error.message; return; }
+        if (data && Array.isArray(data.questions)) {
+          qta.value = JSON.stringify(data.questions, null, 2);
+          const passInput = document.getElementById('quizPass');
+          if (passInput && data.pass_pct) passInput.value = data.pass_pct;
+        } else {
+          qta.value = '[\n  { "q": "", "choices": ["A","B","C","D"], "correct": 0, "explain": "" }\n]';
+        }
+      });
+    }
+    // Pre-fill challenge spec JSON
+    const csp = document.getElementById('chSpec');
+    if (csp) {
+      const c = cur.moduleData.challenge;
+      csp.value = c && c.spec
+        ? JSON.stringify(c.spec, null, 2)
+        : JSON.stringify({ kind: 'min_trades', params: { n: 3 }, perk: { kind: 'extra_capital', value: { amount: 5000 } } }, null, 2);
+    }
+  }
+
+  function renderAttachedReels() {
+    const wrap = document.getElementById('reelsAttached');
+    if (!wrap) return;
+    const reels = (cur.moduleData && cur.moduleData.reels) || [];
+    if (!reels.length) {
+      wrap.innerHTML = '<div class="text-muted" style="font-size:12.5px;padding:8px 0 12px;">No reels attached. Search below to add some.</div>';
+      return;
+    }
+    wrap.innerHTML = `<div class="attached-list">${reels.map((item, i) => {
+      const r = item.reel || {};
+      return `<div class="attached-item">
+        <div class="ord">${i + 1}</div>
+        <div style="flex:1;min-width:0;">
+          <span style="font-family:'Cinzel',serif;font-weight:700;color:var(--gold2);">${escHtml(r.symbol || '?')}</span>
+          <span style="color:var(--muted);font-size:11px;">@${escHtml((r.author && r.author.username) || '?')}</span>
+        </div>
+        <button class="icn-btn" title="Move up"  onclick="moveReel(${i}, -1)" ${i === 0 ? 'disabled' : ''}><i class="fa-solid fa-arrow-up"></i></button>
+        <button class="icn-btn" title="Move down" onclick="moveReel(${i},  1)" ${i === reels.length - 1 ? 'disabled' : ''}><i class="fa-solid fa-arrow-down"></i></button>
+        <button class="icn-btn" title="Remove" onclick="detachReel(${i})"><i class="fa-solid fa-xmark"></i></button>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  async function saveModule() {
+    const m = (cur.moduleData && cur.moduleData.module) || {};
+    const schoolId = m.school_id || cur.selSchoolId;
+    const payload = {
+      id: m.id || null,
+      school_id: schoolId,
+      title:    document.getElementById('modTitle').value.trim(),
+      summary:  document.getElementById('modSummary').value,
+      ordinal:  parseInt(document.getElementById('modOrdinal').value, 10) || 1,
+    };
+    if (!payload.title) { alert('Title is required.'); return; }
+    const { data, error } = await sb.rpc('admin_upsert_module', { p: payload });
+    if (error) { alert('Save failed: ' + error.message); return; }
+    cur.selModuleId = data;
+    await selectSchool(schoolId);
+    await selectModule(data);
+  }
+
+  async function deleteModule() {
+    const m = cur.moduleData && cur.moduleData.module;
+    if (!m) return;
+    if (!confirm(`Delete module "${m.title}" and its quiz / challenge?`)) return;
+    const { error } = await sb.rpc('admin_delete_module', { p_id: m.id });
+    if (error) { alert('Delete failed: ' + error.message); return; }
+    cur.selModuleId = null;
+    cur.moduleData = null;
+    await selectSchool(m.school_id);
+  }
+
+  async function searchReels() {
+    const q = document.getElementById('reelQ').value.trim();
+    const { data, error } = await sb.rpc('admin_list_reels', { p_q: q, p_limit: 30 });
+    if (error) { alert('Search failed: ' + error.message); return; }
+    cur.reelResults = Array.isArray(data) ? data : [];
+    const wrap = document.getElementById('reelResults');
+    const attachedIds = new Set(((cur.moduleData && cur.moduleData.reels) || []).map(r => r.reel.id));
+    wrap.innerHTML = cur.reelResults.length
+      ? cur.reelResults.map(r => `<div class="reel-pick" onclick="attachReel('${r.id}')">
+          <span class="sym">${escHtml(r.symbol)}</span>
+          <span class="th">${escHtml(r.thesis)}</span>
+          <span class="by">@${escHtml(r.author)}</span>
+          ${attachedIds.has(r.id)
+            ? `<i class="fa-solid fa-check" style="color:#86efac;"></i>`
+            : `<i class="fa-solid fa-plus" style="color:var(--gold2);"></i>`}
+        </div>`).join('')
+      : '<div class="text-muted" style="font-size:12.5px;padding:8px 0;">No matching reels.</div>';
+  }
+
+  async function applyReelOrder(ids) {
+    const { error } = await sb.rpc('admin_set_module_reels',
+      { p_module_id: cur.selModuleId, p_reel_ids: ids });
+    if (error) { alert('Reorder failed: ' + error.message); return; }
+    await selectModule(cur.selModuleId);
+  }
+
+  async function attachReel(reelId) {
+    const ids = ((cur.moduleData && cur.moduleData.reels) || []).map(r => r.reel.id);
+    if (ids.includes(reelId)) {
+      // toggle off
+      await applyReelOrder(ids.filter(x => x !== reelId));
+    } else {
+      await applyReelOrder([...ids, reelId]);
+    }
+  }
+
+  async function detachReel(idx) {
+    const ids = ((cur.moduleData && cur.moduleData.reels) || []).map(r => r.reel.id);
+    ids.splice(idx, 1);
+    await applyReelOrder(ids);
+  }
+
+  async function moveReel(idx, delta) {
+    const ids = ((cur.moduleData && cur.moduleData.reels) || []).map(r => r.reel.id);
+    const j = idx + delta;
+    if (j < 0 || j >= ids.length) return;
+    [ids[idx], ids[j]] = [ids[j], ids[idx]];
+    await applyReelOrder(ids);
+  }
+
+  async function saveQuiz() {
+    let questions;
+    try { questions = JSON.parse(document.getElementById('quizJson').value); }
+    catch (e) { alert('Quiz JSON is invalid: ' + e.message); return; }
+    if (!Array.isArray(questions) || !questions.length) { alert('Provide at least one question.'); return; }
+    const pass = parseInt(document.getElementById('quizPass').value, 10) || 70;
+    const { error } = await sb.rpc('admin_upsert_quiz',
+      { p_module_id: cur.selModuleId, p_questions: questions, p_pass_pct: pass });
+    if (error) { alert('Save quiz failed: ' + error.message); return; }
+    alert('Quiz saved.');
+    await selectModule(cur.selModuleId);
+  }
+
+  async function saveChallenge() {
+    let spec;
+    try { spec = JSON.parse(document.getElementById('chSpec').value); }
+    catch (e) { alert('Challenge spec JSON is invalid: ' + e.message); return; }
+    const title = document.getElementById('chTitle').value.trim();
+    if (!title) { alert('Challenge title is required.'); return; }
+    const { error } = await sb.rpc('admin_upsert_challenge', {
+      p_module_id: cur.selModuleId,
+      p_title:     title,
+      p_summary:   document.getElementById('chSummary').value,
+      p_spec:      spec,
+    });
+    if (error) { alert('Save challenge failed: ' + error.message); return; }
+    alert('Challenge saved.');
+    await selectModule(cur.selModuleId);
+  }
+
+  function chTemplate(kind) {
+    const tpls = {
+      min_trades:        { kind: 'min_trades',        params: { n: 3, market: 'asx' },                                perk: { kind: 'extra_capital',    value: { amount: 5000 } } },
+      consecutive_wins:  { kind: 'consecutive_wins',  params: { n: 3, tag: 'breakout' },                              perk: { kind: 'badge',            value: { key: 'streaker', label: 'Streaker', icon: 'fa-fire' } } },
+      min_rr:            { kind: 'min_rr',            params: { n: 2, ratio: 2.0, min_hold_days: 1 },                 perk: { kind: 'indicator_unlock', value: { indicator: 'rsi', label: 'RSI' } } },
+      journal_count:     { kind: 'journal_count',     params: { n: 5, days: 14 },                                     perk: { kind: 'badge',            value: { key: 'journaler', label: 'Journaller', icon: 'fa-book' } } },
+    };
+    document.getElementById('chSpec').value = JSON.stringify(tpls[kind], null, 2);
+  }
+
+  // expose curator handlers
+  window.reloadSchools  = reloadSchools;
+  window.newSchool      = newSchool;
+  window.selectSchool   = selectSchool;
+  window.saveSchool     = saveSchool;
+  window.deleteSchool   = deleteSchool;
+  window.cancelEditSchool = cancelEditSchool;
+  window.newModule      = newModule;
+  window.selectModule   = selectModule;
+  window.saveModule     = saveModule;
+  window.deleteModule   = deleteModule;
+  window.searchReels    = searchReels;
+  window.attachReel     = attachReel;
+  window.detachReel     = detachReel;
+  window.moveReel       = moveReel;
+  window.saveQuiz       = saveQuiz;
+  window.saveChallenge  = saveChallenge;
+  window.chTemplate     = chTemplate;
+
+  // After the original init() finishes (and the admin gate clears),
+  // load the curator schools list.
+  (async () => {
+    await init();
+    if (document.getElementById('gate').classList.contains('hide')) {
+      await reloadSchools();
+    }
+  })();
   console.log('%c⚔️ TradeArena · Admin loaded.', 'color:#e8c060;font-weight:700;');
 </script>
 </body>
