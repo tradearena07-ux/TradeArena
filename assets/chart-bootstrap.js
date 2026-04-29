@@ -161,6 +161,20 @@
     };
   }
 
+  // 10-minute TTL on the pending snap. The reel composer consumes
+  // this through `TArenaChart.consumePendingSnap()` which validates
+  // and auto-evicts expired entries.
+  const SNAP_TTL_MS = 10 * 60 * 1000;
+
+  function persistSnap(snap) {
+    const payload = Object.assign({}, snap, {
+      ts:        Date.now(),
+      expiresAt: Date.now() + SNAP_TTL_MS,
+    });
+    localStorage.setItem('pending_chart_snap', JSON.stringify(payload));
+    return payload;
+  }
+
   async function snapAdvanced(widget) {
     const c = widget.activeChart();
     const symbol = c.symbol();
@@ -174,9 +188,8 @@
     } catch (e) {
       console.warn('takeClientScreenshot failed', e);
     }
-    const snap = { symbol, resolution, drawings, png, ts: Date.now() };
-    localStorage.setItem('pending_chart_snap', JSON.stringify(snap));
-    flashToast('Chart captured — open the reel composer to attach it.');
+    const snap = persistSnap({ symbol, resolution, drawings, png });
+    flashToast('Chart captured — open the reel composer to attach it (expires in 10 min).');
     return snap;
   }
 
@@ -315,9 +328,8 @@
     };
     toolbar.onSnap = async () => {
       const png = await captureLightweight(container);
-      const snap = { symbol: state.symbol, resolution: state.resolution, drawings: [], png, ts: Date.now() };
-      localStorage.setItem('pending_chart_snap', JSON.stringify(snap));
-      flashToast('Chart captured — open the reel composer to attach it.');
+      persistSnap({ symbol: state.symbol, resolution: state.resolution, drawings: [], png });
+      flashToast('Chart captured — open the reel composer to attach it (expires in 10 min).');
     };
 
     loadHistory().then(startLive);
@@ -332,9 +344,7 @@
       },
       async takeSnapshot() {
         const png = await captureLightweight(container);
-        const snap = { symbol: state.symbol, resolution: state.resolution, drawings: [], png, ts: Date.now() };
-        localStorage.setItem('pending_chart_snap', JSON.stringify(snap));
-        return snap;
+        return persistSnap({ symbol: state.symbol, resolution: state.resolution, drawings: [], png });
       },
       getDrawings() { return []; },
       destroy() {
@@ -429,10 +439,44 @@
   // Public mount
   // ============================================================
   async function mount(containerId, symbol, resolution) {
+    // Opportunistically evict any expired snap on every chart mount
+    // so stale captures don't leak into a brand-new session.
+    consumePendingSnap({ peek: true });
     await detectLibrary();
     if (mode === 'advanced')   return mountAdvanced(containerId, symbol, resolution);
     /* lightweight */          return mountLightweight(containerId, symbol, resolution);
   }
 
-  global.TArenaChart = { mount, getMode: () => mode };
+  // ============================================================
+  // Pending-snap consumer API
+  // ============================================================
+  // The reel composer (Task #5) calls `consumePendingSnap()` to
+  // grab the most recent capture and clear it. With `{peek: true}`
+  // the snap is returned without being removed (used internally to
+  // auto-evict expired entries on chart mount).
+  // Returns null when no valid snap is present.
+  // ============================================================
+  function consumePendingSnap(opts) {
+    const peek = !!(opts && opts.peek);
+    let raw;
+    try { raw = localStorage.getItem('pending_chart_snap'); }
+    catch (_) { return null; }
+    if (!raw) return null;
+    let snap;
+    try { snap = JSON.parse(raw); }
+    catch (_) { localStorage.removeItem('pending_chart_snap'); return null; }
+    // Backfill expiresAt for any pre-TTL snap left behind by an
+    // older build of this file.
+    if (typeof snap.expiresAt !== 'number') {
+      snap.expiresAt = (snap.ts || 0) + SNAP_TTL_MS;
+    }
+    if (Date.now() > snap.expiresAt) {
+      localStorage.removeItem('pending_chart_snap');
+      return null;
+    }
+    if (!peek) localStorage.removeItem('pending_chart_snap');
+    return snap;
+  }
+
+  global.TArenaChart = { mount, getMode: () => mode, consumePendingSnap };
 })(window);

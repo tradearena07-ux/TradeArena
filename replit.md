@@ -83,7 +83,7 @@ By default Supabase emails the magic-link confirmation that includes both a clic
 - `tarena_profile_cache`     — last-known profile snapshot keyed by email (for fast nav rendering)
 - `tarena_orders`            — placed orders log (still localStorage; paper_trades wiring lives with Task #4)
 - `tarena_watchlist`         — user's watched symbols (drives live quote subscriptions on the Trade page)
-- `pending_chart_snap`       — most recent "Snap to reel" capture `{symbol, resolution, drawings, png, ts}` (consumed by the reel composer)
+- `pending_chart_snap`       — most recent "Snap to reel" capture `{symbol, resolution, drawings, png, ts, expiresAt}`. **10-minute TTL**, enforced by `TArenaChart.consumePendingSnap()` (the reel composer's read API) which auto-evicts expired entries.
 
 ## Trade page (broker-grade chart + real market data)
 
@@ -92,7 +92,7 @@ The chart pane is mounted by **`assets/chart-bootstrap.js`** which detects which
 1. **`/charting_library/charting_library.js` present** → mounts the **TradingView Advanced Charts library** with our UDF datafeed (`assets/datafeed.js`), navy/gold theme overrides, default studies (EMA20, EMA50, Volume, RSI(14)), full drawing toolset, multi-timeframe (1m → 1M), bar-replay mode, and a save/load adapter that reads/writes `chart_layouts`.
 2. **library not yet installed** → lazy-loads **TradingView Lightweight Charts** (MIT) from CDN and renders a navy/gold candle chart with EMA20 / EMA50 / Volume + a built-in timeframe toolbar. The page never looks broken while the Advanced library application is being processed.
 
-In both modes a **"📸 Snap to reel"** toolbar button captures `{symbol, resolution, drawings, png}` and stashes it in `localStorage.pending_chart_snap` so the reel composer (Task #5) can attach it.
+In both modes a **"📸 Snap to reel"** toolbar button captures `{symbol, resolution, drawings, png}` and stashes it in `localStorage.pending_chart_snap` (with a 10-minute TTL) so the reel composer (Task #5) can attach it. The composer reads the snap with `TArenaChart.consumePendingSnap()` which validates the TTL and removes the entry; expired captures are also evicted opportunistically on every chart mount.
 
 The right-side order panel and the watchlist subscribe to the **same live price stream** used by the chart, so everything moves in sync (no more random tick simulator on the Trade page). Live ticks come from:
 - **Binance public WebSocket** for crypto (true real-time).
@@ -116,7 +116,7 @@ supabase secrets set FINNHUB_API_KEY=YOUR_KEY    # https://finnhub.io/register
 supabase functions deploy data-proxy
 ```
 
-The function fans out to Yahoo Finance (ASX), Finnhub (US), and Binance (crypto), and caches every bar it returns into `public.price_bars` so bar-replay and repeat history loads don't re-hit upstream. Source + smoke-test in `supabase/functions/data-proxy/`.
+The function fans out to Yahoo Finance (ASX), Finnhub (US), and Binance (crypto). Every history call is **read-through-cache** against `public.price_bars`: cached bars are returned immediately when their most recent timestamp is within one bar-period of the requested `to`, otherwise only the missing tail is fetched from upstream and merged in (so bar-replay scrubbing and repeat history loads don't re-hit upstream). On upstream failure with cached bars present, the function returns the cached set with `stale: true` instead of erroring. Source + smoke-test in `supabase/functions/data-proxy/`.
 
 ## Portfolio page (Groww-style)
 - Big "Investments" header with current value, total returns ($/%), and today's change tile.

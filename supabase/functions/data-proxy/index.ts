@@ -176,7 +176,7 @@ async function fetchBinanceQuote(symbol: string): Promise<{ price: number; chang
 
 // ----- cache -------------------------------------------------------------
 
-async function cacheBars(symbol: string, resolution: string, bars: Bar[]) {
+async function writeCache(symbol: string, resolution: string, bars: Bar[]) {
   if (!sb || bars.length === 0) return;
   const rows = bars.map(b => ({
     symbol,
@@ -184,11 +184,49 @@ async function cacheBars(symbol: string, resolution: string, bars: Bar[]) {
     t: new Date(b.t).toISOString(),
     o: b.o, h: b.h, l: b.l, c: b.c, v: b.v,
   }));
-  // Upsert in batches of 500.
   for (let i = 0; i < rows.length; i += 500) {
     const slice = rows.slice(i, i + 500);
     await sb.from("price_bars").upsert(slice, { onConflict: "symbol,resolution,t" });
   }
+}
+
+async function readCache(symbol: string, resolution: string, fromSec: number, toSec: number): Promise<Bar[]> {
+  if (!sb) return [];
+  const { data, error } = await sb
+    .from("price_bars")
+    .select("t,o,h,l,c,v")
+    .eq("symbol", symbol)
+    .eq("resolution", resolution)
+    .gte("t", new Date(fromSec * 1000).toISOString())
+    .lte("t", new Date(toSec   * 1000).toISOString())
+    .order("t", { ascending: true })
+    .limit(5000);
+  if (error || !data) return [];
+  return data.map((r: any) => ({
+    t: Date.parse(r.t),
+    o: +r.o, h: +r.h, l: +r.l, c: +r.c, v: +r.v,
+  }));
+}
+
+// How many seconds does each bar cover? Used to decide whether the
+// cached bars are "fresh enough" relative to the requested `to` and
+// whether to skip the upstream fetch entirely.
+function resolutionSeconds(res: string): number {
+  const r = res.toUpperCase();
+  if (r === "D") return 86400;
+  if (r === "W") return 86400 * 7;
+  if (r === "M") return 86400 * 30;
+  return Math.max(60, parseInt(r, 10) * 60 || 60);
+}
+
+// Merge two bar arrays by timestamp (later one wins on conflict),
+// sort ascending. Used to splice fresh upstream bars into the
+// cached set without losing either side.
+function mergeBars(a: Bar[], b: Bar[]): Bar[] {
+  const m = new Map<number, Bar>();
+  for (const x of a) m.set(x.t, x);
+  for (const x of b) m.set(x.t, x);
+  return [...m.values()].sort((p, q) => p.t - q.t);
 }
 
 // ----- handlers ----------------------------------------------------------
@@ -198,22 +236,58 @@ async function handleHistory(body: any): Promise<Response> {
   const resolution = String(body.resolution ?? "D").trim();
   const fromSec    = +body.from || Math.floor(Date.now() / 1000) - 60 * 60 * 24 * 30;
   const toSec      = +body.to   || Math.floor(Date.now() / 1000);
+  // The `force` flag is only used by internal callers that want to
+  // explicitly bypass the cache (e.g. an admin "refresh" button).
+  const force      = !!body.force;
   if (!symbol) return jsonResponse({ s: "error", error: "symbol required" }, 400);
 
   const kind = classify(symbol);
-  let bars: Bar[] = [];
+
+  // ----- Cache read --------------------------------------------------
+  // Try to satisfy the request from `public.price_bars` first so the
+  // bar-replay UI and repeated history loads don't re-hit upstream.
+  const resSec = resolutionSeconds(resolution);
+  const cached = force ? [] : await readCache(symbol, resolution, fromSec, toSec);
+  const nowSec = Math.floor(Date.now() / 1000);
+
+  // If the most recent cached bar covers (toSec - one bar period) AND
+  // we have at least a handful of bars, the cache is fresh enough — no
+  // upstream call needed. This is the hot path for replay scrubbing.
+  if (cached.length >= 5) {
+    const latest = cached[cached.length - 1].t / 1000;
+    const targetEdge = Math.min(toSec, nowSec) - resSec;
+    if (latest >= targetEdge) {
+      return jsonResponse({ s: "ok", bars: cached, cached: true });
+    }
+  }
+
+  // ----- Incremental upstream fetch ----------------------------------
+  // If we have ANY cached bars, only fetch from the latest cached bar
+  // forward. Otherwise fetch the full requested range.
+  const upstreamFrom = cached.length
+    ? Math.floor(cached[cached.length - 1].t / 1000)
+    : fromSec;
+
+  let upstream: Bar[] = [];
   try {
-    if (kind === "asx")    bars = await fetchYahooHistory(symbol, resolution, fromSec, toSec);
-    if (kind === "us")     bars = await fetchFinnhubHistory(symbol, resolution, fromSec, toSec);
-    if (kind === "crypto") bars = await fetchBinanceHistory(symbol, resolution, fromSec, toSec);
+    if (kind === "asx")    upstream = await fetchYahooHistory(symbol, resolution, upstreamFrom, toSec);
+    if (kind === "us")     upstream = await fetchFinnhubHistory(symbol, resolution, upstreamFrom, toSec);
+    if (kind === "crypto") upstream = await fetchBinanceHistory(symbol, resolution, upstreamFrom, toSec);
   } catch (err) {
+    // If we have cached data, fall back to it instead of erroring out
+    // — partial data beats no data when upstream is rate-limited.
+    if (cached.length) {
+      console.warn("upstream failed, serving cached", symbol, err);
+      return jsonResponse({ s: "ok", bars: cached, cached: true, stale: true });
+    }
     return jsonResponse({ s: "error", error: String(err) }, 502);
   }
 
-  // Fire-and-forget cache write so the client doesn't wait on it.
-  cacheBars(symbol, resolution, bars).catch(e => console.error("cacheBars", e));
+  // Fire-and-forget cache write of the new upstream bars only.
+  writeCache(symbol, resolution, upstream).catch(e => console.error("writeCache", e));
 
-  return jsonResponse({ s: "ok", bars });
+  const merged = mergeBars(cached, upstream);
+  return jsonResponse({ s: "ok", bars: merged, cached: cached.length > 0, partial: false });
 }
 
 async function handleQuote(body: any): Promise<Response> {
