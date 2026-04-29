@@ -9,7 +9,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
   <link rel="stylesheet" href="assets/styles.css"/>
-  <script src="https://s3.tradingview.com/tv.js"></script>
   <style>
     /* ----- Layout ----- */
     .trade-layout{display:grid;grid-template-columns:260px 1fr 340px;gap:16px;padding:16px;flex:1;min-height:0;}
@@ -187,8 +186,8 @@
       </div>
     </div>
 
-    <!-- TradingView chart -->
-    <div class="t-chart" id="tv_chart"></div>
+    <!-- Chart container — populated by TArenaChart.mount() -->
+    <div class="t-chart" id="tv_chart_container"></div>
 
     <!-- Lower tabs -->
     <div class="t-lower">
@@ -262,6 +261,8 @@
 <script src="assets/supabase.js"></script>
 <script src="assets/app.js"></script>
 <script src="assets/market.js"></script>
+<script src="assets/datafeed.js"></script>
+<script src="assets/chart-bootstrap.js"></script>
 <script>
   const session = TArenaAuth.requireAuth();
   if (!session) throw new Error('redirect');
@@ -272,8 +273,10 @@
   let currentSymbol = 'BHP.AX';
   let side = 'buy';
   let orderType = 'market';
-  let tvWidget = null;
+  let chartCtl = null;          // controller returned by TArenaChart.mount()
   const CASH = 25000;
+  // Map of symbol → unsubscribe function for the live quote feed.
+  const liveSubs = {};
 
   function currentMarket() {
     const m = TArenaMarket.find(currentSymbol);
@@ -300,48 +303,54 @@
     renderOrderBook();
   }
 
-  function loadTvChart() {
-    const m = currentMarket();
+  // Mount the chart once. Subsequent symbol selections call
+  // chartCtl.setSymbol() instead of re-mounting.
+  async function ensureChart() {
+    if (chartCtl) return chartCtl;
+    chartCtl = await TArenaChart.mount('tv_chart_container', currentSymbol, '60');
+    return chartCtl;
+  }
+
+  // ----- Live quote subscription helpers -----
+  // Apply a tick to the in-memory market record so other renders
+  // (header, watchlist, order panel summary, order book) all see
+  // the same price.
+  function applyTick(symbol, tick) {
+    const m = TArenaMarket.find(symbol);
     if (!m) return;
-    document.getElementById('tv_chart').innerHTML = '';
-    tvWidget = new TradingView.widget({
-      autosize: true,
-      symbol: m.tv,
-      interval: '60',
-      container_id: 'tv_chart',
-      timezone: 'Australia/Sydney',
-      theme: 'dark',
-      style: '1',
-      locale: 'en',
-      toolbar_bg: '#0c1d36',
-      enable_publishing: false,
-      withdateranges: true,
-      allow_symbol_change: false,
-      details: false,
-      hotlist: false,
-      calendar: false,
-      hide_side_toolbar: false,
-      hide_top_toolbar: false,
-      hide_legend: false,
-      save_image: false,
-      backgroundColor: '#0c1d36',
-      gridColor: 'rgba(168,193,219,0.06)',
-      studies: ['MASimple@tv-basicstudies', 'Volume@tv-basicstudies'],
-      overrides: {
-        'paneProperties.background':            '#0c1d36',
-        'paneProperties.backgroundType':        'solid',
-        'paneProperties.vertGridProperties.color': 'rgba(168,193,219,0.05)',
-        'paneProperties.horzGridProperties.color': 'rgba(168,193,219,0.05)',
-        'scalesProperties.textColor':           '#a8c1db',
-        'scalesProperties.lineColor':           'rgba(168,193,219,0.15)',
-        'mainSeriesProperties.candleStyle.upColor':       '#10b981',
-        'mainSeriesProperties.candleStyle.downColor':     '#dc2626',
-        'mainSeriesProperties.candleStyle.borderUpColor': '#10b981',
-        'mainSeriesProperties.candleStyle.borderDownColor':'#dc2626',
-        'mainSeriesProperties.candleStyle.wickUpColor':   '#10b981',
-        'mainSeriesProperties.candleStyle.wickDownColor': '#dc2626',
-      },
-    });
+    m.price = tick.price;
+    if (typeof tick.changePct === 'number' && tick.changePct !== 0) m.change = tick.changePct;
+    if (symbol === currentSymbol) {
+      renderSymbolHeader();
+      renderOrderBook();
+      updateTotal();
+    }
+    // Update just this row in the watchlist (cheaper than a full re-render).
+    const row = document.querySelector(`.t-sb-row[data-sym="${symbol}"]`);
+    if (row) {
+      const up = m.change >= 0;
+      row.querySelector('.p').textContent = '$' + (m.price < 100 ? m.price.toFixed(2) : m.price.toLocaleString());
+      const c = row.querySelector('.c');
+      c.textContent = TArenaUI.fmtPct(m.change);
+      c.className = 'c ' + (up ? 'text-green' : 'text-red');
+    }
+  }
+
+  function ensureLive(symbol) {
+    if (liveSubs[symbol]) return;
+    liveSubs[symbol] = TArenaDatafeed.subscribeQuote(symbol, (tick) => applyTick(symbol, tick));
+  }
+
+  function dropLive(symbol) {
+    if (liveSubs[symbol]) { try { liveSubs[symbol](); } catch (_) {} delete liveSubs[symbol]; }
+  }
+
+  // Subscribe to all watchlist symbols + the current symbol;
+  // drop subscriptions for anything no longer needed.
+  function syncLiveSubs() {
+    const wanted = new Set([currentSymbol, ...TArenaMarket.getWatchlist()]);
+    for (const s of wanted) ensureLive(s);
+    for (const s of Object.keys(liveSubs)) if (!wanted.has(s)) dropLive(s);
   }
 
   function renderWatchlist() {
@@ -351,7 +360,7 @@
       if (!m) return '';
       const up = m.change >= 0;
       const active = sym === currentSymbol ? 'active' : '';
-      return `<div class="t-sb-row ${active}" onclick="selectSymbol('${sym}')">
+      return `<div class="t-sb-row ${active}" data-sym="${sym}" onclick="selectSymbol('${sym}')">
         <div>
           <div class="l">${sym.replace('.AX','')}</div>
           <div class="n">${m.name}</div>
@@ -370,7 +379,8 @@
     renderSymbolHeader();
     renderWatchlist();
     renderLower();
-    loadTvChart();
+    syncLiveSubs();
+    if (chartCtl) chartCtl.setSymbol(sym);
   }
   window.selectSymbol = selectSymbol;
 
@@ -553,17 +563,28 @@
     }
   }
 
-  // Tick all data periodically
-  function tickAll() {
-    TArenaMarket.tick();
-    renderSymbolHeader();
-    renderWatchlist();
-    renderOrderBook();
-  }
+  // Initial render — mount chart + start live subscriptions.
+  renderSymbolHeader();
+  renderWatchlist();
+  renderLower();
+  syncLiveSubs();
+  ensureChart().catch(e => {
+    console.error('chart mount failed', e);
+    document.getElementById('tv_chart_container').innerHTML =
+      `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#a8c1db;font-family:'DM Sans',sans-serif;text-align:center;padding:32px;">
+        <div>
+          <div style="font-size:32px;margin-bottom:12px;opacity:.6;">⚠️</div>
+          <div style="font-weight:700;color:#fff;">Chart failed to load</div>
+          <div style="font-size:12px;opacity:.7;margin-top:6px;">${e.message}</div>
+        </div>
+      </div>`;
+  });
 
-  // Initial render
-  selectSymbol('BHP.AX');
-  setInterval(tickAll, 4000);
+  // Clean up subscriptions on page unload so we don't leak WS connections.
+  window.addEventListener('beforeunload', () => {
+    Object.keys(liveSubs).forEach(dropLive);
+    if (chartCtl) chartCtl.destroy();
+  });
 
   console.log('%cTradeArena · Markets ready.', 'color:#e8c060;font-weight:700;');
 </script>

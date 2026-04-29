@@ -23,7 +23,9 @@ Static multi-page paper-trading site for Australian uni students. ASX, US stocks
 - `config.js`   — Supabase URL + publishable key (safe to expose; rotate by editing this file)
 - `supabase.js` — Singleton Supabase client at `window.TArenaDB`
 - `app.js`      — `TArenaAuth` (full Supabase-backed API) + `TArenaUI` (`renderNav`, `renderFooter`, `fmtMoney`, `fmtPct`, `getAvatar`, `avatarHtml`)
-- `market.js`   — `TArenaMarket` (mock prices, holdings, watchlist, orders, tick simulator) — to be replaced by real market data in Task #3
+- `market.js`   — `TArenaMarket` static catalogue (symbol → name/market/mcap/52w). `tick()` is the fallback random simulator still used by the home ticker and portfolio page — those pages get rebuilt later. The Trade page **does not** use `tick()`; it gets live prices from `datafeed.js`.
+- `datafeed.js` — `TArenaDatafeed` market-data layer. `fetchBars`, `fetchQuotes`, `subscribeQuote` (Binance WS for crypto + 5s poll for stocks), plus a TradingView UDF adapter (`createUDF()`) and a Supabase save/load adapter (`createSaveLoadAdapter()`).
+- `chart-bootstrap.js` — `TArenaChart.mount(containerId, symbol, resolution)` — detects whether the Advanced Charts library is installed and mounts either it or the Lightweight Charts fallback.
 - `styles.css`  — design tokens (navy/gold), nav, cards, tables, buttons, modal, forms, avatar pill + dropdown menu
 - `favicon.svg` — gold shield logo
 
@@ -79,11 +81,42 @@ By default Supabase emails the magic-link confirmation that includes both a clic
 - `tarena_sb_session`        — Supabase auth session (managed by SDK)
 - `tarena_pending_email`     — multi-step signup / reset state (cleared after success)
 - `tarena_profile_cache`     — last-known profile snapshot keyed by email (for fast nav rendering)
-- `tarena_orders`            — placed orders log (mock — replaced in Task #3)
-- `tarena_watchlist`         — user's watched symbols (mock — replaced in Task #3)
+- `tarena_orders`            — placed orders log (still localStorage; paper_trades wiring lives with Task #4)
+- `tarena_watchlist`         — user's watched symbols (drives live quote subscriptions on the Trade page)
+- `pending_chart_snap`       — most recent "Snap to reel" capture `{symbol, resolution, drawings, png, ts}` (consumed by the reel composer)
 
-## Trade page (TradingView + order entry)
-The TradingView widget is configured for a pro-trader feel: dark theme overridden to navy/gold (`#0c1d36` background, `#10b981` up, `#dc2626` down, gold grid), default studies (MA + Volume), full top + side toolbar, date-range picker. The right-side order panel mirrors a real broker. Below it sits a simulated **order book with depth bars**. *(Replaced with broker-grade Advanced Charts library in Task #3.)*
+## Trade page (broker-grade chart + real market data)
+
+The chart pane is mounted by **`assets/chart-bootstrap.js`** which detects which TradingView library is available:
+
+1. **`/charting_library/charting_library.js` present** → mounts the **TradingView Advanced Charts library** with our UDF datafeed (`assets/datafeed.js`), navy/gold theme overrides, default studies (EMA20, EMA50, Volume, RSI(14)), full drawing toolset, multi-timeframe (1m → 1M), bar-replay mode, and a save/load adapter that reads/writes `chart_layouts`.
+2. **library not yet installed** → lazy-loads **TradingView Lightweight Charts** (MIT) from CDN and renders a navy/gold candle chart with EMA20 / EMA50 / Volume + a built-in timeframe toolbar. The page never looks broken while the Advanced library application is being processed.
+
+In both modes a **"📸 Snap to reel"** toolbar button captures `{symbol, resolution, drawings, png}` and stashes it in `localStorage.pending_chart_snap` so the reel composer (Task #5) can attach it.
+
+The right-side order panel and the watchlist subscribe to the **same live price stream** used by the chart, so everything moves in sync (no more random tick simulator on the Trade page). Live ticks come from:
+- **Binance public WebSocket** for crypto (true real-time).
+- **5-second polling** of the data-proxy edge function for ASX (Yahoo Finance) and US (Finnhub).
+
+### Installing the Advanced Charts library
+
+The library is licensed by TradingView and not redistributable, so each Replit project has to apply for it once.
+
+1. Apply at <https://www.tradingview.com/charting-library/>. Approval is usually fast for non-commercial educational use; mention the project name "TradeArena" and the dev URL.
+2. Once approved, download the zip and unzip it so that `charting_library/charting_library.js` sits at the **project root** (sibling of `index.html`).
+3. Hard-refresh the Trade page. The bootstrap auto-detects the new file and switches over.
+
+### Deploying the `data-proxy` edge function
+
+```bash
+npm install -g supabase
+supabase login
+supabase link --project-ref chncykagtzotdtflkhim
+supabase secrets set FINNHUB_API_KEY=YOUR_KEY    # https://finnhub.io/register
+supabase functions deploy data-proxy
+```
+
+The function fans out to Yahoo Finance (ASX), Finnhub (US), and Binance (crypto), and caches every bar it returns into `public.price_bars` so bar-replay and repeat history loads don't re-hit upstream. Source + smoke-test in `supabase/functions/data-proxy/`.
 
 ## Portfolio page (Groww-style)
 - Big "Investments" header with current value, total returns ($/%), and today's change tile.
