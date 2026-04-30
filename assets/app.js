@@ -520,9 +520,9 @@
   function renderNav(activePage) {
     global.__tarena_nav_active = activePage;
     const links = [
-      { id: 'trade',     href: 'trade.html',     label: 'Markets',   icon: 'fa-chart-line' },
-      { id: 'reels',     href: 'reels.html',     label: 'Reels',     icon: 'fa-clapperboard' },
-      { id: 'schools',   href: 'schools.html',   label: 'Learn',     icon: 'fa-graduation-cap' },
+      { id: 'trade',     href: 'trade.html',     label: 'Markets',    icon: 'fa-chart-line' },
+      { id: 'reels',     href: 'reels.html',     label: 'Strategies', icon: 'fa-lightbulb' },
+      { id: 'schools',   href: 'schools.html',   label: 'Learn',      icon: 'fa-graduation-cap' },
       { id: 'portfolio', href: 'portfolio.html', label: 'Portfolio', icon: 'fa-briefcase' },
       { id: 'profile',   href: 'profile.html',   label: 'Profile',   icon: 'fa-user' },
     ];
@@ -553,7 +553,7 @@
             <a href="profile.html" class="ta-menu-link"><i class="fa-solid fa-user"></i> View profile</a>
             <a href="portfolio.html" class="ta-menu-link"><i class="fa-solid fa-briefcase"></i> Portfolio</a>
             <a href="trade.html" class="ta-menu-link"><i class="fa-solid fa-chart-line"></i> Markets</a>
-            <a href="reels.html" class="ta-menu-link"><i class="fa-solid fa-clapperboard"></i> Reels</a>
+            <a href="reels.html" class="ta-menu-link"><i class="fa-solid fa-lightbulb"></i> Strategies</a>
             <a href="schools.html" class="ta-menu-link"><i class="fa-solid fa-graduation-cap"></i> Learn</a>
             <div class="ta-menu-sep"></div>
             <button class="ta-menu-link ta-menu-logout" id="logoutBtn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out</button>
@@ -616,7 +616,7 @@
           <div class="ta-foot-col">
             <h4>Product</h4>
             <a href="trade.html">Markets</a>
-            <a href="reels.html">Reels</a>
+            <a href="reels.html">Strategies</a>
             <a href="schools.html">Learn</a>
             <a href="portfolio.html">Portfolio</a>
           </div>

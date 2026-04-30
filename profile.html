@@ -280,9 +280,9 @@
     { k: 'cash',         l: 'Cash balance',     d: 'Reveal your portfolio cash buffer.' },
     { k: 'equity_curve', l: 'Equity curve',     d: 'Account value over time vs benchmarks.' },
     { k: 'metrics',      l: 'Quant metrics',    d: 'Sharpe, Sortino, win rate, drawdown, etc.' },
-    { k: 'strategies',   l: 'Strategies',       d: 'Your published strategy library.' },
+    { k: 'strategies',   l: 'Playbook',         d: 'Your published strategy library.' },
     { k: 'journal',      l: 'Trade journal',    d: 'Closed trade history with reasoning.' },
-    { k: 'reels',        l: 'Reels',            d: 'Trade-idea reels you have posted.' },
+    { k: 'reels',        l: 'Strategies',       d: 'Trade-idea strategies you have posted.' },
     { k: 'university',   l: 'University',       d: 'Show your school on your profile.' },
   ];
 
@@ -425,7 +425,7 @@
       metrics:     'Quant metrics are private.',
       strategies:  'Strategy library is private.',
       journal:     'Trade journal is private.',
-      reels:       'Reels are private.',
+      reels:       'Strategies are private.',
     };
     return `<div class="locked-card"><i class="fa-solid fa-lock"></i>
       <div class="lt">${label || 'Private'}</div>
@@ -594,8 +594,8 @@
     // Tabs
     const tabsHtml = `
       <div class="pf-tabs">
-        <button class="pf-tab ${state.activeTab==='strategies'?'active':''} ${showStrats?'':'lock-tab'}" onclick="switchTab('strategies')"><i class="fa-solid fa-chess-knight"></i> Strategies ${showStrats?'':'<i class="fa-solid fa-lock" style="font-size:9px;"></i>'}</button>
-        <button class="pf-tab ${state.activeTab==='reels'?'active':''} ${showReels?'':'lock-tab'}" onclick="switchTab('reels')"><i class="fa-solid fa-clapperboard"></i> Reels ${showReels?'':'<i class="fa-solid fa-lock" style="font-size:9px;"></i>'}</button>
+        <button class="pf-tab ${state.activeTab==='strategies'?'active':''} ${showStrats?'':'lock-tab'}" onclick="switchTab('strategies')"><i class="fa-solid fa-chess-knight"></i> Playbook ${showStrats?'':'<i class="fa-solid fa-lock" style="font-size:9px;"></i>'}</button>
+        <button class="pf-tab ${state.activeTab==='reels'?'active':''} ${showReels?'':'lock-tab'}" onclick="switchTab('reels')"><i class="fa-solid fa-lightbulb"></i> Strategies ${showReels?'':'<i class="fa-solid fa-lock" style="font-size:9px;"></i>'}</button>
         <button class="pf-tab ${state.activeTab==='journal'?'active':''} ${showJournal?'':'lock-tab'}" onclick="switchTab('journal')"><i class="fa-solid fa-book"></i> Journal ${showJournal?'':'<i class="fa-solid fa-lock" style="font-size:9px;"></i>'}</button>
         <button class="pf-tab ${state.activeTab==='holdings'?'active':''} ${showHold?'':'lock-tab'}" onclick="switchTab('holdings')"><i class="fa-solid fa-grip"></i> Holdings ${showHold?'':'<i class="fa-solid fa-lock" style="font-size:9px;"></i>'}</button>
       </div>
@@ -672,8 +672,8 @@
   }
 
   function renderReelsTab() {
-    if (!isVisible('reels')) return locked('reels', 'Reels');
-    return emptyState('fa-clapperboard', 'Reels feed launches with the next release. Snap a chart on the Trade page to get ready.');
+    if (!isVisible('reels')) return locked('reels', 'Strategies');
+    return emptyState('fa-lightbulb', 'Strategies feed launches with the next release. Snap a chart on the Trade page to get ready.');
   }
 
   function renderJournalTab() {

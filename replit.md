@@ -11,7 +11,7 @@ TradeArena is built as a pure static HTML/CSS/JS application with no build step,
 
 ### UI/UX Decisions
 - **Theme**: Professional trader aesthetic with a navy and gold color scheme.
-- **Navigation**: Icon + label navigation (`.ta-nav-link` pills) for Markets, Reels, Learn, Portfolio, Profile.
+- **Navigation**: Icon + label navigation (`.ta-nav-link` pills) for Markets, Strategies (formerly Reels — file path `reels.html` retained for compatibility), Learn, Portfolio, Profile.
 - **Footer**: 4-column company footer with product, company, legal, brand, social links, a paper-trading risk disclaimer, copyright, and a sign-in nudge for unauthenticated users.
 - **Logo**: Transparent monoline gold shield with a chart spark.
 - **Typography**: Uses DM Sans exclusively for a clean, modern look.

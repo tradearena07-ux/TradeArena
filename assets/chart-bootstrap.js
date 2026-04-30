@@ -354,9 +354,20 @@
       try {
         const bars = await global.TArenaDatafeed.fetchBars(state.symbol, state.resolution, from, to);
         applyBars(bars);
+        // Real data arrived → drop the sample badge if it was up.
+        const b = container.querySelector('.ta-sample-badge');
+        if (b) b.remove();
       } catch (e) {
-        console.warn('history failed', e);
-        renderError(container, `Couldn't load chart history: ${e.message}`);
+        console.warn('history failed — using sample bars so the chart never looks broken', e);
+        // Anchor a deterministic synthetic series on the current quote so
+        // the chart visually matches the ticker price above. Crypto charts
+        // shouldn't normally land here (they go direct to Binance), but
+        // stocks fall back to this whenever the data-proxy isn't reachable.
+        const m = global.TArenaMarket && global.TArenaMarket.find && global.TArenaMarket.find(state.symbol);
+        const basePrice = (m && m.price > 0) ? m.price : 100;
+        const fakeBars = generateSyntheticBars(state.symbol, basePrice, resSec, 200);
+        applyBars(fakeBars);
+        renderSampleBadge(container);
       }
     }
 
@@ -450,6 +461,75 @@
     if (r === 'W') return 86400 * 7;
     if (r === 'M') return 86400 * 30;
     return Math.max(60, parseInt(r, 10) * 60 || 60);
+  }
+
+  // ----- Synthetic-bar fallback ---------------------------------
+  // The chart should never look broken. When a real history fetch
+  // fails (e.g. data-proxy not deployed), we paint a deterministic
+  // sample series anchored on the current quote so the chart still
+  // matches the price ticker above it. A small "Sample data" badge
+  // makes the placeholder honest to the user.
+
+  // FNV-1a 32-bit hash — small, fast, no deps.
+  function hashStr(s) {
+    let h = 2166136261 >>> 0;
+    for (let i = 0; i < s.length; i++) {
+      h = Math.imul(h ^ s.charCodeAt(i), 16777619) >>> 0;
+    }
+    return h;
+  }
+
+  // Mulberry32 PRNG — same seed → same sequence (so the fake chart
+  // for a given symbol is stable across reloads within the same day).
+  function mulberry32(seed) {
+    return function () {
+      seed = (seed + 0x6D2B79F5) >>> 0;
+      let t = seed;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return (((t ^ (t >>> 14)) >>> 0) / 4294967296);
+    };
+  }
+
+  function generateSyntheticBars(symbol, basePrice, resolutionSec, count) {
+    const day = Math.floor(Date.now() / 86400000);
+    const rng = mulberry32(hashStr(String(symbol).toUpperCase() + ':' + day));
+    const now = Math.floor(Date.now() / 1000);
+    const bars = [];
+    // Start the walk 5–15% below current and drift up so the closing
+    // bar lands ~at the live price.
+    const startMul = 0.85 + rng() * 0.10;
+    let curr  = basePrice * startMul;
+    const drift = (basePrice - curr) / count;
+    const step  = basePrice * 0.012;  // ~1.2% per-bar volatility
+    for (let i = 0; i < count; i++) {
+      const t = (now - (count - i - 1) * resolutionSec) * 1000;
+      const open  = curr;
+      const noise = (rng() - 0.45) * step;
+      const close = Math.max(0.01, open + drift + noise);
+      const wick  = step * (0.3 + rng() * 0.6);
+      const high  = Math.max(open, close) + rng() * wick;
+      const low   = Math.max(0.01, Math.min(open, close) - rng() * wick);
+      const v     = Math.floor(50000 + rng() * 200000);
+      bars.push({ t, o: open, h: high, l: low, c: close, v });
+      curr = close;
+    }
+    // Anchor the final bar so the ticker and chart agree exactly.
+    const last = bars[bars.length - 1];
+    last.c = basePrice;
+    last.h = Math.max(last.h, basePrice);
+    last.l = Math.min(last.l, basePrice);
+    return bars;
+  }
+
+  function renderSampleBadge(container) {
+    if (container.querySelector('.ta-sample-badge')) return;
+    const badge = document.createElement('div');
+    badge.className = 'ta-sample-badge';
+    badge.title = 'This symbol is being charted with sample bars while the live feed is offline.';
+    badge.style.cssText = 'position:absolute;top:10px;right:12px;background:rgba(232,192,96,0.12);border:1px solid rgba(232,192,96,0.45);color:#e8c060;font:700 10px "DM Sans",sans-serif;padding:4px 9px;border-radius:9999px;letter-spacing:.08em;text-transform:uppercase;z-index:6;pointer-events:none;backdrop-filter:blur(4px);';
+    badge.textContent = 'Sample data';
+    container.appendChild(badge);
   }
 
   function renderLightweightToolbar(container) {
