@@ -81,23 +81,114 @@
     return r.json();
   }
 
+  // ----- Direct providers (no edge function required) -----------
+  // Crypto goes straight to Binance's public REST. This means the
+  // chart works the moment the page loads even when the data-proxy
+  // edge function isn't deployed (or its FINNHUB key is missing).
+  // Stocks still go through the proxy because the upstreams (Yahoo
+  // for ASX, Alpaca/Finnhub for US) either lack browser-CORS or
+  // require an API key that we won't ship in client code.
+  const BINANCE_INTERVAL = {
+    '1':'1m','3':'3m','5':'5m','15':'15m','30':'30m',
+    '60':'1h','120':'2h','240':'4h','360':'6h','480':'8h','720':'12h',
+    'D':'1d','1D':'1d','W':'1w','1W':'1w','M':'1M','1M':'1M',
+  };
+
+  // Binance interval length in ms — used to back-compute a startTime that
+  // sits exactly `limit` candles before `endTime`. Without this, requesting
+  // a long lookback at a small resolution (e.g. 30 days @ 1m = 43,200 bars)
+  // returns the FIRST 1000 candles after startTime instead of the most
+  // recent 1000, leaving a giant gap between historical bars and live ticks.
+  const BINANCE_INTERVAL_MS = {
+    '1m': 60_000, '3m': 180_000, '5m': 300_000, '15m': 900_000, '30m': 1_800_000,
+    '1h': 3_600_000, '2h': 7_200_000, '4h': 14_400_000, '6h': 21_600_000,
+    '8h': 28_800_000, '12h': 43_200_000,
+    '1d': 86_400_000, '1w': 604_800_000, '1M': 2_592_000_000,
+  };
+
+  async function fetchBarsBinanceDirect(symbol, resolution, fromSec, toSec) {
+    const interval = BINANCE_INTERVAL[String(resolution).toUpperCase()] || '1h';
+    const pair = binancePair(symbol);
+    const limit = 1000;
+    const intervalMs = BINANCE_INTERVAL_MS[interval] || 3_600_000;
+    const endMs   = toSec * 1000;
+    // Clamp startTime so Binance returns the trailing `limit` candles up
+    // to endTime. If the caller's requested `fromSec` window is shorter
+    // than `limit * intervalMs`, honour that instead.
+    const requestedFromMs = Math.max(0, fromSec) * 1000;
+    const clampedFromMs   = Math.max(requestedFromMs, endMs - limit * intervalMs);
+    const url = new URL('https://api.binance.com/api/v3/klines');
+    url.searchParams.set('symbol',    pair);
+    url.searchParams.set('interval',  interval);
+    url.searchParams.set('startTime', String(clampedFromMs));
+    url.searchParams.set('endTime',   String(endMs));
+    url.searchParams.set('limit',     String(limit));
+    const r = await fetch(url.toString());
+    if (!r.ok) throw new Error(`binance ${r.status}`);
+    const rows = await r.json();
+    return rows.map(row => ({
+      t: row[0],          // openTime ms
+      o: +row[1],
+      h: +row[2],
+      l: +row[3],
+      c: +row[4],
+      v: +row[5],
+    }));
+  }
+
+  async function fetchQuoteBinanceDirect(symbol) {
+    const pair = binancePair(symbol);
+    const r = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${pair}`);
+    if (!r.ok) throw new Error(`binance ${r.status}`);
+    const j = await r.json();
+    return {
+      price:     +j.lastPrice,
+      change:    +j.priceChange,
+      changePct: +j.priceChangePercent,
+    };
+  }
+
   // ----- Bars + quotes (used by everyone) ----------------------
+  // Routing: crypto → direct Binance public REST (no proxy needed).
+  // Stocks → data-proxy edge function (Yahoo for ASX, Finnhub/Alpaca
+  // for US). When the proxy is unreachable the caller gets a clear
+  // "data-proxy unreachable" error instead of a generic Failed to fetch.
   async function fetchBars(symbol, resolution, fromSec, toSec) {
-    const j = await callFn('history', {
-      symbol,
-      resolution,
-      from: fromSec,
-      to:   toSec,
-    });
+    if (classify(symbol) === 'crypto') {
+      return fetchBarsBinanceDirect(symbol, resolution, fromSec, toSec);
+    }
+    let j;
+    try {
+      j = await callFn('history', { symbol, resolution, from: fromSec, to: toSec });
+    } catch (e) {
+      throw new Error('data-proxy unreachable — deploy supabase functions deploy data-proxy');
+    }
     if (j.s !== 'ok') throw new Error(j.error || 'history failed');
     return j.bars || [];
   }
 
   async function fetchQuotes(symbols) {
     if (!symbols || !symbols.length) return {};
-    const j = await callFn('quote', { symbols });
-    if (j.s !== 'ok') throw new Error(j.error || 'quote failed');
-    return j.quotes || {};
+    const cryptoSyms = symbols.filter(s => classify(s) === 'crypto');
+    const stockSyms  = symbols.filter(s => classify(s) !== 'crypto');
+    const out = {};
+
+    // Crypto direct, in parallel.
+    await Promise.all(cryptoSyms.map(async (s) => {
+      try { out[s] = await fetchQuoteBinanceDirect(s); }
+      catch (e) { /* leave missing; caller can detect */ }
+    }));
+
+    // Stocks via proxy in one batched call.
+    if (stockSyms.length) {
+      try {
+        const j = await callFn('quote', { symbols: stockSyms });
+        if (j.s === 'ok' && j.quotes) Object.assign(out, j.quotes);
+      } catch (e) {
+        // Silent: portfolio page falls back to avg_cost when a quote is missing.
+      }
+    }
+    return out;
   }
 
   async function search(query, market) {

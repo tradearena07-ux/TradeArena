@@ -6,7 +6,7 @@
   <title>TradeArena · Portfolio</title>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
   <link rel="stylesheet" href="assets/styles.css"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -182,44 +182,122 @@
 <script src="assets/supabase.js"></script>
 <script src="assets/app.js"></script>
 <script src="assets/market.js"></script>
+<script src="assets/datafeed.js"></script>
 <script>
+  // ============================================================
+  // PORTFOLIO — real Supabase-backed dashboard.
+  // New users start with $25,000 cash and zero invested. Holdings
+  // come from `get_my_holdings()` (RLS-gated). Live prices come
+  // from TArenaDatafeed (Binance direct for crypto, data-proxy for
+  // stocks). If a quote isn't available we fall back to avg_cost
+  // so the dashboard still renders meaningful numbers.
+  // ============================================================
   const session = TArenaAuth.requireAuth();
   if (!session) throw new Error('redirect');
   TArenaUI.renderNav('portfolio');
   TArenaUI.renderFooter();
 
+  // The single source of truth for the starting paper-trading bankroll.
+  // (The SQL `get_cash_balance_for` RPC still uses the legacy 100k
+  // constant; this client-side compute supersedes it for the dashboard.)
+  const STARTING_CAPITAL = 25000;
+
   let activeRange = '1m';
   let activeMarket = 'all';
   let perfChart;
+  let portfolio = {
+    holdings:        [],   // [{symbol, qty, avgCost, current, value, cost, pnl, pnlPct, todayPct, type, name}]
+    cash:            STARTING_CAPITAL,
+    investedCost:    0,
+    investedValue:   0,
+    totalValue:      STARTING_CAPITAL,
+    totalReturn:     0,
+    totalReturnPct:  0,
+    todayChange:     0,
+    todayPct:        0,
+  };
+
+  // Classify a raw symbol into asx/us/crypto for the allocation buckets
+  // and the icon colour. Mirrors TArenaDatafeed.classify but without
+  // requiring the datafeed to be loaded.
+  function classifyType(symbol) {
+    const s = String(symbol || '').toUpperCase();
+    if (s.endsWith('.AX')) return 'asx';
+    if (TArenaDatafeed && TArenaDatafeed.classify(s) === 'crypto') return 'crypto';
+    return 'us';
+  }
+
+  function nameFor(symbol) {
+    const m = TArenaMarket.find(symbol);
+    return m ? m.name : symbol;
+  }
+
+  async function loadHoldings() {
+    // get_my_holdings() returns the materialized rollup of paper_trades
+    // for the signed-in user. Empty array → brand new account.
+    const { data, error } = await TArenaDB.rpc('get_my_holdings');
+    if (error) {
+      console.warn('get_my_holdings failed:', error.message);
+      return [];
+    }
+    return (data || [])
+      .filter(r => Number(r.net_qty) > 0)
+      .map(r => ({
+        symbol:  r.symbol,
+        qty:     Number(r.net_qty),
+        avgCost: Number(r.avg_cost) || 0,
+        type:    classifyType(r.symbol),
+        name:    nameFor(r.symbol),
+      }));
+  }
+
+  async function loadQuotes(symbols) {
+    if (!symbols.length) return {};
+    try { return await TArenaDatafeed.fetchQuotes(symbols); }
+    catch (e) { console.warn('fetchQuotes failed:', e.message); return {}; }
+  }
+
+  function recomputePortfolio(rawHoldings, quotes) {
+    const enriched = rawHoldings.map(h => {
+      const q = quotes[h.symbol];
+      const current = (q && isFinite(q.price)) ? q.price : h.avgCost;
+      const value   = h.qty * current;
+      const cost    = h.qty * h.avgCost;
+      const pnl     = value - cost;
+      const pnlPct  = cost ? (pnl / cost) * 100 : 0;
+      const todayPct = (q && isFinite(q.changePct)) ? q.changePct : 0;
+      return Object.assign({}, h, { current, value, cost, pnl, pnlPct, todayPct });
+    });
+    const investedCost  = enriched.reduce((s, h) => s + h.cost,  0);
+    const investedValue = enriched.reduce((s, h) => s + h.value, 0);
+    const cash          = Math.max(0, STARTING_CAPITAL - investedCost);
+    const totalValue    = investedValue + cash;
+    const totalReturn   = totalValue - STARTING_CAPITAL;
+    const totalReturnPct = (totalReturn / STARTING_CAPITAL) * 100;
+    const todayChange   = enriched.reduce((s, h) => s + h.value * (h.todayPct / 100), 0);
+    const todayPct      = totalValue ? (todayChange / totalValue) * 100 : 0;
+    portfolio = { holdings: enriched, cash, investedCost, investedValue, totalValue, totalReturn, totalReturnPct, todayChange, todayPct };
+  }
 
   function renderHero() {
-    const total = TArenaMarket.totalValue();
-    const cost  = TArenaMarket.totalCost();
-    const pnl   = total - cost;
-    const pct   = (pnl / cost) * 100;
-    document.getElementById('totalValue').textContent = TArenaUI.fmtMoney(total, {decimals:2});
-    document.getElementById('totalRet').textContent   = TArenaUI.fmtMoney(pnl, {sign:true, decimals:2});
-    document.getElementById('totalRet').className     = 'amt ' + (pnl >= 0 ? 'text-green' : 'text-red');
-    document.getElementById('totalRetPct').textContent = '(' + TArenaUI.fmtPct(pct) + ')';
-    document.getElementById('totalRetPct').className   = 'pct ' + (pnl >= 0 ? 'text-green' : 'text-red');
+    document.getElementById('totalValue').textContent  = TArenaUI.fmtMoney(portfolio.totalValue, {decimals:2});
+    const ret = portfolio.totalReturn;
+    document.getElementById('totalRet').textContent    = TArenaUI.fmtMoney(ret, {sign:true, decimals:2});
+    document.getElementById('totalRet').className      = 'amt ' + (ret >= 0 ? 'text-green' : 'text-red');
+    document.getElementById('totalRetPct').textContent = '(' + TArenaUI.fmtPct(portfolio.totalReturnPct) + ')';
+    document.getElementById('totalRetPct').className   = 'pct ' + (ret >= 0 ? 'text-green' : 'text-red');
 
-    // Today's change — derive from current market changes weighted by holding value
-    let todayChange = 0;
-    TArenaMarket.holdings.forEach(h => {
-      const m = TArenaMarket.find(h.symbol);
-      if (m) todayChange += h.qty * m.price * (m.change / 100);
-    });
-    const todayPct = (todayChange / total) * 100;
     const tBox = document.getElementById('todayBox');
-    tBox.classList.toggle('down', todayChange < 0);
+    tBox.classList.toggle('down', portfolio.todayChange < 0);
+    const cls = portfolio.todayChange >= 0 ? 'text-green' : 'text-red';
     document.getElementById('todayVal').innerHTML =
-      `<span class="${todayChange >= 0 ? 'text-green' : 'text-red'}">${TArenaUI.fmtMoney(todayChange,{sign:true,decimals:0})} (${TArenaUI.fmtPct(todayPct)})</span>`;
+      `<span class="${cls}">${TArenaUI.fmtMoney(portfolio.todayChange, {sign:true,decimals:0})} (${TArenaUI.fmtPct(portfolio.todayPct)})</span>`;
   }
 
   function renderAllocation() {
-    const groups = { asx: 0, us: 0, crypto: 0, cash: 6000 };
-    TArenaMarket.holdings.forEach(h => groups[h.type] += TArenaMarket.holdingValue(h).value);
-    const total = Object.values(groups).reduce((a,b) => a+b, 0);
+    const groups = { asx: 0, us: 0, crypto: 0, cash: portfolio.cash };
+    portfolio.holdings.forEach(h => { groups[h.type] = (groups[h.type] || 0) + h.value; });
+    const total = Object.values(groups).reduce((a,b) => a+b, 0) || 1;
     const meta = [
       { k: 'asx',    label: 'ASX',     color: '#10b981' },
       { k: 'us',     label: 'US',      color: '#3b82f6' },
@@ -243,36 +321,45 @@
   }
 
   function renderHoldings() {
-    let list = TArenaMarket.holdings.slice();
+    let list = portfolio.holdings.slice();
     if (activeMarket !== 'all') list = list.filter(h => h.type === activeMarket);
+    if (!portfolio.holdings.length) {
+      document.getElementById('holdingsList').innerHTML = `
+        <div class="empty-row" style="padding:48px 24px;">
+          <div style="font-size:36px;opacity:0.6;margin-bottom:10px;">📊</div>
+          <div style="color:var(--cream);font-weight:600;font-size:15px;margin-bottom:6px;">No positions yet</div>
+          <div style="font-size:13px;margin-bottom:20px;">Start with <strong style="color:var(--gold2);">${TArenaUI.fmtMoney(STARTING_CAPITAL,{decimals:0})}</strong> in paper cash. Place your first trade to see it here.</div>
+          <a href="trade.html" class="btn-gold" style="display:inline-flex;text-decoration:none;">Go to Markets</a>
+        </div>`;
+      return;
+    }
     if (!list.length) {
       document.getElementById('holdingsList').innerHTML = '<div class="empty-row">No holdings in this market.</div>';
       return;
     }
     document.getElementById('holdingsList').innerHTML = list.map(h => {
-      const v = TArenaMarket.holdingValue(h);
       const initials = h.symbol.replace('.AX', '').slice(0, 3);
-      const m = TArenaMarket.find(h.symbol);
-      const todayPct = m ? m.change : 0;
-      const up = v.pnl >= 0;
+      const up = h.pnl >= 0;
       return `<div class="h-row" onclick="window.location.href='trade.html'">
         <div class="icn ${h.type}">${initials}</div>
         <div class="meta">
           <div class="sym">${h.symbol.replace('.AX','')}</div>
-          <div class="name">${v.name} · ${h.type.toUpperCase()}</div>
+          <div class="name">${h.name} · ${h.type.toUpperCase()}</div>
         </div>
         <div class="qty">
-          <b>${TArenaUI.fmtMoney(v.value, {decimals:0})}</b>
-          ${h.qty.toLocaleString('en-US',{maximumFractionDigits:4})} × ${TArenaUI.fmtMoney(v.current, {decimals:2})}
+          <b>${TArenaUI.fmtMoney(h.value, {decimals:0})}</b>
+          ${h.qty.toLocaleString('en-US',{maximumFractionDigits:4})} × ${TArenaUI.fmtMoney(h.current, {decimals:2})}
         </div>
         <div class="pnl">
-          <div class="v ${up ? 'text-green' : 'text-red'}">${TArenaUI.fmtMoney(v.pnl, {sign:true, decimals:2})}</div>
-          <div class="p ${up ? 'text-green' : 'text-red'}">${TArenaUI.fmtPct(v.pnlPct)} <span class="text-muted" style="font-weight:400;">· today ${TArenaUI.fmtPct(todayPct)}</span></div>
+          <div class="v ${up ? 'text-green' : 'text-red'}">${TArenaUI.fmtMoney(h.pnl, {sign:true, decimals:2})}</div>
+          <div class="p ${up ? 'text-green' : 'text-red'}">${TArenaUI.fmtPct(h.pnlPct)} <span class="text-muted" style="font-weight:400;">· today ${TArenaUI.fmtPct(h.todayPct)}</span></div>
         </div>
       </div>`;
     }).join('');
   }
 
+  // Movers come from the static catalogue — they're "what's hot in the
+  // market overall today", not user-specific. Independent of holdings.
   function renderMovers() {
     const all = TArenaMarket.data.slice();
     const gainers = all.slice().sort((a,b) => b.change - a.change).slice(0, 4);
@@ -300,14 +387,19 @@
   }
 
   function genPerfData(range) {
+    // Synthetic equity curve until we wire up account-snapshot history.
+    // Anchors at STARTING_CAPITAL on the left, current portfolio value
+    // on the right. For new users the line is essentially flat at $25k.
     const points = { '1d': 24, '1w': 30, '1m': 30, '3m': 60, '1y': 52, 'all': 80 }[range] || 30;
-    const startVal = 50000;
-    const endVal   = TArenaMarket.totalValue();
+    const startVal = STARTING_CAPITAL;
+    const endVal   = portfolio.totalValue;
+    const span     = endVal - startVal;
+    const flat     = Math.abs(span) < 1;
     const data = [];
     for (let i = 0; i <= points; i++) {
       const t = i / points;
-      const noise = Math.sin(i * 0.45) * 600 + (Math.random() - 0.5) * 400;
-      data.push(startVal + (endVal - startVal) * t + noise * (range === '1d' ? 0.2 : 1));
+      const noise = flat ? 0 : (Math.sin(i * 0.45) * Math.abs(span) * 0.02 + (Math.random() - 0.5) * Math.abs(span) * 0.015);
+      data.push(startVal + span * t + noise * (range === '1d' ? 0.2 : 1));
     }
     return data;
   }
@@ -361,7 +453,7 @@
           x: { display: false, grid: { display: false } },
           y: {
             position: 'right',
-            ticks: { color: 'rgba(168,193,219,.5)', font: { family: 'DM Sans', size: 10 }, callback: v => '$' + (v/1000).toFixed(0) + 'k' },
+            ticks: { color: 'rgba(168,193,219,.5)', font: { family: 'DM Sans', size: 10 }, callback: v => '$' + (v/1000).toFixed(1) + 'k' },
             grid: { color: 'rgba(255,255,255,.04)' },
             border: { display: false },
           },
@@ -384,16 +476,31 @@
     renderHoldings();
   });
 
-  function refreshAll() {
-    TArenaMarket.tick();
+  async function loadAndRender() {
+    const raw    = await loadHoldings();
+    const quotes = await loadQuotes(raw.map(h => h.symbol));
+    recomputePortfolio(raw, quotes);
     renderHero();
     renderAllocation();
     renderHoldings();
     renderMovers();
+    renderChart();
   }
-  refreshAll();
-  renderChart();
-  setInterval(refreshAll, 5000);
+
+  // Light refresh — just re-quote and recompute (cheap). Skip the
+  // full holdings reload; positions only change via the Trade page,
+  // which navigates away from here.
+  async function refreshQuotes() {
+    if (!portfolio.holdings.length) return;
+    const quotes = await loadQuotes(portfolio.holdings.map(h => h.symbol));
+    recomputePortfolio(portfolio.holdings.map(({symbol,qty,avgCost,type,name}) => ({symbol,qty,avgCost,type,name})), quotes);
+    renderHero();
+    renderAllocation();
+    renderHoldings();
+  }
+
+  loadAndRender();
+  setInterval(refreshQuotes, 15000);
 
   console.log('%cTradeArena · Portfolio loaded', 'color:#e8c060;font-weight:700;');
 </script>

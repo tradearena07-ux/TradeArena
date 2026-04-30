@@ -33,17 +33,28 @@ nav.tarena-nav{
   flex-wrap:wrap;gap:14px;
 }
 .logo{
-  display:flex;align-items:center;gap:12px;
-  font-family:'Cinzel Decorative',serif;
-  font-size:1.3rem;font-weight:700;letter-spacing:.05em;
+  display:flex;align-items:center;gap:10px;
+  font-family:'DM Sans',sans-serif;
+  font-size:1.25rem;font-weight:700;letter-spacing:-.01em;
   color:var(--gold2);
 }
 .logo span{color:var(--cream);}
 .nav-links{
-  display:flex;gap:32px;
-  font-family:'Cinzel',serif;font-size:13.5px;
-  letter-spacing:1px;text-transform:uppercase;color:var(--muted);
+  display:flex;gap:6px;
+  font-family:'DM Sans',sans-serif;font-size:13.5px;
+  font-weight:500;color:var(--muted);
 }
+/* New icon-+-label nav link. Subtle pill background on hover/active so the
+   nav reads more like a modern app shell than the old serif word list. */
+.ta-nav-link{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:8px 14px;border-radius:9999px;
+  color:var(--muted);transition:color .15s, background .15s;
+}
+.ta-nav-link i{font-size:14px;color:inherit;opacity:.85;}
+.ta-nav-link:hover{color:var(--cream);background:rgba(255,255,255,.04);}
+.ta-nav-link.active{color:var(--gold2);background:rgba(201,160,48,.10);}
+.ta-nav-link.active i{opacity:1;}
 .nav-links a{transition:color .2s;}
 .nav-links a:hover{color:var(--cream);}
 .nav-links a.active{color:var(--gold2);}
@@ -58,9 +69,11 @@ nav.tarena-nav{
 .user-pill:hover{border-color:var(--gold);}
 .user-pill .dot{width:8px;height:8px;background:var(--green);border-radius:50%;}
 .btn-account{
-  font-family:'Cinzel',serif;font-size:13.5px;
-  letter-spacing:1px;text-transform:uppercase;color:var(--gold2);
+  font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;
+  color:var(--gold2);padding:8px 16px;border-radius:9999px;
+  border:1px solid rgba(201,160,48,.4);transition:background .15s;
 }
+.btn-account:hover{background:rgba(201,160,48,.08);}
 
 /* ---------- BUTTONS ---------- */
 .btn-gold{
@@ -177,13 +190,66 @@ section{padding:90px 5%;}
 /* ---------- FOOTER ---------- */
 footer.tarena-footer{
   background:var(--navy2);
-  padding:60px 5% 36px;
+  padding:56px 5% 28px;
   border-top:1px solid var(--border);
   margin-top:auto;
+  font-family:'DM Sans',sans-serif;
 }
 footer.tarena-footer .row{
   display:flex;justify-content:space-between;align-items:flex-end;
   max-width:1280px;margin:0 auto;flex-wrap:wrap;gap:24px;
+}
+.ta-foot-grid{
+  max-width:1280px;margin:0 auto;
+  display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;
+  padding-bottom:36px;border-bottom:1px solid var(--bdl);
+}
+.ta-foot-brand .ta-foot-blurb{
+  color:var(--muted);font-size:13.5px;line-height:1.65;
+  max-width:340px;margin-bottom:18px;
+}
+.ta-foot-social{display:flex;gap:10px;}
+.ta-foot-social a{
+  width:36px;height:36px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:var(--navy3);border:1px solid var(--border);color:var(--muted);
+  transition:color .15s, border-color .15s, background .15s;
+}
+.ta-foot-social a:hover{color:var(--gold2);border-color:var(--gold);background:rgba(201,160,48,.08);}
+.ta-foot-col h4{
+  font-size:11px;font-weight:700;color:var(--gold2);
+  text-transform:uppercase;letter-spacing:.14em;margin-bottom:14px;
+}
+.ta-foot-col a{
+  display:block;color:var(--muted);font-size:13.5px;
+  padding:6px 0;transition:color .15s;
+}
+.ta-foot-col a:hover{color:var(--cream);}
+.ta-foot-disclaimer{
+  max-width:1280px;margin:24px auto 0;
+  font-size:11.5px;line-height:1.7;color:var(--muted);
+  background:rgba(255,255,255,.02);border:1px solid var(--bdl);
+  border-radius:10px;padding:14px 18px;
+}
+.ta-foot-disclaimer strong{color:var(--gold2);}
+.ta-foot-bottom{
+  max-width:1280px;margin:24px auto 0;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;
+  font-size:12px;color:var(--muted);
+}
+.ta-foot-bottom-links{display:flex;gap:18px;}
+.ta-foot-bottom-links a{color:var(--muted);transition:color .15s;}
+.ta-foot-bottom-links a:hover{color:var(--cream);}
+.ta-foot-cta{
+  max-width:1280px;margin:18px auto 0;text-align:center;
+  font-size:13.5px;color:var(--muted);
+}
+.ta-foot-cta a{color:var(--cream);}
+.ta-foot-cta a strong{color:var(--gold2);}
+@media(max-width:780px){
+  .ta-foot-grid{grid-template-columns:1fr 1fr;gap:32px;}
+  .ta-foot-brand{grid-column:1 / -1;}
+  .ta-foot-bottom{justify-content:center;text-align:center;}
 }
 
 /* ---------- SPINNER & ERRORS ---------- */
@@ -245,7 +311,7 @@ footer.tarena-footer .row{
   transition:border-color .2s, background .2s;
 }
 .ta-pill:hover{border-color:var(--gold);background:var(--navy4);}
-.ta-pill-name{font-family:'Cinzel',serif;font-size:13px;letter-spacing:.05em;color:var(--cream);}
+.ta-pill-name{font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:600;color:var(--cream);}
 .ta-menu{
   position:absolute;top:calc(100% + 10px);right:0;
   background:var(--navy2);border:1px solid var(--border);
@@ -278,6 +344,9 @@ footer.tarena-footer .row{
 /* ---------- RESPONSIVE ---------- */
 @media(max-width:900px){
   nav.tarena-nav{padding:14px 5%;}
-  .nav-links{order:3;width:100%;justify-content:center;gap:18px;font-size:11.5px;}
+  .nav-links{order:3;width:100%;justify-content:center;gap:6px;font-size:11.5px;flex-wrap:wrap;}
+  .ta-nav-link{padding:6px 10px;}
+  .ta-nav-link span{display:none;}  /* icons-only on small screens */
+  .ta-nav-link i{font-size:16px;}
   .section-title{font-size:1.8rem;}
 }

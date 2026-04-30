@@ -513,11 +513,15 @@
   }
 
   function renderError(container, message) {
+    // Crypto bars come straight from Binance now, so a crypto chart
+    // failing is a real network error. A stock chart failing usually
+    // means the data-proxy edge function isn't deployed yet — surface
+    // a friendly hint without naming a specific upstream provider.
     container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;padding:32px;text-align:center;color:#a8c1db;font-family:'DM Sans',sans-serif;">
       <div>
         <div style="font-size:32px;margin-bottom:12px;opacity:0.6;">📉</div>
         <div style="font-weight:700;color:#fff;margin-bottom:6px;">${message}</div>
-        <div style="font-size:12px;opacity:0.7;">Make sure the data-proxy edge function is deployed and FINNHUB_API_KEY is set.</div>
+        <div style="font-size:12px;opacity:0.7;max-width:360px;line-height:1.5;">Crypto charts work out of the box. Stock charts (ASX/US) need the <code>data-proxy</code> edge function deployed with an Alpaca/Finnhub key.</div>
       </div>
     </div>`;
   }

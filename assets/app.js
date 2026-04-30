@@ -508,25 +508,27 @@
   // Shared NAV / FOOTER
   // ============================================================
   function logoSvg() {
-    return `<svg width="28" height="32" viewBox="0 0 40 46" fill="none" aria-hidden="true">
-      <path d="M20 2L36 9V22C36 31 29 39 20 43C11 39 4 31 4 22V9L20 2Z" fill="#091528" stroke="#c9a030" stroke-width="1"/>
-      <path d="M20 8L30 12.5V21C30 26.5 25.5 31.5 20 34C14.5 31.5 10 26.5 10 21V12.5L20 8Z" fill="none" stroke="#e8c060" stroke-width="0.75" opacity="0.6"/>
-      <polyline points="12,24 17,19 20,22 28,13" fill="none" stroke="#c9a030" stroke-width="1.6" stroke-linecap="round"/>
+    // Transparent background — sits flush on any surface (nav, footer, hero).
+    // Geometric, monoline shield + bull/chart spark. No fills, all strokes.
+    return `<svg width="30" height="34" viewBox="0 0 40 46" fill="none" aria-hidden="true" style="vertical-align:middle;">
+      <path d="M20 2L36 9V22C36 31 29 39 20 43C11 39 4 31 4 22V9L20 2Z" fill="none" stroke="#e8c060" stroke-width="1.6" stroke-linejoin="round"/>
+      <polyline points="11,27 17,21 21,25 29,15" fill="none" stroke="#e8c060" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="29" cy="15" r="1.6" fill="#e8c060"/>
     </svg>`;
   }
 
   function renderNav(activePage) {
     global.__tarena_nav_active = activePage;
     const links = [
-      { id: 'trade',     href: 'trade.html',     label: 'Markets' },
-      { id: 'reels',     href: 'reels.html',     label: 'Reels' },
-      { id: 'schools',   href: 'schools.html',   label: 'Schools' },
-      { id: 'portfolio', href: 'portfolio.html', label: 'Portfolio' },
-      { id: 'profile',   href: 'profile.html',   label: 'Profile' },
+      { id: 'trade',     href: 'trade.html',     label: 'Markets',   icon: 'fa-chart-line' },
+      { id: 'reels',     href: 'reels.html',     label: 'Reels',     icon: 'fa-clapperboard' },
+      { id: 'schools',   href: 'schools.html',   label: 'Learn',     icon: 'fa-graduation-cap' },
+      { id: 'portfolio', href: 'portfolio.html', label: 'Portfolio', icon: 'fa-briefcase' },
+      { id: 'profile',   href: 'profile.html',   label: 'Profile',   icon: 'fa-user' },
     ];
     const session = getSession();
     const linksHtml = links.map(l =>
-      `<a href="${l.href}" class="${activePage === l.id ? 'active' : ''}">${l.label}</a>`
+      `<a href="${l.href}" class="ta-nav-link ${activePage === l.id ? 'active' : ''}"><i class="fa-solid ${l.icon}"></i><span>${l.label}</span></a>`
     ).join('');
 
     let accountHtml;
@@ -552,7 +554,7 @@
             <a href="portfolio.html" class="ta-menu-link"><i class="fa-solid fa-briefcase"></i> Portfolio</a>
             <a href="trade.html" class="ta-menu-link"><i class="fa-solid fa-chart-line"></i> Markets</a>
             <a href="reels.html" class="ta-menu-link"><i class="fa-solid fa-clapperboard"></i> Reels</a>
-            <a href="schools.html" class="ta-menu-link"><i class="fa-solid fa-graduation-cap"></i> Schools</a>
+            <a href="schools.html" class="ta-menu-link"><i class="fa-solid fa-graduation-cap"></i> Learn</a>
             <div class="ta-menu-sep"></div>
             <button class="ta-menu-link ta-menu-logout" id="logoutBtn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out</button>
           </div>
@@ -588,23 +590,83 @@
   }
 
   function renderFooter() {
+    const session = getSession();
+    const year = new Date().getFullYear();
+    // Three-column company footer + disclaimer + (signed-out only) sign-in nudge.
+    const signInHtml = session ? '' : `
+      <div class="ta-foot-cta">
+        <a href="auth.html">Already have an account? <strong>Log in →</strong></a>
+      </div>`;
     const html = `
       <footer class="tarena-footer">
-        <div class="row">
-          <div>
-            <div class="logo" style="font-size:1.5rem;margin-bottom:14px;">${logoSvg()} Trade<span>Arena</span></div>
-            <p class="text-muted" style="max-width:340px;font-size:14px;line-height:1.6;">
-              Strategy-first paper trading for serious traders. Real markets. Zero risk. Built in Sydney.
-            </p>
+        <div class="ta-foot-grid">
+          <div class="ta-foot-brand">
+            <div class="logo" style="font-size:1.4rem;margin-bottom:12px;font-family:'DM Sans',sans-serif;font-weight:700;letter-spacing:-.01em;">
+              ${logoSvg()} <span style="color:var(--cream);">Trade</span><span style="color:var(--gold2);">Arena</span>
+            </div>
+            <p class="ta-foot-blurb">Strategy-first paper trading for Australian uni students. ASX, US &amp; crypto. Zero risk. Built in Sydney.</p>
+            <div class="ta-foot-social">
+              <a href="#" aria-label="Twitter / X"><i class="fa-brands fa-x-twitter"></i></a>
+              <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+              <a href="#" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+              <a href="#" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>
+              <a href="mailto:hello@tradearena.com.au" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
+            </div>
           </div>
-          <div style="text-align:right;">
-            <p style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:.2em;color:var(--gold);margin-bottom:8px;">© 2026 TRADEARENA</p>
-            <a href="auth.html" class="text-muted" style="font-size:13px;">Already have an account? Log in →</a>
+          <div class="ta-foot-col">
+            <h4>Product</h4>
+            <a href="trade.html">Markets</a>
+            <a href="reels.html">Reels</a>
+            <a href="schools.html">Learn</a>
+            <a href="portfolio.html">Portfolio</a>
+          </div>
+          <div class="ta-foot-col">
+            <h4>Company</h4>
+            <a href="#" data-foot="about">About</a>
+            <a href="#" data-foot="contact">Contact</a>
+            <a href="#" data-foot="careers">Careers</a>
+            <a href="#" data-foot="press">Press</a>
+          </div>
+          <div class="ta-foot-col">
+            <h4>Legal</h4>
+            <a href="#" data-foot="terms">Terms of Use</a>
+            <a href="#" data-foot="privacy">Privacy Policy</a>
+            <a href="#" data-foot="disclaimer">Risk Disclaimer</a>
+            <a href="#" data-foot="cookies">Cookie Policy</a>
           </div>
         </div>
+
+        <div class="ta-foot-disclaimer">
+          <strong>Important:</strong> TradeArena is an educational paper-trading platform.
+          All trades are simulated — no real money is at risk and no real orders are executed.
+          Nothing on this site constitutes financial product advice, a recommendation, or an offer
+          to buy or sell any security. Past simulated performance is not indicative of future
+          results. You should consider obtaining personal advice from a licensed Australian
+          financial adviser (AFSL) before making investment decisions. Market data is provided
+          by third-party sources and may be delayed or inaccurate.
+        </div>
+
+        <div class="ta-foot-bottom">
+          <span>© ${year} TradeArena · Made with care in Sydney, Australia</span>
+          <span class="ta-foot-bottom-links">
+            <a href="#" data-foot="status">Status</a>
+            <a href="#" data-foot="changelog">Changelog</a>
+            <a href="#" data-foot="security">Security</a>
+          </span>
+        </div>
+        ${signInHtml}
       </footer>`;
     const mount = document.getElementById('tarena-footer');
-    if (mount) mount.innerHTML = html;
+    if (mount) {
+      mount.innerHTML = html;
+      // Stub the "coming soon" links so accidental clicks don't 404.
+      mount.querySelectorAll('a[data-foot]').forEach(a => {
+        a.addEventListener('click', (e) => {
+          e.preventDefault();
+          alert(a.textContent.trim() + ' — coming soon.');
+        });
+      });
+    }
   }
 
   function fmtMoney(n, opts) {

@@ -33,16 +33,12 @@
     });
   }
 
-  // Mock holdings (shared between trade + portfolio)
-  const holdings = [
-    { symbol: 'BHP.AX', qty: 420,  avgCost: 41.20,  type: 'asx' },
-    { symbol: 'CBA.AX', qty: 85,   avgCost: 148.10, type: 'asx' },
-    { symbol: 'BTC',    qty: 0.12, avgCost: 52000,  type: 'crypto' },
-    { symbol: 'AAPL',   qty: 28,   avgCost: 210,    type: 'us' },
-    { symbol: 'RIO.AX', qty: 65,   avgCost: 112,    type: 'asx' },
-    { symbol: 'MQG.AX', qty: 22,   avgCost: 198,    type: 'asx' },
-    { symbol: 'CSL.AX', qty: 12,   avgCost: 305,    type: 'asx' },
-  ];
+  // Holdings start EMPTY for every visitor. Real positions are loaded
+  // from Supabase (`get_my_holdings()` RPC) on the portfolio page; the
+  // home ticker and trade page no longer rely on this array. Kept as
+  // an exported empty array for backward compat with any older code
+  // path that still references TArenaMarket.holdings.
+  const holdings = [];
 
   function holdingValue(h) {
     const m = find(h.symbol);
