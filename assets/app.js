@@ -498,10 +498,17 @@
       hue: h1,
     };
   }
-  function avatarHtml(emailOrUser, size) {
+  // avatarHtml(user, size, opts)
+  //   opts.gold = true  → force the brand gold gradient (used by the user
+  //   pill so it stays visually consistent across every page). When gold
+  //   is omitted, the avatar uses a deterministic per-email hue so user
+  //   avatars in feeds (reels, leaderboards) remain distinguishable.
+  function avatarHtml(emailOrUser, size, opts) {
     size = size || 36;
-    const a = getAvatar(emailOrUser);
-    return `<div class="ta-avatar" style="width:${size}px;height:${size}px;background:${a.gradient};font-size:${Math.round(size*0.38)}px;">${a.initials}</div>`;
+    opts = opts || {};
+    const a    = getAvatar(emailOrUser);
+    const grad = opts.gold ? 'linear-gradient(135deg,#c9a030,#e8c060)' : a.gradient;
+    return `<div class="ta-avatar" style="width:${size}px;height:${size}px;background:${grad};font-size:${Math.round(size*0.38)}px;">${a.initials}</div>`;
   }
 
   // ============================================================
@@ -607,23 +614,29 @@
     let drawerAccountHtml;
     if (session) {
       const u = session.user;
+      // User pill — gold-gradient avatar, handle in cream, chevron, and a
+      // 4-item dropdown (My Profile / Portfolio / Trade / Sign Out). The
+      // .ta-pill / .ta-menu CSS lives in assets/styles.css and is shared
+      // by trade.html so the component looks identical on every page.
       accountHtml = `
         <div class="ta-account-wrap">
           <button class="ta-pill" id="userPill" aria-label="Open account menu">
-            ${avatarHtml(u, 32)}
+            ${avatarHtml(u, 30, { gold: true })}
+            <span class="ta-pill-name">${u.handle}</span>
             <i class="fa-solid fa-chevron-down" style="font-size:10px;color:var(--muted);"></i>
           </button>
           <div class="ta-menu" id="userMenu">
             <a href="profile.html" class="ta-menu-row">
-              ${avatarHtml(u, 38)}
+              ${avatarHtml(u, 38, { gold: true })}
               <div>
                 <div style="font-weight:700;color:var(--cream);">${u.handle}</div>
                 <div class="text-muted" style="font-size:11.5px;">${u.email}</div>
               </div>
             </a>
             <div class="ta-menu-sep"></div>
-            <a href="profile.html" class="ta-menu-link"><i class="fa-solid fa-user"></i> View profile</a>
+            <a href="profile.html" class="ta-menu-link"><i class="fa-solid fa-user"></i> My Profile</a>
             <a href="portfolio.html" class="ta-menu-link"><i class="fa-solid fa-briefcase"></i> Portfolio</a>
+            <a href="trade.html" class="ta-menu-link"><i class="fa-solid fa-chart-line"></i> Trade</a>
             <div class="ta-menu-sep"></div>
             <button class="ta-menu-link ta-menu-logout" id="logoutBtn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out</button>
           </div>

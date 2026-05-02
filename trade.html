@@ -57,25 +57,11 @@
     .tn-filt{padding:6px 11px;background:var(--navy3);border:1px solid var(--border);color:var(--muted);
              font-size:11px;font-weight:600;border-radius:9999px;cursor:pointer;letter-spacing:.04em;}
     .tn-filt.on{background:rgba(201,160,48,.12);border-color:var(--gold);color:var(--gold2);}
-    .tn-user{position:relative;display:flex;align-items:center;gap:8px;background:var(--navy3);
-             border:1px solid var(--border);padding:5px 12px 5px 5px;border-radius:9999px;cursor:pointer;}
-    .tn-user:hover{border-color:rgba(201,160,48,.5);}
-    .tn-user .av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));
-                 display:flex;align-items:center;justify-content:center;color:#1a1208;font-weight:800;font-size:12px;}
-    .tn-user .h{font-size:12px;font-weight:600;color:var(--cream);max-width:120px;
-                white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .tn-user .caret{color:var(--muted);font-size:10px;}
-    .tn-menu{position:absolute;top:calc(100% + 8px);right:0;min-width:200px;background:var(--navy3);
-             border:1px solid var(--border);border-radius:11px;padding:6px;display:none;z-index:120;
-             box-shadow:0 14px 40px rgba(0,0,0,.5);}
-    .tn-menu.open{display:block;}
-    .tn-menu a{display:flex;align-items:center;gap:9px;padding:8px 11px;font-size:12.5px;color:var(--cream);
-               border-radius:7px;text-decoration:none;cursor:pointer;}
-    .tn-menu a i{width:14px;color:var(--gold2);font-size:11px;}
-    .tn-menu a:hover{background:rgba(201,160,48,.08);}
-    .tn-menu hr{border:none;border-top:1px solid var(--bdl);margin:5px 0;}
-    .tn-menu .so{color:var(--red);}
-    .tn-menu .so i{color:var(--red);}
+    /* User pill is the shared .ta-pill / .ta-menu component from
+       assets/styles.css. We don't redefine it here so the look stays
+       identical to every other page. The only page-specific tweak is
+       a slightly tighter z-index above the chart canvas. */
+    .ta-account-wrap{z-index:120;}
 
     /* ---------- Stats bar ---------- */
     .sb{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:14px 22px;border-bottom:1px solid var(--bdl);}
@@ -244,18 +230,10 @@
     <button class="tn-filt"    data-m="crypto">Crypto</button>
     <button class="tn-filt"    data-m="forex">Forex</button>
   </div>
-  <div class="tn-user" id="userPill">
-    <div class="av" id="userAv">U</div>
-    <div class="h" id="userH">user</div>
-    <i class="fa-solid fa-chevron-down caret"></i>
-    <div class="tn-menu" id="userMenu">
-      <a href="profile.html"><i class="fa-regular fa-user"></i>View profile</a>
-      <a href="portfolio.html"><i class="fa-solid fa-briefcase"></i>Portfolio</a>
-      <a href="trade.html"><i class="fa-solid fa-chart-line"></i>Trade</a>
-      <hr/>
-      <a class="so" id="signOutBtn"><i class="fa-solid fa-arrow-right-from-bracket"></i>Sign out</a>
-    </div>
-  </div>
+  <!-- User pill: rendered by JS below using TArenaUI.avatarHtml so it
+       uses the exact same .ta-pill / .ta-menu component as every other
+       page (renderNav in assets/app.js). -->
+  <div id="userPillSlot"></div>
 </header>
 
 <!-- ============ Stats bar ============ -->
@@ -525,19 +503,44 @@ function icnLabel(sym) {
 }
 
 // ============ USER PILL (top right) ============
+// We render the same .ta-pill / .ta-menu markup that renderNav() emits
+// on every other page so the avatar pill is visually identical project-
+// wide. Wiring (toggle on click, close on outside-click, sign-out) is
+// duplicated here rather than imported because trade.html doesn't call
+// renderNav — it has its own custom Groww-style topbar.
 (function userPill() {
-  const email   = (session.user && session.user.email) || 'user';
-  const handle  = (session.user && session.user.user_metadata && session.user.user_metadata.handle)
-                || email.split('@')[0];
-  document.getElementById('userAv').textContent = (handle[0] || 'U').toUpperCase();
-  document.getElementById('userH').textContent  = handle;
+  const u = session.user;
+  document.getElementById('userPillSlot').innerHTML = `
+    <div class="ta-account-wrap">
+      <button class="ta-pill" id="userPill" aria-label="Open account menu">
+        ${TArenaUI.avatarHtml(u, 30, { gold: true })}
+        <span class="ta-pill-name">${esc(u.handle)}</span>
+        <i class="fa-solid fa-chevron-down" style="font-size:10px;color:var(--muted);"></i>
+      </button>
+      <div class="ta-menu" id="userMenu">
+        <a href="profile.html" class="ta-menu-row">
+          ${TArenaUI.avatarHtml(u, 38, { gold: true })}
+          <div>
+            <div style="font-weight:700;color:var(--cream);">${esc(u.handle)}</div>
+            <div class="text-muted" style="font-size:11.5px;">${esc(u.email || '')}</div>
+          </div>
+        </a>
+        <div class="ta-menu-sep"></div>
+        <a href="profile.html"   class="ta-menu-link"><i class="fa-solid fa-user"></i> My Profile</a>
+        <a href="portfolio.html" class="ta-menu-link"><i class="fa-solid fa-briefcase"></i> Portfolio</a>
+        <a href="trade.html"     class="ta-menu-link"><i class="fa-solid fa-chart-line"></i> Trade</a>
+        <div class="ta-menu-sep"></div>
+        <button class="ta-menu-link ta-menu-logout" id="signOutBtn">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out
+        </button>
+      </div>
+    </div>`;
   const pill = document.getElementById('userPill');
   const menu = document.getElementById('userMenu');
-  pill.addEventListener('click', e => {
-    e.stopPropagation();
-    menu.classList.toggle('open');
+  pill.addEventListener('click', e => { e.stopPropagation(); menu.classList.toggle('open'); });
+  document.addEventListener('click', e => {
+    if (!menu.contains(e.target) && !pill.contains(e.target)) menu.classList.remove('open');
   });
-  document.addEventListener('click', () => menu.classList.remove('open'));
   document.getElementById('signOutBtn').addEventListener('click', async () => {
     try { await TArenaDB.auth.signOut(); } catch (_) {}
     location.href = 'auth.html';
