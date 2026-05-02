@@ -771,17 +771,38 @@ async function fetchPrices(symbols) {
     );
   }
 
-  // ASX + US stocks via Yahoo Finance direct (CORS-friendly, no API key,
-  // returns price + change + 52w high/low + day volume in one call). This
-  // is the canonical source for both markets — the data-proxy edge fn and
-  // Alpaca sandbox both have failure modes (proxy may not be deployed,
-  // Alpaca sandbox has no ASX and is geo-blocked from some Replit DCs).
+  // ASX + US stocks via the data-proxy edge fn (TArenaDatafeed.fetchQuotes).
+  // The proxy already powers chart bars (Yahoo for *.AX, Finnhub for US,
+  // Binance for crypto) and is CORS-allowlisted from the production origin
+  // — Yahoo /v8/finance/chart called directly from the browser is blocked
+  // by CORS on tradearena.com.au, so the proxy is the only reliable source
+  // for stock quotes in production.
   const stocksToFetch = [...(groups.us || []), ...(groups.asx || [])];
   if (stocksToFetch.length) {
-    tasks.push(fetchExtendedSnapshots(stocksToFetch, out));
+    tasks.push(
+      TArenaDatafeed.fetchQuotes(stocksToFetch)
+        .then(q => {
+          stocksToFetch.forEach(s => {
+            const row = q[s];
+            if (row && typeof row.price === 'number' && row.price > 0) {
+              const c = row.changePct || 0;
+              out[s] = { price: row.price, change: c, changePct: c };
+            }
+          });
+        })
+        .catch(e => console.warn('proxy fetchQuotes failed', e.message))
+    );
   }
 
   await Promise.allSettled(tasks);
+
+  // Best-effort backfill of 52w high/low + day volume from Yahoo direct.
+  // CORS may block this in production — the per-symbol catch in
+  // fetchExtendedSnapshots swallows failures so the table still renders
+  // with proxy prices, just without the 52w columns populated.
+  if (stocksToFetch.length) {
+    await fetchExtendedSnapshots(stocksToFetch, out);
+  }
 
   // Merge into PRICES store, preserving _anchor / fields not refreshed.
   Object.keys(out).forEach(s => {
@@ -804,6 +825,9 @@ const _extCache = {};                   // symbol → { ts, h52, l52, vol }
 // tick overlap on a slow first paint).
 const _EXT_TTL  = 12 * 1000;
 async function fetchExtendedSnapshots(symbols, out) {
+  // Skip on file:// / non-https origins where Yahoo CORS preflight always
+  // fails — saves the network thrash and the noisy console warns.
+  if (typeof location !== 'undefined' && location.protocol === 'file:') return;
   const now = Date.now();
   // Browsers cap concurrent connections per host (~6) and Yahoo throttles
   // bursty clients. Cap to 4 in-flight requests so a 10-stock table doesn't
