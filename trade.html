@@ -158,8 +158,14 @@
     .text-red{color:var(--red);}
     .text-muted{color:var(--muted);}
 
-    /* ---------- 3-column main ---------- */
-    .grid{display:grid;grid-template-columns:280px 1fr 320px;gap:14px;padding:14px 22px;flex:1;min-height:0;}
+    /* ---------- 3-column main ----------
+       NB: do NOT use `flex:1` here.  The body is a flex column and several
+       siblings (markets browser, holdings tabs, footer) live BELOW this
+       grid; flex:1 + min-height:0 forces the grid to shrink under the
+       chart's fixed 420px so the chart visually overflows on top of the
+       markets section.  Sizing the grid to its natural content keeps
+       everything stacking cleanly. */
+    .grid{display:grid;grid-template-columns:280px 1fr 320px;gap:14px;padding:14px 22px;}
     @media(max-width:1280px){.grid{grid-template-columns:240px 1fr 300px;}}
     @media(max-width:1024px){.grid{grid-template-columns:1fr 300px;}.t-watchlist{display:none;}}
     @media(max-width:760px){.grid{grid-template-columns:1fr;padding:12px;}.t-orderpanel{display:none;}}
