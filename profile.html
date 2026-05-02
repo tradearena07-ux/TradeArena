@@ -341,17 +341,48 @@
 
     // Own-profile fallback: if the username lookup missed (stale cache,
     // username changed in DB, etc.) but we know the auth user id, read
-    // the profiles row directly. This guarantees we never show
-    // "Trader not found" for the signed-in user's own page.
+    // the profiles row directly. If still missing (signup completed at
+    // auth layer but the profiles row was never inserted), self-heal by
+    // creating one from session metadata so the user never sees
+    // "Trader not found" on their own page.
     if (isOwnProfile && session.user.id) {
-      const { data: row, error: e2 } = await sb
-        .from('profiles')
-        .select('id,username,display_name,tier,type,university,bio,avatar_color,badges,visibility_mask,created_at')
-        .eq('id', session.user.id)
-        .maybeSingle();
+      const sel = 'id,username,display_name,tier,type,university,bio,avatar_color,badges,visibility_mask,created_at';
+      let { data: row, error: e2 } = await sb
+        .from('profiles').select(sel).eq('id', session.user.id).maybeSingle();
       if (e2) { console.error('[profile] own-profile fallback error', e2); return null; }
-      if (!row) return null;
-      return { ...row, joined_at: row.created_at };
+      if (row) return { ...row, joined_at: row.created_at };
+
+      // Self-heal: create the missing profiles row.
+      console.warn('[profile] no profiles row for', session.user.id, '— self-healing');
+      const u = session.user;
+      const rawName = (u.username || (u.email || '').split('@')[0] || 'trader').toLowerCase();
+      let safe = rawName.replace(/[^a-z0-9_]/g, '');
+      if (!/^[a-z]/.test(safe)) safe = 't' + safe;
+      safe = (safe + 'xxx').slice(0, 20);
+      if (safe.length < 3) safe = (safe + 'aaa').slice(0, 3);
+
+      async function tryInsert(uname) {
+        return await sb.from('profiles').insert({
+          id:           u.id,
+          username:     uname,
+          display_name: u.displayName || uname,
+          university:   u.university || 'Public',
+          type:         u.type || 'public',
+          tier:         u.tier || (u.type === 'student' ? 'Student' : 'Member'),
+          bio:          '',
+        });
+      }
+      let { error: iErr } = await tryInsert(safe);
+      if (iErr && /duplicate|unique/i.test(iErr.message || '')) {
+        const suffix = Math.random().toString(36).slice(2, 6);
+        safe = (safe.slice(0, 16) + suffix).slice(0, 20);
+        ({ error: iErr } = await tryInsert(safe));
+      }
+      if (iErr) { console.error('[profile] self-heal insert failed', iErr); return null; }
+
+      ({ data: row } = await sb.from('profiles').select(sel).eq('id', u.id).maybeSingle());
+      if (TArenaAuth.reloadSession) { try { await TArenaAuth.reloadSession(); } catch (_) {} }
+      return row ? { ...row, joined_at: row.created_at } : null;
     }
     return null;
   }
