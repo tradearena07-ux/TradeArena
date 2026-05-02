@@ -841,6 +841,12 @@ function tfToInterval(tf) {
   return {'1m':60,'5m':300,'15m':900,'1h':3600,'4h':14400,'1D':86400,'1W':604800,'1M':2592000}[tf] || 86400;
 }
 
+// TradeArena tf label → TArenaDatafeed/TradingView resolution string.
+// Used to ask the data layer for the right candle granularity.
+function tfToResolution(tf) {
+  return {'1m':'1','5m':'5','15m':'15','1h':'60','4h':'240','1D':'D','1W':'W','1M':'M'}[tf] || 'D';
+}
+
 // Generate ~120 synthetic candles ending NOW, anchored to the current
 // live price. Walk price backward with a seeded random walk so each
 // candle's close = next candle's open. Last candle close = currentPx.
@@ -921,11 +927,52 @@ function mountChart() {
   chartRO.observe(host);
 }
 
-function refreshChart() {
+// Token used to ignore stale fetchBars responses when the user
+// changes symbol/timeframe before the previous fetch resolves.
+let chartReqId = 0;
+
+async function refreshChart() {
   if (!candleSeries) return;
+  const def = CATALOG[state.symbol];
+  if (!def) return;
+  const tf       = state.tf;
+  const interval = tfToInterval(tf);              // seconds per candle
+  const reqId    = ++chartReqId;
+  // Show synthetic placeholder immediately so the chart is never empty
+  // while the real bars load (especially on slow ASX/US proxy hops).
   const px = (PRICES[state.symbol] && PRICES[state.symbol].price) || 100;
-  candleSeries.setData(genCandles(px, state.tf));
+  candleSeries.setData(genCandles(px, tf));
   chart.timeScale().fitContent();
+  // Forex has no bars provider — synthetic is the final answer.
+  if (def.market === 'forex') return;
+  // Fetch real OHLCV.  Window = 200 candles back from now so all timeframes
+  // get a useful history length without hammering the upstream.
+  const toSec   = Math.floor(Date.now() / 1000);
+  const fromSec = toSec - 200 * interval;
+  try {
+    const bars = await TArenaDatafeed.fetchBars(
+      state.symbol, tfToResolution(tf), fromSec, toSec
+    );
+    // Bail if the user navigated to another symbol/tf in the meantime.
+    if (reqId !== chartReqId) return;
+    if (!bars || !bars.length) return;
+    // Datafeed returns {t:ms, o, h, l, c, v}; LightweightCharts wants
+    // {time:sec, open, high, low, close}.  De-dup + sort defensively.
+    const seen = new Set();
+    const out  = [];
+    for (const b of bars) {
+      const t = Math.floor(b.t / 1000);
+      if (seen.has(t)) continue;
+      seen.add(t);
+      out.push({ time: t, open: +b.o, high: +b.h, low: +b.l, close: +b.c });
+    }
+    out.sort((a, b) => a.time - b.time);
+    candleSeries.setData(out);
+    chart.timeScale().fitContent();
+  } catch (e) {
+    // Stick with the synthetic placeholder; surface in console for ops.
+    console.warn('chart bars failed for', state.symbol, e.message);
+  }
 }
 
 // Track the resize observer + poll so we can tear them down cleanly
@@ -1398,6 +1445,12 @@ function selectSymbolFromMarkets(sym) {
 }
 window.selectSymbolFromMarkets = selectSymbolFromMarkets;
 
+// When the user clicks a market sub-tab (ASX / US STOCKS / CRYPTO / FOREX)
+// they expect the *chart* to switch too — not just the markets table at the
+// bottom. Jump to a sensible default for each market when the currently
+// charted symbol doesn't belong to that market. ALL MARKETS leaves the
+// chart alone (it's a filter, not a navigation).
+const MARKET_DEFAULT = { asx: 'BHP.AX', us: 'AAPL', crypto: 'BTC', forex: 'AUDUSD' };
 function setMarketsTab(t) {
   marketsTab = t;
   state.mkt = t;
@@ -1405,6 +1458,12 @@ function setMarketsTab(t) {
   renderMarkets();
   if ((t === 'all' || t === 'crypto') && !cryptoTop.length) fetchCoinGeckoTop().then(renderMarkets);
   if ((t === 'all' || t === 'forex')  && !forexCur)        fetchForex().then(renderMarkets);
+  // Auto-jump chart symbol if user navigated into a different market.
+  const def = CATALOG[state.symbol];
+  const targetSym = MARKET_DEFAULT[t];
+  if (targetSym && (!def || def.market !== t) && CATALOG[targetSym]) {
+    selectSymbol(targetSym);
+  }
 }
 window.setMarketsTab = setMarketsTab;
 

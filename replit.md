@@ -32,8 +32,9 @@ TradeArena is built as a pure static HTML/CSS/JS application with no build step,
     - **Forgot password**: Email-OTP verification for password reset.
     - **Security**: Supabase RLS policies enforce authorization; publishable key is client-side safe.
 - **Data Handling**:
-    - **Market Data**: `TArenaDatafeed` handles live market data. Crypto data directly from Binance public REST/WebSocket; stock data (ASX, US) via a `data-proxy` Edge Function.
-    - **Charting**: `TArenaChart` dynamically mounts either TradingView Advanced Charts (if available) or Lightweight Charts as a fallback, with custom themes and data adapters.
+    - **Market Data**: `TArenaDatafeed` handles live market data. Crypto data directly from Binance public REST/WebSocket; stock data (ASX, US) via a `data-proxy` Edge Function (deploy with `bash scripts/deploy-data-proxy.sh` after setting `SUPABASE_ACCESS_TOKEN` and `FINNHUB_API_KEY` secrets).
+    - **Charting**: `TArenaChart` dynamically mounts either TradingView Advanced Charts (if available) or Lightweight Charts as a fallback, with custom themes and data adapters. The Lightweight Charts surface on `trade.html` calls `TArenaDatafeed.fetchBars` for real OHLCV (Binance for crypto, proxy for ASX/US) and falls back to a synthetic seeded random walk when the upstream is unreachable.
+    - **Trade page tabs**: The top sub-tabs (ASX / US Stocks / Crypto / Forex) auto-jump the chart symbol to a market-default (BHP.AX / AAPL / BTC / AUDUSD) and filter the Markets browser below; ALL MARKETS leaves the chart alone.
     - **Quant Metrics**: `TArenaMetrics` provides pure math helpers for profile scorecard calculations (e.g., P&L, Sharpe, Drawdown).
     - **Reels Logic**: `TArenaReels` module contains taxonomy, position sizing, and risk-reward calculations.
 - **Page-Specific Features**:
