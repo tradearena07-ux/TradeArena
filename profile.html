@@ -253,19 +253,31 @@
 <script src="assets/market.js"></script>
 <script src="assets/metrics.js"></script>
 <script>
-(() => {
+(async () => {
   'use strict';
 
-  const session = TArenaAuth.requireAuth();
-  if (!session) throw new Error('redirect');
+  let session = TArenaAuth.requireAuth();
+  if (!session) return;
   TArenaUI.renderNav('profile');
   TArenaUI.renderFooter();
 
   // ---- Page state ------------------------------------------------
   const sb = window.TArenaDB;
   const params = new URLSearchParams(location.search);
-  const wantedHandle = (params.get('u') || session.user.username).replace(/^@/, '').toLowerCase();
-  const isOwnProfile = wantedHandle === session.user.username.toLowerCase();
+
+  // The sync session cache primed from localStorage may carry a stale
+  // username (email-derived fallback) when the profiles row hasn't been
+  // hydrated yet. For own-profile views this would cause the username
+  // RPC to miss and render "Trader not found." Force a server hydrate
+  // first so we always look up the real profiles.username.
+  const hasUParam = !!params.get('u');
+  if (!hasUParam && TArenaAuth.reloadSession) {
+    try { const fresh = await TArenaAuth.reloadSession(); if (fresh) session = fresh; } catch (_) {}
+  }
+
+  const ownUsername = (session.user.username || '').toLowerCase();
+  const wantedHandle = (params.get('u') || ownUsername).replace(/^@/, '').toLowerCase();
+  const isOwnProfile = !hasUParam || wantedHandle === ownUsername;
 
   // Default visibility mask matches the SQL default — everything but
   // holdings/cash starts visible. We only fall back to this when a
@@ -322,10 +334,26 @@
   }
 
   async function loadProfile() {
+    // Try the username RPC first (works for any public profile).
     const { data, error } = await sb.rpc('get_profile_card', { p_username: wantedHandle });
-    if (error) { console.error(error); return null; }
-    if (!data || !data.length) return null;
-    return data[0];
+    if (error) console.warn('[profile] get_profile_card error', error);
+    if (data && data.length) return data[0];
+
+    // Own-profile fallback: if the username lookup missed (stale cache,
+    // username changed in DB, etc.) but we know the auth user id, read
+    // the profiles row directly. This guarantees we never show
+    // "Trader not found" for the signed-in user's own page.
+    if (isOwnProfile && session.user.id) {
+      const { data: row, error: e2 } = await sb
+        .from('profiles')
+        .select('id,username,display_name,tier,type,university,bio,avatar_color,badges,visibility_mask,created_at')
+        .eq('id', session.user.id)
+        .maybeSingle();
+      if (e2) { console.error('[profile] own-profile fallback error', e2); return null; }
+      if (!row) return null;
+      return { ...row, joined_at: row.created_at };
+    }
+    return null;
   }
 
   async function loadFollowStats(ownerId) {
