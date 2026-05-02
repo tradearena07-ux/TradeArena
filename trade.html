@@ -57,10 +57,88 @@
     .tn-search .res:hover{background:rgba(201,160,48,.06);}
     .tn-search .res .l{font-weight:700;font-size:12.5px;color:var(--cream);}
     .tn-search .res .n{font-size:10.5px;color:var(--muted);margin-top:1px;}
-    .tn-filters{display:flex;gap:5px;}
-    .tn-filt{padding:6px 11px;background:var(--navy3);border:1px solid var(--border);color:var(--muted);
-             font-size:11px;font-weight:600;border-radius:9999px;cursor:pointer;letter-spacing:.04em;}
-    .tn-filt.on{background:rgba(201,160,48,.12);border-color:var(--gold);color:var(--gold2);}
+    /* Markets sub-tabs — Groww-style underline tabs in navy/gold. */
+    .tn-filters{display:flex;gap:0;align-items:center;}
+    .tn-filt{padding:8px 14px;background:transparent;border:none;border-bottom:2px solid transparent;
+             color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.05em;
+             font-family:inherit;transition:color .15s, border-color .15s;text-transform:uppercase;}
+    .tn-filt:hover{color:var(--cream);}
+    .tn-filt.on{color:var(--gold2);border-bottom-color:var(--gold);}
+
+    /* ---------- Markets block (Groww-style hub below the chart) ---------- */
+    .mb-wrap{padding:0 22px 22px;}
+    @media(max-width:760px){.mb-wrap{padding:0 14px 14px;}}
+    .mb-section{background:var(--navy2);border:1px solid var(--bdl);border-radius:13px;padding:16px 18px;margin-bottom:14px;}
+    .mb-section-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:12px;flex-wrap:wrap;}
+    .mb-title{font-family:'Cinzel',serif;font-size:1.05rem;color:var(--cream);font-weight:700;letter-spacing:.02em;}
+    .mb-meta{font-size:11px;color:var(--muted);display:inline-flex;align-items:center;gap:6px;font-weight:600;}
+    .mb-meta .live{width:6px;height:6px;border-radius:50%;background:var(--green);animation:livePulse 2s infinite;}
+    .mb-toggle{display:flex;gap:2px;background:var(--navy3);border:1px solid var(--bdl);border-radius:8px;padding:3px;}
+    .mb-tg{padding:5px 12px;background:transparent;border:none;color:var(--muted);font-size:11.5px;font-weight:600;cursor:pointer;border-radius:6px;font-family:inherit;display:inline-flex;align-items:center;gap:5px;letter-spacing:.04em;}
+    .mb-tg.on{background:rgba(201,160,48,.15);color:var(--gold2);}
+    .mb-link{background:transparent;border:none;color:var(--gold2);font-size:12px;font-weight:700;cursor:pointer;padding:0;display:inline-flex;align-items:center;gap:4px;font-family:inherit;letter-spacing:.04em;}
+    .mb-link:hover{color:var(--gold);}
+    .mb-search{background:var(--navy3);border:1px solid var(--bdl);color:var(--cream);padding:7px 12px;border-radius:8px;font-size:12.5px;font-family:inherit;min-width:180px;outline:none;transition:border-color .15s;}
+    .mb-search:focus{border-color:var(--gold);}
+
+    /* All-markets · Top movers grid */
+    .mv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px;}
+    .mv-card{background:var(--navy3);border:1px solid var(--bdl);border-radius:10px;padding:12px;cursor:pointer;transition:all .14s;}
+    .mv-card:hover{border-color:var(--gold);transform:translateY(-1px);}
+    .mv-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;gap:6px;}
+    .mv-sym{font-size:13px;font-weight:700;color:var(--cream);letter-spacing:.03em;}
+    .mv-name{font-size:11px;color:var(--muted);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .mv-price{font-size:14px;font-weight:700;color:var(--cream);font-feature-settings:'tnum';}
+    .mv-chg{font-size:12px;font-weight:700;margin-top:2px;font-feature-settings:'tnum';}
+
+    /* Most-traded scroller */
+    .mt-row{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin;}
+    .mt-row::-webkit-scrollbar{height:6px;}
+    .mt-row::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+    .mt-card{flex:0 0 200px;background:var(--navy3);border:1px solid var(--bdl);border-radius:10px;padding:12px;cursor:pointer;transition:all .14s;}
+    .mt-card:hover{border-color:var(--gold);}
+    .mt-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+    .mt-sym{font-size:13px;font-weight:700;color:var(--cream);}
+    .mt-name{font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;}
+    .mt-bot{display:flex;justify-content:space-between;align-items:baseline;}
+    .mt-price{font-size:13.5px;font-weight:700;color:var(--cream);font-feature-settings:'tnum';}
+    .mt-chg{font-size:11.5px;font-weight:700;font-feature-settings:'tnum';}
+
+    /* Crypto rows + sparkline */
+    .cy-list{display:flex;flex-direction:column;gap:6px;}
+    .cy-row{display:grid;grid-template-columns:1fr 110px auto;align-items:center;gap:16px;padding:10px 12px;background:var(--navy3);border:1px solid var(--bdl);border-radius:9px;cursor:pointer;transition:all .14s;}
+    .cy-row:hover{border-color:var(--gold);}
+    .cy-l{display:flex;align-items:center;gap:10px;min-width:0;}
+    .cy-img{width:26px;height:26px;border-radius:50%;flex-shrink:0;}
+    .cy-sym{font-size:13px;font-weight:700;color:var(--cream);}
+    .cy-name{font-size:11px;color:var(--muted);}
+    .cy-spark{display:flex;align-items:center;justify-content:center;}
+    .cy-r{text-align:right;}
+    .cy-price{font-size:13.5px;font-weight:700;color:var(--cream);font-feature-settings:'tnum';}
+    .cy-chg{font-size:11.5px;font-weight:700;margin-top:2px;font-feature-settings:'tnum';}
+
+    /* Forex rows + 2-col table */
+    .fx-list{display:flex;flex-direction:column;gap:6px;}
+    .fx-row{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:16px;padding:10px 14px;background:var(--navy3);border:1px solid var(--bdl);border-radius:9px;cursor:pointer;transition:all .14s;}
+    .fx-row:hover{border-color:var(--gold);}
+    .fx-pair{font-size:13px;font-weight:700;color:var(--cream);letter-spacing:.03em;}
+    .fx-rate{font-size:14px;font-weight:700;color:var(--cream);font-feature-settings:'tnum';}
+    .fx-chg{font-size:11.5px;font-weight:700;min-width:60px;text-align:right;font-feature-settings:'tnum';}
+    .fx-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+    @media(max-width:760px){.fx-grid{grid-template-columns:1fr;}}
+
+    /* Sortable table tweaks */
+    .mb-tbl thead th{user-select:none;}
+    .mb-tbl thead th[data-sort]{cursor:pointer;}
+    .mb-tbl thead th[data-sort]:hover{color:var(--gold2);}
+    .mb-tbl tbody tr{transition:background .12s;}
+    .mb-tbl tbody tr:hover{background:rgba(201,160,48,.05);}
+
+    @media(max-width:600px){
+      .mv-grid{grid-template-columns:repeat(2,1fr);}
+      .cy-row{grid-template-columns:1fr auto;gap:10px;}
+      .cy-spark{display:none;}
+    }
     /* User pill is the shared .ta-pill / .ta-menu component from
        assets/styles.css. We don't redefine it here so the look stays
        identical to every other page. The only page-specific tweak is
@@ -228,10 +306,10 @@
     <span class="ta-kbd" id="searchKbd">⌘K</span>
     <div class="results" id="searchResults"></div>
   </div>
-  <div class="tn-filters" id="mktTabs">
-    <button class="tn-filt on" data-m="all">All</button>
+  <div class="tn-filters" id="mktTabs" role="tablist" aria-label="Markets">
+    <button class="tn-filt on" data-m="all">All Markets</button>
     <button class="tn-filt"    data-m="asx">ASX</button>
-    <button class="tn-filt"    data-m="us">US</button>
+    <button class="tn-filt"    data-m="us">US Stocks</button>
     <button class="tn-filt"    data-m="crypto">Crypto</button>
     <button class="tn-filt"    data-m="forex">Forex</button>
   </div>
@@ -367,12 +445,16 @@
 
 </div>
 
-<!-- ============ Bottom tabs ============ -->
+<!-- ============ Markets browser (Groww-style hub) ============ -->
+<section class="mb-wrap">
+  <div id="marketsBody"><div class="mb-section"><div class="tbl-empty">Loading markets…</div></div></div>
+</section>
+
+<!-- ============ Bottom tabs (Holdings + Order history) ============ -->
 <section class="lower">
   <div class="lower-tabs">
     <button class="lower-tab on" data-t="hold">Holdings</button>
     <button class="lower-tab"    data-t="orders">Order history</button>
-    <button class="lower-tab"    data-t="movers">Market movers</button>
   </div>
   <div class="lower-body" id="lowerBody">
     <div class="tbl-empty">Loading…</div>
@@ -409,23 +491,31 @@ TArenaUI.renderFooter();
 // `market` drives icon colour, exchange badge and live-price routing.
 const CATALOG = {
   // ASX (priced via TArenaDatafeed → Yahoo proxy; Alpaca has no ASX)
-  'BHP.AX': { name: 'BHP Group',           market: 'asx',    exchange: 'ASX' },
-  'CBA.AX': { name: 'Commonwealth Bank',   market: 'asx',    exchange: 'ASX' },
-  'MQG.AX': { name: 'Macquarie Group',     market: 'asx',    exchange: 'ASX' },
-  'WDS.AX': { name: 'Woodside Energy',     market: 'asx',    exchange: 'ASX' },
-  'RIO.AX': { name: 'Rio Tinto',           market: 'asx',    exchange: 'ASX' },
-  'CSL.AX': { name: 'CSL Limited',         market: 'asx',    exchange: 'ASX' },
+  'BHP.AX': { name: 'BHP Group',                 market: 'asx',    exchange: 'ASX' },
+  'CBA.AX': { name: 'Commonwealth Bank',         market: 'asx',    exchange: 'ASX' },
+  'NAB.AX': { name: 'National Australia Bank',   market: 'asx',    exchange: 'ASX' },
+  'WBC.AX': { name: 'Westpac Banking',           market: 'asx',    exchange: 'ASX' },
+  'ANZ.AX': { name: 'ANZ Group',                 market: 'asx',    exchange: 'ASX' },
+  'MQG.AX': { name: 'Macquarie Group',           market: 'asx',    exchange: 'ASX' },
+  'WDS.AX': { name: 'Woodside Energy',           market: 'asx',    exchange: 'ASX' },
+  'RIO.AX': { name: 'Rio Tinto',                 market: 'asx',    exchange: 'ASX' },
+  'FMG.AX': { name: 'Fortescue Metals',          market: 'asx',    exchange: 'ASX' },
+  'CSL.AX': { name: 'CSL Limited',               market: 'asx',    exchange: 'ASX' },
   // US (Alpaca direct, fallback to data-proxy)
   'AAPL':   { name: 'Apple Inc.',          market: 'us',     exchange: 'NASDAQ' },
-  'TSLA':   { name: 'Tesla Inc.',          market: 'us',     exchange: 'NASDAQ' },
-  'NVDA':   { name: 'NVIDIA Corp.',        market: 'us',     exchange: 'NASDAQ' },
   'MSFT':   { name: 'Microsoft Corp.',     market: 'us',     exchange: 'NASDAQ' },
-  'AMZN':   { name: 'Amazon.com Inc.',     market: 'us',     exchange: 'NASDAQ' },
   'GOOGL':  { name: 'Alphabet Inc.',       market: 'us',     exchange: 'NASDAQ' },
+  'AMZN':   { name: 'Amazon.com Inc.',     market: 'us',     exchange: 'NASDAQ' },
+  'NVDA':   { name: 'NVIDIA Corp.',        market: 'us',     exchange: 'NASDAQ' },
+  'TSLA':   { name: 'Tesla Inc.',          market: 'us',     exchange: 'NASDAQ' },
+  'META':   { name: 'Meta Platforms',      market: 'us',     exchange: 'NASDAQ' },
+  'NFLX':   { name: 'Netflix Inc.',        market: 'us',     exchange: 'NASDAQ' },
   // Crypto (CoinGecko direct)
   'BTC':    { name: 'Bitcoin',             market: 'crypto', exchange: 'Crypto', cgId: 'bitcoin' },
   'ETH':    { name: 'Ethereum',            market: 'crypto', exchange: 'Crypto', cgId: 'ethereum' },
   'SOL':    { name: 'Solana',              market: 'crypto', exchange: 'Crypto', cgId: 'solana' },
+  'BNB':    { name: 'BNB',                 market: 'crypto', exchange: 'Crypto', cgId: 'binancecoin' },
+  'XRP':    { name: 'XRP',                 market: 'crypto', exchange: 'Crypto', cgId: 'ripple' },
   // Forex (Frankfurter direct)
   'AUDUSD': { name: 'AUD / USD',           market: 'forex',  exchange: 'FX', fxBase: 'AUD', fxQuote: 'USD' },
   'EURUSD': { name: 'EUR / USD',           market: 'forex',  exchange: 'FX', fxBase: 'EUR', fxQuote: 'USD' },
@@ -632,7 +722,8 @@ async function fetchPrices(symbols) {
           groups.crypto.forEach(s => {
             const row = j[CATALOG[s].cgId];
             if (row && typeof row.usd === 'number') {
-              out[s] = { price: row.usd, change: row.usd_24h_change || 0 };
+              const cg = row.usd_24h_change || 0;
+              out[s] = { price: row.usd, change: cg, changePct: cg };
             }
           });
         })
@@ -643,7 +734,7 @@ async function fetchPrices(symbols) {
   // Forex via Frankfurter (USD-base for AUD/EUR/GBP/JPY)
   if (groups.forex.length) {
     tasks.push(
-      fetch('https://api.frankfurter.dev/v2/latest?base=USD&symbols=AUD,EUR,GBP,JPY')
+      fetch('https://api.frankfurter.dev/v1/latest?base=USD&symbols=AUD,EUR,GBP,JPY')
         .then(r => r.ok ? r.json() : Promise.reject(new Error('fx ' + r.status)))
         .then(j => {
           if (!j || !j.rates) return;
@@ -658,9 +749,11 @@ async function fetchPrices(symbols) {
               const prev = (PRICES[s] && PRICES[s].price) || rate;
               const chg  = prev ? ((rate - prev) / prev) * 100 : 0;
               // Carry over a rolling change pct so the UI shows movement.
-              out[s] = { price: rate, change: (PRICES[s] && PRICES[s]._anchor)
+              const fxChg = (PRICES[s] && PRICES[s]._anchor)
                 ? ((rate - PRICES[s]._anchor) / PRICES[s]._anchor) * 100
-                : chg, _anchor: PRICES[s] && PRICES[s]._anchor || rate };
+                : chg;
+              out[s] = { price: rate, change: fxChg, changePct: fxChg,
+                _anchor: PRICES[s] && PRICES[s]._anchor || rate };
             }
           });
         })
@@ -684,7 +777,7 @@ async function fetchPrices(symbols) {
             const prev = r && r.prevDailyBar && r.prevDailyBar.c;
             if (p) {
               const chg = prev ? ((p - prev) / prev) * 100 : 0;
-              out[s] = { price: p, change: chg, _hi: r.dailyBar?.h, _lo: r.dailyBar?.l, _vol: r.dailyBar?.v };
+              out[s] = { price: p, change: chg, changePct: chg, _hi: r.dailyBar?.h, _lo: r.dailyBar?.l, _vol: r.dailyBar?.v };
             }
           });
         })
@@ -696,7 +789,8 @@ async function fetchPrices(symbols) {
             groups.us.forEach(s => {
               const row = q[s];
               if (row && typeof row.price === 'number') {
-                out[s] = { price: row.price, change: row.changePct || 0 };
+                const c = row.changePct || 0;
+                out[s] = { price: row.price, change: c, changePct: c };
               }
             });
           } catch (e2) {
@@ -714,7 +808,8 @@ async function fetchPrices(symbols) {
           groups.asx.forEach(s => {
             const row = q[s];
             if (row && typeof row.price === 'number') {
-              out[s] = { price: row.price, change: row.changePct || 0 };
+              const c = row.changePct || 0;
+              out[s] = { price: row.price, change: c, changePct: c };
             }
           });
         })
@@ -904,11 +999,13 @@ function selectSymbol(s) {
 }
 window.selectSymbol = selectSymbol;
 
-// ============ MARKET FILTER + SEARCH ============
+// ============ MARKET TABS + SEARCH ============
+// Top tabs (All Markets / ASX / US Stocks / Crypto / Forex) drive both
+// the search-result filter AND the Markets browser below the chart.
 document.getElementById('mktTabs').addEventListener('click', e => {
-  if (!e.target.dataset.m) return;
-  state.mkt = e.target.dataset.m;
-  document.querySelectorAll('.tn-filt').forEach(b => b.classList.toggle('on', b === e.target));
+  const t = e.target.dataset.m;
+  if (!t) return;
+  setMarketsTab(t);
 });
 
 const searchBox = document.getElementById('searchBox');
@@ -1163,34 +1260,447 @@ function renderLower() {
       <th>Side</th><th>Symbol</th><th class="num">Qty</th><th class="num">Price</th><th class="num">Total</th><th>Time</th>
     </tr></thead><tbody>${rows}</tbody></table>`;
   }
-  else { // movers — top 5 gainers + top 5 losers across CATALOG
-    const items = Object.keys(CATALOG)
-      .map(s => ({ s, def: CATALOG[s], px: PRICES[s] }))
-      .filter(x => x.px && typeof x.px.change === 'number')
-      .sort((a, b) => b.px.change - a.px.change);
-    const gainers = items.slice(0, 5);
-    const losers  = items.slice(-5).reverse();
-    function row(x) {
-      const up = x.px.change >= 0;
-      return `<tr onclick="selectSymbol('${x.s}')" style="cursor:pointer;">
-        <td><strong>${esc(x.s.replace('.AX',''))}</strong> <span class="text-muted" style="font-size:11px;">${esc(x.def.name)}</span></td>
-        <td class="num">${fmtMoney(x.px.price)}</td>
-        <td class="num ${up ? 'text-green' : 'text-red'}">${fmtPct(x.px.change)}</td>
-      </tr>`;
+}
+
+// ============ MARKETS BROWSER (Groww-style sub-tabs) ============
+let marketsTab    = 'all';
+let moversFilter  = 'gainers';
+let cryptoTop     = [];           // CoinGecko /coins/markets cache
+let forexCur      = null;         // {USD: {rates}, AUD: {rates}}
+let forexPrev     = null;         // yesterday's rates for daily change %
+const sortState   = {};           // per-tab {col, dir}
+
+function fmtMcap(n) {
+  if (!n || !isFinite(n)) return '—';
+  if (n >= 1e12) return '$' + (n/1e12).toFixed(2) + 'T';
+  if (n >= 1e9)  return '$' + (n/1e9).toFixed(2)  + 'B';
+  if (n >= 1e6)  return '$' + (n/1e6).toFixed(0)  + 'M';
+  return '$' + n.toLocaleString('en-AU');
+}
+
+// Backoff state for CoinGecko's free-tier 429s.
+let cgBackoffUntil = 0;
+let cgFailStreak   = 0;
+async function fetchCoinGeckoTop() {
+  if (Date.now() < cgBackoffUntil) return;
+  try {
+    const url = 'https://api.coingecko.com/api/v3/coins/markets'
+              + '?vs_currency=aud&order=market_cap_desc&per_page=20&page=1'
+              + '&sparkline=true&price_change_percentage=24h%2C7d';
+    const r = await fetch(url);
+    if (!r.ok) {
+      if (r.status === 429) {
+        const retryAfter = parseInt(r.headers.get('retry-after') || '0', 10);
+        const waitMs = (retryAfter > 0 ? retryAfter * 1000 : 0)
+                     || Math.min(60000 * Math.pow(2, cgFailStreak), 8 * 60 * 1000);
+        cgBackoffUntil = Date.now() + waitMs;
+        cgFailStreak++;
+      }
+      throw new Error('coingecko ' + r.status);
     }
-    if (!items.length) { body.innerHTML = `<div class="tbl-empty">Loading market data…</div>`; return; }
-    body.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
-        <div>
-          <div class="t-h" style="margin-bottom:9px;">Top gainers <i class="fa-solid fa-arrow-trend-up text-green" style="font-size:10px;"></i></div>
-          <table class="tbl"><tbody>${gainers.map(row).join('')}</tbody></table>
-        </div>
-        <div>
-          <div class="t-h" style="margin-bottom:9px;">Top losers <i class="fa-solid fa-arrow-trend-down text-red" style="font-size:10px;"></i></div>
-          <table class="tbl"><tbody>${losers.map(row).join('')}</tbody></table>
-        </div>
-      </div>`;
+    cryptoTop = await r.json();
+    cgFailStreak = 0;
+  } catch (e) { console.warn('CoinGecko top-20 failed:', e.message); }
+}
+
+async function fetchForex() {
+  // 2 days back to avoid weekends/holidays where Frankfurter has no data.
+  const d = new Date(); d.setDate(d.getDate() - 2);
+  const prevDate = d.toISOString().slice(0, 10);
+  try {
+    // NB: api.frankfurter.app now 301-redirects to api.frankfurter.dev,
+    // and browsers reject cross-origin redirects on CORS preflight.
+    const [uN, aN, uP, aP] = await Promise.all([
+      fetch('https://api.frankfurter.dev/v1/latest?base=USD').then(r => r.json()),
+      fetch('https://api.frankfurter.dev/v1/latest?base=AUD').then(r => r.json()),
+      fetch(`https://api.frankfurter.dev/v1/${prevDate}?base=USD`).then(r => r.json()),
+      fetch(`https://api.frankfurter.dev/v1/${prevDate}?base=AUD`).then(r => r.json()),
+    ]);
+    forexCur  = { USD: uN, AUD: aN };
+    forexPrev = { USD: uP, AUD: aP };
+  } catch (e) { console.warn('Frankfurter fetch failed:', e.message); }
+}
+
+function fxRate(base, quote) {
+  if (base === quote) return 1;
+  if (forexCur && forexCur[base]?.rates?.[quote]) return forexCur[base].rates[quote];
+  // Cross via USD: e.g. EUR/JPY = (USD/JPY) / (USD/EUR)
+  const u = forexCur?.USD?.rates;
+  if (!u) return 0;
+  const usdToBase  = base === 'USD'  ? 1 : u[base];
+  const usdToQuote = quote === 'USD' ? 1 : u[quote];
+  if (!usdToBase || !usdToQuote) return 0;
+  return usdToQuote / usdToBase;
+}
+function fxChangePct(base, quote) {
+  const cur = fxRate(base, quote);
+  if (!cur) return 0;
+  if (base === quote) return 0;
+  let prev = 0;
+  if (forexPrev && forexPrev[base]?.rates?.[quote]) prev = forexPrev[base].rates[quote];
+  else {
+    const u = forexPrev?.USD?.rates;
+    if (!u) return 0;
+    const a = base === 'USD' ? 1 : u[base];
+    const b = quote === 'USD' ? 1 : u[quote];
+    prev = (a && b) ? (b / a) : 0;
   }
+  return prev ? ((cur - prev) / prev) * 100 : 0;
+}
+
+function sparklineSvg(prices, up) {
+  if (!Array.isArray(prices) || prices.length < 2) return '';
+  const w = 100, h = 28;
+  const min = Math.min(...prices), max = Math.max(...prices);
+  const range = max - min || 1;
+  const stepX = w / (prices.length - 1);
+  const pts = prices.map((p, i) =>
+    (i*stepX).toFixed(2) + ',' + (h - ((p - min) / range) * h).toFixed(2)
+  ).join(' ');
+  const color = up ? '#34d399' : '#f87171';
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <polyline fill="none" stroke="${color}" stroke-width="1.5" points="${pts}"/>
+  </svg>`;
+}
+
+// Click any row/card → load chart above + scroll to it.
+// Forex datafeed only knows AUD/EUR/GBP/JPY ↔ USD, so we restrict
+// auto-registered FX pairs to that set.
+const FX_SUPPORTED = new Set(['AUD','EUR','GBP','JPY','USD']);
+function selectSymbolFromMarkets(sym) {
+  if (!CATALOG[sym]) {
+    // Auto-register top-20 crypto coins clicked from the table.
+    const top = cryptoTop.find(c => c.symbol.toUpperCase() === sym);
+    if (top) {
+      CATALOG[sym] = { name: top.name, market: 'crypto', exchange: 'Crypto', cgId: top.id };
+    } else if (sym.length === 6 && /^[A-Z]{6}$/.test(sym)) {
+      const base = sym.slice(0,3), quote = sym.slice(3,6);
+      if (!FX_SUPPORTED.has(base) || !FX_SUPPORTED.has(quote) ||
+          (base !== 'USD' && quote !== 'USD')) {
+        toast('Pair not supported yet', 'Try AUD/EUR/GBP/JPY vs USD.');
+        return;
+      }
+      CATALOG[sym] = {
+        name: base + ' / ' + quote,
+        market: 'forex', exchange: 'FX',
+        fxBase: base, fxQuote: quote,
+      };
+    } else { return; }
+  }
+  selectSymbol(sym);
+  document.querySelector('.t-main')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+window.selectSymbolFromMarkets = selectSymbolFromMarkets;
+
+function setMarketsTab(t) {
+  marketsTab = t;
+  state.mkt = t;
+  document.querySelectorAll('.tn-filt').forEach(b => b.classList.toggle('on', b.dataset.m === t));
+  renderMarkets();
+  if ((t === 'all' || t === 'crypto') && !cryptoTop.length) fetchCoinGeckoTop().then(renderMarkets);
+  if ((t === 'all' || t === 'forex')  && !forexCur)        fetchForex().then(renderMarkets);
+}
+window.setMarketsTab = setMarketsTab;
+
+function renderMarkets() {
+  const root = document.getElementById('marketsBody');
+  if (!root) return;
+  if      (marketsTab === 'all')    root.innerHTML = renderAllMarkets();
+  else if (marketsTab === 'asx')    root.innerHTML = renderStockTable('asx');
+  else if (marketsTab === 'us')     root.innerHTML = renderStockTable('us');
+  else if (marketsTab === 'crypto') root.innerHTML = renderCryptoTable();
+  else if (marketsTab === 'forex')  root.innerHTML = renderForexTable();
+  attachMarketsHandlers();
+}
+
+function renderAllMarkets() {
+  return renderMoversSection() + renderMostTradedSection() + renderCryptoSection() + renderForexSection();
+}
+
+function renderMoversSection() {
+  const items = Object.keys(CATALOG)
+    .map(s => ({ s, def: CATALOG[s], px: PRICES[s] }))
+    .filter(x => x.px && typeof x.px.changePct === 'number' && x.def.market !== 'forex');
+  const sorted = items.sort((a, b) => moversFilter === 'gainers'
+    ? (b.px.changePct||0) - (a.px.changePct||0)
+    : (a.px.changePct||0) - (b.px.changePct||0));
+  const six = sorted.slice(0, 6);
+  const cards = six.map(x => {
+    const up = (x.px.changePct || 0) >= 0;
+    return `<div class="mv-card" onclick="selectSymbolFromMarkets('${x.s}')">
+      <div class="mv-top">
+        <span class="mv-sym">${esc(x.s.replace('.AX',''))}</span>
+        <span class="sym-badge">${esc(x.def.exchange)}</span>
+      </div>
+      <div class="mv-name">${esc(x.def.name)}</div>
+      <div class="mv-price">${fmtMoney(x.px.price)}</div>
+      <div class="mv-chg ${up?'text-green':'text-red'}">${fmtPct(x.px.changePct)}</div>
+    </div>`;
+  }).join('');
+  return `<div class="mb-section">
+    <div class="mb-section-h">
+      <div class="mb-title">Top Movers Today</div>
+      <div class="mb-toggle">
+        <button class="mb-tg ${moversFilter==='gainers'?'on':''}" data-tg="gainers"><i class="fa-solid fa-arrow-trend-up"></i> Gainers</button>
+        <button class="mb-tg ${moversFilter==='losers' ?'on':''}" data-tg="losers"><i class="fa-solid fa-arrow-trend-down"></i> Losers</button>
+      </div>
+    </div>
+    <div class="mv-grid">${cards || '<div class="tbl-empty">Loading market data…</div>'}</div>
+  </div>`;
+}
+
+function renderMostTradedSection() {
+  // Curated list of high-liquidity instruments across markets.
+  const popular = ['BHP.AX','CBA.AX','MQG.AX','AAPL','NVDA','TSLA','BTC','ETH'];
+  const cards = popular.map(s => {
+    const def = CATALOG[s]; if (!def) return '';
+    const px = PRICES[s];
+    const up = (px?.changePct || 0) >= 0;
+    return `<div class="mt-card" onclick="selectSymbolFromMarkets('${s}')">
+      <div class="mt-top">
+        <span class="sym-icn ${def.market}" style="width:32px;height:32px;font-size:11px;border-radius:9px;">${esc(s.replace('.AX','').slice(0,3))}</span>
+        <div style="min-width:0;">
+          <div class="mt-sym">${esc(s.replace('.AX',''))}</div>
+          <div class="mt-name">${esc(def.name)}</div>
+        </div>
+      </div>
+      <div class="mt-bot">
+        <div class="mt-price">${px ? fmtMoney(px.price) : '<span class="text-muted">—</span>'}</div>
+        <div class="mt-chg ${up?'text-green':'text-red'}">${px ? fmtPct(px.changePct) : '—'}</div>
+      </div>
+    </div>`;
+  }).filter(Boolean).join('');
+  return `<div class="mb-section">
+    <div class="mb-section-h"><div class="mb-title">Most Traded</div></div>
+    <div class="mt-row">${cards}</div>
+  </div>`;
+}
+
+function renderCryptoSection() {
+  const wanted = ['BTC','ETH','SOL','BNB','XRP'];
+  const rows = wanted.map(sym => {
+    const c = cryptoTop.find(x => x.symbol.toUpperCase() === sym);
+    if (!c) {
+      return `<div class="cy-row" style="cursor:default;"><div class="cy-l"><div><div class="cy-sym">${sym}</div><div class="cy-name text-muted">Loading…</div></div></div><div></div><div></div></div>`;
+    }
+    const up = (c.price_change_percentage_24h || 0) >= 0;
+    const sparkPts = c.sparkline_in_7d?.price ? c.sparkline_in_7d.price.slice(-30) : null;
+    const spark = sparkPts ? sparklineSvg(sparkPts, up) : '';
+    return `<div class="cy-row" onclick="selectSymbolFromMarkets('${sym}')">
+      <div class="cy-l">
+        <img src="${esc(c.image)}" alt="" class="cy-img" loading="lazy"/>
+        <div>
+          <div class="cy-sym">${sym}</div>
+          <div class="cy-name">${esc(c.name)}</div>
+        </div>
+      </div>
+      <div class="cy-spark">${spark}</div>
+      <div class="cy-r">
+        <div class="cy-price">${fmtMoney(c.current_price)}</div>
+        <div class="cy-chg ${up?'text-green':'text-red'}">${fmtPct(c.price_change_percentage_24h)}</div>
+      </div>
+    </div>`;
+  }).join('');
+  return `<div class="mb-section">
+    <div class="mb-section-h">
+      <div class="mb-title">Crypto Market</div>
+      <button class="mb-link" data-jump="crypto">View top 20 <i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+    <div class="cy-list">${rows}</div>
+  </div>`;
+}
+
+function renderForexSection() {
+  if (!forexCur) {
+    return `<div class="mb-section"><div class="mb-section-h"><div class="mb-title">Forex Rates</div></div><div class="tbl-empty">Loading forex…</div></div>`;
+  }
+  const pairs = [['AUD','USD'],['EUR','USD'],['GBP','USD'],['USD','JPY']];
+  const rows = pairs.map(([b,q]) => {
+    const sym = b + q;
+    const rate = fxRate(b, q);
+    const chg  = fxChangePct(b, q);
+    const up   = chg >= 0;
+    return `<div class="fx-row" onclick="selectSymbolFromMarkets('${sym}')">
+      <div class="fx-pair">${b}/${q}</div>
+      <div class="fx-rate">${rate ? rate.toFixed(q==='JPY'?2:4) : '—'}</div>
+      <div class="fx-chg ${up?'text-green':'text-red'}">${fmtPct(chg)}</div>
+    </div>`;
+  }).join('');
+  return `<div class="mb-section">
+    <div class="mb-section-h">
+      <div class="mb-title">Forex Rates</div>
+      <button class="mb-link" data-jump="forex">View all pairs <i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+    <div class="fx-list">${rows}</div>
+  </div>`;
+}
+
+function renderStockTable(market) {
+  const rows = Object.keys(CATALOG).filter(s => CATALOG[s].market === market);
+  const items = rows.map(s => {
+    const def = CATALOG[s];
+    const px  = PRICES[s] || {};
+    return {
+      s, def,
+      price:  px.price      || 0,
+      chg:    px.changePct  || 0,
+      vol:    px.volume     || 0,
+      h52:    px.high52     || 0,
+      l52:    px.low52      || 0,
+    };
+  });
+  const ss = sortState[market] || (sortState[market] = { col: 'chg', dir: 'desc' });
+  items.sort((a, b) => {
+    const m = ss.dir === 'asc' ? 1 : -1;
+    const A = a[ss.col], B = b[ss.col];
+    if (typeof A === 'string') return A.localeCompare(B) * m;
+    return ((A || 0) - (B || 0)) * m;
+  });
+  const ind = c => ss.col === c ? `<i class="fa-solid fa-chevron-${ss.dir==='asc'?'up':'down'}" style="font-size:9px;margin-left:4px;"></i>` : '';
+  const filterId = market + 'Search', tableId = market + 'Table';
+  return `<div class="mb-section">
+    <div class="mb-section-h">
+      <div class="mb-title">${market === 'asx' ? 'ASX Stocks' : 'US Stocks'}</div>
+      <input type="text" class="mb-search" id="${filterId}" placeholder="Search ${market === 'asx' ? 'ASX' : 'US'} stocks..." autocomplete="off"/>
+    </div>
+    <table class="tbl mb-tbl" id="${tableId}">
+      <thead><tr>
+        <th data-sort="s">Symbol${ind('s')}</th>
+        <th>Company</th>
+        <th class="num" data-sort="price">Price${ind('price')}</th>
+        <th class="num" data-sort="chg">Change${ind('chg')}</th>
+        <th class="num" data-sort="vol">Volume${ind('vol')}</th>
+        <th class="num" data-sort="h52">52w High${ind('h52')}</th>
+        <th class="num" data-sort="l52">52w Low${ind('l52')}</th>
+      </tr></thead>
+      <tbody>${items.map(it => {
+        const up = it.chg >= 0;
+        return `<tr data-sym="${it.s}" data-name="${esc(it.def.name).toLowerCase()}" onclick="selectSymbolFromMarkets('${it.s}')" style="cursor:pointer;">
+          <td><strong>${esc(it.s.replace('.AX',''))}</strong></td>
+          <td class="text-muted" style="font-weight:500;">${esc(it.def.name)}</td>
+          <td class="num">${it.price ? fmtMoney(it.price) : '<span class="text-muted">—</span>'}</td>
+          <td class="num ${up?'text-green':'text-red'}">${it.price ? fmtPct(it.chg) : '—'}</td>
+          <td class="num text-muted">${it.vol ? fmtVol(it.vol) : '—'}</td>
+          <td class="num">${it.h52 ? fmtMoney(it.h52) : '—'}</td>
+          <td class="num">${it.l52 ? fmtMoney(it.l52) : '—'}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>
+  </div>`;
+}
+
+function renderCryptoTable() {
+  if (!cryptoTop.length) return `<div class="mb-section"><div class="mb-section-h"><div class="mb-title">Top 20 Cryptocurrencies</div></div><div class="tbl-empty">Loading from CoinGecko…</div></div>`;
+  const ss = sortState.crypto || (sortState.crypto = { col: 'market_cap_rank', dir: 'asc' });
+  const items = [...cryptoTop].sort((a, b) => {
+    const m = ss.dir === 'asc' ? 1 : -1;
+    return ((a[ss.col] || 0) - (b[ss.col] || 0)) * m;
+  });
+  const ind = c => ss.col === c ? `<i class="fa-solid fa-chevron-${ss.dir==='asc'?'up':'down'}" style="font-size:9px;margin-left:4px;"></i>` : '';
+  return `<div class="mb-section">
+    <div class="mb-section-h">
+      <div class="mb-title">Top 20 Cryptocurrencies</div>
+      <span class="mb-meta"><span class="live"></span> Updates every 30s · CoinGecko</span>
+    </div>
+    <table class="tbl mb-tbl" id="cryptoTable">
+      <thead><tr>
+        <th data-sort="market_cap_rank">#${ind('market_cap_rank')}</th>
+        <th>Coin</th>
+        <th class="num" data-sort="current_price">Price (AUD)${ind('current_price')}</th>
+        <th class="num" data-sort="price_change_percentage_24h">24h${ind('price_change_percentage_24h')}</th>
+        <th class="num" data-sort="price_change_percentage_7d_in_currency">7d${ind('price_change_percentage_7d_in_currency')}</th>
+        <th class="num" data-sort="market_cap">Market Cap${ind('market_cap')}</th>
+      </tr></thead>
+      <tbody>${items.map(c => {
+        const u24 = (c.price_change_percentage_24h || 0) >= 0;
+        const u7  = (c.price_change_percentage_7d_in_currency || 0) >= 0;
+        const sym = c.symbol.toUpperCase();
+        return `<tr onclick="selectSymbolFromMarkets('${sym}')" style="cursor:pointer;">
+          <td>${c.market_cap_rank}</td>
+          <td><img src="${esc(c.image)}" alt="" style="width:18px;height:18px;border-radius:50%;vertical-align:middle;margin-right:8px;" loading="lazy"/><strong>${sym}</strong> <span class="text-muted" style="font-weight:500;">${esc(c.name)}</span></td>
+          <td class="num">${fmtMoney(c.current_price)}</td>
+          <td class="num ${u24?'text-green':'text-red'}">${fmtPct(c.price_change_percentage_24h)}</td>
+          <td class="num ${u7?'text-green':'text-red'}">${fmtPct(c.price_change_percentage_7d_in_currency)}</td>
+          <td class="num">${fmtMcap(c.market_cap)}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>
+  </div>`;
+}
+
+function renderForexTable() {
+  if (!forexCur) return `<div class="mb-section"><div class="mb-section-h"><div class="mb-title">Forex — Major Pairs</div></div><div class="tbl-empty">Loading from Frankfurter…</div></div>`;
+  const usdQuotes = ['EUR','GBP','JPY','AUD','CAD','CHF','CNY','NZD'];
+  const audQuotes = ['USD','EUR','GBP','JPY','NZD','SGD','HKD','CAD'];
+  function rowsFor(base, quotes) {
+    return quotes.map(q => {
+      const rate = fxRate(base, q);
+      if (!rate) return '';
+      const sym  = base + q;
+      const chg  = fxChangePct(base, q);
+      const up   = chg >= 0;
+      return `<tr onclick="selectSymbolFromMarkets('${sym}')" style="cursor:pointer;">
+        <td><strong>${base}/${q}</strong></td>
+        <td class="num">${rate.toFixed(q==='JPY'?2:4)}</td>
+        <td class="num ${up?'text-green':'text-red'}">${fmtPct(chg)}</td>
+      </tr>`;
+    }).filter(Boolean).join('');
+  }
+  return `<div class="mb-section">
+    <div class="mb-section-h">
+      <div class="mb-title">Forex — Major Pairs</div>
+      <span class="mb-meta"><span class="live"></span> Updates every 60s · Frankfurter</span>
+    </div>
+    <div class="fx-grid">
+      <div>
+        <div class="t-h" style="margin-bottom:8px;">USD base</div>
+        <table class="tbl"><thead><tr><th>Pair</th><th class="num">Rate</th><th class="num">Daily</th></tr></thead><tbody>${rowsFor('USD', usdQuotes)}</tbody></table>
+      </div>
+      <div>
+        <div class="t-h" style="margin-bottom:8px;">AUD base</div>
+        <table class="tbl"><thead><tr><th>Pair</th><th class="num">Rate</th><th class="num">Daily</th></tr></thead><tbody>${rowsFor('AUD', audQuotes)}</tbody></table>
+      </div>
+    </div>
+  </div>`;
+}
+
+function attachMarketsHandlers() {
+  document.querySelectorAll('.mb-tg').forEach(b => b.addEventListener('click', () => {
+    moversFilter = b.dataset.tg;
+    renderMarkets();
+  }));
+  document.querySelectorAll('[data-jump]').forEach(b => b.addEventListener('click', () => {
+    setMarketsTab(b.dataset.jump);
+  }));
+  ['asxSearch','usSearch'].forEach(id => {
+    const inp = document.getElementById(id);
+    if (!inp) return;
+    inp.addEventListener('input', () => {
+      const q = inp.value.trim().toLowerCase();
+      const tbl = document.getElementById(id.replace('Search','Table'));
+      if (!tbl) return;
+      tbl.querySelectorAll('tbody tr').forEach(tr => {
+        const sym = (tr.dataset.sym || '').toLowerCase();
+        const name = tr.dataset.name || '';
+        tr.style.display = (!q || sym.includes(q) || name.includes(q)) ? '' : 'none';
+      });
+    });
+  });
+  document.querySelectorAll('.mb-tbl thead th[data-sort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const tbl = th.closest('table');
+      const tabKey = tbl.id === 'cryptoTable' ? 'crypto'
+                   : tbl.id === 'asxTable'    ? 'asx'
+                   : 'us';
+      const cur = sortState[tabKey] || {};
+      const col = th.dataset.sort;
+      sortState[tabKey] = {
+        col,
+        dir: (cur.col === col && cur.dir === 'desc') ? 'asc' : 'desc',
+      };
+      renderMarkets();
+    });
+  });
 }
 
 // ============ POLL LOOP — refresh every 10s ============
@@ -1202,7 +1712,23 @@ async function tick() {
   renderWatchlist();
   renderSymbolHeader();
   renderStatsBar();
-  if (state.lowerTab === 'movers' || state.lowerTab === 'hold') renderLower();
+  if (state.lowerTab === 'hold') renderLower();
+  // Re-render the markets browser with fresh prices, but never wipe out a
+  // search the user is typing (focus & value are preserved across renders).
+  const ae = document.activeElement;
+  const typing = ae && ae.classList && ae.classList.contains('mb-search');
+  if (!typing && (marketsTab === 'all' || marketsTab === 'asx' || marketsTab === 'us')) {
+    renderMarkets();
+  }
+}
+
+// Refresh CoinGecko (30s) and Frankfurter (60s) on their own cadences.
+let cgPollHandle = null, fxPollHandle = null;
+function startMarketsPolling() {
+  if (cgPollHandle) clearInterval(cgPollHandle);
+  if (fxPollHandle) clearInterval(fxPollHandle);
+  cgPollHandle = setInterval(() => fetchCoinGeckoTop().then(renderMarkets), 30000);
+  fxPollHandle = setInterval(() => fetchForex().then(renderMarkets), 60000);
 }
 
 // ============ BOOT ============
@@ -1222,7 +1748,16 @@ async function tick() {
   renderStatsBar();
   refreshChart();
   renderLower();
-  // 5. Start the 10s poll (handle saved for clean teardown on unload)
+  // 5. Markets browser: fetch CoinGecko top-20 + Frankfurter forex,
+  //    then render. Both kick off in parallel; renderMarkets is called
+  //    whenever either resolves so the UI fills in progressively.
+  renderMarkets();
+  Promise.all([
+    fetchCoinGeckoTop().then(renderMarkets),
+    fetchForex().then(renderMarkets),
+  ]);
+  startMarketsPolling();
+  // 6. Start the 10s poll (handle saved for clean teardown on unload)
   pollHandle = setInterval(tick, 10000);
   console.log('%cTradeArena · Markets ready', 'color:#e8c060;font-weight:700;');
 })();
