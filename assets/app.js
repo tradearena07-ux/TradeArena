@@ -614,16 +614,31 @@
     let drawerAccountHtml;
     if (session) {
       const u = session.user;
-      // User pill — gold-gradient avatar, handle in cream, chevron, and a
-      // 4-item dropdown (My Profile / Portfolio / Trade / Sign Out). The
-      // .ta-pill / .ta-menu CSS lives in assets/styles.css and is shared
-      // by trade.html so the component looks identical on every page.
+      // User pill (Groww-style) — JUST the gold circular avatar. No
+      // username text, no chevron. The whole circle is the click
+      // target; the same .ta-menu dropdown opens with My Profile /
+      // Portfolio / Trade / Sign Out. Sits next to a notification bell
+      // (.ta-bell) so the layout matches the reference screenshot.
       accountHtml = `
+        <div class="ta-bell-wrap">
+          <button class="ta-bell" id="taBell" aria-label="Notifications">
+            <i class="fa-regular fa-bell"></i>
+            <span class="ta-bell-dot" aria-hidden="true"></span>
+          </button>
+          <div class="ta-menu ta-menu-bell" id="taBellMenu">
+            <div style="padding:6px 12px 12px;border-bottom:1px solid var(--bdl);margin-bottom:8px;">
+              <div style="font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:var(--cream);">Notifications</div>
+              <div class="text-muted" style="font-size:11.5px;margin-top:2px;">You're all caught up.</div>
+            </div>
+            <div style="padding:14px 12px;text-align:center;color:var(--muted);font-size:12.5px;">
+              <i class="fa-regular fa-bell-slash" style="font-size:22px;color:var(--gold2);opacity:.6;display:block;margin-bottom:8px;"></i>
+              No new notifications yet.
+            </div>
+          </div>
+        </div>
         <div class="ta-account-wrap">
-          <button class="ta-pill" id="userPill" aria-label="Open account menu">
-            ${avatarHtml(u, 30, { gold: true })}
-            <span class="ta-pill-name">${u.handle}</span>
-            <i class="fa-solid fa-chevron-down" style="font-size:10px;color:var(--muted);"></i>
+          <button class="ta-pill ta-pill-mini" id="userPill" aria-label="Open account menu">
+            ${avatarHtml(u, 34, { gold: true })}
           </button>
           <div class="ta-menu" id="userMenu">
             <a href="profile.html" class="ta-menu-row">
@@ -687,16 +702,32 @@
     if (!mount) return;
     mount.innerHTML = html;
 
-    // Account dropdown
-    const pill = document.getElementById('userPill');
-    const menu = document.getElementById('userMenu');
+    // Account dropdown + notification bell. Bell + pill share an
+    // outside-click closer that closes whichever isn't being interacted
+    // with, so opening one auto-dismisses the other.
+    const pill     = document.getElementById('userPill');
+    const menu     = document.getElementById('userMenu');
+    const bell     = document.getElementById('taBell');
+    const bellMenu = document.getElementById('taBellMenu');
     const logoutBtn = document.getElementById('logoutBtn');
     if (pill && menu) {
-      pill.addEventListener('click', e => { e.stopPropagation(); menu.classList.toggle('open'); });
-      document.addEventListener('click', e => {
-        if (!menu.contains(e.target) && e.target !== pill) menu.classList.remove('open');
+      pill.addEventListener('click', e => {
+        e.stopPropagation();
+        if (bellMenu) bellMenu.classList.remove('open');
+        menu.classList.toggle('open');
       });
     }
+    if (bell && bellMenu) {
+      bell.addEventListener('click', e => {
+        e.stopPropagation();
+        if (menu) menu.classList.remove('open');
+        bellMenu.classList.toggle('open');
+      });
+    }
+    document.addEventListener('click', e => {
+      if (menu && pill && !menu.contains(e.target) && !pill.contains(e.target)) menu.classList.remove('open');
+      if (bellMenu && bell && !bellMenu.contains(e.target) && !bell.contains(e.target)) bellMenu.classList.remove('open');
+    });
     const doSignOut = async () => { await signOut(); window.location.href = 'index.html'; };
     if (logoutBtn) logoutBtn.addEventListener('click', doSignOut);
     const drawerLogoutBtn = document.getElementById('drawerLogoutBtn');

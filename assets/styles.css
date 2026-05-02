@@ -453,6 +453,41 @@ footer.tarena-footer .row{
 }
 .ta-pill:hover{border-color:var(--gold);background:rgba(201,160,48,.08);box-shadow:0 0 0 3px rgba(201,160,48,.10);}
 .ta-pill-name{font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:700;color:var(--cream);}
+/* .ta-pill-mini = Groww-style avatar-only pill (no name, no chevron).
+   Removes inner padding so the click target is just the circle, with
+   a soft gold ring on hover. */
+.ta-pill-mini{padding:0;background:transparent;border-color:transparent;border-radius:50%;}
+.ta-pill-mini:hover{border-color:var(--gold);background:transparent;box-shadow:0 0 0 3px rgba(201,160,48,.18);}
+
+/* ---------- NOTIFICATION BELL ---------- */
+.ta-bell-wrap{position:relative;display:inline-flex;align-items:center;}
+.ta-bell{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:36px;height:36px;border-radius:50%;
+  background:rgba(255,255,255,.04);border:1px solid var(--bdl);
+  color:var(--cream);font-size:14px;cursor:pointer;
+  transition:border-color .2s, background .2s, box-shadow .2s, color .2s;
+  position:relative;
+}
+.ta-bell:hover{border-color:var(--gold);color:var(--gold2);background:rgba(201,160,48,.08);box-shadow:0 0 0 3px rgba(201,160,48,.10);}
+.ta-bell-dot{
+  position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;
+  background:#f87171;border:2px solid var(--navy);
+  /* Hidden by default — show by toggling .has-unread on .ta-bell. */
+  display:none;
+}
+.ta-bell.has-unread .ta-bell-dot{display:block;}
+.ta-menu-bell{min-width:280px;}
+
+/* ---------- KEYBOARD SHORTCUT HINT (⌘K) ---------- */
+.ta-kbd{
+  display:inline-flex;align-items:center;gap:2px;
+  padding:2px 7px;border-radius:5px;
+  background:rgba(255,255,255,.05);border:1px solid var(--bdl);
+  font-family:'DM Sans',sans-serif;font-size:10.5px;font-weight:600;
+  color:var(--muted);letter-spacing:.04em;
+  pointer-events:none;
+}
 .ta-menu{
   position:absolute;top:calc(100% + 10px);right:0;
   background:var(--navy2);
