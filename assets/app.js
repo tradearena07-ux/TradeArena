@@ -517,12 +517,80 @@
     </svg>`;
   }
 
+  // Symbols shown in the live ticker strip above the nav. Order matters
+  // (BTC + ETH first because crypto fetches via direct Binance and never
+  // misses; AAPL + BHP.AX fall back to TArenaMarket if the proxy isn't
+  // wired up — see assets/datafeed.js).
+  const TICKER_SYMBOLS = ['BTC', 'ETH', 'AAPL', 'BHP.AX'];
+
+  function tickerItemHtml(sym, price, changePct) {
+    const cls = changePct >= 0 ? 'ta-tk-up' : 'ta-tk-dn';
+    const arrow = changePct >= 0 ? '▲' : '▼';
+    const decimals = price >= 1000 ? 0 : 2;
+    const priceTxt = '$' + Number(price).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    const pctTxt = (changePct >= 0 ? '+' : '') + Number(changePct).toFixed(2) + '%';
+    return `<span class="ta-tk-item"><span class="ta-tk-sym">${sym}</span><span class="ta-tk-px">${priceTxt}</span><span class="${cls}">${arrow} ${pctTxt}</span></span>`;
+  }
+
+  function buildTickerStrip() {
+    const M = global.TArenaMarket;
+    if (!M) return '';
+    const items = TICKER_SYMBOLS.map(s => {
+      const m = M.find(s);
+      if (!m) return '';
+      return tickerItemHtml(s, m.price, m.change);
+    }).filter(Boolean).join('');
+    if (!items) return ''; // no ticker → no leading 30px gap (nav falls back to top:0)
+    // Duplicate the row so the marquee animation loops seamlessly.
+    return `
+      <div class="ta-ticker" id="taTicker" aria-label="Live market ticker">
+        <div class="ta-ticker-track">
+          <div class="ta-ticker-row">${items}</div>
+          <div class="ta-ticker-row" aria-hidden="true">${items}</div>
+        </div>
+      </div>`;
+  }
+
+  // Pull live crypto quotes from Binance (no proxy required) and patch
+  // the ticker. Stocks stay on the seeded TArenaMarket values until the
+  // data-proxy edge function is deployed.
+  async function refreshTickerLive() {
+    if (!global.TArenaDatafeed || !global.TArenaDatafeed.fetchQuotes) return;
+    try {
+      const quotes = await global.TArenaDatafeed.fetchQuotes(TICKER_SYMBOLS);
+      const M = global.TArenaMarket;
+      if (!M) return;
+      let changed = false;
+      TICKER_SYMBOLS.forEach((s) => {
+        const q = quotes[s];
+        if (!q || q.price == null) return;
+        const m = M.find(s);
+        if (!m) return;
+        m.price = +q.price;
+        if (q.changePct != null) m.change = +q.changePct;
+        changed = true;
+      });
+      if (changed) repaintTicker();
+    } catch (e) { /* silent — keep seed prices */ }
+  }
+
+  function repaintTicker() {
+    const wrap = document.getElementById('taTicker');
+    if (!wrap) return;
+    const M = global.TArenaMarket;
+    const items = TICKER_SYMBOLS.map(s => {
+      const m = M && M.find(s);
+      return m ? tickerItemHtml(s, m.price, m.change) : '';
+    }).join('');
+    wrap.querySelectorAll('.ta-ticker-row').forEach(r => { r.innerHTML = items; });
+  }
+
   function renderNav(activePage) {
     global.__tarena_nav_active = activePage;
     const links = [
-      { id: 'trade',     href: 'trade.html',     label: 'Markets',    icon: 'fa-chart-line' },
-      { id: 'reels',     href: 'reels.html',     label: 'Strategies', icon: 'fa-lightbulb' },
-      { id: 'schools',   href: 'schools.html',   label: 'Learn',      icon: 'fa-graduation-cap' },
+      { id: 'trade',     href: 'trade.html',     label: 'Markets',   icon: 'fa-chart-line' },
+      { id: 'reels',     href: 'reels.html',     label: 'Learn',     icon: 'fa-clapperboard' },
+      { id: 'schools',   href: 'schools.html',   label: 'School',    icon: 'fa-graduation-cap' },
       { id: 'portfolio', href: 'portfolio.html', label: 'Portfolio', icon: 'fa-briefcase' },
       { id: 'profile',   href: 'profile.html',   label: 'Profile',   icon: 'fa-user' },
     ];
@@ -530,63 +598,142 @@
     const linksHtml = links.map(l =>
       `<a href="${l.href}" class="ta-nav-link ${activePage === l.id ? 'active' : ''}"><i class="fa-solid ${l.icon}"></i><span>${l.label}</span></a>`
     ).join('');
+    // Mobile drawer reuses the same link set, plus account actions inline.
+    const drawerLinksHtml = links.map(l =>
+      `<a href="${l.href}" class="ta-drawer-link ${activePage === l.id ? 'active' : ''}"><i class="fa-solid ${l.icon}"></i><span>${l.label}</span></a>`
+    ).join('');
 
     let accountHtml;
+    let drawerAccountHtml;
     if (session) {
       const u = session.user;
       accountHtml = `
         <div class="ta-account-wrap">
           <button class="ta-pill" id="userPill" aria-label="Open account menu">
-            ${avatarHtml(u, 30)}
-            <span class="ta-pill-name">${u.handle}</span>
+            ${avatarHtml(u, 32)}
             <i class="fa-solid fa-chevron-down" style="font-size:10px;color:var(--muted);"></i>
           </button>
           <div class="ta-menu" id="userMenu">
             <a href="profile.html" class="ta-menu-row">
               ${avatarHtml(u, 38)}
               <div>
-                <div style="font-weight:600;color:var(--cream);">${u.handle}</div>
+                <div style="font-weight:700;color:var(--cream);">${u.handle}</div>
                 <div class="text-muted" style="font-size:11.5px;">${u.email}</div>
               </div>
             </a>
             <div class="ta-menu-sep"></div>
             <a href="profile.html" class="ta-menu-link"><i class="fa-solid fa-user"></i> View profile</a>
             <a href="portfolio.html" class="ta-menu-link"><i class="fa-solid fa-briefcase"></i> Portfolio</a>
-            <a href="trade.html" class="ta-menu-link"><i class="fa-solid fa-chart-line"></i> Markets</a>
-            <a href="reels.html" class="ta-menu-link"><i class="fa-solid fa-lightbulb"></i> Strategies</a>
-            <a href="schools.html" class="ta-menu-link"><i class="fa-solid fa-graduation-cap"></i> Learn</a>
             <div class="ta-menu-sep"></div>
             <button class="ta-menu-link ta-menu-logout" id="logoutBtn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out</button>
           </div>
         </div>`;
+      drawerAccountHtml = `
+        <div class="ta-drawer-user">
+          ${avatarHtml(u, 44)}
+          <div>
+            <div style="font-weight:700;color:var(--cream);font-size:15px;">${u.handle}</div>
+            <div class="text-muted" style="font-size:12px;">${u.email}</div>
+          </div>
+        </div>
+        <button class="ta-drawer-link ta-drawer-logout" id="drawerLogoutBtn"><i class="fa-solid fa-arrow-right-from-bracket"></i><span>Sign out</span></button>`;
     } else {
       accountHtml = `<a href="auth.html" class="btn-account ${activePage === 'auth' ? 'active' : ''}">Sign in</a>`;
+      drawerAccountHtml = `<a href="auth.html" class="ta-drawer-link ta-drawer-cta"><i class="fa-solid fa-arrow-right-to-bracket"></i><span>Sign in</span></a>`;
     }
+
+    const tickerHtml = buildTickerStrip();
+    // Toggle a body class so CSS can drop the 30px sticky offset when the
+    // ticker isn't rendered — prevents a floating gap above the nav.
+    if (document.body) document.body.classList.toggle('ta-has-ticker', !!tickerHtml);
 
     const html = `
-      <nav class="tarena-nav">
+      ${tickerHtml}
+      <nav class="tarena-nav" id="tarenaNav">
         <a href="index.html" class="logo">${logoSvg()} Trade<span>Arena</span></a>
         <div class="nav-links">${linksHtml}</div>
-        <div class="nav-account">${accountHtml}</div>
-      </nav>`;
+        <div class="nav-account">
+          ${accountHtml}
+          <button class="ta-hamburger" id="taHamburger" aria-label="Open menu" aria-expanded="false">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+      </nav>
+      <div class="ta-drawer-scrim" id="taDrawerScrim" aria-hidden="true"></div>
+      <aside class="ta-drawer" id="taDrawer" aria-hidden="true">
+        <div class="ta-drawer-head">
+          <a href="index.html" class="logo" style="font-size:1.15rem;">${logoSvg()} Trade<span>Arena</span></a>
+          <button class="ta-drawer-close" id="taDrawerClose" aria-label="Close menu"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <nav class="ta-drawer-nav">${drawerLinksHtml}</nav>
+        <div class="ta-drawer-sep"></div>
+        ${drawerAccountHtml}
+      </aside>`;
 
     const mount = document.getElementById('tarena-nav');
-    if (mount) {
-      mount.innerHTML = html;
-      const pill = document.getElementById('userPill');
-      const menu = document.getElementById('userMenu');
-      const logoutBtn = document.getElementById('logoutBtn');
-      if (pill && menu) {
-        pill.addEventListener('click', e => { e.stopPropagation(); menu.classList.toggle('open'); });
-        document.addEventListener('click', e => {
-          if (!menu.contains(e.target) && e.target !== pill) menu.classList.remove('open');
-        });
-      }
-      if (logoutBtn) logoutBtn.addEventListener('click', async () => {
-        await signOut();
-        window.location.href = 'index.html';
+    if (!mount) return;
+    mount.innerHTML = html;
+
+    // Account dropdown
+    const pill = document.getElementById('userPill');
+    const menu = document.getElementById('userMenu');
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (pill && menu) {
+      pill.addEventListener('click', e => { e.stopPropagation(); menu.classList.toggle('open'); });
+      document.addEventListener('click', e => {
+        if (!menu.contains(e.target) && e.target !== pill) menu.classList.remove('open');
       });
     }
+    const doSignOut = async () => { await signOut(); window.location.href = 'index.html'; };
+    if (logoutBtn) logoutBtn.addEventListener('click', doSignOut);
+    const drawerLogoutBtn = document.getElementById('drawerLogoutBtn');
+    if (drawerLogoutBtn) drawerLogoutBtn.addEventListener('click', doSignOut);
+
+    // Mobile drawer
+    const ham    = document.getElementById('taHamburger');
+    const drawer = document.getElementById('taDrawer');
+    const scrim  = document.getElementById('taDrawerScrim');
+    const closer = document.getElementById('taDrawerClose');
+    const openDrawer = () => {
+      drawer.classList.add('open');
+      scrim.classList.add('open');
+      ham.classList.add('on');
+      ham.setAttribute('aria-expanded', 'true');
+      drawer.setAttribute('aria-hidden', 'false');
+    };
+    const closeDrawer = () => {
+      drawer.classList.remove('open');
+      scrim.classList.remove('open');
+      ham.classList.remove('on');
+      ham.setAttribute('aria-expanded', 'false');
+      drawer.setAttribute('aria-hidden', 'true');
+    };
+    if (ham)    ham.addEventListener('click', openDrawer);
+    if (closer) closer.addEventListener('click', closeDrawer);
+    if (scrim)  scrim.addEventListener('click', closeDrawer);
+    // Escape key to close the drawer (one shared listener; replaces the
+    // previous one on re-render so we don't leak handlers across pages).
+    window.removeEventListener('keydown', global.__tarena_nav_keydown || (() => {}));
+    const onKeydown = (e) => {
+      if (e.key === 'Escape' && drawer && drawer.classList.contains('open')) closeDrawer();
+    };
+    global.__tarena_nav_keydown = onKeydown;
+    window.addEventListener('keydown', onKeydown);
+
+    // Sticky-on-scroll: add `.scrolled` for stronger blur + shadow
+    const navEl = document.getElementById('tarenaNav');
+    const onScroll = () => {
+      if (!navEl) return;
+      if (window.scrollY > 8) navEl.classList.add('scrolled');
+      else navEl.classList.remove('scrolled');
+    };
+    window.removeEventListener('scroll', global.__tarena_nav_scroll || (() => {}));
+    global.__tarena_nav_scroll = onScroll;
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    // Kick off a one-shot live refresh (crypto only) — no need to await.
+    refreshTickerLive();
   }
 
   function renderFooter() {
@@ -616,8 +763,8 @@
           <div class="ta-foot-col">
             <h4>Product</h4>
             <a href="trade.html">Markets</a>
-            <a href="reels.html">Strategies</a>
-            <a href="schools.html">Learn</a>
+            <a href="reels.html">Learn</a>
+            <a href="schools.html">School</a>
             <a href="portfolio.html">Portfolio</a>
           </div>
           <div class="ta-foot-col">
