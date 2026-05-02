@@ -1,0 +1,74 @@
+Rebuild schools.html into a proper trading education hub 
+that both admins and users can understand and use.
+
+USER VIEW:
+
+HERO SECTION:
+- Title: "TradeArena School"
+- Subtitle: "Learn to trade. Earn paper capital. 
+  Climb the leaderboard."
+- Progress bar showing overall completion %
+
+COURSE MODULES (show these 6 built-in modules):
+
+Module 1: "Stock Market Basics"
+- 5 lessons
+- Topics: What is a stock, How exchanges work, 
+  Reading a stock chart, Market hours, Order types
+- Reward: +$500 paper capital on completion
+
+Module 2: "Crypto Fundamentals" 
+- 5 lessons
+- Topics: What is Bitcoin, Blockchain basics, 
+  Crypto vs stocks, Reading crypto charts, Risk management
+- Reward: +$500 paper capital on completion
+
+Module 3: "Technical Analysis"
+- 5 lessons  
+- Topics: Candlestick patterns, Support/Resistance, 
+  Moving averages, RSI indicator, MACD indicator
+- Reward: +$1000 paper capital on completion
+
+Module 4: "ASX Deep Dive"
+- 4 lessons
+- Topics: How ASX works, Top ASX stocks, 
+  Australian market hours, Franking credits
+- Reward: +$500 paper capital on completion
+
+Module 5: "Trading Psychology"
+- 4 lessons
+- Topics: FOMO vs strategy, Loss aversion, 
+  Setting stop losses, Trading journal
+- Reward: +$500 paper capital on completion
+
+Module 6: "Portfolio Strategy"
+- 4 lessons
+- Topics: Diversification, Dollar cost averaging, 
+  Rebalancing, Long vs short term
+- Reward: +$1000 paper capital on completion
+
+Each module card shows:
+- Module title + icon
+- Number of lessons
+- Estimated time (e.g. "~20 mins")
+- Reward badge
+- Progress bar (0% if not started)
+- Lock icon if previous module not completed
+- "Start Module" or "Continue" button
+
+LESSON VIEW (when user clicks a module):
+- Clean reading layout
+- Lesson title + content
+- Previous / Next navigation
+- Mark as complete button
+- Progress saved to Supabase (user_progress table)
+
+ADMIN VIEW (only visible to tradearena07@gmail.com):
+- "Admin Mode" gold badge in corner
+- Edit button on each module to change content
+- Add new module button
+- See completion stats per module 
+  (e.g. "24 students completed Module 1")
+
+All progress saved to Supabase.
+Match exact navy/gold TradeArena theme.

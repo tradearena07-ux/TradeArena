@@ -3,66 +3,207 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TradeArena · Schools</title>
+  <title>TradeArena · School</title>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
   <link rel="stylesheet" href="assets/styles.css"/>
   <style>
-    .sch-shell{ max-width:1100px;margin:0 auto;padding:32px 24px 60px;flex:1;width:100%; }
-    .sch-head{ margin-bottom:28px; }
-    .sch-head h1{ font-family:'Cinzel',serif;font-size:2.1rem;letter-spacing:-.5px;margin-bottom:6px; }
-    .sch-head p{ color:var(--muted);font-size:14.5px;max-width:680px;line-height:1.6; }
-    .sch-grid{ display:grid;grid-template-columns:repeat(auto-fill, minmax(300px,1fr));gap:18px; }
+    .sch-shell{ max-width:1180px;margin:0 auto;padding:36px 24px 80px;flex:1;width:100%; }
+
+    .sch-hero{
+      background:linear-gradient(135deg, var(--navy3) 0%, var(--navy2) 100%);
+      border:1px solid var(--border);border-radius:20px;
+      padding:32px 32px 28px;margin-bottom:28px;position:relative;overflow:hidden;
+    }
+    .sch-hero::before{
+      content:'';position:absolute;inset:-2px;border-radius:20px;
+      background:radial-gradient(800px 240px at 80% 0%, rgba(232,192,96,.10), transparent 60%);
+      pointer-events:none;
+    }
+    .sch-hero h1{
+      font-family:'Cinzel',serif;font-size:2.4rem;letter-spacing:-.5px;margin:0 0 6px;
+      display:flex;align-items:center;gap:14px;
+    }
+    .sch-hero h1 i{ color:var(--gold); }
+    .sch-hero p{ color:var(--muted);font-size:14.5px;line-height:1.6;max-width:680px;margin:0 0 18px; }
+    .sch-progress-row{ display:flex;align-items:center;gap:14px;margin-top:18px;flex-wrap:wrap; }
+    .sch-progress-bar{
+      flex:1;min-width:240px;height:10px;background:rgba(122,138,170,.15);
+      border-radius:99px;overflow:hidden;position:relative;
+    }
+    .sch-progress-bar > span{
+      display:block;height:100%;background:linear-gradient(90deg, var(--gold), var(--gold2));
+      border-radius:99px;transition:width .6s ease;
+    }
+    .sch-progress-meta{ font-family:'Cinzel',serif;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2); }
+    .sch-bonus-badge{
+      display:inline-flex;align-items:center;gap:6px;padding:5px 11px;
+      background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);
+      border-radius:99px;font-size:12px;color:#10b981;font-weight:600;
+    }
+
+    .admin-pill{
+      position:absolute;top:18px;right:18px;
+      display:inline-flex;align-items:center;gap:6px;padding:5px 11px;
+      background:rgba(232,192,96,.15);border:1px solid var(--gold);border-radius:99px;
+      font-family:'Cinzel',serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold2);font-weight:700;
+    }
+
+    .sch-grid{ display:grid;grid-template-columns:repeat(auto-fill, minmax(330px,1fr));gap:20px; }
     .sch-card{
-      background:var(--navy3);border:1px solid var(--bdl);border-radius:14px;padding:22px;
-      display:flex;flex-direction:column;gap:14px;text-decoration:none;color:inherit;
-      transition:transform .12s ease, border-color .12s ease;
-      position:relative;overflow:hidden;
+      background:var(--navy3);border:1px solid var(--bdl);border-radius:16px;
+      padding:22px;display:flex;flex-direction:column;gap:14px;
+      text-decoration:none;color:inherit;
+      transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+      position:relative;overflow:hidden;cursor:pointer;
     }
-    .sch-card:hover{ transform:translateY(-2px);border-color:var(--gold); }
-    .sch-card .icn{
-      width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;
-      font-size:22px;color:var(--navy);
+    .sch-card:not(.locked):hover{ transform:translateY(-2px);border-color:var(--gold);box-shadow:0 12px 28px -16px rgba(232,192,96,.35); }
+    .sch-card.locked{ opacity:.55;cursor:not-allowed; }
+    .sch-card.complete{ border-color:rgba(16,185,129,.45); }
+    .sch-card-head{ display:flex;align-items:flex-start;gap:14px; }
+    .sch-icn{
+      width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+      font-size:22px;color:var(--navy);flex-shrink:0;
     }
-    .sch-card .ttl{ font-family:'Cinzel',serif;font-size:1.15rem;font-weight:700;color:var(--cream);letter-spacing:.02em; }
-    .sch-card .sum{ color:var(--muted);font-size:13.5px;line-height:1.5;flex:1; }
-    .sch-card .ftr{ display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--bdl); }
+    .sch-ttl{ font-family:'Cinzel',serif;font-size:1.18rem;font-weight:700;color:var(--cream);letter-spacing:.02em;line-height:1.25; }
+    .sch-meta{ color:var(--muted);font-size:12px;letter-spacing:.04em;margin-top:4px; }
+    .sch-meta i{ width:14px;text-align:center;margin-right:4px;opacity:.7; }
+    .sch-sum{ color:var(--muted);font-size:13.5px;line-height:1.55;flex:1;margin:0; }
+    .sch-bar{
+      height:6px;background:rgba(122,138,170,.15);border-radius:99px;overflow:hidden;
+    }
+    .sch-bar > span{ display:block;height:100%;background:linear-gradient(90deg, var(--gold), var(--gold2));border-radius:99px;transition:width .4s ease; }
+    .sch-bar.done > span{ background:linear-gradient(90deg, #10b981, #34d399); }
+    .sch-card-ftr{ display:flex;align-items:center;justify-content:space-between;gap:10px; }
+    .sch-cta{
+      display:inline-flex;align-items:center;gap:6px;padding:8px 14px;
+      background:var(--gold);color:var(--navy);border-radius:10px;
+      font-weight:700;font-size:13px;letter-spacing:.04em;text-decoration:none;
+      transition:background .12s ease;
+    }
+    .sch-card:not(.locked):hover .sch-cta{ background:var(--gold2); }
+    .sch-cta.outline{ background:transparent;border:1px solid var(--gold);color:var(--gold2); }
+    .sch-cta.complete{ background:rgba(16,185,129,.18);border:1px solid rgba(16,185,129,.5);color:#10b981; }
+    .sch-lock{
+      position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:50%;
+      background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;
+    }
+    .sch-rwd{ display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#10b981; }
+    .sch-rwd i{ font-size:11px; }
 
-    .ring{ display:inline-flex;align-items:center;gap:10px; }
-    .ring svg{ display:block; }
-    .ring .lbl{ font-family:'Cinzel',serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted); }
-    .ring .pct{ font-family:'Cinzel',serif;font-size:13px;color:var(--gold2);font-weight:700; }
+    /* Admin panel */
+    .admin-panel{
+      margin-top:34px;padding:24px;background:var(--navy3);border:1px dashed var(--gold);border-radius:16px;
+    }
+    .admin-panel h2{ font-family:'Cinzel',serif;font-size:1.2rem;color:var(--gold2);margin:0 0 6px;display:flex;align-items:center;gap:10px; }
+    .admin-panel p{ color:var(--muted);font-size:13px;margin:0 0 16px; }
+    .admin-stats{ display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:18px; }
+    .admin-stat{
+      background:var(--navy2);border:1px solid var(--bdl);border-radius:12px;padding:12px 14px;
+    }
+    .admin-stat .k{ font-family:'Cinzel',serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted); }
+    .admin-stat .v{ font-family:'Cinzel',serif;font-size:1.2rem;color:var(--cream);margin-top:2px; }
+    .admin-stat .v small{ font-size:12px;color:var(--muted);font-weight:400; }
 
-    .pill-arrow{ color:var(--gold2);font-size:13px;font-weight:600; }
+    .admin-actions{ display:flex;flex-wrap:wrap;gap:10px; }
+    .admin-btn{
+      padding:8px 14px;background:var(--navy2);border:1px solid var(--gold);
+      color:var(--gold2);border-radius:10px;font-weight:600;font-size:13px;cursor:pointer;
+      display:inline-flex;align-items:center;gap:6px;
+    }
+    .admin-btn:hover{ background:rgba(232,192,96,.1); }
 
-    .empty-state{ text-align:center;padding:64px 24px;color:var(--muted); }
-    .empty-state i{ font-size:42px;color:var(--gold);opacity:.5;margin-bottom:14px;display:block; }
+    /* Modal (admin edit) */
+    .modal-back{
+      position:fixed;inset:0;background:rgba(6,14,28,.85);backdrop-filter:blur(6px);
+      display:none;align-items:center;justify-content:center;z-index:1000;padding:24px;
+    }
+    .modal-back.show{ display:flex; }
+    .modal{
+      background:var(--navy2);border:1px solid var(--border);border-radius:18px;
+      max-width:680px;width:100%;max-height:90vh;overflow:auto;padding:26px;
+    }
+    .modal h3{ font-family:'Cinzel',serif;font-size:1.25rem;margin:0 0 14px;color:var(--cream); }
+    .modal label{ display:block;font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:14px 0 6px; }
+    .modal input, .modal textarea{
+      width:100%;background:var(--navy3);border:1px solid var(--bdl);border-radius:10px;
+      padding:10px 12px;color:var(--cream);font-family:inherit;font-size:13.5px;
+    }
+    .modal textarea{ min-height:120px;resize:vertical;font-family:'DM Sans',monospace; }
+    .modal-actions{ display:flex;justify-content:flex-end;gap:10px;margin-top:20px; }
+    .btn-cancel{ padding:9px 16px;background:transparent;border:1px solid var(--bdl);color:var(--muted);border-radius:10px;cursor:pointer;font-weight:600; }
+    .btn-save{ padding:9px 16px;background:var(--gold);color:var(--navy);border:none;border-radius:10px;cursor:pointer;font-weight:700; }
 
     .gate{ position:fixed;inset:0;background:rgba(6,14,28,.95);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(6px); }
     .gate.hide{ display:none; }
     .gate-card{ max-width:420px;width:90%;background:var(--navy2);border:1px solid var(--border);border-radius:20px;padding:34px;text-align:center; }
     .gate-card h2{ font-family:'Cinzel',serif;font-size:1.4rem;margin-bottom:8px; }
     .gate-card p{ color:var(--muted);font-size:13.5px;line-height:1.6;margin-bottom:16px; }
+
+    @media (max-width: 640px){
+      .sch-hero{ padding:24px 20px 22px; }
+      .sch-hero h1{ font-size:1.8rem; }
+      .admin-pill{ position:static;margin-bottom:12px; }
+    }
   </style>
 </head>
 <body>
 
 <div id="tarena-nav"></div>
+
 <div class="gate hide" id="gate"><div class="gate-card">
   <h2 id="gateTitle">Sign in required</h2>
-  <p id="gateMsg">You need an account to access TradeArena Schools.</p>
+  <p id="gateMsg">You need an account to access TradeArena School.</p>
   <a href="auth.html" class="btn-gold">Sign in →</a>
 </div></div>
 
 <div class="sch-shell">
-  <div class="sch-head">
-    <h1><i class="fa-solid fa-graduation-cap" style="color:var(--gold);margin-right:8px;"></i> Schools</h1>
-    <p>Curated playlists of trade-idea reels, ending with a quiz and a paper-trade challenge. Pass both to unlock the next module — and earn extra paper capital, indicator unlocks, and badges along the way.</p>
-  </div>
-  <div id="grid" class="sch-grid">
-    <div class="empty-state" style="grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i><div>Loading schools…</div></div>
+
+  <section class="sch-hero">
+    <span class="admin-pill" id="adminPill" style="display:none;"><i class="fa-solid fa-shield-halved"></i> Admin Mode</span>
+    <h1><i class="fa-solid fa-graduation-cap"></i> TradeArena School</h1>
+    <p>Learn to trade. Earn paper capital. Climb the leaderboard.</p>
+    <div class="sch-progress-row">
+      <div class="sch-progress-bar"><span id="overallBar" style="width:0%"></span></div>
+      <div class="sch-progress-meta" id="overallMeta">0 / 0 lessons</div>
+      <span class="sch-bonus-badge" id="rewardBadge" style="display:none;">
+        <i class="fa-solid fa-coins"></i> <span id="rewardEarned">$0</span> earned
+      </span>
+    </div>
+  </section>
+
+  <div id="grid" class="sch-grid"></div>
+
+  <section class="admin-panel" id="adminPanel" style="display:none;">
+    <h2><i class="fa-solid fa-chart-bar"></i> Module completion stats</h2>
+    <p>Per-module learners (started a lesson) and completers (finished + earned the reward).</p>
+    <div class="admin-stats" id="adminStats"></div>
+    <div class="admin-actions">
+      <button class="admin-btn" id="btnRefreshStats"><i class="fa-solid fa-rotate"></i> Refresh stats</button>
+    </div>
+  </section>
+
+</div>
+
+<!-- Admin edit modal -->
+<div class="modal-back" id="editBack">
+  <div class="modal">
+    <h3 id="editTtl">Edit module</h3>
+    <input type="hidden" id="editKey"/>
+    <label>Title</label>
+    <input id="editTitle" maxlength="80"/>
+    <label>Summary</label>
+    <textarea id="editSummary" maxlength="400" style="min-height:70px;"></textarea>
+    <label>Reward amount (paper $)</label>
+    <input id="editReward" type="number" min="0" max="10000" step="100"/>
+    <label>Lessons (advanced — JSON array)</label>
+    <textarea id="editLessons" placeholder="Leave blank to keep default lessons" spellcheck="false"></textarea>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="btnCancel">Cancel</button>
+      <button class="btn-save" id="btnSave">Save changes</button>
+    </div>
   </div>
 </div>
 
@@ -73,8 +214,9 @@
 <script src="assets/supabase.js"></script>
 <script src="assets/app.js"></script>
 <script src="assets/market.js"></script>
+<script src="assets/school-content.js"></script>
 <script>
-(() => {
+(async () => {
   'use strict';
   TArenaUI.renderNav('schools');
   TArenaUI.renderFooter();
@@ -83,73 +225,198 @@
   if (!session) { document.getElementById('gate').classList.remove('hide'); return; }
 
   const sb = window.TArenaDB;
-
-  function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-  function escAttr(s) { return String(s == null ? '' : s).replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
-
-  function ring(pct, accent) {
-    // 36px diameter SVG progress ring
-    const r = 14, c = 2 * Math.PI * r;
-    const off = c * (1 - Math.max(0, Math.min(1, pct)));
-    return `<svg width="36" height="36" viewBox="0 0 36 36">
-      <circle cx="18" cy="18" r="${r}" stroke="rgba(168,193,219,0.15)" stroke-width="3" fill="none"/>
-      <circle cx="18" cy="18" r="${r}" stroke="${accent || 'var(--gold2)'}" stroke-width="3" fill="none"
-        stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}"
-        transform="rotate(-90 18 18)"/>
-    </svg>`;
+  const isAdmin = !!session.user.isAdmin;
+  if (isAdmin) {
+    document.getElementById('adminPill').style.display = 'inline-flex';
+    document.getElementById('adminPanel').style.display = 'block';
   }
 
-  function card(s) {
-    const pct = s.module_count > 0 ? (s.done_count / s.module_count) : 0;
-    // Whitelist accent + icon so admin-supplied strings can't break out of
-    // CSS / inject markup. Hex colour: #abc or #abcdef. Icon: FA token.
-    const accent = /^#[0-9a-fA-F]{3,8}$/.test(s.accent_color || '') ? s.accent_color : '#c9a030';
-    const icon = /^fa-[a-z0-9-]+$/.test(s.icon || '') ? s.icon : 'fa-graduation-cap';
-    const tint = `linear-gradient(135deg, ${accent}, ${accent}cc)`;
-    return `<a class="sch-card" href="school.html?id=${encodeURIComponent(s.id)}">
-      <div style="display:flex;align-items:flex-start;gap:14px;">
-        <div class="icn" style="background:${tint};"><i class="fa-solid ${icon}"></i></div>
-        <div style="flex:1;">
-          <div class="ttl">${esc(s.title)}</div>
-          <div class="text-muted" style="font-size:11.5px;letter-spacing:.04em;margin-top:2px;">
-            ${s.module_count} module${s.module_count === 1 ? '' : 's'}
-          </div>
-        </div>
-      </div>
-      <div class="sum">${esc(s.summary)}</div>
-      <div class="ftr">
-        <div class="ring">
-          ${ring(pct, accent)}
-          <div>
-            <div class="lbl">Progress</div>
-            <div class="pct">${s.done_count} / ${s.module_count}</div>
-          </div>
-        </div>
-        <div class="pill-arrow">Open <i class="fa-solid fa-arrow-right"></i></div>
-      </div>
-    </a>`;
+  const esc = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const fmt$ = n => '$' + (n||0).toLocaleString('en-AU');
+
+  // ---- progress + overrides loading ------------------------------------
+  // Try server first, fall back to localStorage so the page works even
+  // before the migration has been applied.
+  const LSKEY = 'tarena.school.progress.v1';
+  function loadLocal() {
+    try { return JSON.parse(localStorage.getItem(LSKEY) || '{"l":[],"m":[]}'); }
+    catch(_) { return { l:[], m:[] }; }
+  }
+  function saveLocal(p) { try { localStorage.setItem(LSKEY, JSON.stringify(p)); } catch(_){} }
+
+  let progress = { lessons: new Set(), modules: new Set(), totalReward: 0 };
+  try {
+    const { data, error } = await sb.rpc('get_my_school_progress');
+    if (error) throw error;
+    const row = (Array.isArray(data) ? data[0] : data) || {};
+    progress.lessons = new Set(row.lesson_keys || []);
+    progress.modules = new Set(row.module_keys || []);
+    progress.totalReward = Number(row.total_reward) || 0;
+  } catch (e) {
+    console.warn('[school] using localStorage fallback', e?.message || e);
+    const local = loadLocal();
+    progress.lessons = new Set(local.l || []);
+    progress.modules = new Set(local.m || []);
   }
 
-  async function load() {
-    const { data, error } = await sb.rpc('list_schools');
+  let overrides = [];
+  try {
+    const { data } = await sb.from('school_module_overrides').select('*');
+    overrides = data || [];
+  } catch(_) { overrides = []; }
+  const MODULES = TArenaSchool.applyOverrides(overrides);
+
+  // ---- render ----------------------------------------------------------
+  function renderHero() {
+    const totalLessons = MODULES.reduce((s,m) => s + m.lessons.length, 0);
+    const doneLessons = MODULES.reduce((s,m) =>
+      s + m.lessons.filter(l => progress.lessons.has(l.key)).length, 0);
+    const pct = totalLessons ? Math.round(100 * doneLessons / totalLessons) : 0;
+    document.getElementById('overallBar').style.width = pct + '%';
+    document.getElementById('overallMeta').textContent =
+      `${doneLessons} / ${totalLessons} lessons · ${pct}%`;
+    if (progress.totalReward > 0) {
+      document.getElementById('rewardBadge').style.display = 'inline-flex';
+      document.getElementById('rewardEarned').textContent = fmt$(progress.totalReward);
+    }
+  }
+
+  function renderGrid() {
     const grid = document.getElementById('grid');
-    if (error) {
-      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><i class="fa-solid fa-triangle-exclamation"></i>
-        <div>Couldn't load schools.</div>
-        <div style="font-size:12px;margin-top:6px;">${error.message || 'Unknown error'}</div></div>`;
-      return;
+    const html = MODULES.map((m, i) => {
+      const lessonsDone = m.lessons.filter(l => progress.lessons.has(l.key)).length;
+      const totalMin = m.lessons.reduce((s,l) => s + (l.minutes || 4), 0);
+      const pct = m.lessons.length ? Math.round(100 * lessonsDone / m.lessons.length) : 0;
+      const moduleDone = progress.modules.has(m.key);
+      const prevDone = i === 0 ? true : progress.modules.has(MODULES[i-1].key);
+      const locked = !prevDone && !moduleDone;
+      const accent = /^#[0-9a-fA-F]{3,8}$/.test(m.accent) ? m.accent : '#c9a030';
+      const icon   = /^fa-[a-z0-9-]+$/.test(m.icon || '') ? m.icon : 'fa-graduation-cap';
+      const tint   = `linear-gradient(135deg, ${accent}, ${accent}cc)`;
+      const cls    = ['sch-card', locked ? 'locked' : '', moduleDone ? 'complete' : ''].filter(Boolean).join(' ');
+      const cta    = moduleDone
+        ? `<span class="sch-cta complete"><i class="fa-solid fa-check"></i> Completed</span>`
+        : (lessonsDone > 0
+            ? `<span class="sch-cta"><i class="fa-solid fa-arrow-right"></i> Continue</span>`
+            : (locked
+                ? `<span class="sch-cta outline"><i class="fa-solid fa-lock"></i> Locked</span>`
+                : `<span class="sch-cta"><i class="fa-solid fa-play"></i> Start module</span>`));
+      const lock = locked ? `<div class="sch-lock"><i class="fa-solid fa-lock"></i></div>` : '';
+      const editBtn = isAdmin
+        ? `<button class="admin-btn" data-edit="${esc(m.key)}" style="position:absolute;bottom:14px;right:14px;padding:5px 10px;font-size:11px;"><i class="fa-solid fa-pen"></i> Edit</button>`
+        : '';
+      const startUrl = locked ? '#' : `lesson.html?m=${encodeURIComponent(m.key)}&l=${encodeURIComponent(m.lessons[0].key)}`;
+
+      return `<div class="${cls}" data-href="${esc(startUrl)}" data-locked="${locked}">
+        ${lock}
+        <div class="sch-card-head">
+          <div class="sch-icn" style="background:${tint};"><i class="fa-solid ${icon}"></i></div>
+          <div style="flex:1;">
+            <div class="sch-ttl">${esc(m.title)}</div>
+            <div class="sch-meta">
+              <i class="fa-regular fa-circle-dot"></i>${m.lessons.length} lessons
+              <span style="margin:0 6px;opacity:.4;">·</span>
+              <i class="fa-regular fa-clock"></i>~${totalMin} mins
+            </div>
+          </div>
+        </div>
+        <p class="sch-sum">${esc(m.summary)}</p>
+        <div class="sch-bar ${pct === 100 ? 'done' : ''}"><span style="width:${pct}%"></span></div>
+        <div class="sch-card-ftr">
+          <span class="sch-rwd"><i class="fa-solid fa-coins"></i> +${fmt$(m.reward)} on completion</span>
+          ${cta}
+        </div>
+        ${editBtn}
+      </div>`;
+    }).join('');
+    grid.innerHTML = html;
+
+    grid.querySelectorAll('.sch-card').forEach(card => {
+      card.addEventListener('click', e => {
+        if (e.target.closest('[data-edit]')) return;
+        if (card.dataset.locked === 'true') return;
+        const href = card.dataset.href;
+        if (href && href !== '#') window.location.href = href;
+      });
+    });
+
+    if (isAdmin) {
+      grid.querySelectorAll('[data-edit]').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          openEdit(btn.dataset.edit);
+        });
+      });
     }
-    const list = Array.isArray(data) ? data : [];
-    if (!list.length) {
-      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><i class="fa-solid fa-graduation-cap"></i>
-        <div>No schools published yet.</div>
-        <div style="font-size:12.5px;margin-top:8px;">Admins can run <code>select public.seed_starter_schools();</code> in the SQL editor to load the two starter schools, or build their own from the Admin page.</div></div>`;
-      return;
-    }
-    grid.innerHTML = list.map(card).join('');
   }
 
-  load();
+  // ---- admin: stats + edit --------------------------------------------
+  async function loadStats() {
+    if (!isAdmin) return;
+    const wrap = document.getElementById('adminStats');
+    wrap.innerHTML = `<div class="admin-stat"><div class="k">Loading…</div></div>`;
+    try {
+      const { data, error } = await sb.rpc('admin_school_completion_stats');
+      if (error) throw error;
+      const map = {};
+      (data || []).forEach(r => { map[r.module_key] = r; });
+      wrap.innerHTML = MODULES.map(m => {
+        const r = map[m.key] || { learners: 0, completions: 0 };
+        return `<div class="admin-stat">
+          <div class="k">${esc(m.title)}</div>
+          <div class="v">${r.completions} <small>/ ${r.learners} started</small></div>
+        </div>`;
+      }).join('');
+    } catch (e) {
+      wrap.innerHTML = `<div class="admin-stat"><div class="k">Error</div><div class="v" style="font-size:13px;">${esc(e.message || e)}</div></div>`;
+    }
+  }
+
+  function openEdit(moduleKey) {
+    const m = MODULES.find(x => x.key === moduleKey);
+    if (!m) return;
+    document.getElementById('editTtl').textContent = `Edit · ${m.title}`;
+    document.getElementById('editKey').value = m.key;
+    document.getElementById('editTitle').value = m.title;
+    document.getElementById('editSummary').value = m.summary;
+    document.getElementById('editReward').value = m.reward;
+    document.getElementById('editLessons').value = '';
+    document.getElementById('editBack').classList.add('show');
+  }
+  function closeEdit() { document.getElementById('editBack').classList.remove('show'); }
+  document.getElementById('btnCancel').addEventListener('click', closeEdit);
+  document.getElementById('editBack').addEventListener('click', e => {
+    if (e.target.id === 'editBack') closeEdit();
+  });
+  document.getElementById('btnSave').addEventListener('click', async () => {
+    const payload = {
+      module_key:    document.getElementById('editKey').value,
+      title:         document.getElementById('editTitle').value.trim(),
+      summary:       document.getElementById('editSummary').value.trim(),
+      reward_amount: String(parseInt(document.getElementById('editReward').value, 10) || 0),
+    };
+    const lessonsRaw = document.getElementById('editLessons').value.trim();
+    if (lessonsRaw) {
+      try {
+        const parsed = JSON.parse(lessonsRaw);
+        if (!Array.isArray(parsed)) throw new Error('Must be a JSON array');
+        payload.lessons = parsed;
+      } catch (e) { alert('Lessons JSON invalid: ' + e.message); return; }
+    }
+    try {
+      const { error } = await sb.rpc('admin_upsert_school_module_override', { p: payload });
+      if (error) throw error;
+      closeEdit();
+      // Reload to reflect overrides
+      window.location.reload();
+    } catch (e) { alert('Save failed: ' + (e.message || e)); }
+  });
+  document.getElementById('btnRefreshStats').addEventListener('click', loadStats);
+
+  // ---- boot ------------------------------------------------------------
+  renderHero();
+  renderGrid();
+  if (isAdmin) loadStats();
 })();
 </script>
 </body>

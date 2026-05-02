@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TradeArena · Lesson</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <style>
+    .lsn-shell{ max-width:920px;margin:0 auto;padding:32px 24px 80px;flex:1;width:100%; }
+    .lsn-bread{
+      display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);
+      margin-bottom:16px;letter-spacing:.04em;
+    }
+    .lsn-bread a{ color:var(--gold2);text-decoration:none; }
+    .lsn-bread a:hover{ text-decoration:underline; }
+    .lsn-bread i{ font-size:9px;opacity:.5; }
+
+    .lsn-progress{
+      display:flex;align-items:center;gap:14px;margin-bottom:28px;
+    }
+    .lsn-progress-bar{
+      flex:1;height:6px;background:rgba(122,138,170,.15);border-radius:99px;overflow:hidden;
+    }
+    .lsn-progress-bar > span{
+      display:block;height:100%;background:linear-gradient(90deg, var(--gold), var(--gold2));border-radius:99px;transition:width .4s ease;
+    }
+    .lsn-progress-meta{ font-family:'Cinzel',serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted); }
+
+    .lsn-head h1{
+      font-family:'Cinzel',serif;font-size:2rem;line-height:1.2;letter-spacing:-.4px;margin:0 0 8px;
+    }
+    .lsn-head .meta{
+      color:var(--muted);font-size:12.5px;letter-spacing:.04em;margin-bottom:24px;
+      display:flex;align-items:center;gap:10px;
+    }
+    .lsn-head .meta .pill{
+      display:inline-flex;align-items:center;gap:5px;padding:3px 10px;
+      background:var(--navy3);border:1px solid var(--bdl);border-radius:99px;
+    }
+    .lsn-head .meta .pill i{ font-size:10px;opacity:.7; }
+
+    .lsn-content{
+      background:var(--navy3);border:1px solid var(--bdl);border-radius:16px;
+      padding:32px 36px;line-height:1.75;font-size:15.5px;color:var(--cream);
+    }
+    .lsn-content p{ margin:0 0 14px; }
+    .lsn-content p:last-child{ margin-bottom:0; }
+    .lsn-content strong{ color:var(--gold2);font-weight:700; }
+    .lsn-content em{ color:var(--cream);font-style:italic; }
+    .lsn-content ul, .lsn-content ol{ margin:0 0 14px;padding-left:22px; }
+    .lsn-content li{ margin-bottom:6px; }
+    .lsn-content code{
+      background:var(--navy2);padding:1px 6px;border-radius:4px;
+      font-family:'DM Sans',monospace;font-size:13.5px;color:var(--gold2);border:1px solid var(--bdl);
+    }
+    .lsn-content blockquote{
+      margin:14px 0;padding:12px 18px;background:var(--navy2);
+      border-left:3px solid var(--gold);border-radius:0 8px 8px 0;color:var(--muted);
+    }
+    .lsn-content h2{ font-family:'Cinzel',serif;font-size:1.3rem;margin:24px 0 10px;color:var(--gold2); }
+
+    .lsn-actions{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:28px;flex-wrap:wrap;
+    }
+    .lsn-nav{
+      display:flex;align-items:center;gap:8px;padding:10px 16px;
+      background:var(--navy3);border:1px solid var(--bdl);border-radius:10px;
+      color:var(--cream);text-decoration:none;font-weight:600;font-size:13.5px;cursor:pointer;
+      transition:border-color .12s ease, color .12s ease;
+    }
+    .lsn-nav:hover{ border-color:var(--gold);color:var(--gold2); }
+    .lsn-nav[disabled], .lsn-nav.disabled{ opacity:.4;pointer-events:none; }
+    .lsn-mark{
+      padding:11px 20px;background:var(--gold);color:var(--navy);
+      border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;
+      display:inline-flex;align-items:center;gap:8px;letter-spacing:.04em;
+      transition:background .12s ease;
+    }
+    .lsn-mark:hover{ background:var(--gold2); }
+    .lsn-mark.done{ background:rgba(16,185,129,.18);border:1px solid rgba(16,185,129,.5);color:#10b981;cursor:default; }
+    .lsn-mark.done:hover{ background:rgba(16,185,129,.18); }
+
+    /* Lesson list rail (right side on wide, top on narrow) */
+    .lsn-layout{ display:grid;grid-template-columns:1fr 240px;gap:30px;align-items:start; }
+    @media (max-width: 880px){ .lsn-layout{ grid-template-columns:1fr; } }
+    .lsn-rail{
+      background:var(--navy3);border:1px solid var(--bdl);border-radius:14px;
+      padding:18px;position:sticky;top:90px;
+    }
+    .lsn-rail h3{ font-family:'Cinzel',serif;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:0 0 12px; }
+    .lsn-rail ol{ list-style:none;padding:0;margin:0; }
+    .lsn-rail li{ margin-bottom:6px; }
+    .lsn-rail a{
+      display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:8px;
+      text-decoration:none;color:var(--muted);font-size:13px;
+      transition:background .12s ease, color .12s ease;
+    }
+    .lsn-rail a:hover{ background:var(--navy2);color:var(--cream); }
+    .lsn-rail a.active{ background:rgba(232,192,96,.12);color:var(--gold2);font-weight:600; }
+    .lsn-rail .check{
+      width:18px;height:18px;border-radius:50%;border:1.5px solid var(--bdl);
+      display:flex;align-items:center;justify-content:center;font-size:9px;color:transparent;flex-shrink:0;
+    }
+    .lsn-rail a.complete .check{
+      background:#10b981;border-color:#10b981;color:#fff;
+    }
+
+    /* Reward modal */
+    .reward-back{
+      position:fixed;inset:0;background:rgba(6,14,28,.92);backdrop-filter:blur(8px);
+      display:none;align-items:center;justify-content:center;z-index:1000;padding:24px;
+    }
+    .reward-back.show{ display:flex; }
+    .reward-card{
+      background:linear-gradient(160deg, var(--navy2) 0%, var(--navy3) 100%);
+      border:1px solid var(--gold);border-radius:20px;padding:36px 32px;
+      max-width:440px;width:100%;text-align:center;
+      box-shadow:0 30px 80px -30px rgba(232,192,96,.5);
+    }
+    .reward-icon{
+      width:84px;height:84px;border-radius:50%;background:linear-gradient(135deg, var(--gold), var(--gold2));
+      display:flex;align-items:center;justify-content:center;font-size:38px;color:var(--navy);
+      margin:0 auto 18px;
+    }
+    .reward-card h2{ font-family:'Cinzel',serif;font-size:1.6rem;margin:0 0 8px;color:var(--cream); }
+    .reward-card p{ color:var(--muted);font-size:14px;line-height:1.6;margin:0 0 18px; }
+    .reward-amount{ font-family:'Cinzel',serif;font-size:2.4rem;color:var(--gold2);margin:8px 0 18px;font-weight:700; }
+    .reward-actions{ display:flex;gap:10px;justify-content:center; }
+    .btn-primary{ padding:11px 22px;background:var(--gold);color:var(--navy);border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:13.5px;text-decoration:none; }
+    .btn-secondary{ padding:11px 22px;background:transparent;border:1px solid var(--gold);color:var(--gold2);border-radius:10px;font-weight:700;cursor:pointer;font-size:13.5px;text-decoration:none; }
+
+    .gate{ position:fixed;inset:0;background:rgba(6,14,28,.95);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(6px); }
+    .gate.hide{ display:none; }
+    .gate-card{ max-width:420px;width:90%;background:var(--navy2);border:1px solid var(--border);border-radius:20px;padding:34px;text-align:center; }
+    .gate-card h2{ font-family:'Cinzel',serif;font-size:1.4rem;margin-bottom:8px; }
+    .gate-card p{ color:var(--muted);font-size:13.5px;line-height:1.6;margin-bottom:16px; }
+  </style>
+</head>
+<body>
+
+<div id="tarena-nav"></div>
+
+<div class="gate hide" id="gate"><div class="gate-card">
+  <h2>Sign in required</h2>
+  <p>You need an account to access TradeArena School.</p>
+  <a href="auth.html" class="btn-gold">Sign in →</a>
+</div></div>
+
+<div class="lsn-shell" id="shell" style="display:none;">
+
+  <div class="lsn-bread">
+    <a href="schools.html"><i class="fa-solid fa-graduation-cap"></i> School</a>
+    <i class="fa-solid fa-chevron-right"></i>
+    <span id="bcModule">…</span>
+  </div>
+
+  <div class="lsn-progress">
+    <div class="lsn-progress-bar"><span id="lsnBar" style="width:0%"></span></div>
+    <div class="lsn-progress-meta" id="lsnMeta">0 / 0</div>
+  </div>
+
+  <div class="lsn-layout">
+    <main>
+      <div class="lsn-head">
+        <h1 id="lsnTitle">…</h1>
+        <div class="meta">
+          <span class="pill"><i class="fa-regular fa-clock"></i> <span id="lsnTime">~4 mins</span></span>
+          <span class="pill"><i class="fa-solid fa-coins" style="color:var(--gold);"></i> +$<span id="lsnReward">0</span> on module finish</span>
+        </div>
+      </div>
+
+      <article class="lsn-content" id="lsnContent">Loading…</article>
+
+      <div class="lsn-actions">
+        <a class="lsn-nav" id="prevBtn"><i class="fa-solid fa-arrow-left"></i> Previous</a>
+        <button class="lsn-mark" id="markBtn"><i class="fa-solid fa-check"></i> Mark as complete</button>
+        <a class="lsn-nav" id="nextBtn">Next <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+    </main>
+
+    <aside class="lsn-rail">
+      <h3>Module lessons</h3>
+      <ol id="lsnList"></ol>
+    </aside>
+  </div>
+
+</div>
+
+<!-- Reward modal -->
+<div class="reward-back" id="rewardBack">
+  <div class="reward-card">
+    <div class="reward-icon"><i class="fa-solid fa-trophy"></i></div>
+    <h2>Module complete!</h2>
+    <p id="rewardCopy">You finished the module. Your paper account has been topped up.</p>
+    <div class="reward-amount">+$<span id="rewardAmt">0</span></div>
+    <div class="reward-actions">
+      <a href="schools.html" class="btn-secondary">Back to School</a>
+      <a href="trade.html" class="btn-primary">Start trading <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+  </div>
+</div>
+
+<div id="tarena-footer"></div>
+
+<script src="assets/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="assets/supabase.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/market.js"></script>
+<script src="assets/school-content.js"></script>
+<script>
+(async () => {
+  'use strict';
+  TArenaUI.renderNav('schools');
+  TArenaUI.renderFooter();
+
+  const session = TArenaAuth.getSession();
+  if (!session) { document.getElementById('gate').classList.remove('hide'); return; }
+
+  const sb = window.TArenaDB;
+  const params = new URLSearchParams(location.search);
+  const mKey = params.get('m');
+  const lKey = params.get('l');
+
+  if (!mKey) { window.location.href = 'schools.html'; return; }
+
+  // Load overrides + progress (graceful fallback to localStorage)
+  const LSKEY = 'tarena.school.progress.v1';
+  const lsLoad = () => {
+    try { return JSON.parse(localStorage.getItem(LSKEY) || '{"l":[],"m":[]}'); }
+    catch(_) { return { l:[], m:[] }; }
+  };
+  const lsSave = (p) => { try { localStorage.setItem(LSKEY, JSON.stringify(p)); } catch(_){} };
+
+  let progress = { lessons: new Set(), modules: new Set() };
+  let useServer = true;
+  try {
+    const { data, error } = await sb.rpc('get_my_school_progress');
+    if (error) throw error;
+    const row = (Array.isArray(data) ? data[0] : data) || {};
+    progress.lessons = new Set(row.lesson_keys || []);
+    progress.modules = new Set(row.module_keys || []);
+  } catch (e) {
+    useServer = false;
+    const local = lsLoad();
+    progress.lessons = new Set(local.l || []);
+    progress.modules = new Set(local.m || []);
+  }
+
+  let overrides = [];
+  try {
+    const { data } = await sb.from('school_module_overrides').select('*');
+    overrides = data || [];
+  } catch(_) {}
+  const MODULES = TArenaSchool.applyOverrides(overrides);
+  const m = MODULES.find(x => x.key === mKey);
+  if (!m) { window.location.href = 'schools.html'; return; }
+  const lessonIdx = Math.max(0, m.lessons.findIndex(l => l.key === lKey));
+  const lesson = m.lessons[lessonIdx];
+  if (!lesson) { window.location.href = 'schools.html'; return; }
+
+  document.getElementById('shell').style.display = 'block';
+
+  const esc = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  // Tiny markdown → HTML (paragraphs, **bold**, *em*, `code`, > blockquote, lists, ## h2)
+  function mdToHtml(md) {
+    const lines = String(md || '').replace(/\r\n/g,'\n').split('\n');
+    const out = [];
+    let inUl = false, inOl = false, paraBuf = [];
+    const flushPara = () => {
+      if (paraBuf.length) {
+        const txt = paraBuf.join(' ').trim();
+        if (txt) out.push('<p>' + inline(txt) + '</p>');
+        paraBuf = [];
+      }
+    };
+    const closeLists = () => {
+      if (inUl) { out.push('</ul>'); inUl = false; }
+      if (inOl) { out.push('</ol>'); inOl = false; }
+    };
+    function inline(t) {
+      return esc(t)
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>');
+    }
+    for (const raw of lines) {
+      const line = raw.replace(/\s+$/,'');
+      if (!line.trim()) { flushPara(); closeLists(); continue; }
+      if (/^##\s+/.test(line)) { flushPara(); closeLists(); out.push('<h2>' + inline(line.replace(/^##\s+/,'')) + '</h2>'); continue; }
+      if (/^>\s+/.test(line))  { flushPara(); closeLists(); out.push('<blockquote>' + inline(line.replace(/^>\s+/,'')) + '</blockquote>'); continue; }
+      const ulM = line.match(/^[-*]\s+(.+)$/);
+      const olM = line.match(/^(\d+)\.\s+(.+)$/);
+      if (ulM) { flushPara(); if (inOl){ out.push('</ol>'); inOl=false; } if (!inUl){ out.push('<ul>'); inUl=true; } out.push('<li>' + inline(ulM[1]) + '</li>'); continue; }
+      if (olM) { flushPara(); if (inUl){ out.push('</ul>'); inUl=false; } if (!inOl){ out.push('<ol>'); inOl=true; } out.push('<li>' + inline(olM[2]) + '</li>'); continue; }
+      paraBuf.push(line);
+    }
+    flushPara(); closeLists();
+    return out.join('\n');
+  }
+
+  // Render
+  document.title = `${lesson.title} · ${m.title} · TradeArena`;
+  document.getElementById('bcModule').textContent = m.title;
+  document.getElementById('lsnTitle').textContent = lesson.title;
+  document.getElementById('lsnTime').textContent = `~${lesson.minutes || 4} mins`;
+  document.getElementById('lsnReward').textContent = (m.reward || 0).toLocaleString('en-AU');
+  document.getElementById('lsnContent').innerHTML = mdToHtml(lesson.content);
+
+  const total = m.lessons.length;
+  function renderRail() {
+    document.getElementById('lsnList').innerHTML = m.lessons.map((l, i) => {
+      const done = progress.lessons.has(l.key);
+      const cur  = l.key === lesson.key;
+      return `<li><a href="lesson.html?m=${encodeURIComponent(m.key)}&l=${encodeURIComponent(l.key)}"
+        class="${cur ? 'active' : ''} ${done ? 'complete' : ''}">
+        <span class="check"><i class="fa-solid fa-check"></i></span>
+        <span>${i+1}. ${esc(l.title)}</span>
+      </a></li>`;
+    }).join('');
+  }
+  function renderProgress() {
+    const done = m.lessons.filter(l => progress.lessons.has(l.key)).length;
+    const pct = Math.round(100 * done / total);
+    document.getElementById('lsnBar').style.width = pct + '%';
+    document.getElementById('lsnMeta').textContent = `${done} / ${total} · ${pct}%`;
+  }
+  function renderActions() {
+    const prev = m.lessons[lessonIdx - 1];
+    const next = m.lessons[lessonIdx + 1];
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    if (prev) { prevBtn.href = `lesson.html?m=${encodeURIComponent(m.key)}&l=${encodeURIComponent(prev.key)}`; prevBtn.classList.remove('disabled'); }
+    else { prevBtn.classList.add('disabled'); prevBtn.removeAttribute('href'); }
+    if (next) { nextBtn.href = `lesson.html?m=${encodeURIComponent(m.key)}&l=${encodeURIComponent(next.key)}`; nextBtn.classList.remove('disabled'); }
+    else { nextBtn.classList.add('disabled'); nextBtn.removeAttribute('href'); }
+
+    const markBtn = document.getElementById('markBtn');
+    if (progress.lessons.has(lesson.key)) {
+      markBtn.classList.add('done');
+      markBtn.innerHTML = '<i class="fa-solid fa-check"></i> Completed';
+    } else {
+      markBtn.classList.remove('done');
+      markBtn.innerHTML = '<i class="fa-solid fa-check"></i> Mark as complete';
+    }
+  }
+
+  document.getElementById('markBtn').addEventListener('click', async () => {
+    if (progress.lessons.has(lesson.key)) return;
+    const btn = document.getElementById('markBtn');
+    btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
+
+    if (useServer) {
+      try { await sb.rpc('mark_lesson_complete', { p_module_key: m.key, p_lesson_key: lesson.key }); }
+      catch (e) { console.warn('[lesson] mark failed', e); }
+    }
+    progress.lessons.add(lesson.key);
+    if (!useServer) lsSave({ l: [...progress.lessons], m: [...progress.modules] });
+
+    renderRail(); renderProgress(); renderActions();
+
+    // Module complete?
+    const allDone = m.lessons.every(l => progress.lessons.has(l.key));
+    if (allDone && !progress.modules.has(m.key)) {
+      let rewardAmt = m.reward || 0;
+      if (useServer) {
+        try {
+          const { data, error } = await sb.rpc('complete_module', { p_module_key: m.key, p_reward: m.reward || 0 });
+          if (error) throw error;
+          const row = (Array.isArray(data) ? data[0] : data) || {};
+          rewardAmt = Number(row.reward_amount) || rewardAmt;
+        } catch (e) { console.warn('[lesson] complete_module failed', e); }
+      }
+      progress.modules.add(m.key);
+      if (!useServer) lsSave({ l: [...progress.lessons], m: [...progress.modules] });
+
+      document.getElementById('rewardAmt').textContent = rewardAmt.toLocaleString('en-AU');
+      document.getElementById('rewardCopy').textContent =
+        `Nice work — you finished "${m.title}" (${m.lessons.length} lessons). Your paper account has been topped up.`;
+      document.getElementById('rewardBack').classList.add('show');
+    }
+  });
+
+  document.getElementById('rewardBack').addEventListener('click', e => {
+    if (e.target.id === 'rewardBack') document.getElementById('rewardBack').classList.remove('show');
+  });
+
+  renderRail();
+  renderProgress();
+  renderActions();
+})();
+</script>
+</body>
+</html>
