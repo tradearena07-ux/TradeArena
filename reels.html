@@ -3,189 +3,446 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Strategies — TradeArena</title>
+  <title>Learn — TradeArena</title>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;700&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&amp;display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
   <link rel="stylesheet" href="assets/styles.css"/>
   <style>
-    body { background: #060e1c; }
+    body { background:#060e1c; }
 
-    .reels-shell { max-width: 1200px; margin: 0 auto; padding: 30px 5% 80px; display:grid; grid-template-columns: 260px 1fr 280px; gap:32px; }
-    @media (max-width: 1080px) { .reels-shell { grid-template-columns: 1fr; padding: 18px 4% 60px; gap: 18px; } .reels-side { display:none; } }
+    /* ============================================================
+       LAYOUT
+       ============================================================ */
+    .learn-shell { max-width:1240px; margin:0 auto; padding:28px 5% 80px; }
+    .learn-grid  { display:grid; grid-template-columns: 1fr 280px; gap:32px; align-items:start; }
+    @media (max-width: 1080px) { .learn-grid { grid-template-columns: 1fr; gap:24px; } .learn-side { order:2; } }
 
-    /* Filters rail */
-    .reels-side { position:sticky; top: 96px; align-self:start; }
-    .reels-side h3 { font-family:'Cinzel',serif; font-size:11px; letter-spacing:.22em; color: var(--gold2); text-transform:uppercase; margin-bottom:10px; }
-    .chip-stack { display:flex; flex-direction:column; gap:6px; }
-    .chip-stack button { background:transparent; border:1px solid var(--bdl); color:var(--cream); padding:7px 12px; border-radius:9999px; text-align:left; font-size:13px; cursor:pointer; transition:.15s; }
-    .chip-stack button:hover { border-color:var(--gold); }
-    .chip-stack button.active { background:var(--gold); color:#091528; border-color:var(--gold); font-weight:700; }
+    /* ============================================================
+       HERO BANNER
+       ============================================================ */
+    .ln-hero{
+      position:relative; overflow:hidden;
+      background:linear-gradient(135deg,#0a1830 0%, #091528 50%, #0a1f3a 100%);
+      border:1px solid rgba(232,192,96,.22);
+      border-radius:22px; padding:36px 38px 30px;
+      margin-bottom:28px;
+    }
+    .ln-hero::before{
+      content:""; position:absolute; right:-80px; top:-80px;
+      width:340px; height:340px; border-radius:50%;
+      background:radial-gradient(circle,rgba(232,192,96,.18) 0%,rgba(232,192,96,0) 60%);
+      pointer-events:none;
+    }
+    .ln-hero h1{
+      font-family:'DM Sans',sans-serif; font-weight:700; letter-spacing:-.01em;
+      font-size:2.1rem; color:var(--cream); margin:0 0 8px;
+    }
+    .ln-hero h1 .accent{
+      background:linear-gradient(180deg,#e8c060,#c9a030);
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+    }
+    .ln-hero p{ color:var(--muted); font-size:15px; margin:0 0 22px; max-width:560px; line-height:1.55; }
+    .ln-cta-row{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:26px; }
+    .ln-cta-gold{
+      display:inline-flex; align-items:center; gap:10px;
+      padding:13px 22px; border-radius:11px;
+      background:linear-gradient(180deg,#e8c060,#c9a030);
+      color:#091528; font-weight:700; font-size:14.5px; text-decoration:none;
+      box-shadow:0 10px 24px -10px rgba(232,192,96,.6);
+      border:none; cursor:pointer;
+      transition:transform .15s, box-shadow .15s;
+    }
+    .ln-cta-gold:hover{ transform:translateY(-1px); box-shadow:0 14px 28px -10px rgba(232,192,96,.7); }
+    .ln-cta-ghost{
+      display:inline-flex; align-items:center; gap:10px;
+      padding:12px 20px; border-radius:11px;
+      background:transparent; color:var(--cream); font-weight:600; font-size:14px;
+      border:1px solid rgba(255,255,255,.12); text-decoration:none; cursor:pointer;
+      transition:border-color .15s, background .15s;
+    }
+    .ln-cta-ghost:hover{ border-color:var(--gold); background:rgba(201,160,48,.06); color:var(--gold2); }
+    .ln-stats{ display:flex; gap:10px; flex-wrap:wrap; }
+    .ln-stat{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 14px; border-radius:9999px;
+      background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.06);
+      font-size:12.5px; color:var(--cream);
+    }
+    .ln-stat strong{ color:var(--gold2); font-weight:700; font-variant-numeric:tabular-nums; }
+    .ln-stat i{ color:var(--gold2); font-size:12px; }
 
-    /* Composer cta */
-    .compose-cta { display:flex; flex-direction:column; gap:14px; padding:18px; background:linear-gradient(135deg,#0a1830,#091528); border:1px solid var(--gold); border-radius:14px; margin-bottom:22px; }
-    .compose-cta h4 { font-family:'Cinzel',serif; color:var(--gold2); margin:0; font-size:15px; letter-spacing:.04em; }
-    .compose-cta p { color:var(--muted); font-size:12.5px; margin:0; line-height:1.5; }
-    .compose-cta a { display:inline-flex;align-items:center;justify-content:center;gap:8px; padding:10px 14px; background:var(--gold); color:#091528; border-radius:8px; text-decoration:none; font-weight:700; font-size:13px; }
+    /* ============================================================
+       TABS + SEARCH
+       ============================================================ */
+    .ln-bar{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:20px; }
+    .ln-tabs{
+      display:inline-flex; background:rgba(255,255,255,.04);
+      border:1px solid var(--bdl); border-radius:12px; padding:4px;
+    }
+    .ln-tabs button{
+      background:transparent; border:0; cursor:pointer;
+      color:var(--muted); font-family:'DM Sans',sans-serif; font-weight:600;
+      font-size:13.5px; padding:9px 16px; border-radius:9px;
+      display:inline-flex; align-items:center; gap:7px;
+      transition:color .15s, background .15s;
+    }
+    .ln-tabs button:hover{ color:var(--cream); }
+    .ln-tabs button.active{
+      background:linear-gradient(180deg,#e8c060,#c9a030);
+      color:#091528; font-weight:700;
+      box-shadow:0 4px 12px -4px rgba(232,192,96,.5);
+    }
+    .ln-search{
+      flex:1; min-width:240px; display:flex; align-items:center; gap:10px;
+      background:rgba(255,255,255,.04); border:1px solid var(--bdl);
+      border-radius:12px; padding:0 14px;
+      transition:border-color .15s;
+    }
+    .ln-search:focus-within{ border-color:var(--gold); }
+    .ln-search i{ color:var(--muted); font-size:13px; }
+    .ln-search input{
+      flex:1; background:transparent; border:0; outline:none;
+      color:var(--cream); font-family:inherit; font-size:14px; padding:11px 0;
+    }
+    .ln-active-filter{ margin-bottom:14px; }
+    .ln-filter-pill{
+      display:inline-flex; align-items:center; gap:8px;
+      background:rgba(201,160,48,.10); border:1px solid var(--gold);
+      color:var(--gold2); padding:6px 12px; border-radius:9999px; font-size:12.5px;
+    }
+    .ln-filter-pill button{ background:transparent; border:0; color:inherit; cursor:pointer; padding:0; }
 
-    /* Top bar */
-    .feed-head { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:18px; }
-    .feed-tabs { display:inline-flex; background:var(--navy2); border:1px solid var(--bdl); border-radius:10px; padding:4px; }
-    .feed-tabs button { background:transparent; border:0; color:var(--muted); font-family:'Cinzel',serif; font-size:12px; letter-spacing:.14em; padding:8px 14px; border-radius:7px; cursor:pointer; text-transform:uppercase; }
-    .feed-tabs button.active { background:var(--gold); color:#091528; }
-    .feed-search { flex:1; min-width:220px; display:flex; align-items:center; background:var(--navy2); border:1px solid var(--bdl); border-radius:10px; padding:0 12px; }
-    .feed-search input { flex:1; background:transparent; border:0; color:var(--cream); padding:10px 8px; font-size:13.5px; outline:none; font-family:inherit; }
-    .feed-search i { color:var(--muted); }
-    .filter-pill { display:inline-flex;align-items:center;gap:6px; background:rgba(201,160,48,.1); border:1px solid var(--gold); color:var(--gold2); padding:6px 12px; border-radius:9999px; font-size:12px; }
-    .filter-pill button { background:transparent; border:0; color:inherit; cursor:pointer; }
+    /* ============================================================
+       LESSON CARD GRID
+       ============================================================ */
+    .ln-grid{
+      display:grid; grid-template-columns:repeat(auto-fill, minmax(330px, 1fr));
+      gap:20px;
+    }
+    .ln-card{
+      background:linear-gradient(180deg,#0a1628,#091525);
+      border:1px solid var(--bdl); border-radius:16px; overflow:hidden;
+      display:flex; flex-direction:column; position:relative;
+      transition:border-color .18s, transform .18s, box-shadow .18s;
+    }
+    .ln-card:hover{
+      border-color:rgba(232,192,96,.35);
+      transform:translateY(-2px);
+      box-shadow:0 18px 40px -22px rgba(0,0,0,.7);
+    }
 
-    /* Reel card */
-    .feed { display:flex; flex-direction:column; gap:24px; align-items:center; }
-    .reel { width: 100%; max-width: 520px; background:var(--navy3); border:1px solid var(--bdl); border-radius:18px; overflow:hidden; position:relative; }
-    /* Virtualized placeholder — rendered when a slot's card is currently
-       unmounted (only ±3 around the viewport are mounted at any time). */
-    .reel.reel-collapsed { background:transparent; border:1px dashed rgba(255,255,255,0.04); }
-    .reel-placeholder { width:100%; height:100%; min-height: inherit; }
-    .reel .chart-wrap { position:relative; aspect-ratio: 16 / 11; background:#091528; }
-    .reel .chart-wrap img { width:100%; height:100%; object-fit:cover; display:block; }
-    .reel .chart-fallback { width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--muted); font-family:'Cinzel',serif; letter-spacing:.18em; font-size:13px; gap:10px; }
-    .reel .chart-fallback i { font-size:28px; color:var(--gold2); }
+    /* Chart area */
+    .ln-chart{ position:relative; aspect-ratio:16/9; background:#091528; overflow:hidden; }
+    .ln-chart img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .ln-chart .ln-chart-fallback{
+      width:100%; height:100%; display:flex; align-items:center; justify-content:center;
+      flex-direction:column; gap:8px;
+      color:var(--muted); font-size:12.5px;
+    }
+    .ln-chart .ln-chart-fallback i{ color:var(--gold2); font-size:30px; }
+    .ln-chart .ln-chart-fallback strong{ color:var(--cream); font-weight:700; letter-spacing:.04em; }
 
-    .pin { position:absolute; transform:translate(-50%,-50%); width:28px; height:28px; border-radius:50%; background:var(--gold); color:#091528; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; border:2px solid #fff; box-shadow:0 4px 12px rgba(0,0,0,.4); cursor:pointer; z-index:2; transition:.15s; }
-    .pin:hover { transform:translate(-50%,-50%) scale(1.15); }
+    /* Subject tag — single gold pill, top-left */
+    .ln-subject{
+      position:absolute; top:12px; left:12px; z-index:2;
+      display:inline-flex; align-items:center; gap:6px;
+      padding:5px 11px; border-radius:9999px;
+      background:linear-gradient(180deg,#e8c060,#c9a030);
+      color:#091528; font-weight:700; font-size:11px;
+      letter-spacing:.04em; text-transform:uppercase;
+      box-shadow:0 4px 12px -4px rgba(0,0,0,.5);
+    }
+    .ln-subject i{ font-size:10px; }
+    /* P&L pill — top-right */
+    .ln-pnl{
+      position:absolute; top:12px; right:12px; z-index:2;
+      padding:5px 10px; border-radius:9999px;
+      font-weight:700; font-size:11.5px;
+      font-variant-numeric:tabular-nums;
+      background:rgba(0,0,0,.5); backdrop-filter:blur(6px);
+      border:1px solid rgba(255,255,255,.06);
+    }
+    .ln-pnl.pos{ color:var(--green); border-color:rgba(74,222,128,.3); }
+    .ln-pnl.neg{ color:var(--red);   border-color:rgba(248,113,113,.3); }
+    .ln-pnl.flat{ color:var(--muted); }
 
-    .pin-popover { position:absolute; z-index:10; background:#0a1830; border:1px solid var(--gold); border-radius:10px; padding:12px 14px; width:240px; color:var(--cream); font-size:12.5px; box-shadow:0 8px 24px rgba(0,0,0,.5); }
-    .pin-popover .pop-title { font-family:'Cinzel',serif; color:var(--gold2); font-size:13px; letter-spacing:.06em; margin-bottom:6px; }
-    .pin-popover .pop-def { color:var(--muted); line-height:1.5; margin-bottom:10px; font-size:12px; }
-    .pin-popover .pop-actions { display:flex; flex-direction:column; gap:6px; }
-    .pin-popover .pop-actions a, .pin-popover .pop-actions button { width:100%; text-align:left; background:transparent; border:0; color:var(--gold2); padding:5px 0; font-size:12px; cursor:pointer; text-decoration:none; }
-    .pin-popover .pop-actions a:hover, .pin-popover .pop-actions button:hover { color:var(--cream); }
-    .pin-close { position:absolute; top:6px; right:8px; background:transparent; border:0; color:var(--muted); cursor:pointer; }
+    /* Hover overlay with Follow CTA */
+    .ln-overlay{
+      position:absolute; inset:0; z-index:3;
+      background:linear-gradient(180deg, rgba(6,14,28,0) 50%, rgba(6,14,28,.85) 100%);
+      display:flex; align-items:flex-end; padding:14px;
+      opacity:0; transition:opacity .18s;
+      pointer-events:none;
+    }
+    .ln-card:hover .ln-overlay{ opacity:1; pointer-events:auto; }
+    .ln-overlay .ln-follow-cta{
+      margin-left:auto;
+      display:inline-flex; align-items:center; gap:6px;
+      padding:7px 14px; border-radius:9999px;
+      background:rgba(232,192,96,.95); color:#091528;
+      font-weight:700; font-size:12px; border:none; cursor:pointer;
+      box-shadow:0 6px 18px -4px rgba(0,0,0,.5);
+    }
+    .ln-overlay .ln-follow-cta:hover{ background:#e8c060; }
+    .ln-overlay .ln-follow-cta.on{
+      background:rgba(255,255,255,.08); color:var(--cream);
+      backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,.15);
+    }
 
-    .reel .meta { padding: 14px 16px 16px; }
-    .reel .head { display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
-    .reel .ticker { background:var(--gold); color:#091528; padding:4px 10px; border-radius:6px; font-weight:700; font-size:12px; text-decoration:none; font-family:'Cinzel',serif; }
-    .reel .ticker.short { background:var(--red); color:#fff; }
-    .reel .dir { font-size:11px; padding:3px 8px; border-radius:6px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; }
-    .reel .dir.long  { background:rgba(74,222,128,.12); color:var(--green); }
-    .reel .dir.short { background:rgba(248,113,113,.12); color:var(--red); }
-    .reel .pnl { margin-left:auto; font-family:'Cinzel',serif; font-weight:700; font-size:14.5px; }
-    .reel .pnl.pos { color:var(--green); }
-    .reel .pnl.neg { color:var(--red); }
-    .reel .pnl.flat { color:var(--muted); }
+    /* Card body */
+    .ln-body{ padding:14px 16px 16px; display:flex; flex-direction:column; gap:12px; flex:1; }
+    .ln-row1{ display:flex; align-items:center; gap:10px; }
+    .ln-symbol{
+      background:rgba(255,255,255,.05); color:var(--cream);
+      padding:4px 9px; border-radius:6px; font-weight:700; font-size:12.5px;
+      text-decoration:none; font-variant-numeric:tabular-nums;
+      border:1px solid rgba(255,255,255,.06);
+    }
+    .ln-symbol:hover{ border-color:var(--gold); color:var(--gold2); }
+    .ln-dir{
+      padding:3px 8px; border-radius:6px; font-weight:700; font-size:10.5px;
+      letter-spacing:.06em; text-transform:uppercase;
+    }
+    .ln-dir.long{ background:rgba(74,222,128,.12);  color:var(--green); }
+    .ln-dir.short{ background:rgba(248,113,113,.12); color:var(--red); }
 
-    .chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
-    .chip-tag { background:var(--navy2); border:1px solid var(--bdl); color:var(--cream); padding:4px 9px; border-radius:9999px; font-size:11.5px; cursor:pointer; transition:.15s; }
-    .chip-tag:hover { border-color:var(--gold); color:var(--gold2); }
-    .chip-tag i { color:var(--gold); margin-right:4px; font-size:10px; }
+    /* Author chip (creator avatar + name + followers) */
+    .ln-author{
+      display:flex; align-items:center; gap:9px;
+      padding:8px 0; border-top:1px solid var(--bdl); border-bottom:1px solid var(--bdl);
+    }
+    .ln-author .ln-author-name{
+      flex:1; min-width:0;
+      display:flex; flex-direction:column; gap:1px;
+    }
+    .ln-author .ln-author-name a{
+      color:var(--cream); text-decoration:none; font-weight:600; font-size:13px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .ln-author .ln-author-name a:hover{ color:var(--gold2); }
+    .ln-author .ln-author-meta{
+      color:var(--muted); font-size:11.5px;
+      display:flex; align-items:center; gap:8px;
+    }
+    .ln-author .ln-author-meta i{ font-size:10px; }
+    .ln-author .ln-author-meta .dot{ width:3px; height:3px; border-radius:50%; background:var(--bdl); }
 
-    .reel .thesis { color:var(--cream); line-height:1.55; font-size:14px; margin-bottom:12px; white-space:pre-wrap; }
+    /* Thesis */
+    .ln-thesis{
+      color:var(--cream); font-size:13.5px; line-height:1.5;
+      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+      overflow:hidden;
+    }
 
-    .levels { display:grid; grid-template-columns: repeat(4,1fr); gap:8px; padding:10px 12px; background:var(--navy2); border:1px solid var(--bdl); border-radius:10px; margin-bottom:12px; font-family:'Cinzel',serif; }
-    .levels div { font-size:11px; color:var(--muted); letter-spacing:.06em; text-transform:uppercase; }
-    .levels strong { display:block; font-size:13.5px; color:var(--cream); margin-top:2px; letter-spacing:0; text-transform:none; font-weight:700; }
-    .levels .stop strong { color:var(--red); }
-    .levels .target strong { color:var(--green); }
-    .levels .rr strong { color:var(--gold2); }
+    /* 3-column mini levels table */
+    .ln-levels{
+      display:grid; grid-template-columns:repeat(3,1fr);
+      background:rgba(255,255,255,.025); border:1px solid var(--bdl);
+      border-radius:10px; overflow:hidden;
+    }
+    .ln-levels > div{
+      padding:9px 10px; text-align:center;
+      border-right:1px solid var(--bdl);
+    }
+    .ln-levels > div:last-child{ border-right:0; }
+    .ln-levels label{
+      display:block; font-size:10px; color:var(--muted);
+      letter-spacing:.08em; text-transform:uppercase; margin-bottom:2px;
+    }
+    .ln-levels strong{
+      display:block; font-size:13.5px; color:var(--cream); font-weight:700;
+      font-variant-numeric:tabular-nums;
+    }
+    .ln-levels .stop strong{ color:var(--red); }
+    .ln-levels .target strong{ color:var(--green); }
 
-    .actions { display:flex; gap:6px; margin-bottom:14px; }
-    .actions button { flex:1; background:var(--navy2); border:1px solid var(--bdl); color:var(--cream); padding:9px 0; border-radius:8px; cursor:pointer; font-size:12.5px; transition:.15s; display:flex; align-items:center; justify-content:center; gap:6px; }
-    .actions button:hover { border-color:var(--gold); color:var(--gold2); }
-    .actions button.primary { background:var(--gold); color:#091528; border-color:var(--gold); font-weight:700; }
-    .actions button.primary:hover { background:#e8c060; color:#091528; }
-    .actions button.on { color:var(--gold2); border-color:var(--gold); }
-
-    .author-row { display:flex; align-items:center; gap:10px; padding-top:12px; border-top:1px solid var(--bdl); }
-    .author-row .name { flex:1; min-width:0; }
-    .author-row .name a { color:var(--cream); text-decoration:none; font-weight:600; font-size:13px; }
-    .author-row .name a:hover { color:var(--gold2); }
-    .author-row .name .h { color:var(--muted); font-size:11.5px; }
-    .author-row .winrate { color:var(--green); font-weight:700; }
-    .author-row .winrate.flat { color:var(--muted); font-weight:500; }
-    .author-row .followbtn { background:var(--gold); color:#091528; border:1px solid var(--gold); padding:6px 12px; border-radius:8px; font-size:12px; cursor:pointer; font-weight:700; font-family:'Cinzel',serif; letter-spacing:.06em; }
-    .author-row .followbtn:hover { background:var(--gold2); }
-    .author-row .followbtn.on { background:transparent; color:var(--muted); border-color:var(--bdl); font-weight:500; }
-    /* Pin number badges + leader lines */
-    .leader-svg { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1; }
-    .leader-svg line { stroke:var(--gold); stroke-width:1; stroke-dasharray:3 3; opacity:.55; }
-    .chip-tag.pinned { position:relative; }
-    .chip-tag .pin-num { display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; border-radius:50%; background:var(--gold); color:#091528; font-weight:700; font-size:10px; margin-right:5px; }
-
-    /* Mirror sheet */
-    .sheet-bg { position:fixed; inset:0; background:rgba(0,0,0,.65); display:none; align-items:flex-end; justify-content:center; z-index:50; }
-    .sheet-bg.show { display:flex; }
-    .sheet { width:100%; max-width:480px; background:#0a1830; border:1px solid var(--bdl); border-radius:18px 18px 0 0; padding:24px 22px 28px; }
-    @media (min-width: 700px) { .sheet-bg { align-items:center; } .sheet { border-radius:18px; } }
-    .sheet h3 { font-family:'Cinzel',serif; color:var(--cream); margin:0 0 4px; font-size:1.25rem; }
-    .sheet .sub { color:var(--muted); font-size:13px; margin-bottom:18px; }
-    .slider-row { margin: 16px 0 8px; }
-    .slider-row label { display:flex; justify-content:space-between; color:var(--cream); font-size:12.5px; margin-bottom:6px; font-family:'Cinzel',serif; letter-spacing:.04em; }
-    .slider-row input[type=range] { width:100%; accent-color: var(--gold); }
-    .preview-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; padding:12px; background:var(--navy2); border:1px solid var(--bdl); border-radius:10px; margin:14px 0 18px; font-size:12.5px; }
-    .preview-grid div { color:var(--muted); }
-    .preview-grid strong { display:block; color:var(--cream); font-family:'Cinzel',serif; margin-top:3px; font-size:14px; }
-    .sheet-actions { display:flex; gap:10px; }
-    .sheet-actions button { flex:1; padding:12px; border-radius:10px; border:1px solid var(--bdl); background:transparent; color:var(--cream); cursor:pointer; font-weight:600; }
-    .sheet-actions button.primary { background:var(--gold); color:#091528; border-color:var(--gold); }
-    .sheet-actions button.danger { color:var(--red); border-color:var(--red); }
+    /* Action row */
+    .ln-actions{ display:flex; gap:6px; }
+    .ln-actions button{
+      flex:1; display:inline-flex; align-items:center; justify-content:center; gap:6px;
+      padding:9px 0; border-radius:8px;
+      background:rgba(255,255,255,.03); border:1px solid var(--bdl);
+      color:var(--cream); font-size:12.5px; font-weight:600;
+      cursor:pointer; transition:border-color .15s, color .15s, background .15s;
+    }
+    .ln-actions button:hover{ border-color:var(--gold); color:var(--gold2); }
+    .ln-actions button.primary{
+      background:linear-gradient(180deg,#e8c060,#c9a030);
+      color:#091528; border-color:transparent; font-weight:700;
+    }
+    .ln-actions button.primary:hover{ filter:brightness(1.05); color:#091528; }
+    .ln-actions button.on{ color:var(--gold2); border-color:var(--gold); background:rgba(201,160,48,.08); }
+    .ln-actions button i{ font-size:13px; }
 
     /* Empty / loading */
-    .feed-msg { width:100%; max-width:520px; text-align:center; padding:60px 20px; color:var(--muted); }
-    .feed-msg i { font-size:32px; color:var(--gold2); margin-bottom:14px; display:block; }
-    .feed-msg .h { font-family:'Cinzel',serif; color:var(--cream); font-size:1.05rem; margin-bottom:6px; }
+    .ln-empty{
+      grid-column:1/-1;
+      text-align:center; padding:60px 20px; color:var(--muted);
+      background:rgba(255,255,255,.02); border:1px dashed var(--bdl); border-radius:14px;
+    }
+    .ln-empty i{ font-size:34px; color:var(--gold2); margin-bottom:12px; display:block; }
+    .ln-empty .h{ color:var(--cream); font-weight:700; font-size:1.05rem; margin-bottom:6px; }
+    .ln-empty a{ color:var(--gold2); text-decoration:none; }
+    .ln-empty a:hover{ text-decoration:underline; }
+    .ln-loading{ grid-column:1/-1; text-align:center; padding:24px; color:var(--muted); font-size:13px; }
+
+    /* ============================================================
+       RIGHT SIDEBAR
+       ============================================================ */
+    .learn-side{ position:sticky; top:96px; align-self:start; display:flex; flex-direction:column; gap:24px; }
+    .ln-side-card{
+      background:linear-gradient(180deg,#0a1628,#091525);
+      border:1px solid var(--bdl); border-radius:14px; padding:18px;
+    }
+    .ln-side-h{
+      font-family:'DM Sans',sans-serif; font-weight:700;
+      font-size:13px; color:var(--cream); letter-spacing:.02em;
+      margin:0 0 14px; display:flex; align-items:center; gap:8px;
+    }
+    .ln-side-h i{ color:var(--gold2); font-size:12px; }
+
+    .ln-edu-row{
+      display:flex; align-items:center; gap:10px;
+      padding:9px 0; border-bottom:1px solid var(--bdl);
+    }
+    .ln-edu-row:last-child{ border-bottom:0; padding-bottom:0; }
+    .ln-edu-row:first-child{ padding-top:0; }
+    .ln-edu-info{ flex:1; min-width:0; }
+    .ln-edu-info .name{
+      color:var(--cream); font-weight:600; font-size:13px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .ln-edu-info .meta{
+      color:var(--muted); font-size:11px;
+      display:flex; align-items:center; gap:6px; margin-top:1px;
+    }
+    .ln-edu-info .meta .wr{ color:var(--green); font-weight:700; }
+    .ln-mini-follow{
+      padding:5px 11px; border-radius:9999px;
+      background:transparent; border:1px solid var(--gold);
+      color:var(--gold2); font-size:11.5px; font-weight:700;
+      cursor:pointer; transition:.15s;
+    }
+    .ln-mini-follow:hover{ background:rgba(201,160,48,.10); }
+    .ln-mini-follow.on{ background:rgba(255,255,255,.04); border-color:var(--bdl); color:var(--muted); font-weight:500; }
+
+    .ln-mirror-row{
+      display:flex; align-items:flex-start; gap:10px;
+      padding:10px 0; border-bottom:1px solid var(--bdl); cursor:pointer;
+      text-decoration:none; color:inherit;
+    }
+    .ln-mirror-row:last-child{ border-bottom:0; padding-bottom:0; }
+    .ln-mirror-row:first-child{ padding-top:0; }
+    .ln-mirror-row:hover .mr-sym{ color:var(--gold2); }
+    .ln-mirror-row .mr-rank{
+      width:26px; height:26px; border-radius:8px;
+      background:rgba(232,192,96,.10); color:var(--gold2);
+      display:flex; align-items:center; justify-content:center;
+      font-weight:700; font-size:13px; flex-shrink:0;
+    }
+    .ln-mirror-row .mr-body{ flex:1; min-width:0; }
+    .ln-mirror-row .mr-sym{
+      font-weight:700; color:var(--cream); font-size:13px;
+      transition:color .15s;
+    }
+    .ln-mirror-row .mr-mirrors{ color:var(--muted); font-size:11.5px; }
+    .ln-mirror-row .mr-mirrors strong{ color:var(--cream); }
+    .ln-side-empty{ color:var(--muted); font-size:12.5px; padding:6px 0; }
+
+    /* ============================================================
+       MIRROR SHEET (preserved)
+       ============================================================ */
+    .sheet-bg{ position:fixed; inset:0; background:rgba(0,0,0,.7); display:none; align-items:flex-end; justify-content:center; z-index:50; backdrop-filter:blur(4px); }
+    .sheet-bg.show{ display:flex; }
+    .sheet{
+      width:100%; max-width:480px;
+      background:linear-gradient(180deg,#0a1830,#091528);
+      border:1px solid var(--bdl); border-radius:18px 18px 0 0;
+      padding:24px 22px 28px;
+    }
+    @media (min-width:700px){ .sheet-bg{ align-items:center; } .sheet{ border-radius:18px; } }
+    .sheet h3{ color:var(--cream); margin:0 0 4px; font-size:1.15rem; font-weight:700; }
+    .sheet .sub{ color:var(--muted); font-size:13px; margin-bottom:18px; }
+    .slider-row{ margin:16px 0 8px; }
+    .slider-row label{ display:flex; justify-content:space-between; color:var(--cream); font-size:12.5px; margin-bottom:6px; font-weight:600; }
+    .slider-row label span:last-child{ color:var(--gold2); }
+    .slider-row input[type=range]{ width:100%; accent-color:var(--gold); }
+    .preview-grid{
+      display:grid; grid-template-columns:repeat(2,1fr); gap:10px;
+      padding:14px; background:rgba(255,255,255,.03); border:1px solid var(--bdl);
+      border-radius:10px; margin:14px 0 18px; font-size:12.5px;
+    }
+    .preview-grid div{ color:var(--muted); }
+    .preview-grid strong{ display:block; color:var(--cream); font-weight:700; margin-top:3px; font-size:14px; font-variant-numeric:tabular-nums; }
+    .sheet-actions{ display:flex; gap:10px; }
+    .sheet-actions button{
+      flex:1; padding:12px; border-radius:10px;
+      border:1px solid var(--bdl); background:transparent;
+      color:var(--cream); cursor:pointer; font-weight:600; font-size:14px;
+    }
+    .sheet-actions button.primary{
+      background:linear-gradient(180deg,#e8c060,#c9a030);
+      color:#091528; border:0; font-weight:700;
+    }
   </style>
 </head>
 <body>
 
 <div id="tarena-nav"></div>
 
-<div class="reels-shell">
+<div class="learn-shell">
 
-  <!-- ────────  LEFT: filter rail  ──────── -->
-  <aside class="reels-side">
-    <div class="compose-cta">
-      <h4><i class="fa-solid fa-clapperboard"></i> Drop a reel</h4>
-      <p>Snap a chart, pin the indicators, share your thesis. Auto paper-trade opens on publish.</p>
-      <a href="reels-new.html"><i class="fa-solid fa-plus"></i> New reel</a>
+  <!-- ─── HERO BANNER (creator-facing) ─── -->
+  <section class="ln-hero">
+    <h1>Teach Trading. <span class="accent">Build Your Audience.</span></h1>
+    <p>Post a lesson, grow your following, earn when students mirror your trades. Join Australia's fastest-growing community of trading educators.</p>
+    <div class="ln-cta-row">
+      <a href="reels-new.html" class="ln-cta-gold"><i class="fa-solid fa-graduation-cap"></i> Start Teaching <i class="fa-solid fa-arrow-right" style="font-size:11px;"></i></a>
+      <button class="ln-cta-ghost" id="browseBtn"><i class="fa-solid fa-compass"></i> Browse Lessons</button>
     </div>
-    <h3>Indicators</h3>
-    <div class="chip-stack" id="indicatorRail"></div>
-    <h3 style="margin-top:18px;">Patterns</h3>
-    <div class="chip-stack" id="patternRail"></div>
-    <h3 style="margin-top:18px;">Strategies</h3>
-    <div class="chip-stack" id="strategyRail"></div>
-  </aside>
+    <div class="ln-stats">
+      <span class="ln-stat"><i class="fa-solid fa-users"></i><strong>2,400+</strong> students</span>
+      <span class="ln-stat"><i class="fa-solid fa-chalkboard-user"></i><strong>147</strong> creators</span>
+      <span class="ln-stat"><i class="fa-solid fa-chart-line"></i><strong>89%</strong> avg learn rate</span>
+    </div>
+  </section>
 
-  <!-- ────────  CENTER: feed  ──────── -->
-  <main>
-    <div class="feed-head">
-      <div class="feed-tabs">
-        <button data-tab="fy"        class="active">For You</button>
-        <button data-tab="following">Following</button>
-        <button data-tab="trending">Trending</button>
+  <!-- ─── TABS + SEARCH ─── -->
+  <div class="ln-bar" id="lessonsAnchor">
+    <div class="ln-tabs" id="tabs">
+      <button data-tab="fy"        class="active"><i class="fa-solid fa-sparkles"></i> For You</button>
+      <button data-tab="following"><i class="fa-solid fa-user-group"></i> Following</button>
+      <button data-tab="trending"><i class="fa-solid fa-fire"></i> Trending</button>
+      <button data-tab="new"><i class="fa-solid fa-clock"></i> New</button>
+    </div>
+    <div class="ln-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input id="feedSearch" placeholder="Search $TICKER, #strategy, @creator, or text…"/>
+    </div>
+  </div>
+  <div class="ln-active-filter" id="activeFilter"></div>
+
+  <!-- ─── MAIN GRID + SIDEBAR ─── -->
+  <div class="learn-grid">
+    <div class="ln-grid" id="feed"></div>
+
+    <aside class="learn-side">
+      <div class="ln-side-card">
+        <h3 class="ln-side-h"><i class="fa-solid fa-trophy"></i> Top Educators This Week</h3>
+        <div id="topEducators"><div class="ln-side-empty">Loading…</div></div>
       </div>
-      <div class="feed-search">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input id="feedSearch" placeholder="$TICKER, #strategy, @user, or text…"/>
+      <div class="ln-side-card">
+        <h3 class="ln-side-h"><i class="fa-solid fa-arrows-rotate"></i> Most Mirrored Strategies</h3>
+        <div id="topMirrored"><div class="ln-side-empty">Loading…</div></div>
       </div>
-    </div>
-    <div id="activeFilter"></div>
-    <div class="feed" id="feed"></div>
-    <div class="feed-msg" id="feedSentinel" style="display:none;">
-      <i class="fa-solid fa-spinner fa-spin"></i>
-      Loading more…
-    </div>
-  </main>
+    </aside>
+  </div>
 
-  <!-- ────────  RIGHT: hot tickers (placeholder, lightweight) ──────── -->
-  <aside class="reels-side">
-    <h3>Hot symbols</h3>
-    <div class="chip-stack" id="tickerRail"></div>
-    <p style="font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.55;">
-      Tap a symbol to filter the feed for reels trading it.
-    </p>
-  </aside>
+  <div class="ln-loading" id="feedSentinel" style="display:none;">
+    <i class="fa-solid fa-spinner fa-spin"></i> Loading more lessons…
+  </div>
 </div>
 
 <!-- Mirror sheet -->
@@ -194,14 +451,14 @@
     <h3>Mirror this trade</h3>
     <div class="sub" id="sheetSub"></div>
     <div class="slider-row">
-      <label><span>Risk per trade</span><span id="riskLbl" style="color:var(--gold2);">1.00%</span></label>
+      <label><span>Risk per trade</span><span id="riskLbl">1.00%</span></label>
       <input id="riskSlider" type="range" min="0.25" max="5" step="0.25" value="1"/>
     </div>
     <div class="preview-grid" id="sheetPreview"></div>
     <div class="sheet-actions">
       <button onclick="closeSheet()">Cancel</button>
       <button class="primary" id="confirmMirror" onclick="confirmMirror()">
-        <i class="fa-solid fa-arrows-rotate"></i> Mirror
+        <i class="fa-solid fa-arrows-rotate"></i> Mirror Trade
       </button>
     </div>
   </div>
@@ -225,111 +482,75 @@
   const session = TArenaAuth.requireAuth();
   if (!session) return;
 
-  const sb = window.TArenaDB;
+  const sb       = window.TArenaDB;
   const reelsApi = window.TArenaReels;
   const datafeed = window.TArenaDatafeed;
-
   const ACCOUNT_SIZE = 100000;
 
+  // ─── State ──────────────────────────────────────────────────
   const state = {
-    tab:        'fy',
-    filterTag:  null,
+    tab:          'fy',
+    filterTag:    null,
     filterTicker: null,
-    filterUser: null,    // @user search filter
-    filterQ:    null,
-    cursor:     null,
-    rows:       [],      // every loaded reel (data only)
-    slots:      [],      // [{ el, mounted, row, lastH }] — one slot per row
-    visibleIdx: new Set(),
-    seen:       new Set(),  // id de-dupe across pages
-    loading:    false,
-    done:       false,
-    pinPopoverFor: null,
-    sheetReel:  null,
+    filterUser:   null,
+    filterQ:      null,
+    cursor:       null,
+    rows:         [],
+    seen:         new Set(),
+    loading:      false,
+    done:         false,
+    sheetReel:    null,
   };
 
-  // Live-tick cleanup registry per reel (so we unsubscribe when the
-  // card scrolls offscreen — keeps the WS / poll fan-out tight).
+  // Live-tick cleanup registry (one unsub per visible card).
   const liveSubs = new Map();
+  // Author follow state cache, used by sidebar mini-follow buttons too.
+  const followingMap = new Map(); // authorId → boolean
 
-  // Each slot collapses to this height when its card is unmounted, so
-  // the scrollbar position stays stable as the user windows past it.
-  const SLOT_PLACEHOLDER_H = 540;
-  // Window radius — keep at most (2*WINDOW + 1) cards mounted at any
-  // time. Task spec calls for ±3 around the focused card.
-  const WINDOW = 3;
-
-  // ----------------------------------------------------------
-  // Sidebar rails
-  // ----------------------------------------------------------
-  function renderRails() {
-    const make = (containerId, items, type) => {
-      const el = document.getElementById(containerId);
-      el.innerHTML = items.map(t => `<button data-tag="${t}" data-type="${type}">${t}</button>`).join('');
-      el.querySelectorAll('button').forEach(btn => {
-        btn.addEventListener('click', () => setTagFilter(btn.dataset.tag));
-      });
-    };
-    make('indicatorRail', reelsApi.INDICATORS, 'indicator');
-    make('patternRail',   reelsApi.PATTERNS,   'pattern');
-    make('strategyRail',  reelsApi.STRATEGIES, 'strategy');
-
-    // Hot tickers — pulled from the live mock book for now; the feed
-    // is filtered server-side regardless of which symbols we surface.
-    const tickers = (window.TArenaMarket?.data || []).slice(0, 8);
-    const rail = document.getElementById('tickerRail');
-    rail.innerHTML = tickers.map(m =>
-      `<button data-ticker="${m.symbol}">${m.symbol} <span style="color:var(--muted);font-size:11px;">${m.name}</span></button>`
-    ).join('');
-    rail.querySelectorAll('button').forEach(btn => {
-      btn.addEventListener('click', () => setTickerFilter(btn.dataset.ticker));
-    });
+  // ─── Utilities ──────────────────────────────────────────────
+  function escape(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+      ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]);
+  }
+  function fmt(n, d) {
+    if (n == null || !isFinite(n)) return '—';
+    return Number(n).toLocaleString('en-US', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 4 });
+  }
+  function fmtCount(n) {
+    n = +n || 0;
+    if (n >= 1_000_000) return (n/1_000_000).toFixed(1).replace(/\.0$/,'') + 'M';
+    if (n >= 1_000)     return (n/1_000).toFixed(1).replace(/\.0$/,'') + 'K';
+    return String(n);
+  }
+  // Pick the single most descriptive subject tag for the card (strategy
+  // > pattern > indicator). Falls back to "Lesson" when no tags exist.
+  function pickSubject(tags) {
+    if (!Array.isArray(tags) || !tags.length) return { value: 'Lesson', icon: 'fa-graduation-cap' };
+    const order = { strategy: 0, pattern: 1, indicator: 2 };
+    const sorted = tags.slice().sort((a, b) =>
+      (order[a.tag_type] ?? 9) - (order[b.tag_type] ?? 9) || (a.ordinal || 0) - (b.ordinal || 0)
+    );
+    const t = sorted[0];
+    return { value: t.tag_value, icon: reelsApi.ICON_FOR_TYPE[t.tag_type] || 'fa-tag' };
   }
 
-  function highlightRail() {
-    document.querySelectorAll('.chip-stack button').forEach(btn => {
-      btn.classList.toggle('active',
-        (btn.dataset.tag    && btn.dataset.tag    === state.filterTag) ||
-        (btn.dataset.ticker && btn.dataset.ticker === state.filterTicker)
-      );
-    });
-  }
-
-  // ----------------------------------------------------------
-  // Filter management
-  // ----------------------------------------------------------
+  // ─── Filter bar ─────────────────────────────────────────────
   function setTab(t) {
     state.tab = t;
-    document.querySelectorAll('.feed-tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === t));
+    document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === t));
+    syncUrl();
     resetAndLoad();
   }
-
-  function setTagFilter(tag) {
-    const same = state.filterTag === tag;
-    clearAllFilters();
-    if (!same) state.filterTag = tag;
-    document.getElementById('feedSearch').value = '';
-    syncUrl(); highlightRail(); renderActiveFilter(); resetAndLoad();
-  }
-
-  function setTickerFilter(t) {
-    const same = state.filterTicker === t;
-    clearAllFilters();
-    if (!same) state.filterTicker = t;
-    document.getElementById('feedSearch').value = '';
-    syncUrl(); highlightRail(); renderActiveFilter(); resetAndLoad();
-  }
-
+  function clearAllFilters() { state.filterTag = state.filterTicker = state.filterUser = state.filterQ = null; }
   function clearFilter() {
     clearAllFilters();
     document.getElementById('feedSearch').value = '';
-    syncUrl(); highlightRail(); renderActiveFilter(); resetAndLoad();
+    syncUrl(); renderActiveFilter(); resetAndLoad();
   }
+  window.__clearFilter = clearFilter;
 
   function syncUrl() {
     const u = new URL(window.location.href);
-    // Preserve a `?reel=` deep-link param across filter edits so a
-    // shared link doesn't get stripped when the visitor types a search.
     const keepReel = u.searchParams.get('reel');
     u.search = '';
     if (state.filterTag)    u.searchParams.set('tag',    state.filterTag);
@@ -340,7 +561,6 @@
     if (keepReel)           u.searchParams.set('reel',   keepReel);
     history.replaceState(null, '', u);
   }
-
   function readUrlFilters() {
     const u = new URL(window.location.href);
     state.filterTag    = u.searchParams.get('tag');
@@ -348,57 +568,53 @@
     state.filterUser   = u.searchParams.get('user');
     state.filterQ      = u.searchParams.get('q');
     const t            = u.searchParams.get('tab');
-    if (t && ['fy','following','trending'].includes(t)) state.tab = t;
-    if (state.filterQ)    document.getElementById('feedSearch').value = state.filterQ;
+    if (t && ['fy','following','trending','new'].includes(t)) state.tab = t;
+    if (state.filterQ)         document.getElementById('feedSearch').value = state.filterQ;
     else if (state.filterUser) document.getElementById('feedSearch').value = '@' + state.filterUser;
+    else if (state.filterTag)  document.getElementById('feedSearch').value = '#' + state.filterTag;
+    else if (state.filterTicker) document.getElementById('feedSearch').value = '$' + state.filterTicker;
   }
-
-  function clearAllFilters() {
-    state.filterTag = state.filterTicker = state.filterUser = state.filterQ = null;
-  }
-
   function renderActiveFilter() {
     const el = document.getElementById('activeFilter');
-    const f = state.filterTag || state.filterTicker || state.filterUser || state.filterQ;
-    if (!f) { el.innerHTML = ''; return; }
+    const active = state.filterTag || state.filterTicker || state.filterUser || state.filterQ;
+    if (!active) { el.innerHTML = ''; return; }
     const lbl = state.filterTag    ? `Tag · ${state.filterTag}` :
                 state.filterTicker ? `Ticker · ${state.filterTicker}` :
                 state.filterUser   ? `Author · @${state.filterUser}` :
-                `Search · "${state.filterQ}"`;
-    el.innerHTML = `<div style="margin-bottom:14px;">
-      <span class="filter-pill">${lbl} <button onclick="window.__clearFilter()" title="Clear filter"><i class="fa-solid fa-xmark"></i></button></span>
-    </div>`;
+                                     `Search · "${state.filterQ}"`;
+    el.innerHTML = `<span class="ln-filter-pill">${escape(lbl)}
+      <button onclick="window.__clearFilter()" title="Clear filter"><i class="fa-solid fa-xmark"></i></button>
+    </span>`;
   }
-  window.__clearFilter = clearFilter;
 
-  // ----------------------------------------------------------
-  // Search
-  // ----------------------------------------------------------
+  // Search bar accepts $TICKER / #tag / @user / freetext.
   let searchDebounce;
   document.getElementById('feedSearch').addEventListener('input', e => {
     clearTimeout(searchDebounce);
     const v = e.target.value.trim();
     searchDebounce = setTimeout(() => {
-      // $TICKER, #tag, and @user shortcuts feel like Twitter — power
-      // users don't want to click the rail to filter by AAPL or by a
-      // specific author. Anything else falls through to free-text.
-      const reset = () => { state.filterTicker = state.filterTag = state.filterUser = state.filterQ = null; };
-      if      (/^\$[A-Za-z0-9.]+$/.test(v))      { reset(); state.filterTicker = v.slice(1).toUpperCase(); }
-      else if (/^#[A-Za-z0-9 _-]+$/.test(v))     { reset(); state.filterTag    = v.slice(1); }
-      else if (/^@[A-Za-z0-9_]+$/.test(v))       { reset(); state.filterUser   = v.slice(1); }
-      else                                       { reset(); state.filterQ      = v || null; }
-      syncUrl(); highlightRail(); renderActiveFilter(); resetAndLoad();
+      clearAllFilters();
+      if      (/^\$[A-Za-z0-9.]+$/.test(v))  state.filterTicker = v.slice(1).toUpperCase();
+      else if (/^#[A-Za-z0-9 _-]+$/.test(v)) state.filterTag    = v.slice(1);
+      else if (/^@[A-Za-z0-9_]+$/.test(v))   state.filterUser   = v.slice(1);
+      else if (v)                            state.filterQ      = v;
+      syncUrl(); renderActiveFilter(); resetAndLoad();
     }, 280);
   });
 
-  // ----------------------------------------------------------
-  // Feed loading
-  // ----------------------------------------------------------
+  document.querySelectorAll('#tabs button').forEach(b => {
+    b.addEventListener('click', () => setTab(b.dataset.tab));
+  });
+
+  // "Browse Lessons" hero CTA scrolls down to the tabs.
+  document.getElementById('browseBtn').addEventListener('click', () => {
+    document.getElementById('lessonsAnchor').scrollIntoView({ behavior:'smooth', block:'start' });
+  });
+
+  // ─── Feed load / reset ──────────────────────────────────────
   function resetAndLoad() {
     state.cursor = null;
     state.rows = [];
-    state.slots = [];
-    state.visibleIdx.clear();
     state.seen.clear();
     state.done = false;
     document.getElementById('feed').innerHTML = '';
@@ -411,10 +627,18 @@
     state.loading = true;
     document.getElementById('feedSentinel').style.display = 'block';
 
+    // 'new' is a UI-only tab — the server's feed_reels orders by score
+    // (not created_at), so on the wire we still send 'fy' but request
+    // a single larger page and resort by created_at locally. We then
+    // mark the feed done so pagination doesn't drift back into score
+    // order, which would be deceptive for users expecting "newest".
+    const isNew = state.tab === 'new';
+    const wireTab = isNew ? 'fy' : state.tab;
+
     const { data, error } = await sb.rpc('feed_reels', {
       p_cursor: state.cursor,
-      p_limit:  12,
-      p_tab:    state.tab,
+      p_limit:  isNew ? 50 : 12,
+      p_tab:    wireTab,
       p_tag:    state.filterTag,
       p_ticker: state.filterTicker,
       p_q:      state.filterQ,
@@ -424,216 +648,169 @@
 
     if (error) {
       console.warn('feed_reels failed', error);
-      document.getElementById('feedSentinel').innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Could not load feed.';
+      document.getElementById('feedSentinel').innerHTML =
+        '<i class="fa-solid fa-triangle-exclamation"></i> Could not load lessons.';
       return;
     }
 
-    const rows = (data && data.rows) || [];
+    let rows = (data && data.rows) || [];
     if (rows.length === 0 && state.rows.length === 0) {
-      document.getElementById('feed').innerHTML = `<div class="feed-msg">
-        <i class="fa-solid fa-clapperboard"></i>
-        <div class="h">No reels yet.</div>
-        <div>Try switching tabs, clearing your filter, or <a href="reels-new.html" style="color:var(--gold2);">drop the first reel</a>.</div>
-      </div>`;
+      document.getElementById('feed').innerHTML = `
+        <div class="ln-empty">
+          <i class="fa-solid fa-graduation-cap"></i>
+          <div class="h">No lessons here yet.</div>
+          <div>Try another tab, clear your filter, or <a href="reels-new.html">post the first lesson →</a></div>
+        </div>`;
       document.getElementById('feedSentinel').style.display = 'none';
       state.done = true;
+      refreshSidebar();
       return;
     }
 
-    // De-dupe (same created_at can produce overlap when network races
-    // or someone publishes mid-scroll).
-    const fresh = rows.filter(r => !state.seen.has(r.id));
-    fresh.forEach(r => { state.seen.add(r.id); state.rows.push(r); });
-    appendSlots(fresh);
+    if (isNew) rows = rows.slice().sort((a,b) => (b.created_at||'').localeCompare(a.created_at||''));
 
-    // The server sets next_cursor=null when there's no more data, so
-    // that's the authoritative "done" signal. (Row count is no longer
-    // a reliable proxy now that the server trims to exactly v_limit.)
-    if (!data.next_cursor) {
+    const fresh = rows.filter(r => !state.seen.has(r.id));
+    fresh.forEach(r => {
+      state.seen.add(r.id);
+      state.rows.push(r);
+      // seed follow cache from server
+      if (r.viewer_state && r.author) followingMap.set(r.author.id, !!r.viewer_state.following);
+      appendCard(r);
+    });
+
+    // 'new' = single shot; truthful chronological order beats
+    // infinite-scroll sorted by score under the hood.
+    if (isNew || !data.next_cursor) {
       state.done = true;
-      document.getElementById('feedSentinel').innerHTML = '<i class="fa-solid fa-flag-checkered"></i> Caught up.';
+      document.getElementById('feedSentinel').innerHTML =
+        '<i class="fa-solid fa-flag-checkered"></i> Caught up.';
     } else {
       state.cursor = data.next_cursor;
       document.getElementById('feedSentinel').style.display = 'none';
     }
+    refreshSidebar();
   }
 
-  // Infinite scroll — sentinel triggers loadMore when in viewport.
+  // Infinite scroll
   const io = new IntersectionObserver(entries => {
     entries.forEach(e => { if (e.isIntersecting) loadMore(); });
   }, { rootMargin: '600px' });
   io.observe(document.getElementById('feedSentinel'));
 
-  // Windowed virtualization: only ±WINDOW cards mount around viewport.
-  function appendSlots(rows) {
-    const feed = document.getElementById('feed');
-    rows.forEach((r, k) => {
-      const idx = state.slots.length;  // global index into state.rows
-      const el = document.createElement('article');
-      el.className = 'reel reel-slot';
-      el.dataset.slotIdx = String(idx);
-      el.dataset.reelId  = r.id;
-      el.style.minHeight = SLOT_PLACEHOLDER_H + 'px';
-      el.innerHTML = `<div class="reel-placeholder" aria-hidden="true"></div>`;
-      feed.appendChild(el);
-      state.slots.push({ el, mounted: false, row: r, lastH: SLOT_PLACEHOLDER_H });
-      slotObserver.observe(el);
-    });
-    // Eagerly mount the first window so the page isn't all placeholders.
-    if (state.visibleIdx.size === 0 && state.slots.length) reconcileWindow(0);
-  }
+  // ─── Card renderer ──────────────────────────────────────────
+  function appendCard(r) {
+    const dirCls   = r.direction === 'short' ? 'short' : 'long';
+    const subject  = pickSubject(r.tags);
+    const rr       = reelsApi.riskReward({ entry: r.entry, stop: r.stop_loss, target: r.target, direction: r.direction });
+    const me       = (TArenaAuth.getSession() || {}).user;
+    const isMe     = !!(me && me.id === r.author.id);
+    const followOn = followingMap.get(r.author.id) || !!(r.viewer_state && r.viewer_state.following);
+    const followers = r.author.follower_count != null ? r.author.follower_count : null;
 
-  function escape(s) {
-    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]);
-  }
-  function fmt(n, d) {
-    if (n == null || !isFinite(n)) return '—';
-    return Number(n).toLocaleString('en-US', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 4 });
-  }
-
-  // Renders the inner HTML + handlers of a card into an EXISTING slot
-  // element (does not create a new <article>). Returns nothing.
-  function renderCardInto(el, r) {
-    const dirCls = r.direction === 'short' ? 'short' : 'long';
-    const tags   = (r.tags || []).slice().sort((a,b) => {
-      const [ka, kb] = [reelsApi.tagSortKey(a), reelsApi.tagSortKey(b)];
-      for (let i=0;i<ka.length;i++) if (ka[i] !== kb[i]) return ka[i] < kb[i] ? -1 : 1;
-      return 0;
-    });
-    const pinned = tags.filter(t => t.x_pct != null && t.y_pct != null);
-    const rr     = reelsApi.riskReward({ entry: r.entry, stop: r.stop_loss, target: r.target, direction: r.direction });
-
-    // Chart snapshot (or fallback)
     const snapHtml = r.chart_snapshot_url
-      ? `<img src="${escape(r.chart_snapshot_url)}" alt="chart snapshot of ${escape(r.symbol)}" loading="lazy"/>`
-      : `<div class="chart-fallback"><i class="fa-solid fa-chart-candlestick"></i> ${escape(r.symbol)} chart</div>`;
+      ? `<img src="${escape(r.chart_snapshot_url)}" alt="chart for ${escape(r.symbol)}" loading="lazy"/>`
+      : `<div class="ln-chart-fallback"><i class="fa-solid fa-chart-candlestick"></i><strong>$${escape(r.symbol)}</strong><span>chart preview</span></div>`;
 
-    const pinsHtml = pinned.map((t, i) => `
-      <button class="pin" style="left:${t.x_pct}%;top:${t.y_pct}%;" data-pin-idx="${i}" data-pin-num="${i+1}" aria-label="${escape(t.tag_value)}">${i+1}</button>`).join('');
-
-    // pin index lookup so chips can claim a number badge that matches
-    // the chart pin and seed the leader-line endpoint.
-    const pinNumOf = new Map();
-    pinned.forEach((t, i) => pinNumOf.set(t.tag_value + '|' + t.tag_type, i + 1));
-    const chipsHtml = tags.map(t => {
-      const num = pinNumOf.get(t.tag_value + '|' + t.tag_type);
-      const cls = num ? 'chip-tag pinned' : 'chip-tag';
-      const badge = num ? `<span class="pin-num" data-chip-num="${num}">${num}</span>` : '';
-      return `<button class="${cls}" data-chip-tag="${escape(t.tag_value)}" ${num?`data-chip-num="${num}"`:''}>
-        ${badge}<i class="fa-solid ${reelsApi.ICON_FOR_TYPE[t.tag_type] || 'fa-tag'}"></i>${escape(t.tag_value)}
+    const followBtn = isMe ? '' : `
+      <button class="ln-follow-cta ${followOn?'on':''}" data-act="follow" data-author-id="${r.author.id}">
+        <i class="fa-solid ${followOn?'fa-check':'fa-plus'}"></i>${followOn ? 'Following' : 'Follow Creator'}
       </button>`;
-    }).join('');
 
-    const winRate    = r.author.win_rate;
-    const winRateStr = (winRate == null) ? '— wins' : winRate + '% wins';
-    const winCls     = (winRate == null) ? 'winrate flat' : 'winrate';
-    const me         = (TArenaAuth.getSession() || {}).user;
-    const isMe       = !!(me && me.id === r.author.id);
-    const followOn   = !!(r.viewer_state && r.viewer_state.following);
-    const followBtn  = isMe
-      ? ''
-      : `<button class="followbtn ${followOn?'on':''}" data-act="follow" data-author-id="${r.author.id}">${followOn ? 'Following' : 'Follow'}</button>`;
-
-    el.innerHTML = `
-      <div class="chart-wrap">${snapHtml}${pinsHtml}<svg class="leader-svg" aria-hidden="true"></svg></div>
-      <div class="meta">
-        <div class="head">
-          <a class="ticker ${dirCls}" href="trade.html?symbol=${encodeURIComponent(r.symbol)}">$${escape(r.symbol)}</a>
-          <span class="dir ${dirCls}">${dirCls === 'long' ? '▲ Long' : '▼ Short'}</span>
-          <span class="pnl flat" data-live-pnl>—</span>
+    const card = document.createElement('article');
+    card.className = 'ln-card';
+    card.dataset.reelId = r.id;
+    card.innerHTML = `
+      <div class="ln-chart">
+        ${snapHtml}
+        <span class="ln-subject"><i class="fa-solid ${subject.icon}"></i>${escape(subject.value)}</span>
+        <span class="ln-pnl flat" data-live-pnl>—</span>
+        <div class="ln-overlay">${followBtn}</div>
+      </div>
+      <div class="ln-body">
+        <div class="ln-row1">
+          <a class="ln-symbol" href="trade.html?symbol=${encodeURIComponent(r.symbol)}">$${escape(r.symbol)}</a>
+          <span class="ln-dir ${dirCls}">${dirCls === 'long' ? '▲ Long' : '▼ Short'}</span>
         </div>
-        <div class="chips">${chipsHtml}</div>
-        <div class="thesis">${escape(r.thesis)}</div>
-        <div class="levels">
-          <div>Entry<strong>${fmt(r.entry, 2)}</strong></div>
-          <div class="stop">Stop<strong>${fmt(r.stop_loss, 2)}</strong></div>
-          <div class="target">Target<strong>${fmt(r.target, 2)}</strong></div>
-          <div class="rr">R:R<strong>${rr == null ? '—' : rr.toFixed(2)}</strong></div>
+        <div class="ln-author">
+          ${TArenaUI.avatarHtml({ username: r.author.username, email: r.author.username }, 34)}
+          <div class="ln-author-name">
+            <a href="profile.html?u=${encodeURIComponent(r.author.username)}">${escape(r.author.display_name || r.author.username)}</a>
+            <div class="ln-author-meta">
+              <span>@${escape(r.author.username)}</span>
+              <span class="dot"></span>
+              <span><i class="fa-solid fa-user-group"></i> ${followers != null ? fmtCount(followers) : '0'} followers</span>
+            </div>
+          </div>
         </div>
-        <div class="actions">
+        <div class="ln-thesis">${escape(r.thesis)}</div>
+        <div class="ln-levels">
+          <div><label>Entry</label><strong>${fmt(r.entry, 2)}</strong></div>
+          <div class="stop"><label>Stop</label><strong>${fmt(r.stop_loss, 2)}</strong></div>
+          <div class="target"><label>Target</label><strong>${fmt(r.target, 2)}</strong></div>
+        </div>
+        <div class="ln-actions">
+          <button data-act="watch" title="Watch lesson">
+            <i class="fa-regular fa-eye"></i>Watch
+          </button>
           <button class="primary" data-act="mirror">
-            <i class="fa-solid fa-arrows-rotate"></i>
-            Mirror${(r.counts.mirrors||0)>0 ? ' ('+r.counts.mirrors+')' : ''}
+            <i class="fa-solid fa-arrows-rotate"></i>Mirror
           </button>
-          <button data-act="like" class="${r.viewer_state.liked?'on':''}">
-            <i class="fa-${r.viewer_state.liked?'solid':'regular'} fa-heart"></i>
-            ${r.counts.likes||0}
-          </button>
-          <button data-act="save" class="${r.viewer_state.saved?'on':''}">
+          <button data-act="save" class="${r.viewer_state.saved?'on':''}" title="Save">
             <i class="fa-${r.viewer_state.saved?'solid':'regular'} fa-bookmark"></i>
           </button>
-          <button data-act="share">
+          <button data-act="share" title="Share">
             <i class="fa-solid fa-paper-plane"></i>
           </button>
-          <button data-act="comment" title="Comments — coming soon">
-            <i class="fa-regular fa-comment"></i>
-          </button>
-        </div>
-        <div class="author-row">
-          ${TArenaUI.avatarHtml({ username: r.author.username, email: r.author.username }, 36)}
-          <div class="name">
-            <a href="profile.html?u=${encodeURIComponent(r.author.username)}">${escape(r.author.display_name || r.author.username)}</a>
-            <div class="h">@${escape(r.author.username)} · ${escape(r.author.tier || 'Member')} · <span class="${winCls}">${winRateStr}</span></div>
-          </div>
-          ${followBtn}
         </div>
       </div>`;
 
-    // Pin popovers (delegated)
-    el.querySelectorAll('.pin').forEach(btn => {
-      btn.addEventListener('click', e => {
-        e.stopPropagation();
-        const idx = +btn.dataset.pinIdx;
-        openPinPopover(el, pinned[idx], btn);
-      });
-    });
+    document.getElementById('feed').appendChild(card);
 
-    // Chip click → filter
-    el.querySelectorAll('.chip-tag').forEach(btn => {
-      btn.addEventListener('click', () => setTagFilter(btn.dataset.chipTag));
+    // Wire actions
+    card.querySelectorAll('.ln-actions button').forEach(btn => {
+      btn.addEventListener('click', () => onAction(r, btn.dataset.act, card));
     });
-
-    // Action buttons
-    el.querySelectorAll('.actions button').forEach(btn => {
-      btn.addEventListener('click', () => onAction(r, btn.dataset.act, el));
-    });
-
-    // Follow CTA
-    const fb = el.querySelector('.followbtn');
+    const fb = card.querySelector('.ln-follow-cta');
     if (fb) fb.addEventListener('click', () => onFollowToggle(fb, r.author.id));
 
-    mountLiveSub(el, r.id);
-    requestAnimationFrame(() => drawLeaders(el));
+    mountLiveSub(card, r.id);
   }
 
-  // Draw SVG leader lines from chip pin-num badges to chart pins.
-  function drawLeaders(el) {
-    const svg = el.querySelector('.leader-svg');
-    if (!svg) return;
-    const wrap = el.querySelector('.chart-wrap');
-    if (!wrap) return;
-    const wrapRect = wrap.getBoundingClientRect();
-    if (!wrapRect.width) return;
-    svg.setAttribute('viewBox', `0 0 ${wrapRect.width} ${wrapRect.height}`);
-    svg.setAttribute('width', wrapRect.width);
-    svg.setAttribute('height', wrapRect.height);
-    svg.innerHTML = '';
-    el.querySelectorAll('.chip-tag.pinned').forEach(chip => {
-      const num = chip.dataset.chipNum;
-      if (!num) return;
-      const pin = el.querySelector(`.pin[data-pin-num="${num}"]`);
-      if (!pin) return;
-      const pinR  = pin.getBoundingClientRect();
-      const chipR = chip.getBoundingClientRect();
-      const x1 = pinR.left  - wrapRect.left + pinR.width  / 2;
-      const y1 = pinR.top   - wrapRect.top  + pinR.height / 2;
-      const x2 = chipR.left - wrapRect.left + chipR.width / 2;
-      const y2 = wrapRect.height; // bottom edge of chart, pointing toward chips below
-      const ln = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      ln.setAttribute('x1', x1); ln.setAttribute('y1', y1);
-      ln.setAttribute('x2', x2); ln.setAttribute('y2', y2);
-      svg.appendChild(ln);
-    });
+  // ─── Actions ────────────────────────────────────────────────
+  async function onAction(r, act, el) {
+    if (act === 'mirror') return openSheet(r);
+    if (act === 'watch') {
+      // Deep-link to this reel so a single canonical URL exists.
+      window.history.pushState(null, '', '?reel=' + encodeURIComponent(r.id));
+      // Scroll the card into view as a lightweight "open" gesture.
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    if (act === 'share') {
+      const url = window.location.origin + window.location.pathname + '?reel=' + encodeURIComponent(r.id);
+      try {
+        if (navigator.share) await navigator.share({ title: '$'+r.symbol+' lesson on TradeArena', url });
+        else { await navigator.clipboard.writeText(url); flashShare(el); }
+        await sb.rpc('toggle_engagement', { p_reel_id: r.id, p_kind: 'share' });
+      } catch (_) {}
+      return;
+    }
+    // save
+    const { data, error } = await sb.rpc('toggle_engagement', { p_reel_id: r.id, p_kind: act });
+    if (error) { console.warn(error); return; }
+    const btn = el.querySelector(`[data-act="${act}"]`);
+    btn.classList.toggle('on', !!data?.on);
+    if (act === 'save') {
+      r.counts.saves = data.count;
+      r.viewer_state.saved = !!data.on;
+      btn.innerHTML = `<i class="fa-${data.on?'solid':'regular'} fa-bookmark"></i>`;
+    }
+  }
+  function flashShare(el) {
+    const btn = el.querySelector('[data-act="share"]');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+    setTimeout(() => { btn.innerHTML = orig; }, 1400);
   }
 
   async function onFollowToggle(btn, authorId) {
@@ -644,222 +821,60 @@
     if (wasOn) {
       const { error } = await sb.from('follows')
         .delete().eq('follower_id', me.id).eq('followee_id', authorId);
-      if (!error) { btn.classList.remove('on'); btn.textContent = 'Follow'; }
+      if (!error) followingMap.set(authorId, false);
     } else {
       const { error } = await sb.from('follows')
         .insert({ follower_id: me.id, followee_id: authorId });
-      if (!error) { btn.classList.add('on'); btn.textContent = 'Following'; }
+      if (!error) followingMap.set(authorId, true);
     }
     btn.disabled = false;
-    // Reflect new state on every other card by the same author currently mounted.
-    state.slots.forEach(s => {
-      if (s.mounted && s.row.author && s.row.author.id === authorId) {
-        s.row.viewer_state.following = !wasOn;
-        const otherBtn = s.el.querySelector('.followbtn');
-        if (otherBtn && otherBtn !== btn) {
-          otherBtn.classList.toggle('on', !wasOn);
-          otherBtn.textContent = wasOn ? 'Follow' : 'Following';
-        }
+    // Reflect on every other card / sidebar mini-follow for the same author.
+    document.querySelectorAll(`[data-author-id="${authorId}"]`).forEach(b => {
+      const on = followingMap.get(authorId);
+      b.classList.toggle('on', !!on);
+      if (b.classList.contains('ln-follow-cta')) {
+        b.innerHTML = `<i class="fa-solid ${on?'fa-check':'fa-plus'}"></i>${on?'Following':'Follow Creator'}`;
+      } else if (b.classList.contains('ln-mini-follow')) {
+        b.textContent = on ? 'Following' : 'Follow';
       }
     });
   }
 
-  function mountSlot(idx) {
-    const slot = state.slots[idx];
-    if (!slot || slot.mounted) return;
-    slot.el.classList.remove('reel-collapsed');
-    slot.el.style.minHeight = '';
-    slot.el.innerHTML = '';
-    renderCardInto(slot.el, slot.row);
-    slot.mounted = true;
-  }
-
-  function unmountSlot(idx) {
-    const slot = state.slots[idx];
-    if (!slot || !slot.mounted) return;
-    // Capture the rendered height first so the placeholder preserves
-    // scroll position when we collapse the slot.
-    const h = slot.el.offsetHeight || slot.lastH || SLOT_PLACEHOLDER_H;
-    slot.lastH = h;
-    teardownSub(slot.row.id);
-    slot.el.innerHTML = `<div class="reel-placeholder" aria-hidden="true"></div>`;
-    slot.el.classList.add('reel-collapsed');
-    slot.el.style.minHeight = h + 'px';
-    slot.mounted = false;
-  }
-
-  // Picks the focal slot index, then mounts [focal-WINDOW..focal+WINDOW]
-  // and unmounts everything else. `focal` defaults to the median of the
-  // currently-visible slots, falling back to the supplied hint or 0.
-  let reconcileScheduled = false;
-  function reconcileWindow(focalHint) {
-    if (reconcileScheduled) return;
-    reconcileScheduled = true;
-    requestAnimationFrame(() => {
-      reconcileScheduled = false;
-      const total = state.slots.length;
-      if (!total) return;
-      let focal;
-      if (state.visibleIdx.size > 0) {
-        const arr = Array.from(state.visibleIdx).sort((a,b) => a - b);
-        focal = arr[Math.floor(arr.length / 2)];
-      } else {
-        focal = (focalHint != null ? focalHint : 0);
-      }
-      const lo = Math.max(0, focal - WINDOW);
-      const hi = Math.min(total - 1, focal + WINDOW);
-      for (let i = 0; i < total; i++) {
-        if (i >= lo && i <= hi) mountSlot(i);
-        else                    unmountSlot(i);
-      }
-    });
-  }
-
-  // ----------------------------------------------------------
-  // Pin popover (one at a time)
-  // ----------------------------------------------------------
-  function openPinPopover(cardEl, tag, anchorBtn) {
-    closePinPopover();
-    const wrap = cardEl.querySelector('.chart-wrap');
-    const pop  = document.createElement('div');
-    pop.className = 'pin-popover';
-    pop.innerHTML = `
-      <button class="pin-close" aria-label="Close">&times;</button>
-      <div class="pop-title"><i class="fa-solid ${reelsApi.ICON_FOR_TYPE[tag.tag_type] || 'fa-tag'}"></i> ${escape(tag.tag_value)}</div>
-      <div class="pop-def">${escape(reelsApi.defineTag(tag.tag_value))}</div>
-      <div class="pop-actions">
-        <a href="schools.html?lesson=${encodeURIComponent(tag.tag_value)}"><i class="fa-solid fa-graduation-cap"></i> Learn this in Schools</a>
-        <button data-filter-tag><i class="fa-solid fa-filter"></i> Show all reels using this</button>
-      </div>`;
-    // Position next to the pin, but keep inside the chart-wrap.
-    const x = Math.min(Math.max(tag.x_pct, 10), 70);
-    const y = Math.min(Math.max(tag.y_pct, 0),  60);
-    pop.style.left = x + '%';
-    pop.style.top  = (y + 6) + '%';
-    wrap.appendChild(pop);
-    state.pinPopoverFor = pop;
-
-    pop.querySelector('.pin-close').addEventListener('click', closePinPopover);
-    pop.querySelector('[data-filter-tag]').addEventListener('click', () => {
-      closePinPopover();
-      setTagFilter(tag.tag_value);
-    });
-  }
-
-  function closePinPopover() {
-    if (state.pinPopoverFor) { state.pinPopoverFor.remove(); state.pinPopoverFor = null; }
-  }
-  document.addEventListener('click', e => {
-    if (state.pinPopoverFor && !state.pinPopoverFor.contains(e.target) && !e.target.classList.contains('pin')) {
-      closePinPopover();
-    }
-  });
-
-  // One observer drives both windowing and live-quote subs.
-  const slotObserver = new IntersectionObserver(entries => {
-    let dirty = false;
-    entries.forEach(e => {
-      const idx = +e.target.dataset.slotIdx;
-      if (Number.isNaN(idx)) return;
-      if (e.isIntersecting) { if (!state.visibleIdx.has(idx)) { state.visibleIdx.add(idx);    dirty = true; } }
-      else                  { if (state.visibleIdx.has(idx))  { state.visibleIdx.delete(idx); dirty = true; } }
-    });
-    if (dirty) reconcileWindow();
-  }, { rootMargin: '120px' });
-
+  // ─── Live P&L subscription per card ─────────────────────────
   function mountLiveSub(el, reelId) {
     if (liveSubs.has(reelId)) return;
     const r = state.rows.find(x => x.id === reelId);
     if (!r || !datafeed) return;
     const pnlEl = el.querySelector('[data-live-pnl]');
-
-    // Server-of-truth: qty AND entry_price come from the actual
-    // paper_trades row the publish RPC opened (filled at the live
-    // quote at submit time, which can differ from the user's intended
-    // limit `r.entry`). Falling back only for legacy rows that don't
-    // carry a linked trade.
-    const qty       = (r.paper_trade_qty != null)
-      ? +r.paper_trade_qty
-      : reelsApi.positionSize({ entry: r.entry, stop: r.stop_loss, riskPct: 1, account: ACCOUNT_SIZE });
+    const qty       = (r.paper_trade_qty != null) ? +r.paper_trade_qty
+                      : reelsApi.positionSize({ entry: r.entry, stop: r.stop_loss, riskPct: 1, account: ACCOUNT_SIZE });
     const side      = r.paper_trade_side || (r.direction === 'short' ? 'sell' : 'buy');
     const fillPrice = (r.paper_trade_entry != null) ? +r.paper_trade_entry : +r.entry;
-
     const update = (last) => {
       const { abs, pct } = reelsApi.livePnl({ entry: fillPrice, qty, side, last });
       const cls = abs > 0.5 ? 'pos' : (abs < -0.5 ? 'neg' : 'flat');
-      pnlEl.className = 'pnl ' + cls;
-      const sign = abs > 0 ? '+' : (abs < 0 ? '' : '');
-      pnlEl.textContent = `${sign}${TArenaUI.fmtMoney(abs)} (${pct.toFixed(2)}%)`;
+      pnlEl.className = 'ln-pnl ' + cls;
+      const sign = abs > 0 ? '+' : '';
+      pnlEl.textContent = `${sign}${pct.toFixed(2)}%`;
     };
-
     let unsub = () => {};
     try {
       unsub = datafeed.subscribeQuote(r.symbol, q => {
         const last = +(q?.price ?? q?.last ?? q);
         if (isFinite(last)) update(last);
       });
-    } catch (err) {
-      console.warn('live sub failed for', r.symbol, err);
-      // Fallback to mock market
+    } catch (_) {
       const m = window.TArenaMarket?.find(r.symbol);
       if (m) update(m.price);
     }
     liveSubs.set(reelId, unsub);
-  }
-
-  function teardownSub(reelId) {
-    const fn = liveSubs.get(reelId);
-    if (fn) { try { fn(); } catch (_){}; liveSubs.delete(reelId); }
   }
   function teardownAllSubs() {
     liveSubs.forEach(fn => { try { fn(); } catch (_){} });
     liveSubs.clear();
   }
 
-  // ----------------------------------------------------------
-  // Action buttons
-  // ----------------------------------------------------------
-  async function onAction(r, act, el) {
-    if (act === 'mirror') return openSheet(r);
-    if (act === 'comment') {
-      alert('Comments thread is coming with the social release. For now, mirror or save.');
-      return;
-    }
-    if (act === 'share') {
-      const url = window.location.origin + '/reels.html?reel=' + encodeURIComponent(r.id);
-      try {
-        if (navigator.share) await navigator.share({ title: '$'+r.symbol+' on TradeArena', url });
-        else { await navigator.clipboard.writeText(url); flashShare(el); }
-        await sb.rpc('toggle_engagement', { p_reel_id: r.id, p_kind: 'share' });
-      } catch (_) {}
-      return;
-    }
-    // like / save toggles
-    const { data, error } = await sb.rpc('toggle_engagement', { p_reel_id: r.id, p_kind: act });
-    if (error) { console.warn(error); return; }
-    const btn = el.querySelector(`[data-act="${act}"]`);
-    btn.classList.toggle('on', !!data?.on);
-    if (act === 'like') {
-      r.counts.likes = data.count;
-      r.viewer_state.liked = !!data.on;
-      btn.innerHTML = `<i class="fa-${data.on?'solid':'regular'} fa-heart"></i> ${data.count||0}`;
-    } else if (act === 'save') {
-      r.counts.saves = data.count;
-      r.viewer_state.saved = !!data.on;
-      btn.innerHTML = `<i class="fa-${data.on?'solid':'regular'} fa-bookmark"></i>`;
-    }
-  }
-
-  function flashShare(el) {
-    const btn = el.querySelector('[data-act="share"]');
-    const orig = btn.innerHTML;
-    btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied';
-    setTimeout(() => { btn.innerHTML = orig; }, 1400);
-  }
-
-  // ----------------------------------------------------------
-  // Mirror sheet
-  // ----------------------------------------------------------
+  // ─── Mirror sheet ───────────────────────────────────────────
   function openSheet(r) {
     state.sheetReel = r;
     document.getElementById('sheetSub').textContent =
@@ -901,7 +916,6 @@
     const btn = document.getElementById('confirmMirror');
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Opening trade…';
-    // Capture viewer's live quote so the mirror trade fills at live.
     let livePrice = null;
     try {
       if (datafeed?.fetchQuotes) {
@@ -909,12 +923,11 @@
         const v = Array.isArray(q) ? q[0] : (q && q[r.symbol]);
         livePrice = +(v?.last ?? v?.price ?? v) || null;
       }
-    } catch (_) { /* fall through */ }
+    } catch (_) {}
     if (!livePrice) {
       const m = window.TArenaMarket?.find ? window.TArenaMarket.find(r.symbol) : null;
       livePrice = m?.price || r.entry;
     }
-
     const { data, error } = await sb.rpc('mirror_reel', {
       p_reel_id: r.id,
       p_risk_pct: risk,
@@ -925,85 +938,119 @@
     if (error) {
       const msg = (error.message || 'Mirror failed').replace(/^.*:\s*/,'');
       alert('Could not mirror: ' + msg);
-      btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Mirror';
+      btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Mirror Trade';
       return;
     }
-    // Bump the count locally
     r.counts.mirrors = (r.counts.mirrors || 0) + 1;
     r.viewer_state.mirrored = true;
-    const card = document.querySelector(`[data-reel-id="${r.id}"]`);
-    if (card) {
-      const mb = card.querySelector('[data-act="mirror"]');
-      if (mb) mb.innerHTML = `<i class="fa-solid fa-check"></i> Mirrored (${r.counts.mirrors})`;
-    }
     closeSheet();
+    refreshSidebar();
   }
   window.confirmMirror = confirmMirror;
 
-  // ----------------------------------------------------------
-  // Tabs
-  // ----------------------------------------------------------
-  document.querySelectorAll('.feed-tabs button').forEach(b => {
-    b.addEventListener('click', () => setTab(b.dataset.tab));
-  });
+  // ─── Right sidebar (Top Educators + Most Mirrored) ──────────
+  // Both panels are derived from currently-loaded rows so we don't
+  // need new RPCs. They refresh whenever loadMore appends new data.
+  function refreshSidebar() {
+    renderTopEducators();
+    renderTopMirrored();
+  }
+  function renderTopEducators() {
+    const el = document.getElementById('topEducators');
+    const me = (TArenaAuth.getSession() || {}).user;
+    // Group rows by author.
+    const byAuthor = new Map();
+    state.rows.forEach(r => {
+      if (!r.author || !r.author.id) return;
+      if (me && r.author.id === me.id) return;
+      const a = byAuthor.get(r.author.id) || {
+        id: r.author.id, username: r.author.username, display_name: r.author.display_name,
+        win_rate: r.author.win_rate, follower_count: r.author.follower_count || 0, lessons: 0,
+      };
+      a.lessons += 1;
+      byAuthor.set(r.author.id, a);
+    });
+    const authors = Array.from(byAuthor.values())
+      .sort((a, b) => (b.follower_count || 0) - (a.follower_count || 0) || (b.lessons - a.lessons))
+      .slice(0, 5);
+    if (!authors.length) {
+      el.innerHTML = `<div class="ln-side-empty">As lessons load, top creators will appear here.</div>`;
+      return;
+    }
+    el.innerHTML = authors.map(a => {
+      const on = followingMap.get(a.id);
+      const wr = (a.win_rate == null) ? '— wins' : a.win_rate + '%';
+      return `
+        <div class="ln-edu-row">
+          ${TArenaUI.avatarHtml({ username: a.username, email: a.username }, 38)}
+          <div class="ln-edu-info">
+            <div class="name"><a href="profile.html?u=${encodeURIComponent(a.username)}" style="color:inherit;text-decoration:none;">${escape(a.display_name || a.username)}</a></div>
+            <div class="meta">
+              <span class="wr">${wr}</span>
+              <span class="dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:var(--bdl);"></span>
+              <span>${fmtCount(a.follower_count)} followers</span>
+            </div>
+          </div>
+          <button class="ln-mini-follow ${on?'on':''}" data-author-id="${a.id}">${on?'Following':'Follow'}</button>
+        </div>`;
+    }).join('');
+    el.querySelectorAll('.ln-mini-follow').forEach(b => {
+      b.addEventListener('click', () => onFollowToggle(b, b.dataset.authorId));
+    });
+  }
+  function renderTopMirrored() {
+    const el = document.getElementById('topMirrored');
+    const top = state.rows
+      .slice()
+      .sort((a, b) => (b.counts?.mirrors || 0) - (a.counts?.mirrors || 0))
+      .slice(0, 3)
+      .filter(r => (r.counts?.mirrors || 0) > 0);
+    if (!top.length) {
+      el.innerHTML = `<div class="ln-side-empty">No mirrored lessons yet — be the first.</div>`;
+      return;
+    }
+    el.innerHTML = top.map((r, i) => {
+      const subj = pickSubject(r.tags);
+      return `
+        <a class="ln-mirror-row" href="?reel=${encodeURIComponent(r.id)}">
+          <div class="mr-rank">${i+1}</div>
+          <div class="mr-body">
+            <div class="mr-sym">$${escape(r.symbol)} · ${escape(subj.value)}</div>
+            <div class="mr-mirrors"><strong>${fmtCount(r.counts.mirrors)}</strong> mirrors · by ${escape(r.author.display_name || r.author.username)}</div>
+          </div>
+        </a>`;
+    }).join('');
+  }
 
-  // Boot
+  // ─── Boot ───────────────────────────────────────────────────
   readUrlFilters();
-  renderRails();
-  highlightRail();
   renderActiveFilter();
-  // Apply persisted tab to UI before first load
-  document.querySelectorAll('.feed-tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === state.tab));
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === state.tab));
   resetAndLoad();
 
-  // ?reel=<uuid> deep link → fetch via get_reel and pin to top of feed.
+  // ?reel=<uuid> deep link → fetch via get_reel and prepend.
   (async function consumeDeepLink() {
     const u = new URL(window.location.href);
     const reelId = u.searchParams.get('reel');
     if (!reelId) return;
     const { data, error } = await sb.rpc('get_reel', { p_id: reelId });
-    if (error || !data) {
-      const af = document.getElementById('activeFilter');
-      if (af && !af.querySelector('.deep-miss')) {
-        af.insertAdjacentHTML('beforeend',
-          `<div class="deep-miss" style="margin:6px 0 14px;color:var(--muted);font-size:12px;">
-             <i class="fa-solid fa-circle-info"></i> The shared reel is no longer available.
-           </div>`);
-      }
-      u.searchParams.delete('reel');
-      history.replaceState(null, '', u);
-      return;
-    }
-    // De-dupe against the live feed and prepend.
-    if (!state.seen.has(data.id)) {
-      state.seen.add(data.id);
-      state.rows.unshift(data);
-      const feed = document.getElementById('feed');
-      const slot = document.createElement('article');
-      slot.className = 'reel reel-slot';
-      slot.dataset.slotIdx = '0';
-      slot.dataset.reelId  = data.id;
-      slot.style.minHeight = SLOT_PLACEHOLDER_H + 'px';
-      slot.innerHTML = `<div class="reel-placeholder" aria-hidden="true"></div>`;
-      feed.insertBefore(slot, feed.firstChild);
-      // Re-index every existing slot so visibleIdx tracking stays sane.
-      state.slots.forEach((s, i) => { s.el.dataset.slotIdx = String(i + 1); });
-      state.slots.unshift({ el: slot, mounted: false, row: data, lastH: SLOT_PLACEHOLDER_H });
-      state.visibleIdx = new Set(Array.from(state.visibleIdx).map(i => i + 1));
-      slotObserver.observe(slot);
-      reconcileWindow(0);
-      setTimeout(() => slot.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
-    }
+    if (error || !data) return;
+    if (state.seen.has(data.id)) return;
+    state.seen.add(data.id);
+    state.rows.unshift(data);
+    if (data.viewer_state && data.author) followingMap.set(data.author.id, !!data.viewer_state.following);
+    // Re-render: the simplest safe approach is to insert at the top.
+    const feed = document.getElementById('feed');
+    const placeholder = document.createElement('div');
+    feed.insertBefore(placeholder, feed.firstChild);
+    appendCard(data); // append at end…
+    // …then move the new card (last child) to the top and remove placeholder.
+    const newCard = feed.lastElementChild;
+    feed.insertBefore(newCard, placeholder);
+    placeholder.remove();
+    refreshSidebar();
+    setTimeout(() => newCard.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
   })();
-
-  // Redraw leader lines on resize for any mounted card.
-  let leaderResizeT;
-  window.addEventListener('resize', () => {
-    clearTimeout(leaderResizeT);
-    leaderResizeT = setTimeout(() => {
-      state.slots.forEach(s => { if (s.mounted) drawLeaders(s.el); });
-    }, 100);
-  });
 })();
 </script>
 </body>

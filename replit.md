@@ -11,7 +11,7 @@ TradeArena is built as a pure static HTML/CSS/JS application with no build step,
 
 ### UI/UX Decisions
 - **Theme**: Professional trader aesthetic with a navy and gold color scheme.
-- **Navigation**: Icon + label navigation (`.ta-nav-link` pills) for Markets, Strategies (formerly Reels — file path `reels.html` retained for compatibility), Learn, Portfolio, Profile.
+- **Navigation**: Icon + label navigation (`.ta-nav-link` pills) for Markets, Learn (file path `reels.html` retained for compatibility), School, Portfolio, Profile. A live ticker strip (BTC/ETH/AAPL/BHP.AX) marquees above the glass-blur sticky nav.
 - **Footer**: 4-column company footer with product, company, legal, brand, social links, a paper-trading risk disclaimer, copyright, and a sign-in nudge for unauthenticated users.
 - **Logo**: Transparent monoline gold shield with a chart spark.
 - **Typography**: Uses DM Sans exclusively for a clean, modern look.
@@ -39,8 +39,8 @@ TradeArena is built as a pure static HTML/CSS/JS application with no build step,
 - **Page-Specific Features**:
     - **Profile**: Trader scorecard displaying stats, equity curve, quant metrics, badges, and tabbed content (Strategies, Reels, Journal, Holdings) with granular privacy controls via `visibility_mask`.
     - **Trade**: Real-time market data integration, order entry panel, simulated order book, and "Snap to reel" chart capture feature.
-    - **Reels Feed**: Displays strategy reels with filtering, search, live P&L, and mirror functionality. Implements windowed virtualization for performance.
-    - **Reel Composer**: 5-step flow for creating and publishing strategy reels, including symbol selection, chart snapping, pin tagging, thesis definition, and visibility settings.
+    - **Learn Feed (`reels.html`)**: Instagram-style lesson grid with hero banner ("Teach Trading. Build Your Audience."), four tabs (For You / Following / Trending / New), search bar, responsive card grid (chart snapshot, single gold subject pill, symbol + direction badge, creator avatar/handle/follower count, 2-line thesis, Entry/Stop/Target mini-table, live P&L pill, Watch/Mirror/Save/Share action row, hover Follow CTA), and a 280px right rail showing "Top Educators This Week" + "Most Mirrored Strategies" derived client-side from loaded rows. Mirror sheet + deep-link `?reel=<uuid>` preserved.
+    - **Creator Studio (`reels-new.html`)**: 3-step wizard (Trade Setup → Add Chart → Write Thesis) with progress bar, sticky live preview rail, and creator benefits callout. Step 1: symbol search, LONG/SHORT pill toggle, four number inputs (Entry/Stop/Target/Risk%), live R:R verdict, timeframe selector. Step 2: drag-drop upload OR Snap-from-TradeArena, max 5 numbered pin annotations with free-text labels. Step 3: 280-char thesis, single subject dropdown, public/followers/private visibility, full-width gold Publish button. Subject + timeframe + pin labels are mapped onto the existing `tags[]` schema (strategy/indicator types) so `publish_reel` RPC needs no backend changes.
     - **Portfolio**: Groww-style portfolio overview with performance charts, asset allocation, holdings list, and top movers.
     - **Schools**: Curated learning modules with reels playlists, quizzes, and paper-trade challenges, progressive unlocking based on completion.
     - **Admin Panel**: For managing registrations, universities, and schools (modules, quizzes, challenges).

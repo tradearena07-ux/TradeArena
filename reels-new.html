@@ -3,222 +3,616 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>New reel — TradeArena</title>
+  <title>Creator Studio — TradeArena</title>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;700&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&amp;display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
   <link rel="stylesheet" href="assets/styles.css"/>
   <style>
     body { background:#060e1c; }
-    .compose { max-width: 920px; margin: 24px auto 90px; padding: 0 5%; display:grid; grid-template-columns: 1fr 320px; gap:28px; }
-    @media (max-width: 880px) { .compose { grid-template-columns: 1fr; } .preview-rail { order:-1; } }
 
-    .step-pill { display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
-    .step-pill div { flex:1; min-width:90px; padding:8px 10px; border-radius:8px; border:1px solid var(--bdl); background:var(--navy2); color:var(--muted); font-size:12px; font-family:'Cinzel',serif; letter-spacing:.06em; text-align:center; }
-    .step-pill div.active { background:var(--gold); color:#091528; border-color:var(--gold); font-weight:700; }
-    .step-pill div.done { color:var(--gold2); border-color:var(--gold); }
+    /* ============================================================
+       LAYOUT
+       ============================================================ */
+    .cs-shell  { max-width:1200px; margin:0 auto; padding:28px 5% 80px; }
+    .cs-header { margin-bottom:22px; }
+    .cs-header h1{
+      font-family:'DM Sans',sans-serif; font-weight:700; letter-spacing:-.01em;
+      font-size:1.7rem; color:var(--cream); margin:0 0 4px;
+      display:flex; align-items:center; gap:10px;
+    }
+    .cs-header h1 i{ color:var(--gold2); }
+    .cs-header p{ color:var(--muted); font-size:14px; margin:0; }
 
-    .panel { background:var(--navy3); border:1px solid var(--bdl); border-radius:14px; padding:22px 22px 24px; margin-bottom:16px; }
-    .panel h2 { font-family:'Cinzel',serif; font-size:1.15rem; color:var(--cream); letter-spacing:.04em; margin-bottom:6px; }
-    .panel .h-sub { color:var(--muted); font-size:13px; margin-bottom:16px; line-height:1.55; }
+    /* ============================================================
+       PROGRESS BAR
+       ============================================================ */
+    .cs-progress{
+      display:flex; align-items:center; gap:0;
+      background:rgba(255,255,255,.03); border:1px solid var(--bdl);
+      border-radius:14px; padding:14px 18px; margin-bottom:22px;
+    }
+    .cs-step{
+      display:flex; align-items:center; gap:10px;
+      color:var(--muted); font-size:13px; font-weight:600;
+      flex-shrink:0;
+    }
+    .cs-step .num{
+      width:28px; height:28px; border-radius:50%;
+      background:rgba(255,255,255,.05); border:1px solid var(--bdl);
+      display:flex; align-items:center; justify-content:center;
+      font-weight:700; font-size:13px; transition:.2s;
+    }
+    .cs-step.active{ color:var(--cream); }
+    .cs-step.active .num{
+      background:linear-gradient(180deg,#e8c060,#c9a030);
+      color:#091528; border-color:transparent;
+      box-shadow:0 4px 10px -3px rgba(232,192,96,.5);
+    }
+    .cs-step.done{ color:var(--gold2); }
+    .cs-step.done .num{
+      background:rgba(74,222,128,.15); color:var(--green); border-color:rgba(74,222,128,.3);
+    }
+    .cs-step-line{
+      flex:1; height:2px; background:var(--bdl); margin:0 14px;
+      position:relative; border-radius:2px; overflow:hidden;
+    }
+    .cs-step-line::before{
+      content:""; position:absolute; inset:0;
+      background:linear-gradient(90deg,#e8c060,#c9a030);
+      transform-origin:left; transform:scaleX(0); transition:transform .3s;
+    }
+    .cs-step-line.fill::before{ transform:scaleX(1); }
 
-    .field { margin-bottom:14px; }
-    .field label { display:block; font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.14em; font-family:'Cinzel',serif; margin-bottom:6px; }
-    .field input, .field textarea, .field select { width:100%; background:var(--navy2); border:1px solid var(--bdl); color:var(--cream); padding:10px 12px; border-radius:8px; font-size:14px; font-family:inherit; outline:none; transition:.15s; }
-    .field input:focus, .field textarea:focus { border-color:var(--gold); }
-    .field .row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
-    .field .hint { color:var(--muted); font-size:11.5px; margin-top:6px; }
-    .field .err  { color:var(--red); font-size:12px; margin-top:6px; min-height:1em; }
+    /* ============================================================
+       MAIN GRID (form + preview)
+       ============================================================ */
+    .cs-grid{ display:grid; grid-template-columns:1fr 320px; gap:24px; align-items:start; }
+    @media (max-width:900px){ .cs-grid{ grid-template-columns:1fr; } .cs-preview{ order:-1; } }
 
-    .symbol-suggest { position:relative; }
-    .symbol-suggest .drop { position:absolute; top:100%; left:0; right:0; background:#0a1830; border:1px solid var(--bdl); border-radius:8px; max-height:240px; overflow-y:auto; z-index:5; margin-top:4px; display:none; }
-    .symbol-suggest .drop.show { display:block; }
-    .symbol-suggest .drop button { display:block; width:100%; text-align:left; background:transparent; border:0; color:var(--cream); padding:9px 12px; cursor:pointer; font-size:13px; }
-    .symbol-suggest .drop button:hover, .symbol-suggest .drop button.cursor { background:var(--navy2); }
-    .symbol-suggest .drop .name { color:var(--muted); font-size:11.5px; margin-left:6px; }
+    .cs-panel{
+      background:linear-gradient(180deg,#0a1628,#091525);
+      border:1px solid var(--bdl); border-radius:16px;
+      padding:24px 24px 26px;
+      display:none;
+    }
+    .cs-panel.active{ display:block; animation:csIn .25s ease; }
+    @keyframes csIn{ from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:none;} }
+    .cs-panel h2{
+      font-family:'DM Sans',sans-serif; font-weight:700;
+      font-size:1.2rem; color:var(--cream); margin:0 0 4px;
+      display:flex; align-items:center; gap:8px;
+    }
+    .cs-panel h2 i{ color:var(--gold2); }
+    .cs-panel .h-sub{ color:var(--muted); font-size:13.5px; margin-bottom:22px; line-height:1.55; }
 
-    .snap-shell { aspect-ratio: 16/11; background:#091528; border:1px solid var(--bdl); border-radius:10px; position:relative; overflow:hidden; }
-    .snap-shell img { width:100%; height:100%; object-fit:cover; cursor:crosshair; user-select:none; }
-    .snap-empty { width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--muted); gap:10px; padding:0 20px; text-align:center; }
-    .snap-empty i { font-size:32px; color:var(--gold2); }
-    .snap-empty a { background:var(--gold); color:#091528; padding:10px 14px; border-radius:8px; text-decoration:none; font-weight:700; margin-top:6px; font-size:13px; }
-    .pin-overlay { position:absolute; inset:0; pointer-events:none; }
-    .pin-overlay .pin { position:absolute; transform:translate(-50%,-50%); width:30px; height:30px; border-radius:50%; background:var(--gold); color:#091528; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; border:2px solid #fff; pointer-events:auto; cursor:pointer; }
-    .snap-shell.placing img { cursor:crosshair; }
+    /* ============================================================
+       FIELDS
+       ============================================================ */
+    .cs-field{ margin-bottom:18px; }
+    .cs-field label{
+      display:block; font-size:11.5px; color:var(--muted); font-weight:600;
+      text-transform:uppercase; letter-spacing:.1em; margin-bottom:7px;
+    }
+    .cs-field input, .cs-field textarea, .cs-field select{
+      width:100%; background:rgba(255,255,255,.04);
+      border:1px solid var(--bdl); border-radius:10px;
+      color:var(--cream); padding:11px 14px;
+      font-family:inherit; font-size:14px; outline:none;
+      transition:border-color .15s, background .15s;
+    }
+    .cs-field input:focus, .cs-field textarea:focus, .cs-field select:focus{
+      border-color:var(--gold); background:rgba(255,255,255,.06);
+    }
+    .cs-field .hint{ color:var(--muted); font-size:11.5px; margin-top:6px; }
 
-    .pin-list { display:flex; flex-direction:column; gap:6px; margin-top:12px; }
-    .pin-list .item { display:flex; align-items:center; gap:8px; padding:8px 10px; background:var(--navy2); border:1px solid var(--bdl); border-radius:8px; }
-    .pin-list .num { width:22px; height:22px; border-radius:50%; background:var(--gold); color:#091528; font-weight:700; font-size:11px; display:inline-flex; align-items:center; justify-content:center; }
-    .pin-list select { flex:1; background:transparent; border:0; color:var(--cream); font-size:13px; outline:none; padding:4px 0; }
-    .pin-list .del { background:transparent; border:0; color:var(--red); cursor:pointer; }
+    /* Symbol search */
+    .cs-symbol-wrap{ position:relative; }
+    .cs-symbol-wrap input{
+      font-size:18px; padding:14px 18px 14px 44px;
+      letter-spacing:.02em;
+    }
+    .cs-symbol-wrap .ico{
+      position:absolute; left:14px; top:50%; transform:translateY(-50%);
+      color:var(--muted); font-size:16px;
+    }
+    .cs-drop{
+      position:absolute; top:100%; left:0; right:0; margin-top:6px;
+      background:#091528; border:1px solid var(--bdl); border-radius:10px;
+      max-height:280px; overflow-y:auto; z-index:10;
+      box-shadow:0 14px 32px -10px rgba(0,0,0,.6);
+      display:none;
+    }
+    .cs-drop.show{ display:block; }
+    .cs-drop button{
+      display:block; width:100%; text-align:left;
+      background:transparent; border:0; cursor:pointer;
+      color:var(--cream); padding:11px 16px; font-size:14px;
+    }
+    .cs-drop button strong{ color:var(--cream); font-weight:700; margin-right:6px; }
+    .cs-drop button .nm{ color:var(--muted); font-size:12.5px; }
+    .cs-drop button:hover, .cs-drop button.cursor{ background:rgba(255,255,255,.04); }
 
-    .vis-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
-    .vis-grid label { display:flex; flex-direction:column; gap:4px; padding:12px; background:var(--navy2); border:1px solid var(--bdl); border-radius:10px; cursor:pointer; transition:.15s; }
-    .vis-grid label.on { border-color:var(--gold); background:rgba(201,160,48,.08); }
-    .vis-grid input { display:none; }
-    .vis-grid .v-name { font-family:'Cinzel',serif; color:var(--cream); font-size:13px; letter-spacing:.04em; }
-    .vis-grid .v-sub  { color:var(--muted); font-size:11px; line-height:1.45; }
+    /* Direction toggle */
+    .cs-dir{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .cs-dir button{
+      padding:14px; border-radius:11px;
+      background:rgba(255,255,255,.03); border:1px solid var(--bdl);
+      color:var(--cream); font-weight:700; font-size:15px; cursor:pointer;
+      display:inline-flex; align-items:center; justify-content:center; gap:10px;
+      transition:.18s;
+    }
+    .cs-dir button .dot{
+      width:10px; height:10px; border-radius:50%; background:var(--muted);
+    }
+    .cs-dir button.long.on{
+      border-color:var(--green); background:rgba(74,222,128,.10); color:var(--green);
+      box-shadow:0 0 0 3px rgba(74,222,128,.08);
+    }
+    .cs-dir button.long.on .dot{ background:var(--green); box-shadow:0 0 8px var(--green); }
+    .cs-dir button.short.on{
+      border-color:var(--red); background:rgba(248,113,113,.10); color:var(--red);
+      box-shadow:0 0 0 3px rgba(248,113,113,.08);
+    }
+    .cs-dir button.short.on .dot{ background:var(--red); box-shadow:0 0 8px var(--red); }
 
-    .footer { display:flex; gap:10px; justify-content:flex-end; }
-    .footer button { padding:12px 22px; border-radius:10px; border:1px solid var(--bdl); background:transparent; color:var(--cream); cursor:pointer; font-weight:600; font-size:14px; }
-    .footer button.primary { background:var(--gold); color:#091528; border-color:var(--gold); }
-    .footer button:disabled { opacity:.5; cursor:not-allowed; }
+    /* 4 number inputs in a row */
+    .cs-nums{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+    @media (max-width:700px){ .cs-nums{ grid-template-columns:repeat(2,1fr); } }
 
-    .preview-rail { position:sticky; top:96px; align-self:start; }
-    .preview-rail h3 { font-family:'Cinzel',serif; font-size:11px; letter-spacing:.22em; color:var(--gold2); margin-bottom:10px; text-transform:uppercase; }
-    .preview-card { background:var(--navy3); border:1px solid var(--bdl); border-radius:12px; padding:14px; }
-    .preview-card .row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; font-size:12.5px; color:var(--muted); border-bottom:1px solid var(--bdl); }
-    .preview-card .row:last-child { border-bottom:0; }
-    .preview-card .row strong { color:var(--cream); font-family:'Cinzel',serif; font-size:13.5px; }
-    .preview-card .row.neg strong { color:var(--red); }
-    .preview-card .row.pos strong { color:var(--green); }
-    .preview-card .rr   strong { color:var(--gold2); }
+    /* R:R live display */
+    .cs-rr-display{
+      margin-top:14px; padding:14px 18px;
+      background:rgba(232,192,96,.06); border:1px solid rgba(232,192,96,.22);
+      border-radius:11px;
+      display:flex; align-items:center; gap:12px;
+    }
+    .cs-rr-display .rr-label{ color:var(--muted); font-size:12.5px; font-weight:600; }
+    .cs-rr-display .rr-value{
+      color:var(--gold2); font-weight:700; font-size:18px;
+      font-variant-numeric:tabular-nums;
+    }
+    .cs-rr-display .rr-verdict{
+      margin-left:auto; padding:4px 10px; border-radius:9999px;
+      font-size:12px; font-weight:700;
+    }
+    .cs-rr-display .rr-verdict.good{ background:rgba(74,222,128,.15); color:var(--green); }
+    .cs-rr-display .rr-verdict.ok  { background:rgba(232,192,96,.15); color:var(--gold2); }
+    .cs-rr-display .rr-verdict.bad { background:rgba(248,113,113,.15); color:var(--red); }
 
-    .thesis-counter { color:var(--muted); font-size:11.5px; text-align:right; margin-top:4px; }
-    .thesis-counter.warn { color:var(--red); }
+    /* Timeframe selector */
+    .cs-tf{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+    .cs-tf button{
+      padding:11px; border-radius:10px;
+      background:rgba(255,255,255,.03); border:1px solid var(--bdl);
+      color:var(--cream); font-size:13px; font-weight:600; cursor:pointer;
+      transition:.15s;
+    }
+    .cs-tf button:hover{ border-color:var(--gold); color:var(--gold2); }
+    .cs-tf button.on{
+      background:rgba(232,192,96,.10); border-color:var(--gold); color:var(--gold2); font-weight:700;
+    }
+    .cs-tf button .tf-sub{ display:block; color:var(--muted); font-size:10.5px; font-weight:500; margin-top:3px; }
+    .cs-tf button.on .tf-sub{ color:var(--gold2); }
 
-    .add-pin-btn { background:transparent; border:1px dashed var(--gold); color:var(--gold2); padding:8px 14px; border-radius:8px; cursor:pointer; font-size:12.5px; margin-top:10px; }
-    .add-pin-btn.active { background:var(--gold); color:#091528; }
+    /* ============================================================
+       STEP 2 — CHART UPLOAD
+       ============================================================ */
+    .cs-drop-zone{
+      position:relative;
+      aspect-ratio:16/9; border:2px dashed var(--bdl); border-radius:14px;
+      background:rgba(255,255,255,.02);
+      display:flex; align-items:center; justify-content:center; flex-direction:column; gap:10px;
+      cursor:pointer; transition:border-color .18s, background .18s;
+      overflow:hidden;
+    }
+    .cs-drop-zone:hover, .cs-drop-zone.over{
+      border-color:var(--gold); background:rgba(201,160,48,.06);
+    }
+    .cs-drop-zone i{ font-size:38px; color:var(--gold2); }
+    .cs-drop-zone .dz-h{ color:var(--cream); font-weight:700; font-size:15px; }
+    .cs-drop-zone .dz-sub{ color:var(--muted); font-size:12.5px; }
+    .cs-drop-zone img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .cs-drop-zone.has-image{ border-style:solid; cursor:default; padding:0; }
+    .cs-drop-zone.has-image .dz-empty{ display:none; }
+    .cs-drop-zone.placing img{ cursor:crosshair; }
+    .cs-drop-zone .pin-overlay{ position:absolute; inset:0; pointer-events:none; }
+    .cs-drop-zone .pin-overlay .pin{
+      position:absolute; transform:translate(-50%,-50%);
+      width:30px; height:30px; border-radius:50%;
+      background:var(--gold); color:#091528;
+      display:flex; align-items:center; justify-content:center;
+      font-weight:700; font-size:13px;
+      border:2px solid #fff; pointer-events:auto; cursor:pointer;
+      box-shadow:0 4px 12px rgba(0,0,0,.4);
+    }
 
-    .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#0a1830; border:1px solid var(--gold); color:var(--cream); padding:14px 24px; border-radius:10px; z-index:99; display:none; }
-    .toast.show { display:block; }
+    .cs-upload-actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+    .cs-upload-actions button{
+      flex:1; min-width:160px;
+      padding:11px 16px; border-radius:10px;
+      background:rgba(255,255,255,.04); border:1px solid var(--bdl);
+      color:var(--cream); font-weight:600; font-size:13.5px; cursor:pointer;
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      transition:.15s;
+    }
+    .cs-upload-actions button:hover{ border-color:var(--gold); color:var(--gold2); }
+    .cs-upload-actions button.primary{
+      background:rgba(232,192,96,.10); border-color:var(--gold); color:var(--gold2);
+    }
+
+    /* Pin annotations list */
+    .cs-pins{ margin-top:18px; display:flex; flex-direction:column; gap:8px; }
+    .cs-pin-row{
+      display:flex; align-items:center; gap:10px;
+      background:rgba(255,255,255,.03); border:1px solid var(--bdl);
+      border-radius:10px; padding:8px 10px;
+    }
+    .cs-pin-row .num{
+      width:26px; height:26px; border-radius:50%;
+      background:var(--gold); color:#091528;
+      display:flex; align-items:center; justify-content:center;
+      font-weight:700; font-size:12px; flex-shrink:0;
+    }
+    .cs-pin-row input{
+      flex:1; background:transparent; border:0; outline:none;
+      color:var(--cream); font-size:13.5px; padding:6px 4px;
+    }
+    .cs-pin-row .del{
+      background:transparent; border:0; cursor:pointer;
+      color:var(--muted); padding:4px 8px;
+    }
+    .cs-pin-row .del:hover{ color:var(--red); }
+    .cs-pin-empty{
+      color:var(--muted); font-size:12.5px; text-align:center;
+      padding:14px; border:1px dashed var(--bdl); border-radius:10px;
+    }
+    .cs-pin-limit{
+      color:var(--muted); font-size:11.5px; text-align:right; margin-top:8px;
+    }
+    .cs-pin-limit.warn{ color:var(--gold2); }
+
+    /* ============================================================
+       STEP 3 — THESIS / VISIBILITY
+       ============================================================ */
+    .cs-thesis-wrap textarea{ min-height:140px; resize:vertical; line-height:1.55; }
+    .cs-counter{ color:var(--muted); font-size:11.5px; text-align:right; margin-top:6px; }
+    .cs-counter.warn{ color:var(--red); }
+
+    .cs-vis-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    @media (max-width:700px){ .cs-vis-grid{ grid-template-columns:1fr; } }
+    .cs-vis-grid label{
+      display:flex; flex-direction:column; gap:5px;
+      padding:14px; background:rgba(255,255,255,.03);
+      border:1px solid var(--bdl); border-radius:11px;
+      cursor:pointer; transition:.15s;
+    }
+    .cs-vis-grid label.on{
+      border-color:var(--gold); background:rgba(201,160,48,.08);
+    }
+    .cs-vis-grid input{ display:none; }
+    .cs-vis-grid .v-name{
+      display:flex; align-items:center; gap:8px;
+      color:var(--cream); font-size:13.5px; font-weight:700;
+    }
+    .cs-vis-grid .v-name i{ color:var(--gold2); font-size:13px; }
+    .cs-vis-grid .v-sub{ color:var(--muted); font-size:11.5px; line-height:1.45; }
+
+    /* ============================================================
+       NAV (back / next / publish)
+       ============================================================ */
+    .cs-nav{
+      display:flex; gap:10px; justify-content:space-between;
+      margin-top:24px; padding-top:20px; border-top:1px solid var(--bdl);
+    }
+    .cs-btn{
+      padding:12px 22px; border-radius:11px;
+      background:rgba(255,255,255,.04); border:1px solid var(--bdl);
+      color:var(--cream); cursor:pointer; font-weight:600; font-size:14px;
+      display:inline-flex; align-items:center; gap:8px; transition:.15s;
+    }
+    .cs-btn:hover{ border-color:var(--gold); color:var(--gold2); }
+    .cs-btn.primary{
+      background:linear-gradient(180deg,#e8c060,#c9a030);
+      color:#091528; border:0; font-weight:700;
+      box-shadow:0 8px 20px -8px rgba(232,192,96,.55);
+    }
+    .cs-btn.primary:hover{ filter:brightness(1.05); color:#091528; }
+    .cs-btn.publish{ width:100%; padding:14px; font-size:15px; justify-content:center; }
+    .cs-btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+    /* ============================================================
+       LIVE PREVIEW PANEL
+       ============================================================ */
+    .cs-preview{ position:sticky; top:96px; align-self:start; }
+    .cs-preview h3{
+      font-family:'DM Sans',sans-serif; font-weight:700;
+      font-size:13px; color:var(--cream); margin:0 0 12px;
+      display:flex; align-items:center; gap:8px;
+    }
+    .cs-preview h3 i{ color:var(--gold2); font-size:12px; }
+    .cs-pv-card{
+      background:linear-gradient(180deg,#0a1628,#091525);
+      border:1px solid var(--bdl); border-radius:14px; overflow:hidden;
+    }
+    .cs-pv-chart{
+      position:relative;
+      aspect-ratio:16/9; background:#091528;
+      display:flex; align-items:center; justify-content:center;
+      color:var(--muted); font-size:12px;
+    }
+    .cs-pv-chart img{ width:100%; height:100%; object-fit:cover; }
+    .cs-pv-chart .empty{ display:flex; flex-direction:column; align-items:center; gap:6px; }
+    .cs-pv-chart .empty i{ color:var(--gold2); font-size:24px; }
+    .cs-pv-subject{
+      position:absolute; top:10px; left:10px;
+      padding:4px 9px; border-radius:9999px;
+      background:linear-gradient(180deg,#e8c060,#c9a030); color:#091528;
+      font-weight:700; font-size:10px; letter-spacing:.04em; text-transform:uppercase;
+    }
+    .cs-pv-body{ padding:13px 14px 16px; }
+    .cs-pv-row{
+      display:flex; justify-content:space-between; align-items:center;
+      padding:6px 0; font-size:12.5px; color:var(--muted);
+      border-bottom:1px solid var(--bdl);
+    }
+    .cs-pv-row:last-child{ border-bottom:0; }
+    .cs-pv-row strong{ color:var(--cream); font-weight:700; font-variant-numeric:tabular-nums; }
+    .cs-pv-row.neg strong{ color:var(--red); }
+    .cs-pv-row.pos strong{ color:var(--green); }
+    .cs-pv-row.rr  strong{ color:var(--gold2); }
+    .cs-pv-symbol{
+      display:flex; align-items:center; gap:8px;
+      padding:10px 14px; border-bottom:1px solid var(--bdl);
+    }
+    .cs-pv-symbol .sym{
+      background:rgba(255,255,255,.05); color:var(--cream);
+      padding:4px 9px; border-radius:6px; font-weight:700; font-size:12px;
+    }
+    .cs-pv-symbol .dir{
+      padding:3px 8px; border-radius:6px; font-weight:700; font-size:10.5px;
+      letter-spacing:.06em; text-transform:uppercase;
+    }
+    .cs-pv-symbol .dir.long { background:rgba(74,222,128,.12);  color:var(--green); }
+    .cs-pv-symbol .dir.short{ background:rgba(248,113,113,.12); color:var(--red); }
+
+    /* Creator benefits */
+    .cs-benefits{
+      margin-top:18px; padding:16px;
+      background:rgba(255,255,255,.025); border:1px solid var(--bdl);
+      border-radius:12px;
+    }
+    .cs-benefits h4{
+      color:var(--cream); margin:0 0 10px; font-weight:700; font-size:12.5px;
+      display:flex; align-items:center; gap:8px;
+    }
+    .cs-benefits h4 i{ color:var(--gold2); }
+    .cs-benefits ul{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px; }
+    .cs-benefits li{ display:flex; align-items:flex-start; gap:8px; color:var(--muted); font-size:12px; line-height:1.5; }
+    .cs-benefits li i{ color:var(--gold2); font-size:12px; margin-top:2px; }
+
+    /* Toast */
+    .cs-toast{
+      position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+      background:#0a1830; border:1px solid var(--gold);
+      color:var(--cream); padding:14px 22px; border-radius:11px;
+      z-index:99; display:none; font-weight:600; font-size:13.5px;
+      box-shadow:0 14px 32px -8px rgba(0,0,0,.5);
+    }
+    .cs-toast.show{ display:block; }
+    .cs-toast.err{ border-color:var(--red); }
   </style>
 </head>
 <body>
 
 <div id="tarena-nav"></div>
 
-<div class="compose">
+<div class="cs-shell">
+  <div class="cs-header">
+    <h1><i class="fa-solid fa-chalkboard-user"></i> Creator Studio</h1>
+    <p>Share your trade idea as a lesson. Three quick steps — feels like posting on Instagram.</p>
+  </div>
 
-  <main>
-    <div class="step-pill">
-      <div data-step="1" class="active">1 · Symbol</div>
-      <div data-step="2">2 · Snap</div>
-      <div data-step="3">3 · Pin tags</div>
-      <div data-step="4">4 · Thesis &amp; risk</div>
-      <div data-step="5">5 · Visibility</div>
-    </div>
+  <!-- Progress bar -->
+  <div class="cs-progress">
+    <div class="cs-step active" data-step="1"><span class="num">1</span><span>Trade Setup</span></div>
+    <div class="cs-step-line" data-line="1"></div>
+    <div class="cs-step"        data-step="2"><span class="num">2</span><span>Add Chart</span></div>
+    <div class="cs-step-line" data-line="2"></div>
+    <div class="cs-step"        data-step="3"><span class="num">3</span><span>Write Thesis</span></div>
+  </div>
 
-    <!-- ─── Symbol ──────────────────────────────────────── -->
-    <div class="panel">
-      <h2><i class="fa-solid fa-tag"></i> Pick a symbol</h2>
-      <div class="h-sub">Type a ticker (BHP.AX, AAPL, BTC) or a company name. ASX, US, and crypto supported.</div>
-      <div class="field symbol-suggest">
-        <input id="symInput" autocomplete="off" placeholder="$BHP.AX"/>
-        <div class="drop" id="symDrop"></div>
-      </div>
-    </div>
+  <div class="cs-grid">
+    <main>
+      <!-- ─── STEP 1 — TRADE SETUP ─── -->
+      <section class="cs-panel active" data-panel="1">
+        <h2><i class="fa-solid fa-chart-line"></i> Your Trade Setup</h2>
+        <p class="h-sub">Pick a symbol, your direction, and the price levels that define your trade.</p>
 
-    <!-- ─── Snap ───────────────────────────────────────── -->
-    <div class="panel">
-      <h2><i class="fa-solid fa-camera"></i> Snap a chart</h2>
-      <div class="h-sub">Open the trade chart, tweak timeframe + drawings, hit "Snap chart" — the snap is held for 30 minutes for use here.</div>
-      <div class="snap-shell" id="snapShell">
-        <div class="snap-empty" id="snapEmpty">
-          <i class="fa-solid fa-camera"></i>
-          <div>No chart snap yet. Open the trade page, set up your chart, then click "Snap chart" to grab it.</div>
-          <a id="openTradeLink" href="trade.html?snap=1" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open chart</a>
+        <div class="cs-field">
+          <label>Symbol</label>
+          <div class="cs-symbol-wrap">
+            <i class="fa-solid fa-magnifying-glass ico"></i>
+            <input id="symInput" autocomplete="off" placeholder="Type BHP, AAPL, BTC…"/>
+            <div class="cs-drop" id="symDrop"></div>
+          </div>
         </div>
-        <img id="snapImg" alt="" style="display:none;"/>
-        <div class="pin-overlay" id="pinOverlay"></div>
-      </div>
-      <div class="hint" style="margin-top:8px;color:var(--muted);font-size:12px;">
-        <i class="fa-solid fa-circle-info"></i>
-        Already snapped? <button onclick="reloadSnap()" style="background:transparent;border:0;color:var(--gold2);cursor:pointer;text-decoration:underline;">Refresh from chart</button>.
-      </div>
-    </div>
 
-    <!-- ─── Pin tags ──────────────────────────────────── -->
-    <div class="panel">
-      <h2><i class="fa-solid fa-thumbtack"></i> Pin indicators &amp; patterns</h2>
-      <div class="h-sub">Click anywhere on the chart to drop a numbered pin, then pick what it's pointing at. Pins teach the trade.</div>
-      <button id="addPinBtn" class="add-pin-btn"><i class="fa-solid fa-plus"></i> Click chart to add a pin</button>
-      <div class="pin-list" id="pinList"></div>
-    </div>
-
-    <!-- ─── Thesis & risk ─────────────────────────────── -->
-    <div class="panel">
-      <h2><i class="fa-solid fa-pen"></i> Thesis &amp; price levels</h2>
-      <div class="field">
-        <label>Direction</label>
-        <select id="dirInput">
-          <option value="long">Long (bullish)</option>
-          <option value="short">Short (bearish)</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Thesis (max 280 chars)</label>
-        <textarea id="thesisInput" rows="3" placeholder="Why does this setup work? Keep it tight."></textarea>
-        <div class="thesis-counter" id="thesisCount">0 / 280</div>
-      </div>
-      <div class="field">
-        <label>Entry / Stop loss / Target</label>
-        <div class="row">
-          <input id="entryInput"  type="number" step="any" placeholder="Entry"/>
-          <input id="stopInput"   type="number" step="any" placeholder="Stop loss"/>
-          <input id="targetInput" type="number" step="any" placeholder="Target"/>
+        <div class="cs-field">
+          <label>Direction</label>
+          <div class="cs-dir">
+            <button type="button" class="long on"  data-dir="long"><span class="dot"></span> LONG <span style="opacity:.7;font-weight:500;">(bullish)</span></button>
+            <button type="button" class="short"   data-dir="short"><span class="dot"></span> SHORT <span style="opacity:.7;font-weight:500;">(bearish)</span></button>
+          </div>
         </div>
-        <div class="hint">Position size is auto-computed from your risk %.</div>
-      </div>
-      <div class="field">
-        <label>Risk on this trade</label>
-        <input id="riskInput" type="range" min="0.25" max="5" step="0.25" value="1" style="accent-color:var(--gold);"/>
-        <div class="hint" id="riskLabel">1.00% of $100,000 — paper account.</div>
-      </div>
-    </div>
 
-    <!-- ─── Visibility ────────────────────────────────── -->
-    <div class="panel">
-      <h2><i class="fa-solid fa-eye"></i> Who can see this?</h2>
-      <div class="vis-grid" id="visGrid">
-        <label data-v="public" class="on"><input type="radio" name="vis" value="public" checked/>
-          <span class="v-name"><i class="fa-solid fa-globe"></i> Public</span>
-          <span class="v-sub">Visible in For You and to anyone with the link.</span>
-        </label>
-        <label data-v="followers"><input type="radio" name="vis" value="followers"/>
-          <span class="v-name"><i class="fa-solid fa-user-group"></i> Followers</span>
-          <span class="v-sub">Only people who follow you can see this reel.</span>
-        </label>
-        <label data-v="league"><input type="radio" name="vis" value="league"/>
-          <span class="v-name"><i class="fa-solid fa-trophy"></i> League only</span>
-          <span class="v-sub">Members of your active league. Treated as private until leagues launch.</span>
-        </label>
-        <label data-v="private"><input type="radio" name="vis" value="private"/>
-          <span class="v-name"><i class="fa-solid fa-lock"></i> Private</span>
-          <span class="v-sub">Only you. Useful for journal practice.</span>
-        </label>
+        <div class="cs-field">
+          <label>Price levels</label>
+          <div class="cs-nums">
+            <div>
+              <input id="entryInput"  type="number" step="any" placeholder="Entry"/>
+              <div class="hint" style="text-align:center;">Entry Price</div>
+            </div>
+            <div>
+              <input id="stopInput"   type="number" step="any" placeholder="Stop"/>
+              <div class="hint" style="text-align:center;">Stop Loss</div>
+            </div>
+            <div>
+              <input id="targetInput" type="number" step="any" placeholder="Target"/>
+              <div class="hint" style="text-align:center;">Target</div>
+            </div>
+            <div>
+              <input id="riskInput"   type="number" step="0.25" min="0.25" max="5" value="1"/>
+              <div class="hint" style="text-align:center;">Risk % per trade</div>
+            </div>
+          </div>
+          <div class="cs-rr-display" id="rrDisplay">
+            <span class="rr-label">Risk : Reward</span>
+            <span class="rr-value" id="rrValue">—</span>
+            <span class="rr-verdict" id="rrVerdict" style="display:none;"></span>
+          </div>
+        </div>
+
+        <div class="cs-field">
+          <label>Timeframe</label>
+          <div class="cs-tf" id="tfSelect">
+            <button type="button" data-tf="Scalp"   >Scalp<span class="tf-sub">sec–min</span></button>
+            <button type="button" data-tf="Day" class="on">Day<span class="tf-sub">intraday</span></button>
+            <button type="button" data-tf="Swing"   >Swing<span class="tf-sub">days–weeks</span></button>
+            <button type="button" data-tf="Position">Position<span class="tf-sub">weeks–mo</span></button>
+          </div>
+        </div>
+
+        <div class="cs-nav">
+          <span></span>
+          <button class="cs-btn primary" data-go="2">Next: Add Chart <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+      </section>
+
+      <!-- ─── STEP 2 — ADD CHART ─── -->
+      <section class="cs-panel" data-panel="2">
+        <h2><i class="fa-solid fa-image"></i> Add Your Chart</h2>
+        <p class="h-sub">Upload a screenshot or pull one from a TradeArena chart. Drop up to 5 numbered pins to highlight what students should notice.</p>
+
+        <div class="cs-drop-zone" id="dropZone">
+          <div class="dz-empty" style="display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding:0 20px;">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <div class="dz-h">Drop your chart screenshot</div>
+            <div class="dz-sub">PNG or JPG · max 4MB</div>
+          </div>
+          <img id="chartImg" alt="" style="display:none;"/>
+          <div class="pin-overlay" id="pinOverlay"></div>
+        </div>
+        <input type="file" id="fileInput" accept="image/png,image/jpeg" style="display:none;"/>
+
+        <div class="cs-upload-actions">
+          <button type="button" id="browseBtn"><i class="fa-solid fa-folder-open"></i> Browse files</button>
+          <button type="button" id="snapBtn"><i class="fa-solid fa-camera"></i> Snap from TradeArena</button>
+          <button type="button" id="addPinBtn" class="primary" disabled><i class="fa-solid fa-thumbtack"></i> Add pin</button>
+        </div>
+
+        <div class="cs-pins" id="pinList"></div>
+        <div class="cs-pin-limit" id="pinLimit">0 / 5 pins</div>
+
+        <div class="cs-nav">
+          <button class="cs-btn" data-go="1"><i class="fa-solid fa-arrow-left"></i> Back</button>
+          <button class="cs-btn primary" data-go="3">Next: Write Thesis <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+      </section>
+
+      <!-- ─── STEP 3 — WRITE THESIS ─── -->
+      <section class="cs-panel" data-panel="3">
+        <h2><i class="fa-solid fa-pen-to-square"></i> Write Your Thesis</h2>
+        <p class="h-sub">Explain why you're taking this trade. Students learn most from the reasoning, not the numbers.</p>
+
+        <div class="cs-field cs-thesis-wrap">
+          <label>Trade thesis</label>
+          <textarea id="thesisInput" placeholder="Why are you taking this trade? What's the setup? What would invalidate it?"></textarea>
+          <div class="cs-counter" id="thesisCount">0 / 280</div>
+        </div>
+
+        <div class="cs-field">
+          <label>Subject</label>
+          <select id="subjectSelect">
+            <option value="">Pick a subject…</option>
+            <option value="Breakout">Breakout</option>
+            <option value="Reversal">Reversal</option>
+            <option value="Trend Following">Trend Follow</option>
+            <option value="Support/Resistance">Support / Resistance</option>
+            <option value="Momentum">Momentum</option>
+            <option value="News Catalyst">News Play</option>
+            <option value="Earnings Play">Earnings</option>
+            <option value="Technical Pattern">Technical Pattern</option>
+          </select>
+        </div>
+
+        <div class="cs-field">
+          <label>Who can see this?</label>
+          <div class="cs-vis-grid" id="visGrid">
+            <label data-v="public" class="on"><input type="radio" name="vis" value="public" checked/>
+              <span class="v-name"><i class="fa-solid fa-globe"></i> Public</span>
+              <span class="v-sub">Anyone on TradeArena can find this lesson.</span>
+            </label>
+            <label data-v="followers"><input type="radio" name="vis" value="followers"/>
+              <span class="v-name"><i class="fa-solid fa-user-group"></i> Followers Only</span>
+              <span class="v-sub">Only people who follow you.</span>
+            </label>
+            <label data-v="private"><input type="radio" name="vis" value="private"/>
+              <span class="v-name"><i class="fa-solid fa-lock"></i> Private</span>
+              <span class="v-sub">Just you. Useful for journaling.</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="cs-nav" style="flex-direction:column; gap:10px;">
+          <button class="cs-btn primary publish" id="publishBtn"><i class="fa-solid fa-paper-plane"></i> Publish Lesson</button>
+          <button class="cs-btn" data-go="2" style="align-self:flex-start;"><i class="fa-solid fa-arrow-left"></i> Back</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- ─── LIVE PREVIEW + BENEFITS ─── -->
+    <aside>
+      <div class="cs-preview">
+        <h3><i class="fa-solid fa-eye"></i> Lesson preview</h3>
+        <div class="cs-pv-card">
+          <div class="cs-pv-chart" id="pvChart">
+            <div class="empty">
+              <i class="fa-solid fa-image"></i>
+              <span>Chart preview</span>
+            </div>
+          </div>
+          <div class="cs-pv-symbol">
+            <span class="sym" id="pvSymbol">$—</span>
+            <span class="dir long" id="pvDir">▲ Long</span>
+            <span style="margin-left:auto;color:var(--muted);font-size:11.5px;" id="pvTf">Day</span>
+          </div>
+          <div class="cs-pv-body">
+            <div class="cs-pv-row"><span>Entry</span><strong id="pvEntry">—</strong></div>
+            <div class="cs-pv-row neg"><span>Stop loss</span><strong id="pvStop">—</strong></div>
+            <div class="cs-pv-row pos"><span>Target</span><strong id="pvTarget">—</strong></div>
+            <div class="cs-pv-row rr"><span>R:R</span><strong id="pvRR">—</strong></div>
+            <div class="cs-pv-row"><span>Position size</span><strong id="pvQty">—</strong></div>
+            <div class="cs-pv-row neg"><span>Risk on trade</span><strong id="pvRisk">—</strong></div>
+            <div class="cs-pv-row"><span>Pins</span><strong id="pvPins">0</strong></div>
+          </div>
+        </div>
+
+        <div class="cs-benefits">
+          <h4><i class="fa-solid fa-bolt"></i> Why teach on TradeArena?</h4>
+          <ul>
+            <li><i class="fa-solid fa-arrows-rotate"></i> Students mirror your trade with one tap.</li>
+            <li><i class="fa-solid fa-chart-bar"></i> See exactly how many followed your setup.</li>
+            <li><i class="fa-solid fa-star"></i> Top creators get featured on the homepage.</li>
+          </ul>
+        </div>
       </div>
-    </div>
-
-    <div class="footer">
-      <button onclick="window.location.href='reels.html'">Cancel</button>
-      <button class="primary" id="publishBtn"><i class="fa-solid fa-paper-plane"></i> Publish reel</button>
-    </div>
-  </main>
-
-  <!-- ────  Live preview rail ──── -->
-  <aside class="preview-rail">
-    <h3>Reel preview</h3>
-    <div class="preview-card">
-      <div class="row"><span>Symbol</span><strong id="pvSymbol">—</strong></div>
-      <div class="row"><span>Direction</span><strong id="pvDir">Long</strong></div>
-      <div class="row"><span>Entry</span><strong id="pvEntry">—</strong></div>
-      <div class="row neg"><span>Stop loss</span><strong id="pvStop">—</strong></div>
-      <div class="row pos"><span>Target</span><strong id="pvTarget">—</strong></div>
-      <div class="row rr"><span>R:R</span><strong id="pvRR">—</strong></div>
-      <div class="row"><span>Position size</span><strong id="pvQty">—</strong></div>
-      <div class="row neg"><span>Risk on trade</span><strong id="pvRisk">—</strong></div>
-      <div class="row"><span>Pins</span><strong id="pvPins">0</strong></div>
-    </div>
-    <div style="color:var(--muted);font-size:11.5px;margin-top:10px;line-height:1.5;">
-      An auto paper-trade opens at entry the moment you publish.
-    </div>
-  </aside>
+    </aside>
+  </div>
 </div>
 
-<div class="toast" id="toast"></div>
-
+<div class="cs-toast" id="toast"></div>
 <div id="tarena-footer"></div>
 
 <script src="assets/config.js"></script>
@@ -234,44 +628,85 @@
   TArenaUI.renderFooter();
   if (!TArenaAuth.requireAuth()) return;
 
-  const sb = window.TArenaDB;
+  const sb       = window.TArenaDB;
   const reelsApi = window.TArenaReels;
-  const ACCOUNT = 100000;
+  const ACCOUNT  = 100000;
+  const PIN_LIMIT = 5;
 
   const state = {
-    symbol: '',
-    market: '',
-    snap:   null,
-    pins:   [],            // [{ x, y, tag_type, tag_value }]
-    placing: false,
-    thesis: '',
-    direction: 'long',
-    entry: null, stop: null, target: null,
-    riskPct: 1.0,
+    step:       1,
+    symbol:     '',
+    market:     '',
+    direction:  'long',
+    entry:      null,
+    stop:       null,
+    target:     null,
+    riskPct:    1.0,
+    timeframe:  'Day',
+    chart:      null,         // dataURL string
+    pins:       [],           // [{ x, y, label }]
+    placing:    false,
+    thesis:     '',
+    subject:    '',
     visibility: 'public',
   };
 
   // ============================================================
-  // Symbol autocomplete
+  // Step navigation
+  // ============================================================
+  function goStep(n) {
+    n = Math.max(1, Math.min(3, n));
+    state.step = n;
+    document.querySelectorAll('.cs-panel').forEach(p => p.classList.toggle('active', +p.dataset.panel === n));
+    document.querySelectorAll('.cs-step').forEach(el => {
+      const i = +el.dataset.step;
+      el.classList.toggle('active', i === n);
+      el.classList.toggle('done',   i < n);
+    });
+    document.querySelectorAll('.cs-step-line').forEach(el => {
+      el.classList.toggle('fill', +el.dataset.line < n);
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  document.querySelectorAll('[data-go]').forEach(b => {
+    b.addEventListener('click', () => {
+      const target = +b.dataset.go;
+      // Soft validation when moving forward
+      if (target > state.step) {
+        if (state.step === 1) {
+          if (!state.symbol)                                    return toast('Pick a symbol first.', 'err');
+          if (!state.entry || !state.stop || !state.target)     return toast('Set entry, stop, and target.', 'err');
+          if (state.entry <= 0 || state.stop <= 0)              return toast('Prices must be positive.', 'err');
+        }
+        // Step 2 (chart) is optional — students can publish thesis-only.
+      }
+      goStep(target);
+    });
+  });
+
+  // ============================================================
+  // STEP 1 — Symbol search
   // ============================================================
   const symInput = document.getElementById('symInput');
   const symDrop  = document.getElementById('symDrop');
   let cursorIdx = -1;
 
+  function classifyMarket(sym) {
+    if (/\.AX$/i.test(sym)) return 'asx';
+    if (/^(BTC|ETH|SOL|XRP|ADA|DOGE)/i.test(sym)) return 'crypto';
+    return 'us';
+  }
   function searchSymbols(q) {
     q = (q || '').toLowerCase().replace(/^\$/, '');
     const all = (window.TArenaMarket?.data || []);
     if (!q) return all.slice(0, 8);
-    return all.filter(m =>
-      m.symbol.toLowerCase().includes(q) ||
-      m.name.toLowerCase().includes(q)
-    ).slice(0, 12);
+    return all.filter(m => m.symbol.toLowerCase().includes(q) || m.name.toLowerCase().includes(q)).slice(0, 12);
   }
   function renderDrop(items) {
     if (!items.length) { symDrop.classList.remove('show'); return; }
     symDrop.innerHTML = items.map((m, i) =>
-      `<button data-sym="${m.symbol}" data-mkt="${m.market}" data-idx="${i}">
-        <strong>${m.symbol}</strong><span class="name">${m.name}</span>
+      `<button type="button" data-sym="${m.symbol}" data-mkt="${m.market}" data-idx="${i}">
+        <strong>${m.symbol}</strong><span class="nm">${m.name}</span>
       </button>`).join('');
     symDrop.classList.add('show');
     symDrop.querySelectorAll('button').forEach(b => {
@@ -286,196 +721,197 @@
     state.market = mkt || classifyMarket(sym);
     symInput.value = sym;
     symDrop.classList.remove('show');
-    refreshPreview();
     autoPriceFromMarket();
-    updateOpenLink();
-    advanceStep();
-  }
-  function classifyMarket(sym) {
-    if (/\.AX$/i.test(sym)) return 'asx';
-    if (/^(BTC|ETH|SOL|XRP|ADA|DOGE)/i.test(sym)) return 'crypto';
-    return 'us';
+    refreshPreview();
   }
   function autoPriceFromMarket() {
     const m = (window.TArenaMarket?.data || []).find(d => d.symbol === state.symbol);
     if (!m) return;
     if (!state.entry)  { state.entry  = m.price;       document.getElementById('entryInput').value  = m.price; }
-    if (!state.stop)   { state.stop   = +(m.price * 0.96).toFixed(2); document.getElementById('stopInput').value   = state.stop; }
-    if (!state.target) { state.target = +(m.price * 1.06).toFixed(2); document.getElementById('targetInput').value = state.target; }
+    if (!state.stop)   { state.stop   = +(m.price * (state.direction === 'short' ? 1.04 : 0.96)).toFixed(2); document.getElementById('stopInput').value   = state.stop; }
+    if (!state.target) { state.target = +(m.price * (state.direction === 'short' ? 0.94 : 1.06)).toFixed(2); document.getElementById('targetInput').value = state.target; }
   }
 
-  symInput.addEventListener('input', e => {
-    cursorIdx = -1;
-    renderDrop(searchSymbols(e.target.value));
-  });
+  symInput.addEventListener('input', () => { cursorIdx = -1; renderDrop(searchSymbols(symInput.value)); });
   symInput.addEventListener('focus', () => renderDrop(searchSymbols(symInput.value)));
   symInput.addEventListener('blur',  () => setTimeout(() => symDrop.classList.remove('show'), 120));
   symInput.addEventListener('keydown', e => {
     const items = symDrop.querySelectorAll('button');
     if (!items.length) return;
-    if (e.key === 'ArrowDown') { cursorIdx = Math.min(cursorIdx+1, items.length-1); }
-    else if (e.key === 'ArrowUp') { cursorIdx = Math.max(cursorIdx-1, 0); }
+    if      (e.key === 'ArrowDown') cursorIdx = Math.min(cursorIdx+1, items.length-1);
+    else if (e.key === 'ArrowUp')   cursorIdx = Math.max(cursorIdx-1, 0);
     else if (e.key === 'Enter' && cursorIdx >= 0) { e.preventDefault(); items[cursorIdx].dispatchEvent(new MouseEvent('mousedown')); return; }
-    else { return; }
+    else return;
     items.forEach((b,i) => b.classList.toggle('cursor', i===cursorIdx));
     items[cursorIdx]?.scrollIntoView({ block:'nearest' });
   });
 
+  // Direction toggle
+  document.querySelectorAll('.cs-dir button').forEach(b => {
+    b.addEventListener('click', () => {
+      state.direction = b.dataset.dir;
+      document.querySelectorAll('.cs-dir button').forEach(x => x.classList.toggle('on', x === b));
+      refreshPreview();
+    });
+  });
+
+  // Number inputs
+  ['entryInput','stopInput','targetInput','riskInput'].forEach(id => {
+    document.getElementById(id).addEventListener('input', e => {
+      const v = +e.target.value || null;
+      if      (id === 'entryInput')  state.entry  = v;
+      else if (id === 'stopInput')   state.stop   = v;
+      else if (id === 'targetInput') state.target = v;
+      else                            state.riskPct = Math.max(0.25, Math.min(5, +e.target.value || 1));
+      refreshPreview();
+    });
+  });
+
+  // Timeframe
+  document.querySelectorAll('#tfSelect button').forEach(b => {
+    b.addEventListener('click', () => {
+      state.timeframe = b.dataset.tf;
+      document.querySelectorAll('#tfSelect button').forEach(x => x.classList.toggle('on', x === b));
+      refreshPreview();
+    });
+  });
+
   // ============================================================
-  // Snap loading
+  // STEP 2 — Chart upload + pins
   // ============================================================
-  function loadSnap() {
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+  const chartImg  = document.getElementById('chartImg');
+  const pinOverlay = document.getElementById('pinOverlay');
+  const addPinBtn  = document.getElementById('addPinBtn');
+
+  function loadImage(file) {
+    if (!file) return;
+    if (!/^image\//.test(file.type)) return toast('That file isn\'t an image.', 'err');
+    if (file.size > 4 * 1024 * 1024) return toast('Image is over 4MB. Try a smaller screenshot.', 'err');
+    const reader = new FileReader();
+    reader.onload = () => {
+      state.chart = reader.result;
+      chartImg.src = state.chart;
+      chartImg.style.display = 'block';
+      dropZone.classList.add('has-image');
+      addPinBtn.disabled = false;
+      refreshPreview();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  document.getElementById('browseBtn').addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => loadImage(e.target.files[0]));
+  dropZone.addEventListener('click', e => {
+    if (state.placing && state.chart) return; // pin placement handled below
+    if (!state.chart) fileInput.click();
+  });
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('over');
+    const f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) loadImage(f);
+  });
+
+  // "Snap from TradeArena" pulls from the same localStorage handoff
+  // the trade page writes when you hit "Snap chart" — keeps the
+  // existing TradeArena flow working without any backend changes.
+  document.getElementById('snapBtn').addEventListener('click', () => {
     let raw;
     try { raw = JSON.parse(localStorage.getItem('pending_chart_snap') || 'null'); }
     catch (_) { raw = null; }
     const expired = raw && raw.expiresAt && Date.now() > raw.expiresAt;
     if (!raw || expired || !raw.png_dataurl) {
-      state.snap = null;
-      document.getElementById('snapEmpty').style.display = 'flex';
-      document.getElementById('snapImg').style.display = 'none';
+      const sym = state.symbol || 'BHP.AX';
+      const url = `trade.html?symbol=${encodeURIComponent(sym)}&snap=1`;
+      window.open(url, '_blank', 'noopener');
+      toast('Open chart, set up your view, then hit "Snap chart" — come back here and click Snap again.', 'ok');
       return;
     }
-    state.snap = raw;
-    if (raw.symbol && !state.symbol) {
-      pickSymbol(raw.symbol, classifyMarket(raw.symbol));
-    }
-    const img = document.getElementById('snapImg');
-    img.src = raw.png_dataurl;
-    img.style.display = 'block';
-    document.getElementById('snapEmpty').style.display = 'none';
-    refreshPins();
+    state.chart = raw.png_dataurl;
+    chartImg.src = state.chart;
+    chartImg.style.display = 'block';
+    dropZone.classList.add('has-image');
+    addPinBtn.disabled = false;
+    if (raw.symbol && !state.symbol) pickSymbol(raw.symbol, classifyMarket(raw.symbol));
     refreshPreview();
-  }
-  function reloadSnap() { loadSnap(); }
-  window.reloadSnap = reloadSnap;
-
-  function updateOpenLink() {
-    const a = document.getElementById('openTradeLink');
-    if (state.symbol) a.href = `trade.html?symbol=${encodeURIComponent(state.symbol)}&snap=1`;
-  }
-
-  // ============================================================
-  // Pin placement
-  // ============================================================
-  const snapShell = document.getElementById('snapShell');
-  const pinOverlay = document.getElementById('pinOverlay');
-  const addPinBtn = document.getElementById('addPinBtn');
-  addPinBtn.addEventListener('click', () => {
-    if (!state.snap) { toast('Snap a chart first.'); return; }
-    state.placing = !state.placing;
-    addPinBtn.classList.toggle('active', state.placing);
-    addPinBtn.innerHTML = state.placing
-      ? '<i class="fa-solid fa-crosshairs"></i> Click on the chart…'
-      : '<i class="fa-solid fa-plus"></i> Click chart to add a pin';
-    snapShell.classList.toggle('placing', state.placing);
+    toast('Snap loaded from TradeArena.');
+  });
+  // If the user comes back from snapping in another tab.
+  window.addEventListener('storage', e => {
+    if (e.key === 'pending_chart_snap') document.getElementById('snapBtn').click();
   });
 
-  snapShell.addEventListener('click', e => {
-    if (!state.placing || !state.snap) return;
+  // Pin placement
+  addPinBtn.addEventListener('click', () => {
+    if (!state.chart) return;
+    if (state.pins.length >= PIN_LIMIT) return toast(`Max ${PIN_LIMIT} pins per lesson.`, 'err');
+    state.placing = !state.placing;
+    addPinBtn.classList.toggle('on', state.placing);
+    addPinBtn.innerHTML = state.placing
+      ? '<i class="fa-solid fa-crosshairs"></i> Click chart to drop pin'
+      : '<i class="fa-solid fa-thumbtack"></i> Add pin';
+    dropZone.classList.toggle('placing', state.placing);
+  });
+  dropZone.addEventListener('click', e => {
+    if (!state.placing || !state.chart) return;
     if (e.target.classList.contains('pin')) return;
-    const rect = snapShell.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const rect = dropZone.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width)  * 100;
     const y = ((e.clientY - rect.top)  / rect.height) * 100;
-    state.pins.push({
-      x: +x.toFixed(2),
-      y: +y.toFixed(2),
-      tag_type: 'indicator',
-      tag_value: reelsApi.INDICATORS[0],
-    });
+    state.pins.push({ x: +x.toFixed(2), y: +y.toFixed(2), label: '' });
     state.placing = false;
-    addPinBtn.classList.remove('active');
-    addPinBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Click chart to add a pin';
-    snapShell.classList.remove('placing');
+    addPinBtn.classList.remove('on');
+    addPinBtn.innerHTML = '<i class="fa-solid fa-thumbtack"></i> Add pin';
+    dropZone.classList.remove('placing');
     refreshPins(); refreshPreview();
   });
 
   function refreshPins() {
-    pinOverlay.innerHTML = state.pins.map((p, i) =>
-      `<div class="pin" data-i="${i}" style="left:${p.x}%;top:${p.y}%;">${i+1}</div>`).join('');
-    pinOverlay.querySelectorAll('.pin').forEach(el => {
-      el.addEventListener('click', e => {
-        e.stopPropagation();
-        const idx = +el.dataset.i;
-        document.querySelector(`.pin-list .item[data-pi="${idx}"] select`)?.focus();
-      });
-    });
-
-    // Editor list
+    pinOverlay.innerHTML = state.pins.map((_, i) =>
+      `<div class="pin" style="left:${state.pins[i].x}%;top:${state.pins[i].y}%;">${i+1}</div>`
+    ).join('');
     const list = document.getElementById('pinList');
-    list.innerHTML = state.pins.map((p, i) => `
-      <div class="item" data-pi="${i}">
-        <span class="num">${i+1}</span>
-        <select data-i="${i}" data-k="tag_type" style="flex:0 0 110px;">
-          <option value="indicator" ${p.tag_type==='indicator'?'selected':''}>Indicator</option>
-          <option value="pattern"   ${p.tag_type==='pattern'?'selected':''}>Pattern</option>
-          <option value="strategy"  ${p.tag_type==='strategy'?'selected':''}>Strategy</option>
-        </select>
-        <select data-i="${i}" data-k="tag_value">
-          ${tagOptions(p.tag_type, p.tag_value)}
-        </select>
-        <button class="del" data-i="${i}" title="Delete pin"><i class="fa-solid fa-trash"></i></button>
-      </div>
-    `).join('');
-    list.querySelectorAll('select').forEach(s => {
-      s.addEventListener('change', () => {
-        const i = +s.dataset.i;
-        const k = s.dataset.k;
-        state.pins[i][k] = s.value;
-        if (k === 'tag_type') {
-          // Reset tag_value to the first option of the NEW tag_type
-          // (previous code switched on the field name `k` instead of
-          // the chosen value, which always picked STRATEGIES[0]).
-          const newType = s.value;
-          state.pins[i].tag_value = (
-            newType === 'indicator' ? reelsApi.INDICATORS :
-            newType === 'pattern'   ? reelsApi.PATTERNS   :
-            reelsApi.STRATEGIES
-          )[0];
-          refreshPins();
-        }
-        refreshPreview();
+    if (!state.pins.length) {
+      list.innerHTML = `<div class="cs-pin-empty">No pins yet — click "Add pin" then click on the chart.</div>`;
+    } else {
+      list.innerHTML = state.pins.map((p, i) => `
+        <div class="cs-pin-row" data-i="${i}">
+          <span class="num">${i+1}</span>
+          <input value="${escape(p.label)}" placeholder="What does this show? (e.g. RSI oversold, breakout level…)"/>
+          <button type="button" class="del" title="Delete pin"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      `).join('');
+      list.querySelectorAll('.cs-pin-row').forEach(row => {
+        const i = +row.dataset.i;
+        row.querySelector('input').addEventListener('input', e => { state.pins[i].label = e.target.value; });
+        row.querySelector('.del').addEventListener('click', () => { state.pins.splice(i, 1); refreshPins(); refreshPreview(); });
       });
-    });
-    list.querySelectorAll('.del').forEach(b => {
-      b.addEventListener('click', () => {
-        const i = +b.dataset.i;
-        state.pins.splice(i, 1);
-        refreshPins(); refreshPreview();
-      });
-    });
+    }
+    const lim = document.getElementById('pinLimit');
+    lim.textContent = `${state.pins.length} / ${PIN_LIMIT} pins`;
+    lim.classList.toggle('warn', state.pins.length >= PIN_LIMIT);
+    addPinBtn.disabled = !state.chart || state.pins.length >= PIN_LIMIT;
   }
-  function tagOptions(type, current) {
-    const opts = type === 'indicator' ? reelsApi.INDICATORS
-              : type === 'pattern'    ? reelsApi.PATTERNS
-              : reelsApi.STRATEGIES;
-    return opts.map(o => `<option value="${o}" ${o===current?'selected':''}>${o}</option>`).join('');
-  }
+  refreshPins();
 
   // ============================================================
-  // Thesis + price levels + risk
+  // STEP 3 — Thesis / subject / visibility
   // ============================================================
-  const thesisInput = document.getElementById('thesisInput');
-  thesisInput.addEventListener('input', () => {
-    state.thesis = thesisInput.value;
+  document.getElementById('thesisInput').addEventListener('input', e => {
+    state.thesis = e.target.value;
     const c = document.getElementById('thesisCount');
     c.textContent = `${state.thesis.length} / 280`;
     c.classList.toggle('warn', state.thesis.length > 280);
     refreshPreview();
   });
-  document.getElementById('dirInput').addEventListener('change', e => { state.direction = e.target.value; refreshPreview(); });
-  document.getElementById('entryInput').addEventListener('input', e => { state.entry  = +e.target.value || null; refreshPreview(); });
-  document.getElementById('stopInput').addEventListener('input',  e => { state.stop   = +e.target.value || null; refreshPreview(); });
-  document.getElementById('targetInput').addEventListener('input',e => { state.target = +e.target.value || null; refreshPreview(); });
-  document.getElementById('riskInput').addEventListener('input',  e => {
-    state.riskPct = +e.target.value;
-    document.getElementById('riskLabel').textContent =
-      `${state.riskPct.toFixed(2)}% of $100,000 — paper account.`;
+  document.getElementById('subjectSelect').addEventListener('change', e => {
+    state.subject = e.target.value;
     refreshPreview();
   });
-
-  // ============================================================
-  // Visibility
-  // ============================================================
   document.querySelectorAll('input[name="vis"]').forEach(r => {
     r.addEventListener('change', () => {
       state.visibility = r.value;
@@ -484,39 +920,55 @@
   });
 
   // ============================================================
-  // Preview rail
+  // Live preview
   // ============================================================
-  function refreshPreview() {
-    const fmt = (n, d) => (n == null || !isFinite(n)) ? '—' : Number(n).toLocaleString('en-US', { minimumFractionDigits: d||0, maximumFractionDigits: d||4 });
-    document.getElementById('pvSymbol').textContent = state.symbol ? '$'+state.symbol : '—';
-    document.getElementById('pvDir').textContent    = state.direction === 'short' ? 'Short' : 'Long';
-    document.getElementById('pvEntry').textContent  = fmt(state.entry, 2);
-    document.getElementById('pvStop').textContent   = fmt(state.stop, 2);
-    document.getElementById('pvTarget').textContent = fmt(state.target, 2);
-    const rr = reelsApi.riskReward({ entry: state.entry, stop: state.stop, target: state.target, direction: state.direction });
-    document.getElementById('pvRR').textContent     = rr == null ? '—' : rr.toFixed(2);
-    const qty = reelsApi.positionSize({ entry: state.entry, stop: state.stop, riskPct: state.riskPct, account: ACCOUNT });
-    document.getElementById('pvQty').textContent    = qty ? fmt(qty, 4) : '—';
-    document.getElementById('pvRisk').textContent   = TArenaUI.fmtMoney(ACCOUNT * (state.riskPct/100));
-    document.getElementById('pvPins').textContent   = String(state.pins.length);
-    advanceStep();
+  function fmt(n, d) {
+    return (n == null || !isFinite(n)) ? '—' :
+      Number(n).toLocaleString('en-US', { minimumFractionDigits: d||0, maximumFractionDigits: d||4 });
   }
+  function escape(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+      ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]);
+  }
+  function rrVerdict(rr) {
+    if (rr == null) return null;
+    if (rr >= 2)   return { cls:'good', text:'Good setup' };
+    if (rr >= 1)   return { cls:'ok',   text:'OK' };
+    return                  { cls:'bad',  text:'Risky — reward < risk' };
+  }
+  function refreshPreview() {
+    // R:R + verdict (Step 1)
+    const rr = reelsApi.riskReward({ entry: state.entry, stop: state.stop, target: state.target, direction: state.direction });
+    document.getElementById('rrValue').textContent = rr == null ? '—' : `1 : ${rr.toFixed(2)}`;
+    const v = rrVerdict(rr);
+    const vEl = document.getElementById('rrVerdict');
+    if (v) { vEl.style.display = ''; vEl.className = 'rr-verdict ' + v.cls; vEl.textContent = v.text; }
+    else   { vEl.style.display = 'none'; }
 
-  function advanceStep() {
-    const steps = document.querySelectorAll('.step-pill div');
-    const done = [
-      !!state.symbol,
-      !!state.snap,
-      state.pins.length > 0,
-      !!(state.thesis && state.entry && state.stop && state.target),
-      true,
-    ];
-    let activeIdx = done.findIndex(d => !d);
-    if (activeIdx === -1) activeIdx = steps.length - 1;
-    steps.forEach((el, i) => {
-      el.classList.toggle('done',   done[i] && i !== activeIdx);
-      el.classList.toggle('active', i === activeIdx);
-    });
+    // Preview rail
+    document.getElementById('pvSymbol').textContent = state.symbol ? '$'+state.symbol : '$—';
+    const pvDir = document.getElementById('pvDir');
+    pvDir.className = 'dir ' + state.direction;
+    pvDir.textContent = state.direction === 'short' ? '▼ Short' : '▲ Long';
+    document.getElementById('pvTf').textContent = state.timeframe;
+    document.getElementById('pvEntry').textContent  = fmt(state.entry,  2);
+    document.getElementById('pvStop').textContent   = fmt(state.stop,   2);
+    document.getElementById('pvTarget').textContent = fmt(state.target, 2);
+    document.getElementById('pvRR').textContent     = rr == null ? '—' : '1 : ' + rr.toFixed(2);
+    const qty = reelsApi.positionSize({ entry: state.entry, stop: state.stop, riskPct: state.riskPct, account: ACCOUNT });
+    document.getElementById('pvQty').textContent  = qty ? fmt(qty, 4) : '—';
+    document.getElementById('pvRisk').textContent = TArenaUI.fmtMoney(ACCOUNT * (state.riskPct/100));
+    document.getElementById('pvPins').textContent = String(state.pins.length);
+
+    // Preview chart
+    const pvChart = document.getElementById('pvChart');
+    if (state.chart) {
+      pvChart.innerHTML = `<img src="${state.chart}" alt="chart"/>` +
+        (state.subject ? `<span class="cs-pv-subject">${escape(state.subject)}</span>` : '');
+    } else {
+      pvChart.innerHTML = `<div class="empty"><i class="fa-solid fa-image"></i><span>Chart preview</span></div>` +
+        (state.subject ? `<span class="cs-pv-subject">${escape(state.subject)}</span>` : '');
+    }
   }
 
   // ============================================================
@@ -525,11 +977,11 @@
   let toastTimer;
   function toast(msg, kind) {
     const el = document.getElementById('toast');
-    el.style.borderColor = kind === 'err' ? 'var(--red)' : 'var(--gold)';
+    el.classList.toggle('err', kind === 'err');
     el.textContent = msg;
     el.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 3400);
   }
 
   // ============================================================
@@ -538,20 +990,19 @@
   document.getElementById('publishBtn').addEventListener('click', publish);
 
   async function publish() {
-    if (!state.symbol)              return toast('Pick a symbol first.', 'err');
-    if (!state.thesis)              return toast('Write a quick thesis.', 'err');
-    if (state.thesis.length > 280)  return toast('Thesis is over 280 characters.', 'err');
-    if (!state.entry || !state.stop || !state.target) return toast('Set entry, stop, and target.', 'err');
-    if (state.entry <= 0 || state.stop <= 0)          return toast('Prices must be positive.', 'err');
+    if (!state.symbol)                                    return toast('Pick a symbol first.', 'err');
+    if (!state.entry || !state.stop || !state.target)     return toast('Set entry, stop, and target.', 'err');
+    if (!state.thesis)                                    return toast('Write a quick thesis.',  'err');
+    if (state.thesis.length > 280)                        return toast('Thesis is over 280 characters.', 'err');
+    if (!state.subject)                                   return toast('Pick a subject for the lesson.', 'err');
+    if (state.entry <= 0 || state.stop <= 0)              return toast('Prices must be positive.', 'err');
 
     const btn = document.getElementById('publishBtn');
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Publishing…';
 
-    // Capture live quote NOW so the auto paper-trade fills at the live
-    // price (server requirement), not at the user's intended limit
-    // entry. Falls back to the static catalogue price, then to entry,
-    // so a brief datafeed outage doesn't block publishing.
+    // Capture live quote so the auto paper-trade fills at the live
+    // price (server requirement). Falls back to catalogue or entry.
     let livePrice = null;
     try {
       if (window.TArenaDatafeed?.fetchQuotes) {
@@ -559,11 +1010,29 @@
         const r = Array.isArray(q) ? q[0] : (q && q[state.symbol]);
         livePrice = +(r?.last ?? r?.price ?? r) || null;
       }
-    } catch (_) { /* ignore — falls back below */ }
+    } catch (_) {}
     if (!livePrice) {
       const m = (window.TArenaMarket?.data || []).find(d => d.symbol === state.symbol);
       livePrice = m?.price || state.entry;
     }
+
+    // Build the tags array. Schema requires {tag_type, tag_value,
+    // x_pct, y_pct, ordinal}. We map our new fields onto it:
+    //   • subject     → strategy tag (no coordinates)
+    //   • timeframe   → strategy tag (no coordinates)
+    //   • pin labels  → indicator tags (with coordinates)
+    const tags = [];
+    if (state.subject)   tags.push({ tag_type:'strategy', tag_value: state.subject,   x_pct:null, y_pct:null, ordinal:0 });
+    if (state.timeframe) tags.push({ tag_type:'strategy', tag_value: state.timeframe, x_pct:null, y_pct:null, ordinal:1 });
+    state.pins.forEach((p, i) => {
+      tags.push({
+        tag_type:  'indicator',
+        tag_value: (p.label && p.label.trim()) || `Pin ${i+1}`,
+        x_pct:     p.x,
+        y_pct:     p.y,
+        ordinal:   i + 2,
+      });
+    });
 
     const payload = {
       symbol:     state.symbol,
@@ -576,38 +1045,26 @@
       target:     state.target,
       visibility: state.visibility,
       risk_pct:   state.riskPct,
-      snapshot:   state.snap?.png_dataurl || null,
-      tags:       state.pins.map((p, i) => ({
-        tag_type:  p.tag_type,
-        tag_value: p.tag_value,
-        x_pct:     p.x,
-        y_pct:     p.y,
-        ordinal:   i,
-      })),
+      snapshot:   state.chart || null,
+      tags,
     };
 
     const { data, error } = await sb.rpc('publish_reel', { p_payload: payload });
     if (error) {
       toast('Publish failed: ' + (error.message || 'unknown error'), 'err');
       btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Publish reel';
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Publish Lesson';
       return;
     }
-    // Snap is single-use — clear so the next composer doesn't reuse it.
     localStorage.removeItem('pending_chart_snap');
-    toast('Reel published! Redirecting to your feed…');
+    toast('Lesson published! Redirecting to your feed…');
     setTimeout(() => { window.location.href = `reels.html?reel=${encodeURIComponent(data)}`; }, 900);
   }
 
   // ============================================================
   // Boot
   // ============================================================
-  loadSnap();
   refreshPreview();
-
-  // Re-load the snap if the user comes back from the trade page in
-  // another tab and snaps something.
-  window.addEventListener('storage', e => { if (e.key === 'pending_chart_snap') loadSnap(); });
 })();
 </script>
 </body>
