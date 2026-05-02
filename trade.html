@@ -10,174 +10,311 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
   <link rel="stylesheet" href="assets/styles.css"/>
   <style>
-    /* ----- Layout ----- */
-    .trade-layout{display:grid;grid-template-columns:260px 1fr 340px;gap:16px;padding:16px;flex:1;min-height:0;}
-    @media(max-width:1280px){.trade-layout{grid-template-columns:240px 1fr 320px;}}
-    @media(max-width:1100px){.trade-layout{grid-template-columns:1fr;}.t-sidebar,.t-orderpanel{display:none;}}
+    /* =================================================================
+       TradeArena · trade.html — Groww-style trading dashboard.
+       Navy/gold theme; uses :root vars from assets/styles.css. This page
+       owns its own topbar (instead of TArenaUI.renderNav) per spec.
+       ================================================================= */
 
-    /* ----- Search header bar ----- */
-    .t-topbar{background:var(--navy2);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:14px;}
-    .t-search{flex:1;max-width:460px;position:relative;}
-    .t-search input{width:100%;background:var(--navy3);border:1px solid var(--border);border-radius:10px;padding:10px 14px 10px 38px;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color .2s;}
-    .t-search input:focus{border-color:var(--gold);}
-    .t-search i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none;}
-    .t-search .results{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--navy3);border:1px solid var(--border);border-radius:10px;max-height:340px;overflow-y:auto;z-index:50;display:none;box-shadow:0 12px 36px rgba(0,0,0,.4);}
-    .t-search .results.open{display:block;}
-    .t-search .res{padding:10px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--bdl);}
-    .t-search .res:hover{background:rgba(201,160,48,.06);}
-    .t-search .res:last-child{border-bottom:none;}
-    .t-search .res .l{font-weight:700;font-size:13px;color:var(--cream);}
-    .t-search .res .n{font-size:11px;color:var(--muted);margin-top:2px;}
-    .t-search .res .p{font-size:13px;font-weight:600;font-feature-settings:'tnum';}
+    body{display:flex;flex-direction:column;min-height:100vh;}
 
-    .t-mkts{display:flex;gap:6px;}
-    .t-mkt{padding:7px 14px;background:var(--navy3);border:1px solid var(--border);color:var(--muted);font-size:12px;font-weight:600;border-radius:9999px;cursor:pointer;}
-    .t-mkt.on{background:rgba(201,160,48,.12);border-color:var(--gold);color:var(--gold2);}
+    /* ---------- Custom topbar ---------- */
+    .tn{
+      position:sticky;top:0;z-index:100;
+      background:rgba(9,21,40,.92);
+      -webkit-backdrop-filter:saturate(160%) blur(14px);
+              backdrop-filter:saturate(160%) blur(14px);
+      border-bottom:1px solid var(--bdl);
+      padding:10px 22px;
+      display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+    }
+    .tn-logo{display:flex;align-items:center;gap:9px;text-decoration:none;flex-shrink:0;}
+    .tn-logo .lg{font-family:'Cinzel',serif;font-size:18px;color:var(--cream);font-weight:700;letter-spacing:.04em;}
+    .tn-logo .lg b{color:var(--gold2);}
+    .tn-tabs{display:flex;gap:4px;align-items:center;}
+    .tn-tab{padding:7px 14px;background:transparent;border:1px solid transparent;border-radius:9999px;
+            color:var(--muted);font-size:12.5px;font-weight:600;cursor:pointer;text-decoration:none;
+            display:inline-flex;align-items:center;gap:6px;transition:all .15s;}
+    .tn-tab:hover{color:var(--cream);background:rgba(201,160,48,.06);}
+    .tn-tab.on{color:var(--gold2);background:rgba(201,160,48,.12);border-color:rgba(201,160,48,.32);}
+    .tn-tab i{font-size:11px;opacity:.85;}
+    .tn-search{flex:1;min-width:200px;max-width:380px;position:relative;}
+    .tn-search input{width:100%;background:var(--navy3);border:1px solid var(--border);border-radius:9px;
+                     padding:8px 12px 8px 34px;color:var(--cream);font-family:inherit;font-size:12.5px;outline:none;
+                     transition:border-color .15s;}
+    .tn-search input:focus{border-color:var(--gold);}
+    .tn-search > i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:12px;pointer-events:none;}
+    .tn-search .results{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--navy3);
+                        border:1px solid var(--border);border-radius:10px;max-height:340px;overflow-y:auto;
+                        z-index:120;display:none;box-shadow:0 12px 36px rgba(0,0,0,.5);}
+    .tn-search .results.open{display:block;}
+    .tn-search .res{padding:9px 13px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--bdl);}
+    .tn-search .res:last-child{border-bottom:none;}
+    .tn-search .res:hover{background:rgba(201,160,48,.06);}
+    .tn-search .res .l{font-weight:700;font-size:12.5px;color:var(--cream);}
+    .tn-search .res .n{font-size:10.5px;color:var(--muted);margin-top:1px;}
+    .tn-filters{display:flex;gap:5px;}
+    .tn-filt{padding:6px 11px;background:var(--navy3);border:1px solid var(--border);color:var(--muted);
+             font-size:11px;font-weight:600;border-radius:9999px;cursor:pointer;letter-spacing:.04em;}
+    .tn-filt.on{background:rgba(201,160,48,.12);border-color:var(--gold);color:var(--gold2);}
+    .tn-user{position:relative;display:flex;align-items:center;gap:8px;background:var(--navy3);
+             border:1px solid var(--border);padding:5px 12px 5px 5px;border-radius:9999px;cursor:pointer;}
+    .tn-user:hover{border-color:rgba(201,160,48,.5);}
+    .tn-user .av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));
+                 display:flex;align-items:center;justify-content:center;color:#1a1208;font-weight:800;font-size:12px;}
+    .tn-user .h{font-size:12px;font-weight:600;color:var(--cream);max-width:120px;
+                white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .tn-user .caret{color:var(--muted);font-size:10px;}
+    .tn-menu{position:absolute;top:calc(100% + 8px);right:0;min-width:200px;background:var(--navy3);
+             border:1px solid var(--border);border-radius:11px;padding:6px;display:none;z-index:120;
+             box-shadow:0 14px 40px rgba(0,0,0,.5);}
+    .tn-menu.open{display:block;}
+    .tn-menu a{display:flex;align-items:center;gap:9px;padding:8px 11px;font-size:12.5px;color:var(--cream);
+               border-radius:7px;text-decoration:none;cursor:pointer;}
+    .tn-menu a i{width:14px;color:var(--gold2);font-size:11px;}
+    .tn-menu a:hover{background:rgba(201,160,48,.08);}
+    .tn-menu hr{border:none;border-top:1px solid var(--bdl);margin:5px 0;}
+    .tn-menu .so{color:var(--red);}
+    .tn-menu .so i{color:var(--red);}
 
-    /* ----- Sidebar (watchlist) ----- */
-    .t-sidebar{background:var(--navy2);border:1px solid var(--border);border-radius:14px;padding:16px;height:fit-content;position:sticky;top:88px;max-height:calc(100vh - 100px);overflow-y:auto;}
-    .t-sb-title{font-family:'DM Sans',sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700;margin-bottom:12px;padding:0 6px;}
-    .t-sb-row{padding:10px;border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border:1px solid transparent;transition:all .15s;}
-    .t-sb-row:hover{background:var(--navy3);}
-    .t-sb-row.active{background:rgba(201,160,48,.08);border-color:rgba(201,160,48,.3);}
-    .t-sb-row .l{font-size:12.5px;font-weight:600;color:var(--cream);}
-    .t-sb-row .n{font-size:10.5px;color:var(--muted);margin-top:2px;}
-    .t-sb-row .p{font-size:12.5px;font-weight:600;font-feature-settings:'tnum';text-align:right;}
-    .t-sb-row .c{font-size:10.5px;font-weight:600;margin-top:2px;}
+    /* ---------- Stats bar ---------- */
+    .sb{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:14px 22px;border-bottom:1px solid var(--bdl);}
+    @media(max-width:760px){.sb{grid-template-columns:repeat(2,1fr);}}
+    .sb-k{background:var(--navy2);border:1px solid var(--bdl);border-radius:11px;padding:13px 16px;}
+    .sb-k .lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:7px;}
+    .sb-k .lbl .live{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(74,222,128,.6);animation:livePulse 2s infinite;}
+    @keyframes livePulse{0%{box-shadow:0 0 0 0 rgba(74,222,128,.5);}70%{box-shadow:0 0 0 7px rgba(74,222,128,0);}100%{box-shadow:0 0 0 0 rgba(74,222,128,0);}}
+    .sb-k .v{font-family:'DM Sans',sans-serif;font-size:1.35rem;font-weight:700;color:var(--cream);font-feature-settings:'tnum';}
+    .sb-k .sub{font-size:11.5px;font-weight:600;margin-top:3px;font-feature-settings:'tnum';}
+    .text-green{color:var(--green);}
+    .text-red{color:var(--red);}
+    .text-muted{color:var(--muted);}
 
-    /* ----- Center: symbol header + chart ----- */
+    /* ---------- 3-column main ---------- */
+    .grid{display:grid;grid-template-columns:280px 1fr 320px;gap:14px;padding:14px 22px;flex:1;min-height:0;}
+    @media(max-width:1280px){.grid{grid-template-columns:240px 1fr 300px;}}
+    @media(max-width:1024px){.grid{grid-template-columns:1fr 300px;}.t-watchlist{display:none;}}
+    @media(max-width:760px){.grid{grid-template-columns:1fr;padding:12px;}.t-orderpanel{display:none;}}
+
+    /* Watchlist */
+    .t-card{background:var(--navy2);border:1px solid var(--bdl);border-radius:13px;padding:14px;}
+    .t-watchlist{display:flex;flex-direction:column;gap:10px;height:fit-content;position:sticky;top:78px;max-height:calc(100vh - 90px);overflow-y:auto;}
+    .t-h{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+    .t-h .live{width:6px;height:6px;border-radius:50%;background:var(--green);animation:livePulse 2s infinite;}
+    .wl-row{padding:9px 11px;border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border:1px solid transparent;transition:all .14s;}
+    .wl-row:hover{background:rgba(201,160,48,.05);}
+    .wl-row.on{background:rgba(201,160,48,.10);border-color:rgba(201,160,48,.32);}
+    .wl-row .l{font-size:12.5px;font-weight:700;color:var(--cream);}
+    .wl-row .n{font-size:10.5px;color:var(--muted);margin-top:1px;max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .wl-row .p{font-size:12.5px;font-weight:700;color:var(--cream);font-feature-settings:'tnum';text-align:right;}
+    .wl-row .c{font-size:10.5px;font-weight:700;margin-top:1px;text-align:right;font-feature-settings:'tnum';}
+    .wl-skel{height:38px;background:linear-gradient(90deg,var(--navy3) 0%,rgba(201,160,48,.05) 50%,var(--navy3) 100%);background-size:200% 100%;animation:skel 1.4s linear infinite;border-radius:8px;}
+    @keyframes skel{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+
+    /* Center: symbol header + chart */
     .t-main{display:flex;flex-direction:column;gap:14px;min-width:0;}
-    .t-sym-card{background:var(--navy2);border:1px solid var(--border);border-radius:14px;padding:18px 22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px;}
-    .t-sym-left{display:flex;align-items:center;gap:14px;}
-    .t-sym-icn{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-weight:700;color:#fff;font-size:13px;}
-    .t-sym-icn.asx{background:linear-gradient(135deg,#065f46,#10b981);}
-    .t-sym-icn.us{background:linear-gradient(135deg,#1e40af,#3b82f6);}
-    .t-sym-icn.crypto{background:linear-gradient(135deg,#92400e,#f59e0b);}
-    .t-sym-info .s{font-family:'DM Sans',sans-serif;font-size:1.3rem;font-weight:700;color:var(--cream);letter-spacing:.02em;}
-    .t-sym-info .n{font-size:12.5px;color:var(--muted);margin-top:2px;}
-    .t-sym-price{text-align:right;font-feature-settings:'tnum';}
-    .t-sym-price .px{font-family:'DM Sans',sans-serif;font-size:1.8rem;font-weight:700;color:var(--cream);line-height:1;}
-    .t-sym-price .ch{font-size:13.5px;font-weight:600;margin-top:4px;}
-    .t-sym-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-left:24px;}
-    @media(max-width:900px){.t-sym-stats{grid-template-columns:repeat(2,1fr);width:100%;margin-left:0;}}
-    .t-sym-stats .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:600;margin-bottom:3px;}
-    .t-sym-stats .val{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--cream);font-feature-settings:'tnum';}
+    .sym-card{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px;}
+    .sym-l{display:flex;align-items:center;gap:14px;}
+    .sym-icn{width:48px;height:48px;border-radius:11px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;letter-spacing:.04em;font-family:'DM Sans',sans-serif;}
+    .sym-icn.asx{background:linear-gradient(135deg,#065f46,#10b981);}
+    .sym-icn.us{background:linear-gradient(135deg,#1e40af,#3b82f6);}
+    .sym-icn.crypto{background:linear-gradient(135deg,#92400e,#f59e0b);}
+    .sym-icn.forex{background:linear-gradient(135deg,#5b21b6,#8b5cf6);}
+    .sym-info .s{font-size:1.3rem;font-weight:700;color:var(--cream);letter-spacing:.02em;}
+    .sym-info .n{font-size:12.5px;color:var(--muted);margin-top:1px;display:flex;align-items:center;gap:8px;}
+    .sym-badge{font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;padding:2px 7px;border:1px solid var(--bdl);border-radius:5px;color:var(--gold2);font-weight:700;}
+    .sym-r{display:flex;align-items:center;gap:24px;flex-wrap:wrap;}
+    .sym-px{text-align:right;font-feature-settings:'tnum';}
+    .sym-px .p{font-size:1.85rem;font-weight:700;color:var(--cream);line-height:1;}
+    .sym-px .c{font-size:13.5px;font-weight:700;margin-top:5px;}
+    .sym-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;}
+    @media(max-width:900px){.sym-stats{grid-template-columns:repeat(2,1fr);width:100%;}}
+    .sym-stats .lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:700;margin-bottom:3px;}
+    .sym-stats .val{font-size:13px;font-weight:700;color:var(--cream);font-feature-settings:'tnum';}
 
-    .t-chart{background:var(--navy2);border:1px solid var(--border);border-radius:14px;overflow:hidden;height:560px;}
+    /* Chart */
+    .chart-card{padding:0;overflow:hidden;}
+    .tf-row{display:flex;gap:5px;padding:11px 14px;border-bottom:1px solid var(--bdl);align-items:center;}
+    .tf{padding:5px 11px;background:transparent;border:1px solid transparent;border-radius:7px;color:var(--muted);font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.04em;}
+    .tf:hover{color:var(--cream);}
+    .tf.on{color:var(--gold2);background:rgba(201,160,48,.10);border-color:rgba(201,160,48,.30);}
+    .tf-spacer{flex:1;}
+    .tf-info{font-size:10.5px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:6px;}
+    .tf-info .live{width:6px;height:6px;border-radius:50%;background:var(--green);animation:livePulse 2s infinite;}
+    .chart-host{width:100%;height:420px;position:relative;}
+    .chart-skel{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;}
 
-    /* ----- Right: order entry panel ----- */
+    /* Right: order panel */
     .t-orderpanel{display:flex;flex-direction:column;gap:14px;min-width:0;}
-    .t-card{background:var(--navy2);border:1px solid var(--border);border-radius:14px;padding:16px;}
-    .t-card h3{font-family:'DM Sans',sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;}
-
-    .bs-tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--navy3);border:1px solid var(--border);border-radius:10px;padding:3px;margin-bottom:14px;}
-    .bs-tab{padding:9px;text-align:center;background:transparent;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border-radius:8px;letter-spacing:.04em;transition:all .15s;}
+    .bs-tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--navy3);border:1px solid var(--border);border-radius:9px;padding:3px;margin-bottom:13px;}
+    .bs-tab{padding:9px;text-align:center;background:transparent;border:none;color:var(--muted);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;border-radius:7px;letter-spacing:.04em;transition:all .15s;}
     .bs-tab.buy.on{background:linear-gradient(135deg,#065f46,#10b981);color:#fff;box-shadow:0 4px 14px -4px rgba(16,185,129,.5);}
     .bs-tab.sell.on{background:linear-gradient(135deg,#7f1d1d,#dc2626);color:#fff;box-shadow:0 4px 14px -4px rgba(220,38,38,.5);}
+    .ty-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;}
+    .ty-btn{padding:7px;background:var(--navy3);border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:11.5px;font-weight:700;cursor:pointer;letter-spacing:.04em;}
+    .ty-btn.on{border-color:var(--gold);color:var(--gold2);background:rgba(201,160,48,.08);}
+    .of{margin-bottom:12px;}
+    .ofl{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:6px;display:flex;justify-content:space-between;}
+    .ofl span:last-child{color:var(--cream);font-weight:600;}
+    .oin{width:100%;background:var(--navy3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--cream);font-family:inherit;font-size:14px;font-weight:700;outline:none;font-feature-settings:'tnum';}
+    .oin:focus{border-color:var(--gold);}
+    .qq-row{display:flex;gap:5px;margin-top:6px;}
+    .qq{flex:1;padding:6px;background:var(--navy3);border:1px solid var(--bdl);border-radius:6px;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;}
+    .qq:hover{color:var(--gold2);border-color:var(--gold);}
+    .osum{background:var(--navy3);border:1px solid var(--bdl);border-radius:8px;padding:11px 12px;margin:10px 0 14px;font-size:12px;}
+    .osum .r{display:flex;justify-content:space-between;padding:3px 0;}
+    .osum .r span:last-child{font-feature-settings:'tnum';color:var(--cream);font-weight:600;}
+    .osum .r.tot{font-weight:700;color:var(--cream);font-size:14px;border-top:1px solid var(--bdl);margin-top:7px;padding-top:8px;}
+    .osub{width:100%;padding:13px;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:800;letter-spacing:.06em;cursor:pointer;text-transform:uppercase;}
+    .osub.buy{background:linear-gradient(135deg,#065f46,#10b981);color:#fff;}
+    .osub.sell{background:linear-gradient(135deg,#7f1d1d,#dc2626);color:#fff;}
+    .osub:disabled{opacity:.55;cursor:not-allowed;}
+    .cash-line{font-size:11.5px;color:var(--muted);text-align:center;margin-top:9px;}
+    .cash-line b{color:var(--gold2);font-feature-settings:'tnum';}
+    .legal{font-size:10px;color:var(--muted);text-align:center;margin-top:11px;line-height:1.5;}
+    .legal a{color:var(--muted);text-decoration:underline;}
+    .legal a:hover{color:var(--gold2);}
 
-    .ord-field{margin-bottom:12px;}
-    .ord-lbl{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:6px;display:flex;justify-content:space-between;}
-    .ord-lbl span:last-child{color:var(--cream);font-weight:500;}
-    .ord-input{width:100%;background:var(--navy3);border:1px solid var(--border);border-radius:8px;padding:11px 12px;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;outline:none;font-feature-settings:'tnum';}
-    .ord-input:focus{border-color:var(--gold);}
+    /* Bottom tabs */
+    .lower{margin:0 22px 22px;}
+    .lower-tabs{display:flex;border-bottom:1px solid var(--bdl);}
+    .lower-tab{padding:13px 22px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--muted);border:none;border-bottom:2px solid transparent;background:transparent;transition:all .15s;text-transform:uppercase;}
+    .lower-tab:hover{color:var(--cream);}
+    .lower-tab.on{color:var(--gold2);border-bottom-color:var(--gold);}
+    .lower-body{padding:18px 22px;background:var(--navy2);border:1px solid var(--bdl);border-top:none;border-radius:0 0 13px 13px;}
+    .lower-tabs{background:var(--navy2);border:1px solid var(--bdl);border-bottom:none;border-radius:13px 13px 0 0;}
 
-    .type-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;}
-    .type-btn{padding:8px;background:var(--navy3);border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
-    .type-btn.on{border-color:var(--gold);color:var(--gold2);background:rgba(201,160,48,.08);}
+    /* Tables in lower */
+    .tbl{width:100%;font-size:12.5px;font-feature-settings:'tnum';}
+    .tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:700;text-align:left;padding:8px 10px;border-bottom:1px solid var(--bdl);}
+    .tbl tbody td{padding:11px 10px;border-bottom:1px solid var(--bdl);color:var(--cream);font-weight:600;}
+    .tbl tbody tr:last-child td{border-bottom:none;}
+    .tbl .num{text-align:right;font-feature-settings:'tnum';}
+    .tbl .pill{display:inline-block;padding:2px 9px;border-radius:5px;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
+    .tbl .pill.buy{background:rgba(74,222,128,.15);color:var(--green);}
+    .tbl .pill.sell{background:rgba(248,113,113,.15);color:var(--red);}
+    .tbl-empty{padding:30px 14px;text-align:center;color:var(--muted);font-size:13px;}
 
-    .qty-quick{display:flex;gap:5px;margin-top:6px;}
-    .qty-q{flex:1;padding:5px;background:var(--navy3);border:1px solid var(--bdl);border-radius:5px;color:var(--muted);font-size:10.5px;font-weight:600;cursor:pointer;}
-    .qty-q:hover{color:var(--gold2);border-color:var(--gold);}
+    /* Toast */
+    .toast{position:fixed;bottom:22px;right:22px;z-index:200;background:var(--navy2);border:1px solid var(--gold);
+           border-radius:10px;padding:12px 16px;box-shadow:0 14px 40px rgba(0,0,0,.5);min-width:240px;
+           display:flex;align-items:center;gap:11px;transform:translateY(20px);opacity:0;transition:all .25s;}
+    .toast.on{transform:translateY(0);opacity:1;}
+    .toast i{color:var(--green);font-size:18px;}
+    .toast.err i{color:var(--red);}
+    .toast .t{font-size:12.5px;font-weight:700;color:var(--cream);}
+    .toast .s{font-size:11px;color:var(--muted);margin-top:1px;}
 
-    .ord-summary{background:var(--navy3);border:1px solid var(--bdl);border-radius:8px;padding:11px 12px;margin:10px 0 14px;font-size:12px;}
-    .ord-summary .row{display:flex;justify-content:space-between;padding:3px 0;}
-    .ord-summary .row.total{font-weight:700;color:var(--cream);font-size:14px;border-top:1px solid var(--bdl);margin-top:6px;padding-top:8px;}
-    .ord-summary .row span:last-child{font-feature-settings:'tnum';}
-
-    .ord-submit{width:100%;padding:13px;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;letter-spacing:.06em;cursor:pointer;text-transform:uppercase;}
-    .ord-submit.buy{background:linear-gradient(135deg,#065f46,#10b981);color:#fff;}
-    .ord-submit.sell{background:linear-gradient(135deg,#7f1d1d,#dc2626);color:#fff;}
-
-    /* ----- Order book ----- */
-    .ob-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;font-size:11.5px;font-feature-settings:'tnum';padding:3px 4px;position:relative;}
-    .ob-row.head{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;padding:6px 4px;border-bottom:1px solid var(--bdl);margin-bottom:4px;}
-    .ob-row .px{font-weight:600;}
-    .ob-row.ask .px{color:#f87171;}
-    .ob-row.bid .px{color:#4ade80;}
-    .ob-row .qty,.ob-row .tot{text-align:right;color:var(--cream);}
-    .ob-row .bar{position:absolute;top:0;right:0;height:100%;opacity:.08;z-index:0;border-radius:4px;}
-    .ob-row.ask .bar{background:#dc2626;}
-    .ob-row.bid .bar{background:#10b981;}
-    .ob-row > *{position:relative;z-index:1;}
-    .ob-spread{display:flex;justify-content:space-between;align-items:center;padding:8px 4px;margin:6px 0;background:rgba(201,160,48,.05);border-radius:6px;font-size:11px;}
-    .ob-spread .lbl{color:var(--muted);font-weight:600;}
-    .ob-spread .val{font-feature-settings:'tnum';font-weight:700;color:var(--gold2);}
-
-    /* ----- Lower tabs (Overview / Trades / News) ----- */
-    .t-lower{background:var(--navy2);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
-    .t-lower-tabs{display:flex;border-bottom:1px solid var(--bdl);}
-    .t-lower-tab{padding:14px 22px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;letter-spacing:.06em;color:var(--muted);border-bottom:2px solid transparent;background:transparent;border-top:none;border-left:none;border-right:none;transition:all .15s;}
-    .t-lower-tab:hover{color:var(--cream);}
-    .t-lower-tab.on{color:var(--gold2);border-bottom-color:var(--gold);}
-    .t-lower-body{padding:20px 22px;}
-    .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;}
-    .stat-tile{background:var(--navy3);border:1px solid var(--bdl);border-radius:10px;padding:14px;}
-    .stat-tile .l{font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:600;margin-bottom:4px;}
-    .stat-tile .v{font-family:'DM Sans',sans-serif;font-size:1.05rem;font-weight:700;color:var(--cream);font-feature-settings:'tnum';}
-
-    .trade-row{display:grid;grid-template-columns:80px 1fr 1fr 1fr;gap:12px;padding:9px 0;border-bottom:1px solid var(--bdl);font-size:12.5px;font-feature-settings:'tnum';}
-    .trade-row:last-child{border-bottom:none;}
-    .trade-row .t{color:var(--muted);}
-    .trade-row .s{color:var(--cream);font-weight:600;}
-    .trade-row .px{text-align:right;font-weight:600;}
-    .trade-row .v{text-align:right;color:var(--muted);}
+    /* Tighter spacing on mobile */
+    @media(max-width:760px){
+      .tn{padding:9px 14px;gap:10px;}
+      .tn-tabs{order:5;width:100%;justify-content:center;}
+      .sb{padding:12px 14px;}
+      .lower{margin:0 14px 14px;}
+    }
   </style>
 </head>
 <body>
 
-<div id="tarena-nav"></div>
-
-<!-- Top search bar -->
-<div class="t-topbar">
-  <div class="t-search">
+<!-- ============ Custom topbar ============ -->
+<header class="tn">
+  <a href="index.html" class="tn-logo">
+    <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
+      <path d="M16 3 L28 9 V20 C28 24 22 28 16 30 C10 28 4 24 4 20 V9 Z" stroke="#e8c060" stroke-width="2" fill="none"/>
+      <path d="M9 19 L13 15 L17 18 L23 11" stroke="#e8c060" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="lg">Trade<b>Arena</b></span>
+  </a>
+  <nav class="tn-tabs">
+    <a class="tn-tab on"  href="trade.html"><i class="fa-solid fa-chart-line"></i>Markets</a>
+    <a class="tn-tab"     href="#watchlist" id="navWl"><i class="fa-regular fa-star"></i>Watchlist</a>
+    <a class="tn-tab"     href="portfolio.html"><i class="fa-solid fa-briefcase"></i>Portfolio</a>
+    <a class="tn-tab"     href="reels.html"><i class="fa-solid fa-graduation-cap"></i>Learn</a>
+    <a class="tn-tab"     href="profile.html"><i class="fa-regular fa-user"></i>Profile</a>
+  </nav>
+  <div class="tn-search">
     <i class="fa-solid fa-magnifying-glass"></i>
     <input type="text" id="searchBox" placeholder="Search BHP, AAPL, BTC..." autocomplete="off"/>
     <div class="results" id="searchResults"></div>
   </div>
-  <div class="t-mkts" id="mktTabs">
-    <button class="t-mkt on" data-m="all">All</button>
-    <button class="t-mkt" data-m="asx">ASX</button>
-    <button class="t-mkt" data-m="us">US</button>
-    <button class="t-mkt" data-m="crypto">Crypto</button>
+  <div class="tn-filters" id="mktTabs">
+    <button class="tn-filt on" data-m="all">All</button>
+    <button class="tn-filt"    data-m="asx">ASX</button>
+    <button class="tn-filt"    data-m="us">US</button>
+    <button class="tn-filt"    data-m="crypto">Crypto</button>
+    <button class="tn-filt"    data-m="forex">Forex</button>
   </div>
-</div>
+  <div class="tn-user" id="userPill">
+    <div class="av" id="userAv">U</div>
+    <div class="h" id="userH">user</div>
+    <i class="fa-solid fa-chevron-down caret"></i>
+    <div class="tn-menu" id="userMenu">
+      <a href="profile.html"><i class="fa-regular fa-user"></i>View profile</a>
+      <a href="portfolio.html"><i class="fa-solid fa-briefcase"></i>Portfolio</a>
+      <a href="trade.html"><i class="fa-solid fa-chart-line"></i>Trade</a>
+      <hr/>
+      <a class="so" id="signOutBtn"><i class="fa-solid fa-arrow-right-from-bracket"></i>Sign out</a>
+    </div>
+  </div>
+</header>
 
-<div class="trade-layout">
+<!-- ============ Stats bar ============ -->
+<section class="sb">
+  <div class="sb-k">
+    <div class="lbl">Total portfolio <span class="live"></span></div>
+    <div class="v" id="kTotal">$25,000.00</div>
+    <div class="sub text-muted" id="kTotalSub">Live valuation</div>
+  </div>
+  <div class="sb-k">
+    <div class="lbl">Cash available</div>
+    <div class="v" id="kCash">$25,000.00</div>
+    <div class="sub text-muted">Buying power</div>
+  </div>
+  <div class="sb-k">
+    <div class="lbl">Invested</div>
+    <div class="v" id="kInvested">$0.00</div>
+    <div class="sub text-muted" id="kInvestedSub">0 positions</div>
+  </div>
+  <div class="sb-k">
+    <div class="lbl">Total P&amp;L</div>
+    <div class="v" id="kPnl">$0.00</div>
+    <div class="sub" id="kPnlSub"><span class="text-muted">+0.00%</span></div>
+  </div>
+</section>
+
+<!-- ============ 3-column grid ============ -->
+<div class="grid">
 
   <!-- LEFT: watchlist -->
-  <aside class="t-sidebar">
-    <div class="t-sb-title">Watchlist</div>
-    <div id="watchlist"></div>
+  <aside class="t-card t-watchlist" id="watchlist">
+    <div class="t-h">Watchlist <span class="live" title="Live"></span></div>
+    <div id="wlBody">
+      <div class="wl-skel" style="margin-bottom:8px;"></div>
+      <div class="wl-skel" style="margin-bottom:8px;"></div>
+      <div class="wl-skel" style="margin-bottom:8px;"></div>
+      <div class="wl-skel" style="margin-bottom:8px;"></div>
+    </div>
   </aside>
 
-  <!-- CENTER -->
+  <!-- CENTER: symbol + chart -->
   <main class="t-main">
-
-    <!-- Symbol header -->
-    <div class="t-sym-card">
-      <div class="t-sym-left">
-        <div class="t-sym-icn" id="symIcn">--</div>
-        <div class="t-sym-info">
+    <div class="t-card sym-card">
+      <div class="sym-l">
+        <div class="sym-icn" id="symIcn">--</div>
+        <div class="sym-info">
           <div class="s" id="symName">—</div>
-          <div class="n" id="symFull">—</div>
+          <div class="n">
+            <span id="symFull">Loading…</span>
+            <span class="sym-badge" id="symBadge">—</span>
+          </div>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
-        <div class="t-sym-price">
-          <div class="px" id="symPx">$0.00</div>
-          <div class="ch" id="symCh">+0.00%</div>
+      <div class="sym-r">
+        <div class="sym-px">
+          <div class="p" id="symPx">$0.00</div>
+          <div class="c text-muted" id="symCh">+0.00%  today</div>
         </div>
-        <div class="t-sym-stats">
+        <div class="sym-stats">
           <div><div class="lbl">Day high</div><div class="val" id="symHi">—</div></div>
           <div><div class="lbl">Day low</div><div class="val" id="symLo">—</div></div>
           <div><div class="lbl">52w high</div><div class="val" id="sym52h">—</div></div>
@@ -186,506 +323,846 @@
       </div>
     </div>
 
-    <!-- Chart container — populated by TArenaChart.mount() -->
-    <div class="t-chart" id="tv_chart_container"></div>
-
-    <!-- Lower tabs -->
-    <div class="t-lower">
-      <div class="t-lower-tabs">
-        <button class="t-lower-tab on" data-t="overview">Overview</button>
-        <button class="t-lower-tab" data-t="trades">Recent trades</button>
-        <button class="t-lower-tab" data-t="orders">My orders</button>
+    <div class="t-card chart-card">
+      <div class="tf-row">
+        <button class="tf"     data-tf="1m">1m</button>
+        <button class="tf"     data-tf="5m">5m</button>
+        <button class="tf"     data-tf="15m">15m</button>
+        <button class="tf"     data-tf="1h">1h</button>
+        <button class="tf"     data-tf="4h">4h</button>
+        <button class="tf on"  data-tf="1D">1D</button>
+        <button class="tf"     data-tf="1W">1W</button>
+        <button class="tf"     data-tf="1M">1M</button>
+        <span class="tf-spacer"></span>
+        <span class="tf-info"><span class="live"></span>Live · refresh 10s</span>
       </div>
-      <div class="t-lower-body" id="lowerBody"></div>
+      <div class="chart-host" id="chartHost">
+        <div class="chart-skel">Loading chart…</div>
+      </div>
     </div>
-
   </main>
 
-  <!-- RIGHT: order panel + book -->
+  <!-- RIGHT: order panel -->
   <aside class="t-orderpanel">
-
     <div class="t-card">
-      <h3>Place order <span style="color:var(--gold2);font-weight:700;text-transform:none;letter-spacing:.04em;font-size:11px;" id="ordSym">—</span></h3>
-
+      <div class="t-h">Place order <span style="color:var(--gold2);font-weight:700;font-size:11px;text-transform:none;letter-spacing:.04em;" id="ordSym">—</span></div>
       <div class="bs-tabs">
         <button class="bs-tab buy on" id="bsBuy" onclick="setSide('buy')">Buy</button>
-        <button class="bs-tab sell" id="bsSell" onclick="setSide('sell')">Sell</button>
+        <button class="bs-tab sell"   id="bsSell" onclick="setSide('sell')">Sell</button>
       </div>
-
-      <div class="type-row">
-        <button class="type-btn on" id="tyMkt" onclick="setType('market')">Market</button>
-        <button class="type-btn" id="tyLmt" onclick="setType('limit')">Limit</button>
+      <div class="ty-row">
+        <button class="ty-btn on" id="tyMkt" onclick="setType('market')">Market</button>
+        <button class="ty-btn"    id="tyLmt" onclick="setType('limit')">Limit</button>
       </div>
-
-      <div class="ord-field">
-        <div class="ord-lbl"><span>Quantity</span><span id="qtyHint">~</span></div>
-        <input type="number" class="ord-input" id="ordQty" value="10" min="0" step="1" oninput="updateTotal()"/>
-        <div class="qty-quick">
-          <button class="qty-q" onclick="setQtyPct(0.25)">25%</button>
-          <button class="qty-q" onclick="setQtyPct(0.5)">50%</button>
-          <button class="qty-q" onclick="setQtyPct(0.75)">75%</button>
-          <button class="qty-q" onclick="setQtyPct(1)">Max</button>
+      <div class="of">
+        <div class="ofl"><span>Amount (AUD)</span><span id="qtyHint">~</span></div>
+        <input type="number" class="oin" id="ordAmt" value="100" min="1" step="1" oninput="updateTotal()"/>
+        <div class="qq-row">
+          <button class="qq" onclick="setQuick(10)">$10</button>
+          <button class="qq" onclick="setQuick(50)">$50</button>
+          <button class="qq" onclick="setQuick(100)">$100</button>
+          <button class="qq" onclick="setQuick(500)">$500</button>
         </div>
       </div>
-
-      <div class="ord-field" id="limitField" style="display:none;">
-        <div class="ord-lbl"><span>Limit price</span></div>
-        <input type="number" class="ord-input" id="ordLimit" step="0.01" oninput="updateTotal()"/>
+      <div class="of" id="limitField" style="display:none;">
+        <div class="ofl"><span>Limit price</span></div>
+        <input type="number" class="oin" id="ordLimit" step="0.01" oninput="updateTotal()"/>
       </div>
-
-      <div class="ord-summary">
-        <div class="row"><span>Est. price</span><span id="sumPx">$0.00</span></div>
-        <div class="row"><span>Quantity</span><span id="sumQty">0</span></div>
-        <div class="row"><span>Brokerage</span><span class="text-green">$0.00</span></div>
-        <div class="row total"><span>Total</span><span id="sumTotal">$0.00</span></div>
+      <div class="osum">
+        <div class="r"><span>Est. price</span><span id="sumPx">$0.00</span></div>
+        <div class="r"><span>Shares</span><span id="sumQty">0</span></div>
+        <div class="r"><span>Brokerage</span><span class="text-green">$0.00</span></div>
+        <div class="r tot"><span>Total</span><span id="sumTotal">$0.00</span></div>
       </div>
-
-      <button class="ord-submit buy" id="submitBtn" onclick="placeOrder()">Buy at market</button>
+      <button class="osub buy" id="submitBtn" onclick="placeOrder()">Buy at market</button>
+      <div class="cash-line">Cash: <b id="cashLine">$25,000.00</b></div>
+      <div class="legal">
+        <a href="terms.html">Terms</a> · <a href="privacy.html">Privacy</a> · <a href="risk.html">Risk disclaimer</a>
+      </div>
     </div>
-
-    <!-- Order book -->
-    <div class="t-card">
-      <h3>Order book <span style="font-weight:500;color:var(--muted);text-transform:none;letter-spacing:0;">simulated</span></h3>
-      <div class="ob-row head"><span>Price</span><span class="qty">Qty</span><span class="tot">Total</span></div>
-      <div id="orderBook"></div>
-    </div>
-
   </aside>
 
 </div>
 
+<!-- ============ Bottom tabs ============ -->
+<section class="lower">
+  <div class="lower-tabs">
+    <button class="lower-tab on" data-t="hold">Holdings</button>
+    <button class="lower-tab"    data-t="orders">Order history</button>
+    <button class="lower-tab"    data-t="movers">Market movers</button>
+  </div>
+  <div class="lower-body" id="lowerBody">
+    <div class="tbl-empty">Loading…</div>
+  </div>
+</section>
+
 <div id="tarena-footer"></div>
 
+<!-- toast slot -->
+<div class="toast" id="toast"><i class="fa-solid fa-circle-check"></i><div><div class="t">Order placed</div><div class="s" id="toastSub">—</div></div></div>
+
+<!-- ===== Scripts ===== -->
 <script src="assets/config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="assets/supabase.js"></script>
 <script src="assets/app.js"></script>
-<script src="assets/market.js"></script>
 <script src="assets/datafeed.js"></script>
-<script src="assets/chart-bootstrap.js"></script>
+<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <script>
-  const session = TArenaAuth.requireAuth();
-  if (!session) throw new Error('redirect');
-  TArenaUI.renderNav('trade');
-  TArenaUI.renderFooter();
+/* =================================================================
+   trade.html — main controller. Lives below body markup so all
+   element IDs exist when JS first runs. Auth gate first; then init
+   data, charts, watchlist, order panel, bottom tabs, and the live
+   poll loop.
+   ================================================================= */
 
-  let activeMkt = 'all';
-  let currentSymbol = 'BHP.AX';
-  let side = 'buy';
-  let orderType = 'market';
-  let chartCtl = null;          // controller returned by TArenaChart.mount()
-  const CASH = 25000;
-  // Map of symbol → unsubscribe function for the live quote feed.
-  const liveSubs = {};
+// ------ Auth gate (redirects to auth.html if no session) ------
+const session = TArenaAuth.requireAuth();
+if (!session) throw new Error('redirect');
+TArenaUI.renderFooter();
 
-  function currentMarket() {
-    const m = TArenaMarket.find(currentSymbol);
-    return m;
+// ------ Static catalogue of supported assets ------
+// `cgId` = CoinGecko id. `fxBase`/`fxQuote` for Frankfurter pairs.
+// `market` drives icon colour, exchange badge and live-price routing.
+const CATALOG = {
+  // ASX (priced via TArenaDatafeed → Yahoo proxy; Alpaca has no ASX)
+  'BHP.AX': { name: 'BHP Group',           market: 'asx',    exchange: 'ASX' },
+  'CBA.AX': { name: 'Commonwealth Bank',   market: 'asx',    exchange: 'ASX' },
+  'MQG.AX': { name: 'Macquarie Group',     market: 'asx',    exchange: 'ASX' },
+  'WDS.AX': { name: 'Woodside Energy',     market: 'asx',    exchange: 'ASX' },
+  'RIO.AX': { name: 'Rio Tinto',           market: 'asx',    exchange: 'ASX' },
+  'CSL.AX': { name: 'CSL Limited',         market: 'asx',    exchange: 'ASX' },
+  // US (Alpaca direct, fallback to data-proxy)
+  'AAPL':   { name: 'Apple Inc.',          market: 'us',     exchange: 'NASDAQ' },
+  'TSLA':   { name: 'Tesla Inc.',          market: 'us',     exchange: 'NASDAQ' },
+  'NVDA':   { name: 'NVIDIA Corp.',        market: 'us',     exchange: 'NASDAQ' },
+  'MSFT':   { name: 'Microsoft Corp.',     market: 'us',     exchange: 'NASDAQ' },
+  'AMZN':   { name: 'Amazon.com Inc.',     market: 'us',     exchange: 'NASDAQ' },
+  'GOOGL':  { name: 'Alphabet Inc.',       market: 'us',     exchange: 'NASDAQ' },
+  // Crypto (CoinGecko direct)
+  'BTC':    { name: 'Bitcoin',             market: 'crypto', exchange: 'Crypto', cgId: 'bitcoin' },
+  'ETH':    { name: 'Ethereum',            market: 'crypto', exchange: 'Crypto', cgId: 'ethereum' },
+  'SOL':    { name: 'Solana',              market: 'crypto', exchange: 'Crypto', cgId: 'solana' },
+  // Forex (Frankfurter direct)
+  'AUDUSD': { name: 'AUD / USD',           market: 'forex',  exchange: 'FX', fxBase: 'AUD', fxQuote: 'USD' },
+  'EURUSD': { name: 'EUR / USD',           market: 'forex',  exchange: 'FX', fxBase: 'EUR', fxQuote: 'USD' },
+  'GBPUSD': { name: 'GBP / USD',           market: 'forex',  exchange: 'FX', fxBase: 'GBP', fxQuote: 'USD' },
+  'USDJPY': { name: 'USD / JPY',           market: 'forex',  exchange: 'FX', fxBase: 'USD', fxQuote: 'JPY' },
+};
+
+// Default watchlist per spec
+const DEFAULT_WL = ['BHP.AX', 'CBA.AX', 'MQG.AX', 'WDS.AX', 'AAPL', 'TSLA', 'BTC', 'ETH'];
+function watchlist() {
+  try {
+    const raw = JSON.parse(localStorage.getItem('ta_wl_v2') || 'null');
+    if (Array.isArray(raw) && raw.length) return raw.filter(s => CATALOG[s]);
+  } catch (_) {}
+  return DEFAULT_WL.slice();
+}
+
+// ------ Alpaca sandbox creds (sandbox/paper key — explicitly shipped to client per spec) ------
+const ALPACA = {
+  base:   'https://data.sandbox.alpaca.markets/v2',
+  baseFb: 'https://data.alpaca.markets/v2',
+  key:    'CKXHEY3TO5EFFFLJTZPDPW2HZU',
+  secret: '4GF29e11JC49sMzMSN96HuEcXX23dE9obecb2LtfAE23',
+};
+
+// ------ Live price store: { symbol: { price, change, ts } } ------
+const PRICES = {};
+const STARTING_CAPITAL = 25000;
+
+// ------ Page state ------
+const state = {
+  mkt: 'all',
+  symbol: 'BHP.AX',
+  side: 'buy',
+  type: 'market',
+  tf: '1D',
+  lowerTab: 'hold',
+  holdings: [],   // [{symbol, qty, avg_price, market_value, ...}]
+  trades: [],     // recent orders
+  cash: STARTING_CAPITAL,
+};
+
+// ============ HELPERS ============
+function fmtMoney(n, dp) {
+  if (n == null || !isFinite(n)) return '$—';
+  const d = dp != null ? dp : (Math.abs(n) < 10 ? 4 : 2);
+  return '$' + Number(n).toLocaleString('en-AU', { minimumFractionDigits: d, maximumFractionDigits: d });
+}
+function fmtPct(n) {
+  if (n == null || !isFinite(n)) return '0.00%';
+  return (n >= 0 ? '+' : '') + Number(n).toFixed(2) + '%';
+}
+function fmtVol(n) {
+  if (n == null || !isFinite(n)) return '—';
+  if (n >= 1e9) return (n/1e9).toFixed(2) + 'B';
+  if (n >= 1e6) return (n/1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
+  return Math.round(n).toString();
+}
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function toast(title, sub, isErr) {
+  const el = document.getElementById('toast');
+  el.classList.toggle('err', !!isErr);
+  el.querySelector('i').className = isErr ? 'fa-solid fa-circle-xmark' : 'fa-solid fa-circle-check';
+  el.querySelector('.t').textContent = title;
+  document.getElementById('toastSub').textContent = sub || '';
+  el.classList.add('on');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove('on'), 3200);
+}
+// Symbol icon: short ticker without exchange suffix
+function icnLabel(sym) {
+  if (sym.endsWith('.AX')) return sym.slice(0, -3).slice(0, 3);
+  if (sym.length === 6 && CATALOG[sym]?.market === 'forex') return sym.slice(0, 3);
+  return sym.slice(0, 4);
+}
+
+// ============ USER PILL (top right) ============
+(function userPill() {
+  const email   = (session.user && session.user.email) || 'user';
+  const handle  = (session.user && session.user.user_metadata && session.user.user_metadata.handle)
+                || email.split('@')[0];
+  document.getElementById('userAv').textContent = (handle[0] || 'U').toUpperCase();
+  document.getElementById('userH').textContent  = handle;
+  const pill = document.getElementById('userPill');
+  const menu = document.getElementById('userMenu');
+  pill.addEventListener('click', e => {
+    e.stopPropagation();
+    menu.classList.toggle('open');
+  });
+  document.addEventListener('click', () => menu.classList.remove('open'));
+  document.getElementById('signOutBtn').addEventListener('click', async () => {
+    try { await TArenaDB.auth.signOut(); } catch (_) {}
+    location.href = 'auth.html';
+  });
+})();
+
+// ============ LIVE DATA — multi-source fetch ============
+// Returns Promise< { symbol: {price, change} } > for the requested syms.
+// Routes: crypto → CoinGecko, forex → Frankfurter, US → Alpaca direct,
+// ASX (or any Alpaca failure) → TArenaDatafeed (data-proxy edge fn).
+async function fetchPrices(symbols) {
+  const out = {};
+  const groups = { crypto: [], forex: [], us: [], asx: [] };
+  symbols.forEach(s => {
+    const m = (CATALOG[s] && CATALOG[s].market) || 'us';
+    (groups[m] = groups[m] || []).push(s);
+  });
+
+  const tasks = [];
+
+  // Crypto via CoinGecko
+  if (groups.crypto.length) {
+    const ids = groups.crypto.map(s => CATALOG[s].cgId).filter(Boolean).join(',');
+    if (ids) tasks.push(
+      fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`)
+        .then(r => r.ok ? r.json() : Promise.reject(new Error('cg ' + r.status)))
+        .then(j => {
+          groups.crypto.forEach(s => {
+            const row = j[CATALOG[s].cgId];
+            if (row && typeof row.usd === 'number') {
+              out[s] = { price: row.usd, change: row.usd_24h_change || 0 };
+            }
+          });
+        })
+        .catch(e => console.warn('CoinGecko failed', e.message))
+    );
   }
 
-  // One-shot quote refresh that mutates the existing runtime record
-  // for `sym`. Used after a placeholder is inserted so the header
-  // shows a real price immediately rather than waiting for the live
-  // subscription to tick.
-  async function refreshRuntimeQuote(sym) {
-    const rec = TArenaMarket.find(sym);
-    if (!rec) return;
-    try {
-      const quotes = await TArenaDatafeed.fetchQuotes([sym]);
-      const q = quotes[sym];
-      if (q) {
-        if (typeof q.price === 'number')      rec.price  = q.price;
-        if (typeof q.changePct === 'number')  rec.change = q.changePct;
-        if (rec.high52 === 0) rec.high52 = rec.price;
-        if (rec.low52  === 0) rec.low52  = rec.price;
-      }
-    } catch (e) {
-      console.warn('quote hydrate failed', sym, e.message);
-    }
+  // Forex via Frankfurter (USD-base for AUD/EUR/GBP/JPY)
+  if (groups.forex.length) {
+    tasks.push(
+      fetch('https://api.frankfurter.dev/v2/latest?base=USD&symbols=AUD,EUR,GBP,JPY')
+        .then(r => r.ok ? r.json() : Promise.reject(new Error('fx ' + r.status)))
+        .then(j => {
+          if (!j || !j.rates) return;
+          groups.forex.forEach(s => {
+            const def = CATALOG[s];
+            // Compute rate for the requested pair from the USD-base table.
+            // For X/USD: 1 / rates[X]. For USD/Y: rates[Y].
+            let rate;
+            if (def.fxQuote === 'USD') rate = j.rates[def.fxBase] ? 1 / j.rates[def.fxBase] : null;
+            else if (def.fxBase === 'USD') rate = j.rates[def.fxQuote] || null;
+            if (rate) {
+              const prev = (PRICES[s] && PRICES[s].price) || rate;
+              const chg  = prev ? ((rate - prev) / prev) * 100 : 0;
+              // Carry over a rolling change pct so the UI shows movement.
+              out[s] = { price: rate, change: (PRICES[s] && PRICES[s]._anchor)
+                ? ((rate - PRICES[s]._anchor) / PRICES[s]._anchor) * 100
+                : chg, _anchor: PRICES[s] && PRICES[s]._anchor || rate };
+            }
+          });
+        })
+        .catch(e => console.warn('Frankfurter failed', e.message))
+    );
   }
 
-  function renderSymbolHeader() {
-    const m = currentMarket();
-    if (!m) return;
-    document.getElementById('symIcn').textContent = m.symbol.replace('.AX', '').slice(0, 3);
-    document.getElementById('symIcn').className = 't-sym-icn ' + m.market;
-    document.getElementById('symName').textContent = m.symbol.replace('.AX', '');
-    document.getElementById('symFull').textContent = `${m.name} · ${m.market === 'asx' ? 'ASX' : m.market === 'us' ? 'NASDAQ/NYSE' : 'Crypto'}`;
-    document.getElementById('symPx').textContent = '$' + (m.price < 100 ? m.price.toFixed(2) : m.price.toLocaleString('en-US', { maximumFractionDigits: 2 }));
-    const up = m.change >= 0;
-    document.getElementById('symCh').textContent = (up ? '▲ ' : '▼ ') + TArenaUI.fmtPct(m.change) + '  today';
-    document.getElementById('symCh').className = 'ch ' + (up ? 'text-green' : 'text-red');
-    document.getElementById('symHi').textContent = '$' + (m.price * 1.012).toFixed(2);
-    document.getElementById('symLo').textContent = '$' + (m.price * 0.988).toFixed(2);
-    document.getElementById('sym52h').textContent = '$' + m.high52.toLocaleString();
-    document.getElementById('symVol').textContent = m.vol;
-    document.getElementById('ordSym').textContent = m.symbol.replace('.AX', '');
-    updateTotal();
-    renderOrderBook();
+  // US stocks via Alpaca direct (sandbox first, fallback to live data host)
+  if (groups.us.length) {
+    const syms = groups.us.join(',');
+    const tryAlpaca = (base) => fetch(`${base}/stocks/snapshots?symbols=${syms}`, {
+      headers: { 'APCA-API-KEY-ID': ALPACA.key, 'APCA-API-SECRET-KEY': ALPACA.secret }
+    }).then(r => r.ok ? r.json() : Promise.reject(new Error('alp ' + r.status)));
+    tasks.push(
+      tryAlpaca(ALPACA.base).catch(() => tryAlpaca(ALPACA.baseFb))
+        .then(j => {
+          // Snapshot shape: { AAPL: {latestTrade:{p}, dailyBar:{c,h,l,v,o}, prevDailyBar:{c}} }
+          groups.us.forEach(s => {
+            const r = j && j[s];
+            const p = r && (r.latestTrade?.p || r.minuteBar?.c || r.dailyBar?.c);
+            const prev = r && r.prevDailyBar && r.prevDailyBar.c;
+            if (p) {
+              const chg = prev ? ((p - prev) / prev) * 100 : 0;
+              out[s] = { price: p, change: chg, _hi: r.dailyBar?.h, _lo: r.dailyBar?.l, _vol: r.dailyBar?.v };
+            }
+          });
+        })
+        .catch(async (e) => {
+          // CORS or 4xx → fall back to existing TArenaDatafeed proxy
+          console.warn('Alpaca direct failed, using data-proxy fallback', e.message);
+          try {
+            const q = await TArenaDatafeed.fetchQuotes(groups.us);
+            groups.us.forEach(s => {
+              const row = q[s];
+              if (row && typeof row.price === 'number') {
+                out[s] = { price: row.price, change: row.changePct || 0 };
+              }
+            });
+          } catch (e2) {
+            console.warn('data-proxy US fallback also failed', e2.message);
+          }
+        })
+    );
   }
 
-  // Mount the chart once. Subsequent symbol selections call
-  // chartCtl.setSymbol() instead of re-mounting. We also re-apply the
-  // current symbol after mount resolves so that any symbol switches
-  // that happened while the library was loading aren't lost.
-  async function ensureChart() {
-    if (chartCtl) return chartCtl;
-    chartCtl = await TArenaChart.mount('tv_chart_container', currentSymbol, '60');
-    try { chartCtl.setSymbol(currentSymbol); } catch (_) {}
-    return chartCtl;
+  // ASX via TArenaDatafeed (Yahoo via data-proxy) — Alpaca has no ASX
+  if (groups.asx.length) {
+    tasks.push(
+      TArenaDatafeed.fetchQuotes(groups.asx)
+        .then(q => {
+          groups.asx.forEach(s => {
+            const row = q[s];
+            if (row && typeof row.price === 'number') {
+              out[s] = { price: row.price, change: row.changePct || 0 };
+            }
+          });
+        })
+        .catch(e => console.warn('ASX fetchQuotes failed', e.message))
+    );
   }
 
-  // ----- Live quote subscription helpers -----
-  // Apply a tick to the in-memory market record so other renders
-  // (header, watchlist, order panel summary, order book) all see
-  // the same price.
-  function applyTick(symbol, tick) {
-    const m = TArenaMarket.find(symbol);
-    if (!m) return;
-    m.price = tick.price;
-    // Always honour a numeric changePct, including a legitimate 0.00%
-    // (otherwise the header sticks at the last non-zero value).
-    if (typeof tick.changePct === 'number' && isFinite(tick.changePct)) m.change = tick.changePct;
-    if (symbol === currentSymbol) {
-      renderSymbolHeader();
-      renderOrderBook();
-      updateTotal();
-    }
-    // Update just this row in the watchlist (cheaper than a full re-render).
-    const row = document.querySelector(`.t-sb-row[data-sym="${symbol}"]`);
-    if (row) {
-      const up = m.change >= 0;
-      row.querySelector('.p').textContent = '$' + (m.price < 100 ? m.price.toFixed(2) : m.price.toLocaleString());
-      const c = row.querySelector('.c');
-      c.textContent = TArenaUI.fmtPct(m.change);
-      c.className = 'c ' + (up ? 'text-green' : 'text-red');
-    }
-  }
+  await Promise.allSettled(tasks);
 
-  function ensureLive(symbol) {
-    if (liveSubs[symbol]) return;
-    liveSubs[symbol] = TArenaDatafeed.subscribeQuote(symbol, (tick) => applyTick(symbol, tick));
-  }
+  // Merge into PRICES store, preserving _anchor / fields not refreshed.
+  Object.keys(out).forEach(s => {
+    PRICES[s] = Object.assign({}, PRICES[s] || {}, out[s], { ts: Date.now() });
+    if (CATALOG[s]?.market === 'forex' && !PRICES[s]._anchor) PRICES[s]._anchor = out[s].price;
+  });
+  return out;
+}
 
-  function dropLive(symbol) {
-    if (liveSubs[symbol]) { try { liveSubs[symbol](); } catch (_) {} delete liveSubs[symbol]; }
-  }
+// ============ CHART (Lightweight Charts, synthetic OHLCV) ============
+let chart, candleSeries;
 
-  // Subscribe to all watchlist symbols + the current symbol;
-  // drop subscriptions for anything no longer needed.
-  function syncLiveSubs() {
-    const wanted = new Set([currentSymbol, ...TArenaMarket.getWatchlist()]);
-    for (const s of wanted) ensureLive(s);
-    for (const s of Object.keys(liveSubs)) if (!wanted.has(s)) dropLive(s);
-  }
+function tfToInterval(tf) {
+  // Returns candle interval in seconds.
+  return {'1m':60,'5m':300,'15m':900,'1h':3600,'4h':14400,'1D':86400,'1W':604800,'1M':2592000}[tf] || 86400;
+}
 
-  function renderWatchlist() {
-    const wl = TArenaMarket.getWatchlist();
-    const html = wl.map(sym => {
-      const m = TArenaMarket.find(sym);
-      if (!m) return '';
-      const up = m.change >= 0;
-      const active = sym === currentSymbol ? 'active' : '';
-      return `<div class="t-sb-row ${active}" data-sym="${sym}" onclick="selectSymbol('${sym}')">
-        <div>
-          <div class="l">${sym.replace('.AX','')}</div>
-          <div class="n">${m.name}</div>
-        </div>
-        <div>
-          <div class="p">$${m.price < 100 ? m.price.toFixed(2) : m.price.toLocaleString()}</div>
-          <div class="c ${up ? 'text-green' : 'text-red'}">${TArenaUI.fmtPct(m.change)}</div>
-        </div>
-      </div>`;
-    }).join('');
-    document.getElementById('watchlist').innerHTML = html;
-  }
+// Generate ~120 synthetic candles ending NOW, anchored to the current
+// live price. Walk price backward with a seeded random walk so each
+// candle's close = next candle's open. Last candle close = currentPx.
+function genCandles(currentPx, tf) {
+  const n = 120;
+  const interval = tfToInterval(tf);
+  const now = Math.floor(Date.now() / 1000);
+  const vol = currentPx * (tf === '1m' ? 0.001 : tf === '5m' ? 0.0025 : tf === '15m' ? 0.005
+                          : tf === '1h' ? 0.008 : tf === '4h' ? 0.014 : tf === '1D' ? 0.018
+                          : tf === '1W' ? 0.04 : 0.07);
+  // Build forward from a seed in the past, end at currentPx.
+  // Use a deterministic LCG so the chart doesn't reshuffle on every render.
+  const seed = (currentPx * 1000 | 0) ^ tf.charCodeAt(0);
+  let rng = seed >>> 0; if (!rng) rng = 1;
+  const r = () => { rng = (rng * 1664525 + 1013904223) >>> 0; return rng / 4294967296; };
 
-  // selectSymbol handles both catalogue symbols and remote-search
-  // symbols. For unknown symbols it hydrates a runtime record first so
-  // header / order panel / watchlist all stay coherent with the chart.
-  async function selectSymbol(sym, meta) {
-    currentSymbol = sym;
-    if (!TArenaMarket.find(sym)) {
-      // Optimistic placeholder so the UI doesn't flash empty while we
-      // wait for the quote to come back.
-      const placeholder = {
-        symbol: sym,
-        name:   (meta && (meta.description || meta.name)) || sym,
-        market: TArenaDatafeed.classify(sym) === 'crypto' ? 'crypto'
-              : TArenaDatafeed.classify(sym) === 'asx'    ? 'asx' : 'us',
-        price:  0, change: 0, mcap: '—', vol: '—',
-        high52: 0, low52: 0, tv: sym,
-      };
-      TArenaMarket.data.push(placeholder);
-      // Refresh the placeholder with a real quote in the background;
-      // re-render once we have a price (live subs will keep it fresh
-      // afterwards).
-      refreshRuntimeQuote(sym).then(() => {
-        if (currentSymbol === sym) renderSymbolHeader();
-      });
-    }
-    renderSymbolHeader();
-    renderWatchlist();
-    renderLower();
-    syncLiveSubs();
-    if (chartCtl) chartCtl.setSymbol(sym);
+  const closes = [currentPx];
+  for (let i = 1; i < n; i++) {
+    // Walk backward with mean-reverting noise
+    const drift = (currentPx - closes[i-1]) * 0.005;
+    const noise = (r() - 0.5) * vol * 2;
+    closes.push(closes[i-1] - drift - noise);
   }
-  window.selectSymbol = selectSymbol;
+  closes.reverse();
+  // Pin the very last close to the live price so the chart matches the header.
+  closes[closes.length - 1] = currentPx;
 
-  // ----- Search (debounced; uses TArenaDatafeed.search → data-proxy) -----
-  const searchBox = document.getElementById('searchBox');
-  const searchResults = document.getElementById('searchResults');
-  let searchTimer = null;
-  let searchSeq   = 0;
-  // Defense-in-depth: escape HTML before splicing untrusted upstream
-  // search-result fields into innerHTML.
-  function esc(s) {
-    return String(s == null ? '' : s)
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  const candles = closes.map((close, i) => {
+    const open  = i === 0 ? close * (0.998 + r() * 0.004) : closes[i-1];
+    const range = vol * (0.4 + r() * 1.2);
+    const high  = Math.max(open, close) + range * r();
+    const low   = Math.min(open, close) - range * r();
+    return {
+      time: now - (n - 1 - i) * interval,
+      open: +open.toFixed(4),
+      high: +high.toFixed(4),
+      low:  +low.toFixed(4),
+      close:+close.toFixed(4),
+    };
+  });
+  return candles;
+}
+
+function mountChart() {
+  const host = document.getElementById('chartHost');
+  host.innerHTML = '';
+  if (!window.LightweightCharts) {
+    host.innerHTML = '<div class="chart-skel">Charts library failed to load.</div>';
+    return;
   }
-  function renderSearchResults(rows) {
+  chart = LightweightCharts.createChart(host, {
+    width:  host.clientWidth,
+    height: 420,
+    layout: {
+      background: { type: 'solid', color: '#060e1c' },
+      textColor: '#7a8aaa',
+      fontFamily: 'DM Sans, sans-serif',
+    },
+    grid: {
+      vertLines: { color: 'rgba(201,160,48,0.06)' },
+      horzLines: { color: 'rgba(201,160,48,0.08)' },
+    },
+    rightPriceScale: { borderColor: 'rgba(201,160,48,0.18)' },
+    timeScale: { borderColor: 'rgba(201,160,48,0.18)', timeVisible: true, secondsVisible: false },
+    crosshair: {
+      mode: 1,
+      vertLine: { color: '#c9a030', width: 1, style: 3, labelBackgroundColor: '#c9a030' },
+      horzLine: { color: '#c9a030', width: 1, style: 3, labelBackgroundColor: '#c9a030' },
+    },
+  });
+  candleSeries = chart.addCandlestickSeries({
+    upColor: '#4ade80', downColor: '#f87171',
+    borderUpColor: '#4ade80', borderDownColor: '#f87171',
+    wickUpColor: '#4ade80', wickDownColor: '#f87171',
+  });
+  // Resize observer (kept on `chartRO` so beforeunload can disconnect it)
+  chartRO = new ResizeObserver(() => chart && chart.applyOptions({ width: host.clientWidth }));
+  chartRO.observe(host);
+}
+
+function refreshChart() {
+  if (!candleSeries) return;
+  const px = (PRICES[state.symbol] && PRICES[state.symbol].price) || 100;
+  candleSeries.setData(genCandles(px, state.tf));
+  chart.timeScale().fitContent();
+}
+
+// Track the resize observer + poll so we can tear them down cleanly
+// on unload. Without this we'd leak a ResizeObserver and a 10-second
+// timer per navigation.
+let chartRO = null;
+let pollHandle = null;
+window.addEventListener('beforeunload', () => {
+  if (pollHandle) clearInterval(pollHandle);
+  if (chartRO)    try { chartRO.disconnect(); } catch (_) {}
+  if (chart)      try { chart.remove(); } catch (_) {}
+});
+
+document.querySelectorAll('.tf').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.tf').forEach(x => x.classList.toggle('on', x === b));
+  state.tf = b.dataset.tf;
+  refreshChart();
+}));
+
+// ============ SYMBOL HEADER ============
+function renderSymbolHeader() {
+  const def = CATALOG[state.symbol];
+  if (!def) return;
+  const px  = PRICES[state.symbol] || { price: 0, change: 0 };
+  const sym = state.symbol.replace('.AX', '');
+  document.getElementById('symIcn').textContent = icnLabel(state.symbol);
+  document.getElementById('symIcn').className = 'sym-icn ' + def.market;
+  document.getElementById('symName').textContent = sym;
+  document.getElementById('symFull').textContent = def.name;
+  document.getElementById('symBadge').textContent = def.exchange;
+  document.getElementById('symPx').textContent  = fmtMoney(px.price);
+  const up = (px.change || 0) >= 0;
+  const ch = document.getElementById('symCh');
+  ch.textContent = (up ? '▲ ' : '▼ ') + fmtPct(px.change) + '  today';
+  ch.className   = 'c ' + (up ? 'text-green' : 'text-red');
+  // Day high/low/52w/vol — use Alpaca-supplied fields if present, else heuristic
+  const hi = px._hi || (px.price ? px.price * 1.012 : null);
+  const lo = px._lo || (px.price ? px.price * 0.988 : null);
+  document.getElementById('symHi').textContent  = hi ? fmtMoney(hi) : '—';
+  document.getElementById('symLo').textContent  = lo ? fmtMoney(lo) : '—';
+  document.getElementById('sym52h').textContent = px.price ? fmtMoney(px.price * 1.18) : '—';
+  document.getElementById('symVol').textContent = fmtVol(px._vol);
+  document.getElementById('ordSym').textContent = sym;
+  updateTotal();
+}
+
+// ============ WATCHLIST ============
+function renderWatchlist() {
+  const wl = watchlist();
+  const html = wl.map(s => {
+    const def = CATALOG[s] || { name: s };
+    const px  = PRICES[s];
+    const up  = px && (px.change || 0) >= 0;
+    const active = s === state.symbol ? 'on' : '';
+    return `<div class="wl-row ${active}" data-sym="${s}" onclick="selectSymbol('${s}')">
+      <div>
+        <div class="l">${esc(s.replace('.AX',''))}</div>
+        <div class="n">${esc(def.name)}</div>
+      </div>
+      <div>
+        <div class="p">${px ? fmtMoney(px.price) : '<span class="text-muted">—</span>'}</div>
+        <div class="c ${up ? 'text-green' : 'text-red'}">${px ? fmtPct(px.change) : ''}</div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('wlBody').innerHTML = html || '<div class="text-muted" style="font-size:12px;padding:12px;">No symbols</div>';
+}
+
+function selectSymbol(s) {
+  if (!CATALOG[s]) return;
+  state.symbol = s;
+  renderWatchlist();
+  renderSymbolHeader();
+  refreshChart();
+  // Lazy-fetch this symbol if we don't have a price yet
+  if (!PRICES[s]) fetchPrices([s]).then(() => { renderWatchlist(); renderSymbolHeader(); refreshChart(); });
+}
+window.selectSymbol = selectSymbol;
+
+// ============ MARKET FILTER + SEARCH ============
+document.getElementById('mktTabs').addEventListener('click', e => {
+  if (!e.target.dataset.m) return;
+  state.mkt = e.target.dataset.m;
+  document.querySelectorAll('.tn-filt').forEach(b => b.classList.toggle('on', b === e.target));
+});
+
+const searchBox = document.getElementById('searchBox');
+const searchResults = document.getElementById('searchResults');
+let searchTimer = null;
+searchBox.addEventListener('input', () => {
+  const q = searchBox.value.trim().toLowerCase();
+  clearTimeout(searchTimer);
+  if (!q) { searchResults.classList.remove('open'); return; }
+  searchTimer = setTimeout(() => {
+    const rows = Object.entries(CATALOG)
+      .filter(([s, d]) => s.toLowerCase().includes(q) || d.name.toLowerCase().includes(q))
+      .filter(([_, d]) => state.mkt === 'all' || d.market === state.mkt)
+      .slice(0, 8);
     if (!rows.length) {
-      searchResults.innerHTML = '<div class="res"><div><div class="l">No matches</div></div></div>';
+      searchResults.innerHTML = '<div class="res"><div class="l">No matches</div></div>';
     } else {
-      searchResults.innerHTML = rows.slice(0, 8).map((r, i) => {
-        const sym  = esc(r.symbol);
-        const desc = esc(r.description || r.name || '');
-        const exch = esc((r.exchange || r.market || '').toUpperCase());
-        return `<div class="res" data-sym="${sym}" data-idx="${i}">
-          <div><div class="l">${sym.replace('.AX','')}</div><div class="n">${desc}${exch ? ' · ' + exch : ''}</div></div>
-        </div>`;
-      }).join('');
-      searchResults.querySelectorAll('.res[data-sym]').forEach(el => {
+      searchResults.innerHTML = rows.map(([s, d]) => `
+        <div class="res" data-sym="${esc(s)}">
+          <div><div class="l">${esc(s.replace('.AX',''))}</div><div class="n">${esc(d.name)} · ${esc(d.exchange)}</div></div>
+        </div>`).join('');
+      searchResults.querySelectorAll('.res[data-sym]').forEach(el =>
         el.addEventListener('click', () => {
-          const meta = rows[+el.dataset.idx] || null;
-          selectSymbol(el.dataset.sym, meta);
+          selectSymbol(el.dataset.sym);
           searchBox.value = '';
           searchResults.classList.remove('open');
-        });
-      });
+        })
+      );
     }
     searchResults.classList.add('open');
+  }, 180);
+});
+document.addEventListener('click', e => {
+  if (!searchBox.contains(e.target) && !searchResults.contains(e.target)) searchResults.classList.remove('open');
+});
+
+// "Watchlist" tab → scroll left sidebar into view (it already lives on this page)
+document.getElementById('navWl').addEventListener('click', e => {
+  e.preventDefault();
+  document.getElementById('watchlist').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+// ============ ORDER PANEL ============
+function setSide(s) {
+  state.side = s;
+  document.getElementById('bsBuy').classList.toggle('on', s === 'buy');
+  document.getElementById('bsSell').classList.toggle('on', s === 'sell');
+  const btn = document.getElementById('submitBtn');
+  btn.classList.toggle('buy',  s === 'buy');
+  btn.classList.toggle('sell', s === 'sell');
+  updateTotal();
+}
+function setType(t) {
+  state.type = t;
+  document.getElementById('tyMkt').classList.toggle('on', t === 'market');
+  document.getElementById('tyLmt').classList.toggle('on', t === 'limit');
+  document.getElementById('limitField').style.display = t === 'limit' ? 'block' : 'none';
+  if (t === 'limit') {
+    const px = PRICES[state.symbol]?.price || 0;
+    document.getElementById('ordLimit').value = px.toFixed(2);
   }
-  searchBox.addEventListener('input', () => {
-    const q = searchBox.value.trim();
-    clearTimeout(searchTimer);
-    if (!q) { searchResults.classList.remove('open'); return; }
-    const seq = ++searchSeq;
-    searchTimer = setTimeout(async () => {
-      try {
-        // Real-data search via the edge function. Fall back to the
-        // local TArenaMarket catalogue if the proxy isn't deployed yet
-        // so the page never looks broken in dev.
-        let rows = await global_TArenaDatafeed_search(q, activeMkt === 'all' ? '' : activeMkt);
-        if (seq !== searchSeq) return; // a newer keystroke superseded us
-        if (!rows.length) {
-          rows = TArenaMarket.data
-            .filter(d => d.symbol.toLowerCase().includes(q.toLowerCase())
-                      || d.name.toLowerCase().includes(q.toLowerCase()))
-            .filter(d => activeMkt === 'all' || d.market === activeMkt)
-            .map(d => ({ symbol: d.symbol, description: d.name, exchange: d.market }));
-        }
-        renderSearchResults(rows);
-      } catch (_) {
-        // Proxy unreachable → use the local catalogue.
-        const ql = q.toLowerCase();
-        const rows = TArenaMarket.data
-          .filter(d => d.symbol.toLowerCase().includes(ql) || d.name.toLowerCase().includes(ql))
-          .filter(d => activeMkt === 'all' || d.market === activeMkt)
-          .map(d => ({ symbol: d.symbol, description: d.name, exchange: d.market }));
-        if (seq === searchSeq) renderSearchResults(rows);
-      }
-    }, 220);
+  updateTotal();
+}
+function setQuick(amt) { document.getElementById('ordAmt').value = amt; updateTotal(); }
+window.setSide = setSide; window.setType = setType; window.setQuick = setQuick;
+
+function updateTotal() {
+  const def = CATALOG[state.symbol];
+  if (!def) return;
+  const px = state.type === 'limit'
+    ? (parseFloat(document.getElementById('ordLimit').value) || PRICES[state.symbol]?.price || 0)
+    : (PRICES[state.symbol]?.price || 0);
+  const amt   = parseFloat(document.getElementById('ordAmt').value) || 0;
+  const qty   = px > 0 ? amt / px : 0;
+  const sym   = state.symbol.replace('.AX', '');
+  const dpQty = qty < 1 ? 4 : 2;
+  document.getElementById('sumPx').textContent    = fmtMoney(px);
+  document.getElementById('sumQty').textContent   = qty.toLocaleString('en-AU', { maximumFractionDigits: dpQty });
+  document.getElementById('sumTotal').textContent = fmtMoney(amt, 2);
+  document.getElementById('cashLine').textContent = fmtMoney(state.cash, 2);
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.textContent = `${state.side === 'buy' ? 'Buy' : 'Sell'} ${sym} ${state.type === 'market' ? 'at market' : 'at limit'}`;
+  // Validation: buy needs cash; sell needs shares
+  let ok = amt >= 1 && px > 0;
+  if (state.side === 'buy'  && amt > state.cash) ok = false;
+  if (state.side === 'sell') {
+    const h = state.holdings.find(x => x.symbol === state.symbol);
+    if (!h || h.qty < qty) ok = false;
+  }
+  submitBtn.disabled = !ok;
+  document.getElementById('qtyHint').textContent = state.side === 'buy'
+    ? `Buying power: ${fmtMoney(state.cash, 2)}`
+    : (() => {
+        const h = state.holdings.find(x => x.symbol === state.symbol);
+        return `Owned: ${h ? h.qty.toFixed(h.qty < 1 ? 4 : 2) : 0}`;
+      })();
+}
+window.updateTotal = updateTotal;
+
+async function placeOrder() {
+  const def = CATALOG[state.symbol];
+  if (!def) return;
+  const px = state.type === 'limit'
+    ? (parseFloat(document.getElementById('ordLimit').value) || PRICES[state.symbol]?.price || 0)
+    : (PRICES[state.symbol]?.price || 0);
+  const amt = parseFloat(document.getElementById('ordAmt').value) || 0;
+  if (amt < 1)  return toast('Minimum trade is $1', '', true);
+  if (px <= 0)  return toast('No live price yet', 'Try again in a moment', true);
+  const qty = amt / px;
+
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.disabled = true; submitBtn.style.opacity = '.7';
+  // Insert directly into paper_trades (RLS policy: authenticated users can self-insert).
+  // We keep status='open' and entry_price=px so the existing get_my_holdings()
+  // SQL rollup works. Forex is mapped to 'us' market for storage compatibility.
+  const marketCol = def.market === 'forex' ? 'us' : def.market;
+  const { error } = await TArenaDB.from('paper_trades').insert({
+    symbol:      state.symbol,
+    market:      marketCol,
+    side:        state.side,
+    qty:         +qty.toFixed(8),
+    entry_price: +px.toFixed(4),
+    status:      'open',
   });
-  // Tiny shim so the inline async caller above stays readable.
-  function global_TArenaDatafeed_search(q, market) {
-    return (window.TArenaDatafeed && window.TArenaDatafeed.search)
-      ? window.TArenaDatafeed.search(q, market)
-      : Promise.resolve([]);
+  submitBtn.disabled = false; submitBtn.style.opacity = '1';
+  if (error) {
+    console.warn('paper_trades insert failed', error);
+    return toast('Order failed', error.message, true);
   }
-  document.addEventListener('click', e => {
-    if (!searchBox.contains(e.target) && !searchResults.contains(e.target)) searchResults.classList.remove('open');
-  });
-  document.getElementById('mktTabs').addEventListener('click', e => {
-    if (!e.target.dataset.m) return;
-    activeMkt = e.target.dataset.m;
-    document.querySelectorAll('.t-mkt').forEach(b => b.classList.toggle('on', b === e.target));
-  });
-
-  // ----- Order entry -----
-  function setSide(s) {
-    side = s;
-    document.getElementById('bsBuy').classList.toggle('on', s === 'buy');
-    document.getElementById('bsSell').classList.toggle('on', s === 'sell');
-    const btn = document.getElementById('submitBtn');
-    btn.classList.toggle('buy', s === 'buy');
-    btn.classList.toggle('sell', s === 'sell');
-    updateTotal();
-  }
-  function setType(t) {
-    orderType = t;
-    document.getElementById('tyMkt').classList.toggle('on', t === 'market');
-    document.getElementById('tyLmt').classList.toggle('on', t === 'limit');
-    document.getElementById('limitField').style.display = t === 'limit' ? 'block' : 'none';
-    if (t === 'limit') {
-      const m = currentMarket();
-      if (m) document.getElementById('ordLimit').value = m.price.toFixed(2);
-    }
-    updateTotal();
-  }
-  function setQtyPct(pct) {
-    const m = currentMarket();
-    if (!m) return;
-    if (side === 'buy') {
-      const max = Math.floor((CASH * pct) / m.price);
-      document.getElementById('ordQty').value = max;
-    } else {
-      const h = TArenaMarket.holdings.find(x => x.symbol === currentSymbol);
-      const owned = h ? h.qty : 0;
-      document.getElementById('ordQty').value = (owned * pct).toFixed(owned < 1 ? 4 : 0);
-    }
-    updateTotal();
-  }
-  window.setSide = setSide; window.setType = setType; window.setQtyPct = setQtyPct;
-
-  function updateTotal() {
-    const m = currentMarket();
-    if (!m) return;
-    const qty = parseFloat(document.getElementById('ordQty').value) || 0;
-    const px = orderType === 'limit' ? (parseFloat(document.getElementById('ordLimit').value) || m.price) : m.price;
-    const total = qty * px;
-    document.getElementById('sumPx').textContent  = '$' + px.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-    document.getElementById('sumQty').textContent = qty.toLocaleString();
-    document.getElementById('sumTotal').textContent = '$' + total.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-    const sym = m.symbol.replace('.AX','');
-    document.getElementById('submitBtn').textContent = `${side === 'buy' ? 'Buy' : 'Sell'} ${sym} ${orderType === 'market' ? 'at market' : 'at limit'}`;
-    document.getElementById('qtyHint').textContent = side === 'buy' ? `Cash: $${CASH.toLocaleString()}` : (() => {
-      const h = TArenaMarket.holdings.find(x => x.symbol === currentSymbol);
-      return `Owned: ${h ? h.qty : 0}`;
-    })();
-  }
-  window.updateTotal = updateTotal;
-
-  function placeOrder() {
-    const m = currentMarket();
-    const qty = parseFloat(document.getElementById('ordQty').value) || 0;
-    if (qty <= 0) return alert('Enter a valid quantity.');
-    const px = orderType === 'limit' ? (parseFloat(document.getElementById('ordLimit').value) || m.price) : m.price;
-    TArenaMarket.placeOrder({ symbol: m.symbol, side, qty, price: px, type: orderType, status: orderType === 'market' ? 'filled' : 'open' });
-    const btn = document.getElementById('submitBtn');
-    const orig = btn.textContent;
-    btn.textContent = '✓ Order placed';
-    btn.style.opacity = '0.7';
-    setTimeout(() => { btn.textContent = orig; btn.style.opacity = '1'; renderLower(); }, 1500);
-  }
-  window.placeOrder = placeOrder;
-
-  // ----- Order book (simulated) -----
-  function renderOrderBook() {
-    const m = currentMarket();
-    if (!m) return;
-    const px = m.price;
-    const tickSize = px > 1000 ? 1 : px > 100 ? 0.05 : 0.01;
-    const asks = []; const bids = [];
-    let runAsk = 0; let runBid = 0;
-    for (let i = 5; i >= 1; i--) {
-      const p = +(px + tickSize * i).toFixed(2);
-      const q = Math.floor(200 + Math.random() * 1800);
-      runAsk += q;
-      asks.push({ p, q, run: runAsk });
-    }
-    for (let i = 1; i <= 5; i++) {
-      const p = +(px - tickSize * i).toFixed(2);
-      const q = Math.floor(200 + Math.random() * 1800);
-      runBid += q;
-      bids.push({ p, q, run: runBid });
-    }
-    const maxRun = Math.max(asks[0].run, bids[bids.length-1].run);
-    const askHtml = asks.map(a => `<div class="ob-row ask"><div class="bar" style="width:${(a.run/maxRun)*100}%;"></div><span class="px">$${a.p}</span><span class="qty">${a.q.toLocaleString()}</span><span class="tot">${a.run.toLocaleString()}</span></div>`).join('');
-    const bidHtml = bids.map(b => `<div class="ob-row bid"><div class="bar" style="width:${(b.run/maxRun)*100}%;"></div><span class="px">$${b.p}</span><span class="qty">${b.q.toLocaleString()}</span><span class="tot">${b.run.toLocaleString()}</span></div>`).join('');
-    const spread = asks[asks.length-1].p - bids[0].p;
-    const spreadPct = (spread / px) * 100;
-    document.getElementById('orderBook').innerHTML =
-      askHtml +
-      `<div class="ob-spread"><span class="lbl">Spread</span><span class="val">$${spread.toFixed(2)} · ${spreadPct.toFixed(3)}%</span></div>` +
-      bidHtml;
-  }
-
-  // ----- Lower tabs -----
-  let lowerTab = 'overview';
-  document.querySelector('.t-lower-tabs').addEventListener('click', e => {
-    if (!e.target.dataset.t) return;
-    lowerTab = e.target.dataset.t;
-    document.querySelectorAll('.t-lower-tab').forEach(b => b.classList.toggle('on', b === e.target));
-    renderLower();
-  });
-  function renderLower() {
-    const m = currentMarket();
-    if (!m) return;
-    const body = document.getElementById('lowerBody');
-    if (lowerTab === 'overview') {
-      body.innerHTML = `<div class="stat-grid">
-        <div class="stat-tile"><div class="l">Open</div><div class="v">$${(m.price * 0.997).toFixed(2)}</div></div>
-        <div class="stat-tile"><div class="l">Prev. close</div><div class="v">$${(m.price * (1 - m.change/100)).toFixed(2)}</div></div>
-        <div class="stat-tile"><div class="l">Day range</div><div class="v">$${(m.price*0.988).toFixed(2)} – $${(m.price*1.012).toFixed(2)}</div></div>
-        <div class="stat-tile"><div class="l">52w range</div><div class="v">$${m.low52.toLocaleString()} – $${m.high52.toLocaleString()}</div></div>
-        <div class="stat-tile"><div class="l">Volume</div><div class="v">${m.vol}</div></div>
-        <div class="stat-tile"><div class="l">Market cap</div><div class="v">${m.mcap}</div></div>
-      </div>`;
-    } else if (lowerTab === 'trades') {
-      const rows = [];
-      let p = m.price;
-      for (let i = 0; i < 12; i++) {
-        const dir = Math.random() > 0.5 ? 1 : -1;
-        p = +(p + dir * (Math.random() * (m.price * 0.001))).toFixed(2);
-        rows.push({ t: new Date(Date.now() - i * 1000 * (3 + Math.random()*30)), s: dir > 0 ? 'B' : 'S', p, q: Math.floor(50 + Math.random() * 1000) });
-      }
-      body.innerHTML = '<div class="trade-row" style="border-bottom:1px solid var(--bdl);font-size:10.5px;text-transform:uppercase;color:var(--muted);font-weight:700;letter-spacing:.08em;"><span>Time</span><span>Side</span><span class="px">Price</span><span class="v">Qty</span></div>' +
-        rows.map(r => `<div class="trade-row">
-          <span class="t">${r.t.toLocaleTimeString('en-AU',{hour12:false})}</span>
-          <span class="s ${r.s==='B'?'text-green':'text-red'}">${r.s==='B'?'Buy':'Sell'}</span>
-          <span class="px">$${r.p}</span>
-          <span class="v">${r.q.toLocaleString()}</span>
-        </div>`).join('');
-    } else if (lowerTab === 'orders') {
-      const orders = TArenaMarket.getOrders();
-      if (!orders.length) { body.innerHTML = '<div class="text-muted" style="text-align:center;padding:30px;">No orders yet. Place your first order on the right →</div>'; return; }
-      body.innerHTML = '<div class="trade-row" style="grid-template-columns:80px 1fr 1fr 1fr 80px;border-bottom:1px solid var(--bdl);font-size:10.5px;text-transform:uppercase;color:var(--muted);font-weight:700;letter-spacing:.08em;"><span>Time</span><span>Symbol</span><span>Side</span><span class="px">Price</span><span class="v">Qty</span></div>' +
-        orders.map(o => `<div class="trade-row" style="grid-template-columns:80px 1fr 1fr 1fr 80px;">
-          <span class="t">${new Date(o.ts).toLocaleTimeString('en-AU',{hour12:false})}</span>
-          <span class="s">${o.symbol.replace('.AX','')}</span>
-          <span class="s ${o.side==='buy'?'text-green':'text-red'}">${o.side.toUpperCase()}</span>
-          <span class="px">$${o.price}</span>
-          <span class="v">${o.qty}</span>
-        </div>`).join('');
-    }
-  }
-
-  // Initial render — mount chart + start live subscriptions.
-  renderSymbolHeader();
-  renderWatchlist();
+  toast(
+    `${state.side === 'buy' ? 'Bought' : 'Sold'} ${state.symbol.replace('.AX','')}`,
+    `${qty.toFixed(qty < 1 ? 4 : 2)} @ ${fmtMoney(px)}`
+  );
+  await loadHoldings();
+  renderStatsBar();
   renderLower();
-  syncLiveSubs();
-  ensureChart().catch(e => {
-    console.error('chart mount failed', e);
-    document.getElementById('tv_chart_container').innerHTML =
-      `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#a8c1db;font-family:'DM Sans',sans-serif;text-align:center;padding:32px;">
+  updateTotal();
+}
+window.placeOrder = placeOrder;
+
+// ============ HOLDINGS + STATS ============
+async function loadHoldings() {
+  // get_my_holdings() returns the materialized rollup of paper_trades.
+  const { data, error } = await TArenaDB.rpc('get_my_holdings');
+  if (error) {
+    console.warn('get_my_holdings failed', error.message);
+    state.holdings = [];
+  } else {
+    // Schema: holdings_view returns {owner_id, symbol, net_qty, avg_cost,
+    // open_legs, last_activity}. Map to UI's {symbol, qty, avg_price}.
+    state.holdings = (data || [])
+      .filter(h => Number(h.net_qty) > 0)
+      .map(h => ({
+        symbol:    h.symbol,
+        qty:       Number(h.net_qty),
+        avg_price: Number(h.avg_cost) || 0,
+      }));
+  }
+  // Always reload trades for the order-history tab too.
+  const { data: trades } = await TArenaDB
+    .from('paper_trades')
+    .select('id,symbol,side,qty,entry_price,opened_at,status,market')
+    .order('opened_at', { ascending: false })
+    .limit(50);
+  state.trades = trades || [];
+  // Lazy-fetch live prices for held symbols not already in PRICES.
+  const need = state.holdings.map(h => h.symbol).filter(s => CATALOG[s] && !PRICES[s]);
+  if (need.length) await fetchPrices(need);
+}
+
+function computeStats() {
+  let invested = 0, current = 0;
+  state.holdings.forEach(h => {
+    const px = (PRICES[h.symbol] && PRICES[h.symbol].price) || h.current_price || h.avg_price;
+    invested += h.qty * h.avg_price;
+    current  += h.qty * px;
+  });
+  const cash    = Math.max(0, STARTING_CAPITAL - invested);
+  const total   = cash + current;
+  const pnl     = total - STARTING_CAPITAL;
+  const pnlPct  = (pnl / STARTING_CAPITAL) * 100;
+  return { invested, current, cash, total, pnl, pnlPct, positions: state.holdings.length };
+}
+
+function renderStatsBar() {
+  const s = computeStats();
+  state.cash = s.cash;
+  document.getElementById('kTotal').textContent    = fmtMoney(s.total, 2);
+  document.getElementById('kCash').textContent     = fmtMoney(s.cash, 2);
+  document.getElementById('kInvested').textContent = fmtMoney(s.current, 2);
+  document.getElementById('kInvestedSub').textContent = `${s.positions} position${s.positions === 1 ? '' : 's'}`;
+  const up = s.pnl >= 0;
+  document.getElementById('kPnl').textContent = (up ? '+' : '−') + fmtMoney(Math.abs(s.pnl), 2).slice(1);
+  document.getElementById('kPnl').className   = 'v ' + (up ? 'text-green' : 'text-red');
+  document.getElementById('kPnlSub').innerHTML = `<span class="${up ? 'text-green' : 'text-red'}">${fmtPct(s.pnlPct)}</span>`;
+  document.getElementById('kTotalSub').textContent = up ? `Up ${fmtPct(s.pnlPct)} from start` : `Down ${fmtPct(s.pnlPct)} from start`;
+  document.getElementById('cashLine').textContent = fmtMoney(s.cash, 2);
+}
+
+// ============ BOTTOM TABS ============
+document.querySelectorAll('.lower-tab').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.lower-tab').forEach(x => x.classList.toggle('on', x === b));
+  state.lowerTab = b.dataset.t;
+  renderLower();
+}));
+
+function renderLower() {
+  const body = document.getElementById('lowerBody');
+  if (state.lowerTab === 'hold') {
+    if (!state.holdings.length) {
+      body.innerHTML = `<div class="tbl-empty">No holdings yet — place your first order using the right panel.</div>`;
+      return;
+    }
+    const rows = state.holdings.map(h => {
+      const px   = (PRICES[h.symbol] && PRICES[h.symbol].price) || h.current_price || h.avg_price;
+      const val  = h.qty * px;
+      const cost = h.qty * h.avg_price;
+      const pnl  = val - cost;
+      const pnlPct = cost ? (pnl / cost) * 100 : 0;
+      const up = pnl >= 0;
+      return `<tr>
+        <td><strong>${esc(h.symbol.replace('.AX',''))}</strong> <span class="text-muted" style="font-size:11px;">${esc((CATALOG[h.symbol]||{}).name || '')}</span></td>
+        <td class="num">${h.qty.toLocaleString('en-AU',{maximumFractionDigits: h.qty < 1 ? 4 : 2})}</td>
+        <td class="num">${fmtMoney(h.avg_price)}</td>
+        <td class="num">${fmtMoney(px)}</td>
+        <td class="num">${fmtMoney(val, 2)}</td>
+        <td class="num ${up ? 'text-green' : 'text-red'}">${(up?'+':'-')}${fmtMoney(Math.abs(pnl),2).slice(1)} <span style="opacity:.75">(${fmtPct(pnlPct)})</span></td>
+      </tr>`;
+    }).join('');
+    body.innerHTML = `<table class="tbl"><thead><tr>
+      <th>Symbol</th><th class="num">Shares</th><th class="num">Avg</th><th class="num">Current</th><th class="num">Value</th><th class="num">P&amp;L</th>
+    </tr></thead><tbody>${rows}</tbody></table>`;
+  }
+  else if (state.lowerTab === 'orders') {
+    if (!state.trades.length) {
+      body.innerHTML = `<div class="tbl-empty">No orders yet.</div>`;
+      return;
+    }
+    const rows = state.trades.map(t => {
+      const total = (Number(t.qty) || 0) * (Number(t.entry_price) || 0);
+      const when  = new Date(t.opened_at).toLocaleString('en-AU', { hour12: false });
+      return `<tr>
+        <td><span class="pill ${t.side}">${esc(t.side)}</span></td>
+        <td><strong>${esc((t.symbol||'').replace('.AX',''))}</strong></td>
+        <td class="num">${Number(t.qty).toLocaleString('en-AU',{maximumFractionDigits: Number(t.qty) < 1 ? 4 : 2})}</td>
+        <td class="num">${fmtMoney(Number(t.entry_price))}</td>
+        <td class="num">${fmtMoney(total, 2)}</td>
+        <td class="text-muted" style="font-size:11px;">${esc(when)}</td>
+      </tr>`;
+    }).join('');
+    body.innerHTML = `<table class="tbl"><thead><tr>
+      <th>Side</th><th>Symbol</th><th class="num">Qty</th><th class="num">Price</th><th class="num">Total</th><th>Time</th>
+    </tr></thead><tbody>${rows}</tbody></table>`;
+  }
+  else { // movers — top 5 gainers + top 5 losers across CATALOG
+    const items = Object.keys(CATALOG)
+      .map(s => ({ s, def: CATALOG[s], px: PRICES[s] }))
+      .filter(x => x.px && typeof x.px.change === 'number')
+      .sort((a, b) => b.px.change - a.px.change);
+    const gainers = items.slice(0, 5);
+    const losers  = items.slice(-5).reverse();
+    function row(x) {
+      const up = x.px.change >= 0;
+      return `<tr onclick="selectSymbol('${x.s}')" style="cursor:pointer;">
+        <td><strong>${esc(x.s.replace('.AX',''))}</strong> <span class="text-muted" style="font-size:11px;">${esc(x.def.name)}</span></td>
+        <td class="num">${fmtMoney(x.px.price)}</td>
+        <td class="num ${up ? 'text-green' : 'text-red'}">${fmtPct(x.px.change)}</td>
+      </tr>`;
+    }
+    if (!items.length) { body.innerHTML = `<div class="tbl-empty">Loading market data…</div>`; return; }
+    body.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
         <div>
-          <div style="font-size:32px;margin-bottom:12px;opacity:.6;">⚠️</div>
-          <div style="font-weight:700;color:#fff;">Chart failed to load</div>
-          <div style="font-size:12px;opacity:.7;margin-top:6px;">${e.message}</div>
+          <div class="t-h" style="margin-bottom:9px;">Top gainers <i class="fa-solid fa-arrow-trend-up text-green" style="font-size:10px;"></i></div>
+          <table class="tbl"><tbody>${gainers.map(row).join('')}</tbody></table>
+        </div>
+        <div>
+          <div class="t-h" style="margin-bottom:9px;">Top losers <i class="fa-solid fa-arrow-trend-down text-red" style="font-size:10px;"></i></div>
+          <table class="tbl"><tbody>${losers.map(row).join('')}</tbody></table>
         </div>
       </div>`;
-  });
+  }
+}
 
-  // Clean up subscriptions on page unload so we don't leak WS connections.
-  window.addEventListener('beforeunload', () => {
-    Object.keys(liveSubs).forEach(dropLive);
-    if (chartCtl) chartCtl.destroy();
-  });
+// ============ POLL LOOP — refresh every 10s ============
+async function tick() {
+  // Fetch prices for: every watchlist symbol + the currently-selected symbol +
+  // every held symbol. De-dup with a Set.
+  const wanted = new Set([...watchlist(), state.symbol, ...state.holdings.map(h => h.symbol)]);
+  await fetchPrices([...wanted].filter(s => CATALOG[s]));
+  renderWatchlist();
+  renderSymbolHeader();
+  renderStatsBar();
+  if (state.lowerTab === 'movers' || state.lowerTab === 'hold') renderLower();
+}
 
-  console.log('%cTradeArena · Markets ready.', 'color:#e8c060;font-weight:700;');
+// ============ BOOT ============
+(async function init() {
+  // 1. Mount chart shell (synchronous after the CDN script tag has loaded)
+  mountChart();
+  // 2. Load holdings + trades from Supabase
+  await loadHoldings();
+  // 3. First price fetch for the catalogue (covers watchlist, current, holdings)
+  const initSyms = new Set([...watchlist(), state.symbol, ...state.holdings.map(h => h.symbol),
+                            // also seed forex + a couple of crypto so movers tab has data
+                            'AUDUSD','EURUSD','SOL']);
+  await fetchPrices([...initSyms].filter(s => CATALOG[s]));
+  // 4. Initial render
+  renderWatchlist();
+  renderSymbolHeader();
+  renderStatsBar();
+  refreshChart();
+  renderLower();
+  // 5. Start the 10s poll (handle saved for clean teardown on unload)
+  pollHandle = setInterval(tick, 10000);
+  console.log('%cTradeArena · Markets ready', 'color:#e8c060;font-weight:700;');
+})();
 </script>
+
 </body>
 </html>

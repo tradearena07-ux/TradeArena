@@ -1,0 +1,119 @@
+You are rebuilding trade.html completely from scratch. 
+
+DESIGN INSPIRATION: Groww.in trading dashboard but in TradeArena's 
+existing dark navy/gold theme.
+
+STRICT DESIGN RULES - DO NOT CHANGE THESE:
+- Background: #060e1c (navy)
+- Accent: #c9a030 (gold) and #e8c060 (gold2)
+- Text: #f2e8cc (cream)
+- Muted text: #7a8aaa
+- Font: Cinzel (serif headings) + DM Sans (body)
+- Keep exact same CSS variables from existing trade.html
+- Keep TradeArena logo and branding
+
+LAYOUT (exactly like Groww but in navy/gold theme):
+
+1. TOP NAVIGATION BAR:
+- TradeArena logo (left)
+- Nav tabs: Markets | Watchlist | Portfolio | Learn | Profile
+- Search bar: "Search BHP, AAPL, BTC..."
+- Asset filters: All | ASX | US | Crypto | Forex
+- User avatar pill (top right) showing email initial + handle
+- Dropdown: View Profile | Portfolio | Trade | Sign Out
+
+2. LEFT SIDEBAR - WATCHLIST PANEL:
+- Shows 8 default assets with live prices
+- Each row: Symbol, Company name, Price, % change (green/red)
+- Clicking a row loads that asset's chart
+- Default watchlist: BHP, CBA, MQG, WDS, AAPL, TSLA, BTC, ETH
+
+3. MAIN CENTER - CHART PANEL:
+- Asset header: Logo/icon, Name, Exchange badge
+- Large price display + daily change
+- Stats row: Day High, Day Low, 52W High, Volume
+- TradingView Lightweight Charts candlestick chart
+- Timeframe buttons: 1m 5m 15m 1h 4h 1D 1W 1M
+- Chart fills full width, height 420px
+
+4. RIGHT SIDEBAR - TRADE PANEL:
+- "PLACE ORDER" header with asset symbol
+- Buy / Sell toggle tabs (green/red)
+- Market / Limit order type
+- Quantity input (in AUD $)
+- Quick amounts: $10 $50 $100 $500
+- Order summary: Price, Shares, Total
+- Execute button (green for buy, red for sell)
+- Cash balance display
+- Legal links: Terms | Privacy | Risk Disclaimer
+
+5. BOTTOM SECTION (below chart):
+- Tab row: Holdings | Order History | Market Movers
+- Holdings table: Symbol, Shares, Avg Price, Current Value, P&L
+- Order History: Buy/Sell badge, Symbol, Shares, Price, Total, Time
+- Market Movers: Top gainers and losers of the day
+
+6. STATS BAR (top of page below nav):
+- Total Portfolio value
+- Cash Available  
+- Invested Value
+- Total P&L (green/red)
+
+LIVE DATA - Connect these 3 APIs:
+
+STOCKS (ASX + US) via Alpaca sandbox:
+- Base URL: https://data.sandbox.alpaca.markets/v2
+- Key: [YOUR ALPACA KEY]
+- Secret: [YOUR ALPACA SECRET]
+- Fetch prices for: BHP, CBA, MQG, WDS, AAPL, TSLA, NVDA, MSFT, AMZN
+
+CRYPTO via CoinGecko (no key needed):
+- URL: https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=aud&include_24hr_change=true
+- Assets: BTC, ETH, SOL
+
+FOREX via Frankfurter (no key needed):
+- URL: https://api.frankfurter.dev/v2/rates?base=USD&symbols=AUD,EUR,GBP,JPY
+- Pairs: AUD/USD, EUR/USD, GBP/USD
+
+- Refresh all prices every 10 seconds
+- Show green pulse dot when data is live
+- Fall back to last known price if API fails
+- Show loading skeleton while fetching
+
+SUPABASE - Keep exact same config from existing trade.html:
+- URL: https://chncykagtzotdtflkhim.supabase.co
+- Same anon key
+- Same portfolios, holdings, trades tables
+- Auth gate: redirect to auth.html if not logged in
+
+CANDLESTICK CHART:
+- Use TradingView Lightweight Charts library
+- CDN: https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js
+- Generate realistic OHLCV sample data for each timeframe
+- Chart colors: green candles #4ade80, red candles #f87171
+- Background: #060e1c, grid lines: rgba(201,160,48,0.08)
+- Crosshair color: #c9a030
+
+TRADING LOGIC (keep from existing trade.html):
+- Buy: deduct from cash_balance, add to holdings, log in trades table
+- Sell: add to cash_balance, reduce holdings, log in trades table
+- Minimum trade: $1
+- Show toast notification on successful trade
+- Update portfolio stats instantly after trade
+
+MOBILE RESPONSIVE:
+- Below 768px: hide left sidebar, show as bottom sheet
+- Chart panel goes full width
+- Trade panel slides up from bottom on mobile
+- Keep all functionality on mobile
+
+DO NOT:
+- Change the navy/gold color scheme
+- Remove Supabase integration
+- Remove auth gate
+- Use any external CSS frameworks
+- Break the existing auth flow
+
+The final result should look like a professional fintech 
+trading platform - think Groww meets Bloomberg Terminal 
+but in TradeArena's dark gold theme.
