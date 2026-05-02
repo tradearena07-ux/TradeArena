@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Account · TradeArena</title>
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link rel="stylesheet" href="assets/styles.css"/>
+<style>
+  /* ---------- Account page (Groww-style settings) ---------- */
+  .ac-wrap{max-width:1180px;margin:32px auto 80px;padding:0 22px;
+           display:grid;grid-template-columns:300px 1fr;gap:24px;align-items:start;}
+  @media(max-width:880px){.ac-wrap{grid-template-columns:1fr;}}
+
+  /* Sidebar card */
+  .ac-side{background:var(--navy2);border:1px solid var(--bdl);border-radius:14px;
+           overflow:hidden;position:sticky;top:90px;}
+  .ac-side-head{padding:22px 18px 18px;text-align:center;border-bottom:1px solid var(--bdl);}
+  .ac-side-head .av-wrap{display:flex;justify-content:center;margin-bottom:10px;}
+  .ac-side-head .name{font-family:'Cinzel',serif;font-size:15px;font-weight:700;
+                      color:var(--cream);letter-spacing:.02em;}
+  .ac-side-head .handle{color:var(--muted);font-size:11.5px;margin-top:2px;}
+  .ac-side-head .tier{display:inline-block;margin-top:8px;padding:2px 9px;border-radius:9999px;
+                      font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+                      background:rgba(201,160,48,.12);color:var(--gold2);
+                      border:1px solid rgba(201,160,48,.28);}
+  .ac-nav{padding:6px 0;}
+  .ac-nav button{
+    width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:11px 18px;background:transparent;border:none;color:var(--cream);
+    font-family:inherit;font-size:13px;cursor:pointer;text-align:left;
+    border-left:3px solid transparent;transition:background .15s, color .15s, border-color .15s;
+  }
+  .ac-nav button .lbl{display:flex;align-items:center;gap:11px;}
+  .ac-nav button .lbl i{width:16px;font-size:13px;color:var(--muted);transition:color .15s;}
+  .ac-nav button .chev{color:var(--muted);font-size:10px;opacity:.6;}
+  .ac-nav button:hover{background:rgba(201,160,48,.05);}
+  .ac-nav button:hover .lbl i{color:var(--gold2);}
+  .ac-nav button.on{background:rgba(201,160,48,.10);color:var(--gold2);
+                    border-left-color:var(--gold);font-weight:600;}
+  .ac-nav button.on .lbl i{color:var(--gold2);}
+  .ac-nav button.danger{color:#fca5a5;}
+  .ac-nav button.danger .lbl i{color:#f87171;}
+  .ac-nav button.danger:hover{background:rgba(248,113,113,.06);}
+  .ac-nav-sep{height:1px;background:var(--bdl);margin:6px 0;}
+
+  /* Right pane */
+  .ac-main{background:var(--navy2);border:1px solid var(--bdl);border-radius:14px;
+           padding:26px 28px;min-height:520px;}
+  .ac-main h2{font-family:'Cinzel',serif;font-size:20px;font-weight:700;color:var(--cream);
+              margin:0 0 4px;letter-spacing:.02em;}
+  .ac-main .sub{color:var(--muted);font-size:12.5px;margin-bottom:22px;}
+  .ac-section{display:none;}
+  .ac-section.on{display:block;animation:fadeIn .18s ease-out;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+  /* Form rows (Groww-style: label above value, divider line) */
+  .ac-row{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;
+          padding:18px 0;border-bottom:1px solid var(--bdl);}
+  .ac-row:last-child{border-bottom:none;}
+  .ac-row .lab{flex:1;}
+  .ac-row .lab .k{color:var(--muted);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;}
+  .ac-row .lab .v{color:var(--cream);font-size:14px;font-weight:600;margin-top:4px;}
+  .ac-row .lab .hint{color:var(--muted);font-size:12px;margin-top:4px;line-height:1.45;}
+  .ac-row .ctrl{flex-shrink:0;}
+
+  /* Toggle switch */
+  .ac-toggle{position:relative;width:42px;height:23px;display:inline-block;cursor:pointer;}
+  .ac-toggle input{opacity:0;width:0;height:0;}
+  .ac-toggle .sl{position:absolute;inset:0;background:rgba(255,255,255,.08);
+                 border:1px solid var(--bdl);border-radius:9999px;transition:.18s;}
+  .ac-toggle .sl::before{content:'';position:absolute;top:2px;left:2px;width:17px;height:17px;
+                         background:var(--cream);border-radius:50%;transition:.18s;}
+  .ac-toggle input:checked + .sl{background:rgba(201,160,48,.28);border-color:var(--gold);}
+  .ac-toggle input:checked + .sl::before{transform:translateX(19px);background:var(--gold);}
+
+  /* Inputs / buttons */
+  .ac-input{background:var(--navy3);border:1px solid var(--border);border-radius:8px;
+            padding:9px 12px;color:var(--cream);font-family:inherit;font-size:13px;
+            width:100%;outline:none;transition:border-color .15s;}
+  .ac-input:focus{border-color:var(--gold);}
+  .ac-form{display:grid;gap:14px;max-width:420px;margin-top:8px;}
+  .ac-form label{display:block;color:var(--muted);font-size:11.5px;letter-spacing:.04em;
+                 text-transform:uppercase;margin-bottom:5px;}
+  .ac-btn{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;
+          background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a1208;
+          border:none;border-radius:9999px;font-family:'DM Sans',sans-serif;font-weight:700;
+          font-size:13px;cursor:pointer;letter-spacing:.04em;
+          box-shadow:0 4px 14px rgba(201,160,48,.25);transition:transform .12s, box-shadow .15s;}
+  .ac-btn:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(201,160,48,.35);}
+  .ac-btn:disabled{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none;}
+  .ac-btn.ghost{background:transparent;color:var(--cream);border:1px solid var(--bdl);
+                box-shadow:none;}
+  .ac-btn.ghost:hover{border-color:var(--gold);color:var(--gold2);}
+  .ac-btn.danger{background:linear-gradient(135deg,#dc2626,#f87171);color:#fff;
+                 box-shadow:0 4px 14px rgba(248,113,113,.25);}
+  .ac-btn.danger:hover{box-shadow:0 6px 18px rgba(248,113,113,.4);}
+
+  /* Stat tiles for overview */
+  .ac-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:8px;}
+  @media(max-width:760px){.ac-tiles{grid-template-columns:repeat(2,1fr);}}
+  .ac-tile{background:var(--navy3);border:1px solid var(--bdl);border-radius:11px;padding:14px;}
+  .ac-tile .k{color:var(--muted);font-size:11px;letter-spacing:.06em;text-transform:uppercase;}
+  .ac-tile .v{color:var(--cream);font-family:'Cinzel',serif;font-size:18px;font-weight:700;
+              margin-top:6px;}
+  .ac-tile .v.green{color:#34d399;} .ac-tile .v.red{color:#f87171;}
+
+  /* Inline status banner */
+  .ac-banner{padding:10px 13px;border-radius:9px;font-size:12.5px;margin-top:12px;display:none;}
+  .ac-banner.show{display:block;}
+  .ac-banner.ok{background:rgba(52,211,153,.10);border:1px solid rgba(52,211,153,.32);color:#6ee7b7;}
+  .ac-banner.err{background:rgba(248,113,113,.10);border:1px solid rgba(248,113,113,.32);color:#fca5a5;}
+
+  /* Device card */
+  .ac-device{background:var(--navy3);border:1px solid var(--bdl);border-radius:11px;
+             padding:14px 16px;display:flex;align-items:center;justify-content:space-between;
+             gap:14px;margin-top:12px;}
+  .ac-device .icon{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;
+                   justify-content:center;background:rgba(201,160,48,.10);color:var(--gold2);
+                   font-size:15px;flex-shrink:0;}
+  .ac-device .meta .t{color:var(--cream);font-weight:600;font-size:13.5px;}
+  .ac-device .meta .s{color:var(--muted);font-size:11.5px;margin-top:2px;}
+  .ac-device .pill-now{background:rgba(52,211,153,.12);color:#6ee7b7;
+                       border:1px solid rgba(52,211,153,.32);
+                       padding:3px 10px;border-radius:9999px;font-size:10.5px;font-weight:700;
+                       text-transform:uppercase;letter-spacing:.06em;}
+
+  /* Loading skeleton */
+  .ac-skel{height:120px;background:linear-gradient(90deg,var(--navy3) 0%,var(--navy2) 50%,var(--navy3) 100%);
+           background-size:200% 100%;animation:skel 1.4s ease-in-out infinite;
+           border-radius:11px;border:1px solid var(--bdl);}
+  @keyframes skel{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+</style>
+</head>
+<body>
+<div id="tarena-nav"></div>
+
+<main class="ac-wrap">
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="ac-side">
+    <div class="ac-side-head">
+      <div class="av-wrap" id="acSideAv"></div>
+      <div class="name" id="acSideName">—</div>
+      <div class="handle" id="acSideHandle">@—</div>
+      <div class="tier" id="acSideTier">Member</div>
+    </div>
+    <nav class="ac-nav" id="acNav">
+      <button data-pane="overview" class="on">
+        <span class="lbl"><i class="fa-solid fa-gauge-high"></i> Overview</span>
+        <i class="fa-solid fa-chevron-right chev"></i>
+      </button>
+      <button data-pane="reports">
+        <span class="lbl"><i class="fa-solid fa-file-arrow-down"></i> Reports</span>
+        <i class="fa-solid fa-chevron-right chev"></i>
+      </button>
+      <button data-pane="password">
+        <span class="lbl"><i class="fa-solid fa-key"></i> Change password</span>
+        <i class="fa-solid fa-chevron-right chev"></i>
+      </button>
+      <button data-pane="controls">
+        <span class="lbl"><i class="fa-solid fa-sliders"></i> Trading controls</span>
+        <i class="fa-solid fa-chevron-right chev"></i>
+      </button>
+      <button data-pane="trading-details">
+        <span class="lbl"><i class="fa-solid fa-circle-dollar-to-slot"></i> Trading details</span>
+        <i class="fa-solid fa-chevron-right chev"></i>
+      </button>
+      <button data-pane="notifications">
+        <span class="lbl"><i class="fa-regular fa-bell"></i> Notifications</span>
+        <i class="fa-solid fa-chevron-right chev"></i>
+      </button>
+      <button data-pane="privacy">
+        <span class="lbl"><i class="fa-solid fa-eye-slash"></i> Privacy</span>
+        <i class="fa-solid fa-chevron-right chev"></i>
+      </button>
+      <button data-pane="devices">
+        <span class="lbl"><i class="fa-solid fa-laptop"></i> Active devices</span>
+        <i class="fa-solid fa-chevron-right chev"></i>
+      </button>
+      <button data-pane="support">
+        <span class="lbl"><i class="fa-regular fa-circle-question"></i> Help &amp; support</span>
+        <i class="fa-solid fa-chevron-right chev"></i>
+      </button>
+      <div class="ac-nav-sep"></div>
+      <button data-pane="report" class="danger">
+        <span class="lbl"><i class="fa-solid fa-triangle-exclamation"></i> Report a problem</span>
+        <i class="fa-solid fa-chevron-right chev"></i>
+      </button>
+      <button id="acSignOut" class="danger">
+        <span class="lbl"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out</span>
+        <i class="fa-solid fa-chevron-right chev"></i>
+      </button>
+    </nav>
+  </aside>
+
+  <!-- ============ RIGHT PANE ============ -->
+  <section class="ac-main">
+
+    <!-- Overview -->
+    <div class="ac-section on" data-pane="overview">
+      <h2>Overview</h2>
+      <div class="sub">A snapshot of your TradeArena account.</div>
+      <div class="ac-tiles" id="acTiles">
+        <div class="ac-skel"></div><div class="ac-skel"></div>
+        <div class="ac-skel"></div><div class="ac-skel"></div>
+      </div>
+      <div class="ac-row" style="margin-top:18px;">
+        <div class="lab">
+          <div class="k">Display name</div>
+          <div class="v" id="ovName">—</div>
+        </div>
+      </div>
+      <div class="ac-row">
+        <div class="lab">
+          <div class="k">Username</div>
+          <div class="v" id="ovHandle">@—</div>
+        </div>
+      </div>
+      <div class="ac-row">
+        <div class="lab">
+          <div class="k">Email</div>
+          <div class="v" id="ovEmail">—</div>
+          <div class="hint">Used for sign-in and password resets. Contact support to change it.</div>
+        </div>
+      </div>
+      <div class="ac-row">
+        <div class="lab">
+          <div class="k">University</div>
+          <div class="v" id="ovUni">—</div>
+        </div>
+      </div>
+      <div class="ac-row">
+        <div class="lab">
+          <div class="k">Member since</div>
+          <div class="v" id="ovJoined">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reports -->
+    <div class="ac-section" data-pane="reports">
+      <h2>Reports</h2>
+      <div class="sub">Download your trading history for tax time, journaling, or your own analysis.</div>
+      <div class="ac-row">
+        <div class="lab">
+          <div class="v">Trade history (CSV)</div>
+          <div class="hint">Every paper trade you've placed — open, closed, and cancelled — with entry, exit,
+            P/L and timestamps.</div>
+        </div>
+        <div class="ctrl">
+          <button class="ac-btn" id="dlTradesCsv">
+            <i class="fa-solid fa-file-csv"></i> Download
+          </button>
+        </div>
+      </div>
+      <div class="ac-row">
+        <div class="lab">
+          <div class="v">Holdings snapshot (CSV)</div>
+          <div class="hint">Your current open positions across ASX, US, crypto and forex.</div>
+        </div>
+        <div class="ctrl">
+          <button class="ac-btn" id="dlHoldingsCsv">
+            <i class="fa-solid fa-file-csv"></i> Download
+          </button>
+        </div>
+      </div>
+      <div class="ac-row">
+        <div class="lab">
+          <div class="v">Closed P&amp;L statement (CSV)</div>
+          <div class="hint">Realised profit and loss on every closed trade — useful as a paper-trading
+            performance log.</div>
+        </div>
+        <div class="ctrl">
+          <button class="ac-btn" id="dlPnlCsv">
+            <i class="fa-solid fa-file-csv"></i> Download
+          </button>
+        </div>
+      </div>
+      <div class="ac-banner" id="reportsMsg"></div>
+    </div>
+
+    <!-- Change password -->
+    <div class="ac-section" data-pane="password">
+      <h2>Change password</h2>
+      <div class="sub">Choose a strong password — at least 6 characters.</div>
+      <form class="ac-form" id="pwForm" autocomplete="off">
+        <div>
+          <label for="pwNew">New password</label>
+          <input type="password" id="pwNew" class="ac-input" minlength="6" required/>
+        </div>
+        <div>
+          <label for="pwConfirm">Confirm new password</label>
+          <input type="password" id="pwConfirm" class="ac-input" minlength="6" required/>
+        </div>
+        <div>
+          <button type="submit" class="ac-btn" id="pwSave">
+            <i class="fa-solid fa-key"></i> Update password
+          </button>
+        </div>
+        <div class="ac-banner" id="pwMsg"></div>
+      </form>
+    </div>
+
+    <!-- Trading controls -->
+    <div class="ac-section" data-pane="controls">
+      <h2>Trading controls</h2>
+      <div class="sub">Add a few guard-rails to keep your paper trading deliberate.</div>
+      <div class="ac-row">
+        <div class="lab">
+          <div class="v">Confirm before placing a trade</div>
+          <div class="hint">Show a confirmation dialog whenever you submit a buy or sell order.</div>
+        </div>
+        <div class="ctrl"><label class="ac-toggle"><input type="checkbox" data-pref="confirmTrade"/><span class="sl"></span></label></div>
+      </div>
+      <div class="ac-row">
+        <div class="lab">
+          <div class="v">Warn on large positions</div>
+          <div class="hint">Flash a warning if a single trade would use more than 25% of your cash.</div>
+        </div>
+        <div class="ctrl"><label class="ac-toggle"><input type="checkbox" data-pref="warnLarge"/><span class="sl"></span></label></div>
+      </div>
+      <div class="ac-row">
+        <div class="lab">
+          <div class="v">Daily loss soft-stop</div>
+          <div class="hint">Pop a "take a break" reminder once your day's P&amp;L drops past −5%.</div>
+        </div>
+        <div class="ctrl"><label class="ac-toggle"><input type="checkbox" data-pref="dailyStop"/><span class="sl"></span></label></div>
+      </div>
+      <div class="ac-row">
+        <div class="lab">
+          <div class="v">Auto-attach stop loss prompt</div>
+          <div class="hint">Always ask for a stop-loss price when you open a new long position.</div>
+        </div>
+        <div class="ctrl"><label class="ac-toggle"><input type="checkbox" data-pref="askStop"/><span class="sl"></span></label></div>
+      </div>
+      <div class="ac-banner ok show" style="margin-top:18px;">
+        <i class="fa-solid fa-circle-info"></i> Settings save automatically and apply the next time you place a trade.
+      </div>
+    </div>
+
+    <!-- Trading details -->
+    <div class="ac-section" data-pane="trading-details">
+      <h2>Trading details</h2>
+      <div class="sub">Your account-level paper-trading parameters.</div>
+      <div class="ac-row">
+        <div class="lab"><div class="k">Starting balance</div><div class="v">$100,000.00 AUD</div>
+          <div class="hint">Every TradeArena member starts with the same paper bank.</div></div>
+      </div>
+      <div class="ac-row">
+        <div class="lab"><div class="k">Brokerage</div><div class="v" id="tdBroker">$0.00 per trade</div>
+          <div class="hint">Free for the first 500 founding members.</div></div>
+      </div>
+      <div class="ac-row">
+        <div class="lab"><div class="k">Markets enabled</div><div class="v">ASX · US · Crypto · Forex</div></div>
+      </div>
+      <div class="ac-row">
+        <div class="lab"><div class="k">Leverage</div><div class="v">1× (cash account)</div>
+          <div class="hint">Margin and shorting come in a future release.</div></div>
+      </div>
+      <div class="ac-row">
+        <div class="lab"><div class="k">Order types</div><div class="v">Market · Limit · Stop</div></div>
+      </div>
+      <div class="ac-row">
+        <div class="lab"><div class="k">Settlement</div><div class="v">T+0 simulated</div>
+          <div class="hint">Cash from a closed trade is available immediately.</div></div>
+      </div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="ac-section" data-pane="notifications">
+      <h2>Notifications</h2>
+      <div class="sub">Pick how loud TradeArena should be. None of these send anything yet — they save your
+        preference for when each channel goes live.</div>
+      <div class="ac-row">
+        <div class="lab">
+          <div class="v">Daily portfolio email</div>
+          <div class="hint">A short morning recap of your open positions and yesterday's P&amp;L.</div>
+        </div>
+        <div class="ctrl"><label class="ac-toggle"><input type="checkbox" data-pref="notifDaily"/><span class="sl"></span></label></div>
+      </div>
+      <div class="ac-row">
+        <div class="lab">
+          <div class="v">Weekly leaderboard digest</div>
+          <div class="hint">Where you placed in your campus league each week.</div>
+        </div>
+        <div class="ctrl"><label class="ac-toggle"><input type="checkbox" data-pref="notifWeekly"/><span class="sl"></span></label></div>
+      </div>
+      <div class="ac-row">
+        <div class="lab">
+          <div class="v">Stop-loss / target hit</div>
+          <div class="hint">Browser push when one of your trades closes automatically.</div>
+        </div>
+        <div class="ctrl"><label class="ac-toggle"><input type="checkbox" data-pref="notifStop"/><span class="sl"></span></label></div>
+      </div>
+      <div class="ac-row">
+        <div class="lab">
+          <div class="v">New follower</div>
+          <div class="hint">Tell me when someone new follows my profile.</div>
+        </div>
+        <div class="ctrl"><label class="ac-toggle"><input type="checkbox" data-pref="notifFollow"/><span class="sl"></span></label></div>
+      </div>
+      <div class="ac-row">
+        <div class="lab">
+          <div class="v">Reel mentions &amp; comments</div>
+          <div class="hint">Replies on your trade ideas and reels you've posted.</div>
+        </div>
+        <div class="ctrl"><label class="ac-toggle"><input type="checkbox" data-pref="notifReels"/><span class="sl"></span></label></div>
+      </div>
+    </div>
+
+    <!-- Privacy -->
+    <div class="ac-section" data-pane="privacy">
+      <h2>Privacy</h2>
+      <div class="sub">Pick exactly what's visible on your public profile. Changes save instantly.</div>
+      <div id="privList">
+        <div class="ac-skel" style="height:60px;"></div>
+      </div>
+      <div class="ac-banner" id="privMsg"></div>
+    </div>
+
+    <!-- Active devices -->
+    <div class="ac-section" data-pane="devices">
+      <h2>Active devices</h2>
+      <div class="sub">Sessions currently signed in to your account.</div>
+      <div id="deviceList"></div>
+      <div style="margin-top:18px;">
+        <button class="ac-btn ghost" id="signOutAll">
+          <i class="fa-solid fa-power-off"></i> Sign out of all devices
+        </button>
+      </div>
+      <div class="ac-banner" id="devMsg"></div>
+    </div>
+
+    <!-- Help & support -->
+    <div class="ac-section" data-pane="support">
+      <h2>Help &amp; support</h2>
+      <div class="sub">Stuck on something? Found a bug? We'd love to hear from you.</div>
+      <div class="ac-row">
+        <div class="lab">
+          <div class="v">Documentation</div>
+          <div class="hint">Browse guides on how paper trading, leagues and reels work.</div>
+        </div>
+        <div class="ctrl"><a class="ac-btn ghost" href="reels.html"><i class="fa-solid fa-book-open"></i> Open guide</a></div>
+      </div>
+      <div class="ac-row">
+        <div class="lab">
+          <div class="v">Community</div>
+          <div class="hint">Compare strategies and ask questions in the Reels feed.</div>
+        </div>
+        <div class="ctrl"><a class="ac-btn ghost" href="reels.html"><i class="fa-solid fa-comments"></i> Visit reels</a></div>
+      </div>
+      <div class="ac-row">
+        <div class="lab">
+          <div class="v">Contact support</div>
+          <div class="hint">Email the team — we usually reply within a business day.</div>
+        </div>
+        <div class="ctrl"><a class="ac-btn" href="mailto:hello@tradearena.app"><i class="fa-regular fa-envelope"></i> hello@tradearena.app</a></div>
+      </div>
+    </div>
+
+    <!-- Report a problem -->
+    <div class="ac-section" data-pane="report">
+      <h2>Report a problem</h2>
+      <div class="sub">Spotted a broken price feed, a suspicious trader, or something that just feels off?
+        Send us a note.</div>
+      <form class="ac-form" id="reportForm" style="max-width:560px;">
+        <div>
+          <label for="repType">What's wrong?</label>
+          <select id="repType" class="ac-input">
+            <option value="bug">Bug or broken feature</option>
+            <option value="data">Wrong price / data feed</option>
+            <option value="user">Suspicious user or trade</option>
+            <option value="abuse">Harassment or spam in reels</option>
+            <option value="other">Something else</option>
+          </select>
+        </div>
+        <div>
+          <label for="repDetails">Tell us a bit more</label>
+          <textarea id="repDetails" class="ac-input" rows="5" required
+                    placeholder="What were you doing? What happened? What were you expecting?"></textarea>
+        </div>
+        <div>
+          <button type="submit" class="ac-btn">
+            <i class="fa-solid fa-paper-plane"></i> Send report
+          </button>
+        </div>
+        <div class="ac-banner" id="repMsg"></div>
+      </form>
+    </div>
+
+  </section>
+</main>
+
+<div id="tarena-footer"></div>
+
+<script src="assets/config.js"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="assets/supabase.js"></script>
+<script src="assets/app.js"></script>
+<script>
+(async function () {
+  // -------- Auth gate --------
+  const session = await TArenaAuth.requireAuth();   // redirects to /auth.html if not signed in
+  if (!session) return;
+  const u  = session.user;
+  const sb = TArenaDB;
+
+  // -------- Nav + footer --------
+  TArenaUI.renderNav('profile');
+  if (TArenaUI.renderFooter) TArenaUI.renderFooter();
+
+  // -------- Sidebar header --------
+  document.getElementById('acSideAv').innerHTML  = TArenaUI.avatarHtml(u, 64, { gold: true });
+  document.getElementById('acSideName').textContent   = u.displayName || u.handle || 'Trader';
+  document.getElementById('acSideHandle').textContent = '@' + (u.handle || 'trader');
+  document.getElementById('acSideTier').textContent   = u.tier || 'Member';
+
+  // -------- Pane switcher --------
+  const navBtns = document.querySelectorAll('#acNav button[data-pane]');
+  const panes   = document.querySelectorAll('.ac-section');
+  function switchTo(pane) {
+    navBtns.forEach(b => b.classList.toggle('on', b.dataset.pane === pane));
+    panes.forEach(p   => p.classList.toggle('on',  p.dataset.pane === pane));
+    if (location.hash !== '#' + pane) history.replaceState(null, '', '#' + pane);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  navBtns.forEach(b => b.addEventListener('click', () => switchTo(b.dataset.pane)));
+  // Honour deep links: #reports, #privacy, etc. — both on first paint
+  // AND on subsequent back/forward navigation or manual hash edits.
+  function syncFromHash() {
+    if (!location.hash) return;
+    const want = location.hash.slice(1);
+    if ([...navBtns].some(b => b.dataset.pane === want)) switchTo(want);
+  }
+  syncFromHash();
+  window.addEventListener('hashchange', syncFromHash);
+
+  // -------- Sign out (sidebar) --------
+  document.getElementById('acSignOut').addEventListener('click', async () => {
+    try { await sb.auth.signOut(); } catch (_) {}
+    location.href = 'index.html';
+  });
+
+  // ============================================================
+  //  OVERVIEW pane — quick stats + identity
+  // ============================================================
+  (async function loadOverview() {
+    document.getElementById('ovName').textContent   = u.displayName || '—';
+    document.getElementById('ovHandle').textContent = '@' + (u.handle || '—');
+    document.getElementById('ovEmail').textContent  = u.email || '—';
+    document.getElementById('ovUni').textContent    = u.university || 'Public';
+    const created = u.createdAt || (session.user && session.user.created_at);
+    document.getElementById('ovJoined').textContent = created
+      ? new Date(created).toLocaleDateString(undefined, { day:'numeric', month:'long', year:'numeric' })
+      : '—';
+
+    // Pull stats in parallel.
+    const [tradesRes, holdRes, cashRes] = await Promise.all([
+      sb.from('paper_trades').select('id,status,entry_price,exit_price,qty').eq('owner_id', u.id),
+      sb.rpc('get_holdings_for', { p_owner: u.id }),
+      sb.rpc('get_cash_balance_for', { p_owner: u.id }),
+    ]);
+    const trades = tradesRes.data || [];
+    const closed = trades.filter(t => t.status === 'closed' && t.exit_price != null);
+    let pnl = 0;
+    closed.forEach(t => { pnl += (Number(t.exit_price) - Number(t.entry_price)) * Number(t.qty); });
+    const wins = closed.filter(t =>
+      (Number(t.exit_price) - Number(t.entry_price)) * Number(t.qty) > 0).length;
+    const winRate = closed.length ? (wins / closed.length) * 100 : 0;
+    const cash    = (cashRes && cashRes.data != null) ? Number(cashRes.data) : 100000;
+    const openN   = (holdRes && Array.isArray(holdRes.data)) ? holdRes.data.length : 0;
+
+    document.getElementById('acTiles').innerHTML = `
+      <div class="ac-tile"><div class="k">Cash balance</div>
+        <div class="v">${TArenaUI.fmtMoney(cash)}</div></div>
+      <div class="ac-tile"><div class="k">All-time P&amp;L</div>
+        <div class="v ${pnl >= 0 ? 'green' : 'red'}">${pnl >= 0 ? '+' : ''}${TArenaUI.fmtMoney(pnl)}</div></div>
+      <div class="ac-tile"><div class="k">Win rate</div>
+        <div class="v">${closed.length ? winRate.toFixed(1) + '%' : '—'}</div></div>
+      <div class="ac-tile"><div class="k">Open positions</div>
+        <div class="v">${openN}</div></div>`;
+  })().catch(err => {
+    console.warn('overview load failed', err);
+    document.getElementById('acTiles').innerHTML =
+      '<div class="ac-banner err show" style="grid-column:1/-1;">Couldn\'t load your stats. Try again in a moment.</div>';
+  });
+
+  // ============================================================
+  //  REPORTS pane — CSV downloads
+  // ============================================================
+  function toCsv(rows, columns) {
+    const esc = v => {
+      if (v == null) return '';
+      const s = String(v);
+      return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    };
+    const head = columns.map(c => c.label).join(',');
+    const body = rows.map(r => columns.map(c => esc(c.get(r))).join(',')).join('\n');
+    return head + '\n' + body + '\n';
+  }
+  function download(filename, csv) {
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a = Object.assign(document.createElement('a'), { href: url, download: filename });
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 500);
+  }
+  function reportMsg(kind, text) {
+    const el = document.getElementById('reportsMsg');
+    el.className = 'ac-banner show ' + kind;
+    el.textContent = text;
+    setTimeout(() => el.classList.remove('show'), 4000);
+  }
+
+  document.getElementById('dlTradesCsv').addEventListener('click', async () => {
+    const { data, error } = await sb.from('paper_trades')
+      .select('symbol,market,side,qty,entry_price,exit_price,stop_loss,target,status,opened_at,closed_at,notes')
+      .eq('owner_id', u.id).order('opened_at', { ascending: false });
+    if (error) return reportMsg('err', 'Couldn\'t fetch trades: ' + error.message);
+    if (!data || !data.length) return reportMsg('err', 'No trades to export yet — place one first.');
+    download('tradearena-trades.csv', toCsv(data, [
+      { label:'Symbol',      get:r => r.symbol },
+      { label:'Market',      get:r => r.market },
+      { label:'Side',        get:r => r.side },
+      { label:'Quantity',    get:r => r.qty },
+      { label:'Entry price', get:r => r.entry_price },
+      { label:'Exit price',  get:r => r.exit_price },
+      { label:'Stop loss',   get:r => r.stop_loss },
+      { label:'Target',      get:r => r.target },
+      { label:'Status',      get:r => r.status },
+      { label:'Opened at',   get:r => r.opened_at },
+      { label:'Closed at',   get:r => r.closed_at },
+      { label:'Notes',       get:r => r.notes },
+    ]));
+    reportMsg('ok', 'Downloaded ' + data.length + ' trades.');
+  });
+
+  document.getElementById('dlHoldingsCsv').addEventListener('click', async () => {
+    const { data, error } = await sb.rpc('get_holdings_for', { p_owner: u.id });
+    if (error) return reportMsg('err', 'Couldn\'t fetch holdings: ' + error.message);
+    if (!data || !data.length) return reportMsg('err', 'No open positions right now.');
+    const cols = Object.keys(data[0]).filter(k => k !== 'owner_id').map(k => ({
+      label: k.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase()),
+      get: r => r[k],
+    }));
+    download('tradearena-holdings.csv', toCsv(data, cols));
+    reportMsg('ok', 'Downloaded ' + data.length + ' positions.');
+  });
+
+  document.getElementById('dlPnlCsv').addEventListener('click', async () => {
+    const { data, error } = await sb.from('paper_trades')
+      .select('symbol,market,side,qty,entry_price,exit_price,opened_at,closed_at')
+      .eq('owner_id', u.id).eq('status', 'closed').order('closed_at', { ascending: false });
+    if (error) return reportMsg('err', 'Couldn\'t fetch P&L: ' + error.message);
+    if (!data || !data.length) return reportMsg('err', 'No closed trades yet.');
+    const rows = data.map(t => {
+      const pnl = (Number(t.exit_price) - Number(t.entry_price)) * Number(t.qty);
+      const ret = Number(t.entry_price) ? (pnl / (Number(t.entry_price) * Number(t.qty))) * 100 : 0;
+      return { ...t, pnl: pnl.toFixed(2), return_pct: ret.toFixed(2) };
+    });
+    download('tradearena-pnl.csv', toCsv(rows, [
+      { label:'Symbol',     get:r => r.symbol },
+      { label:'Market',     get:r => r.market },
+      { label:'Side',       get:r => r.side },
+      { label:'Quantity',   get:r => r.qty },
+      { label:'Entry',      get:r => r.entry_price },
+      { label:'Exit',       get:r => r.exit_price },
+      { label:'P&L (AUD)',  get:r => r.pnl },
+      { label:'Return %',   get:r => r.return_pct },
+      { label:'Opened at',  get:r => r.opened_at },
+      { label:'Closed at',  get:r => r.closed_at },
+    ]));
+    reportMsg('ok', 'Downloaded P&L on ' + rows.length + ' closed trades.');
+  });
+
+  // ============================================================
+  //  CHANGE PASSWORD pane
+  // ============================================================
+  document.getElementById('pwForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const a = document.getElementById('pwNew').value;
+    const b = document.getElementById('pwConfirm').value;
+    const msg = document.getElementById('pwMsg');
+    const btn = document.getElementById('pwSave');
+    msg.className = 'ac-banner';
+    if (a.length < 6)       { msg.className = 'ac-banner err show'; msg.textContent = 'Password must be at least 6 characters.'; return; }
+    if (a !== b)            { msg.className = 'ac-banner err show'; msg.textContent = 'Passwords don\'t match.'; return; }
+    btn.disabled = true;
+    const { error } = await sb.auth.updateUser({ password: a });
+    btn.disabled = false;
+    if (error) { msg.className = 'ac-banner err show'; msg.textContent = error.message || 'Couldn\'t update password.'; return; }
+    msg.className = 'ac-banner ok show';
+    msg.textContent = 'Password updated. Use it next time you sign in.';
+    document.getElementById('pwForm').reset();
+  });
+
+  // ============================================================
+  //  TRADING CONTROLS + NOTIFICATIONS — localStorage prefs
+  // ============================================================
+  const PREFS_KEY = 'tarena.prefs.v1';
+  const DEFAULT_PREFS = {
+    confirmTrade: true, warnLarge: true, dailyStop: false, askStop: true,
+    notifDaily: true, notifWeekly: true, notifStop: true, notifFollow: false, notifReels: true,
+  };
+  function loadPrefs()  { try { return { ...DEFAULT_PREFS, ...(JSON.parse(localStorage.getItem(PREFS_KEY) || '{}')) }; } catch(_) { return { ...DEFAULT_PREFS }; } }
+  function savePrefs(p) { localStorage.setItem(PREFS_KEY, JSON.stringify(p)); }
+  const prefs = loadPrefs();
+  document.querySelectorAll('input[data-pref]').forEach(box => {
+    const k = box.dataset.pref;
+    box.checked = !!prefs[k];
+    box.addEventListener('change', () => {
+      prefs[k] = box.checked; savePrefs(prefs);
+    });
+  });
+
+  // ============================================================
+  //  TRADING DETAILS — brokerage line
+  // ============================================================
+  // Lightweight: pull profile to check tier; founders pay $0.
+  document.getElementById('tdBroker').textContent =
+    (u.tier && u.tier.toLowerCase() === 'founder') ? '$0.00 per trade (founder)' : '$0.00 per trade';
+
+  // ============================================================
+  //  PRIVACY pane — visibility_mask toggles
+  // ============================================================
+  const privFields = [
+    { key: 'cash',         label: 'Cash balance',          hint: 'Show your current paper-cash on your profile.' },
+    { key: 'holdings',     label: 'Open holdings',         hint: 'Reveal your live positions to followers.' },
+    { key: 'equity_curve', label: 'Equity curve',          hint: 'Display the chart of your account value over time.' },
+    { key: 'metrics',      label: 'Performance metrics',   hint: 'Sharpe, win rate, max drawdown, etc.' },
+    { key: 'strategies',   label: 'Strategies',            hint: 'Public list of your saved trading strategies.' },
+    { key: 'journal',      label: 'Trade journal',         hint: 'Closed-trade table with notes.' },
+    { key: 'reels',        label: 'Reels',                 hint: 'Posts you\'ve published in the reels feed.' },
+    { key: 'university',   label: 'University',            hint: 'Show your campus on your profile chip.' },
+  ];
+  async function renderPrivacy() {
+    const profile = await TArenaAuth.getProfile();
+    // TArenaAuth.getProfile() returns the profile in camelCase, so the
+    // mask lives at `visibilityMask`. Fall back to snake_case in case
+    // the profile shape ever changes upstream — defensive but cheap.
+    const mask = { ...((profile && (profile.visibilityMask || profile.visibility_mask)) || {}) };
+    document.getElementById('privList').innerHTML = privFields.map(f => `
+      <div class="ac-row">
+        <div class="lab">
+          <div class="v">${f.label}</div>
+          <div class="hint">${f.hint}</div>
+        </div>
+        <div class="ctrl">
+          <label class="ac-toggle">
+            <input type="checkbox" data-priv="${f.key}" ${mask[f.key] ? 'checked' : ''}/>
+            <span class="sl"></span>
+          </label>
+        </div>
+      </div>`).join('');
+    document.querySelectorAll('input[data-priv]').forEach(box => {
+      box.addEventListener('change', async () => {
+        const newMask = { ...mask, [box.dataset.priv]: box.checked };
+        mask[box.dataset.priv] = box.checked;     // keep local copy in sync
+        const res = await TArenaAuth.saveProfile({ visibilityMask: newMask });
+        const msg = document.getElementById('privMsg');
+        if (res && res.ok) {
+          msg.className = 'ac-banner ok show';
+          msg.textContent = 'Privacy updated.';
+        } else {
+          msg.className = 'ac-banner err show';
+          msg.textContent = (res && res.error) || 'Couldn\'t save — try again.';
+          box.checked = !box.checked;             // revert visual on failure
+        }
+        setTimeout(() => msg.classList.remove('show'), 2400);
+      });
+    });
+  }
+  renderPrivacy().catch(err => {
+    console.warn('privacy load failed', err);
+    document.getElementById('privList').innerHTML =
+      '<div class="ac-banner err show">Couldn\'t load your privacy settings.</div>';
+  });
+
+  // ============================================================
+  //  ACTIVE DEVICES pane
+  // ============================================================
+  function deviceFromUA(ua) {
+    ua = ua || navigator.userAgent || '';
+    const isMobile = /Mobi|Android|iPhone|iPad/i.test(ua);
+    let os = 'Unknown OS';
+    if (/Windows/i.test(ua))         os = 'Windows';
+    else if (/Mac OS X|Macintosh/i.test(ua)) os = 'macOS';
+    else if (/iPhone|iPad|iOS/i.test(ua))    os = 'iOS';
+    else if (/Android/i.test(ua))            os = 'Android';
+    else if (/Linux/i.test(ua))              os = 'Linux';
+    let browser = 'Browser';
+    if (/Edg\//.test(ua))            browser = 'Edge';
+    else if (/Chrome\//.test(ua))    browser = 'Chrome';
+    else if (/Safari\//.test(ua) && !/Chrome\//.test(ua)) browser = 'Safari';
+    else if (/Firefox\//.test(ua))   browser = 'Firefox';
+    return { icon: isMobile ? 'fa-mobile-screen' : 'fa-laptop', label: browser + ' on ' + os };
+  }
+  (function loadDevices() {
+    const meta  = session.user && session.user.user_metadata || {};
+    const last  = (session.user && session.user.last_sign_in_at) || meta.last_sign_in_at;
+    const dev   = deviceFromUA(navigator.userAgent);
+    document.getElementById('deviceList').innerHTML = `
+      <div class="ac-device">
+        <div class="icon"><i class="fa-solid ${dev.icon}"></i></div>
+        <div class="meta" style="flex:1;">
+          <div class="t">${dev.label}</div>
+          <div class="s">${last ? 'Signed in ' + new Date(last).toLocaleString() : 'Active now'}</div>
+        </div>
+        <div class="pill-now">This device</div>
+      </div>
+      <div class="ac-banner ok show" style="margin-top:14px;">
+        <i class="fa-solid fa-circle-info"></i>
+        Supabase doesn't list other open sessions from the browser. Sign out of all devices to invalidate them.
+      </div>`;
+  })();
+  document.getElementById('signOutAll').addEventListener('click', async () => {
+    const msg = document.getElementById('devMsg');
+    if (!confirm('Sign out everywhere? You\'ll need to log in again on every device.')) return;
+    const { error } = await sb.auth.signOut({ scope: 'global' });
+    if (error) { msg.className = 'ac-banner err show'; msg.textContent = error.message; return; }
+    location.href = 'auth.html';
+  });
+
+  // ============================================================
+  //  REPORT A PROBLEM pane
+  // ============================================================
+  document.getElementById('reportForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const msg = document.getElementById('repMsg');
+    const details = document.getElementById('repDetails').value.trim();
+    if (details.length < 10) {
+      msg.className = 'ac-banner err show';
+      msg.textContent = 'Add a few more details so we can help.';
+      return;
+    }
+    // No support_messages table yet — store locally so the report isn't lost,
+    // and show a confirmation. The next migration can flush this to a table.
+    try {
+      const queue = JSON.parse(localStorage.getItem('tarena.support.queue') || '[]');
+      queue.push({
+        type: document.getElementById('repType').value,
+        details, at: Date.now(),
+        user_id: u.id, email: u.email,
+      });
+      localStorage.setItem('tarena.support.queue', JSON.stringify(queue));
+    } catch (_) {}
+    msg.className = 'ac-banner ok show';
+    msg.textContent = 'Thanks — your report is queued. We\'ll be in touch at ' + (u.email || 'your account email') + '.';
+    document.getElementById('reportForm').reset();
+  });
+})();
+</script>
+</body>
+</html>
