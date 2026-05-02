@@ -102,6 +102,7 @@
     .mt-name{font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;}
     .mt-bot{display:flex;justify-content:space-between;align-items:baseline;}
     .mt-price{font-size:13.5px;font-weight:700;color:var(--cream);font-feature-settings:'tnum';}
+    .mt-vol{margin-top:8px;padding-top:8px;border-top:1px solid var(--bdl);font-size:10.5px;color:var(--muted);font-weight:600;letter-spacing:.04em;font-feature-settings:'tnum';}
     .mt-chg{font-size:11.5px;font-weight:700;font-feature-settings:'tnum';}
 
     /* Crypto rows + sparkline */
@@ -825,12 +826,81 @@ async function fetchPrices(symbols) {
 
   await Promise.allSettled(tasks);
 
+  // Backfill 52w high/low + day volume + ASX price from Yahoo if any stocks
+  // are missing extended fields. Yahoo's chart endpoint is CORS-friendly,
+  // doesn't need an API key, and works for both .AX and US tickers — making
+  // it the cheapest single source for 52w stats and an ASX price fallback
+  // when the data-proxy edge function isn't deployed.
+  const stocksNeedingExt = symbols.filter(s => {
+    const m = CATALOG[s] && CATALOG[s].market;
+    if (m !== 'asx' && m !== 'us') return false;
+    const px = PRICES[s] || {};
+    const fresh = out[s];
+    return !px._h52 || !px._l52 || (!px._vol && !(fresh && fresh._vol));
+  });
+  if (stocksNeedingExt.length) {
+    await fetchExtendedSnapshots(stocksNeedingExt, out);
+  }
+
   // Merge into PRICES store, preserving _anchor / fields not refreshed.
   Object.keys(out).forEach(s => {
     PRICES[s] = Object.assign({}, PRICES[s] || {}, out[s], { ts: Date.now() });
     if (CATALOG[s]?.market === 'forex' && !PRICES[s]._anchor) PRICES[s]._anchor = out[s].price;
   });
   return out;
+}
+
+// Fetch 52w high/low + day volume (and price/change as fallback) for stock
+// symbols via Yahoo's chart endpoint. CORS-friendly, no API key, works for
+// both ASX (.AX) and US tickers. Writes _h52/_l52/_vol into the `out` map
+// so the caller's merge step picks them up. Cached per symbol for 5 min so
+// the 10s price tick doesn't re-hammer Yahoo for slow-moving 52w stats.
+const _extCache = {};                   // symbol → { ts, h52, l52, vol }
+const _EXT_TTL  = 5 * 60 * 1000;
+async function fetchExtendedSnapshots(symbols, out) {
+  const now = Date.now();
+  // Browsers cap concurrent connections per host (~6) and Yahoo throttles
+  // bursty clients. Cap to 4 in-flight requests so a 10-stock table doesn't
+  // saturate the connection pool or trip Yahoo's rate limiter.
+  const CONCURRENCY = 4;
+  const queue = symbols.slice();
+  async function worker() {
+    while (queue.length) {
+      const s = queue.shift();
+      const cached = _extCache[s];
+      if (cached && (now - cached.ts) < _EXT_TTL) {
+        out[s] = Object.assign({}, out[s], {
+          _h52: cached.h52, _l52: cached.l52, _vol: cached.vol,
+        });
+        if (!out[s].price && cached.price) {
+          out[s].price = cached.price; out[s].change = cached.chg; out[s].changePct = cached.chg;
+        }
+        continue;
+      }
+      try {
+        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s)}?range=1d&interval=1d`;
+        const r   = await fetch(url);
+        if (!r.ok) continue;
+        const j = await r.json();
+        const m = j && j.chart && j.chart.result && j.chart.result[0] && j.chart.result[0].meta;
+        if (!m) continue;
+        const h52   = Number(m.fiftyTwoWeekHigh)    || 0;
+        const l52   = Number(m.fiftyTwoWeekLow)     || 0;
+        const vol   = Number(m.regularMarketVolume) || 0;
+        const price = Number(m.regularMarketPrice)  || 0;
+        const prev  = Number(m.chartPreviousClose)  || 0;
+        const chg   = (price && prev) ? ((price - prev) / prev) * 100 : 0;
+        _extCache[s] = { ts: now, h52, l52, vol, price, chg };
+        out[s] = Object.assign({}, out[s], { _h52: h52, _l52: l52, _vol: vol });
+        // ASX fallback: if data-proxy is offline the existing branch returned
+        // nothing for ASX, so seed price/change here so the table is alive.
+        if (!out[s].price && price) {
+          out[s].price = price; out[s].change = chg; out[s].changePct = chg;
+        }
+      } catch (e) { /* swallow per-symbol; Yahoo CORS may vary */ }
+    }
+  }
+  await Promise.all(Array.from({length: Math.min(CONCURRENCY, symbols.length)}, worker));
 }
 
 // ============ CHART (Lightweight Charts, synthetic OHLCV) ============
@@ -1458,6 +1528,13 @@ function setMarketsTab(t) {
   renderMarkets();
   if ((t === 'all' || t === 'crypto') && !cryptoTop.length) fetchCoinGeckoTop().then(renderMarkets);
   if ((t === 'all' || t === 'forex')  && !forexCur)        fetchForex().then(renderMarkets);
+  // Lazily fetch extended Yahoo data (52w + day volume) the first time the
+  // user opens an ASX or US table — keeps init light and bounded to 8-10
+  // throttled requests on demand instead of 18 at boot.
+  if (t === 'asx' || t === 'us') {
+    const stocks = Object.keys(CATALOG).filter(s => CATALOG[s].market === t);
+    fetchPrices(stocks).then(renderMarkets);
+  }
   // Auto-jump chart symbol if user navigated into a different market.
   const def = CATALOG[state.symbol];
   const targetSym = MARKET_DEFAULT[t];
@@ -1521,6 +1598,12 @@ function renderMostTradedSection() {
     const def = CATALOG[s]; if (!def) return '';
     const px = PRICES[s];
     const up = (px?.changePct || 0) >= 0;
+    // Volume source: stocks → PRICES[s]._vol (Alpaca/Yahoo); crypto → cryptoTop[].total_volume
+    let vol = px?._vol || 0;
+    if (!vol && def.market === 'crypto') {
+      const c = cryptoTop.find(x => x.symbol.toUpperCase() === s);
+      if (c && c.total_volume) vol = c.total_volume;
+    }
     return `<div class="mt-card" onclick="selectSymbolFromMarkets('${s}')">
       <div class="mt-top">
         <span class="sym-icn ${def.market}" style="width:32px;height:32px;font-size:11px;border-radius:9px;">${esc(s.replace('.AX','').slice(0,3))}</span>
@@ -1533,6 +1616,7 @@ function renderMostTradedSection() {
         <div class="mt-price">${px ? fmtMoney(px.price) : '<span class="text-muted">—</span>'}</div>
         <div class="mt-chg ${up?'text-green':'text-red'}">${px ? fmtPct(px.changePct) : '—'}</div>
       </div>
+      <div class="mt-vol">Vol ${vol ? fmtVol(vol) : '—'}</div>
     </div>`;
   }).filter(Boolean).join('');
   return `<div class="mb-section">
@@ -1609,9 +1693,9 @@ function renderStockTable(market) {
       s, def,
       price:  px.price      || 0,
       chg:    px.changePct  || 0,
-      vol:    px.volume     || 0,
-      h52:    px.high52     || 0,
-      l52:    px.low52      || 0,
+      vol:    px._vol       || 0,
+      h52:    px._h52       || 0,
+      l52:    px._l52       || 0,
     };
   });
   const ss = sortState[market] || (sortState[market] = { col: 'chg', dir: 'desc' });
