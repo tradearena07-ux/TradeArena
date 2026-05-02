@@ -103,6 +103,7 @@
     .mt-bot{display:flex;justify-content:space-between;align-items:baseline;}
     .mt-price{font-size:13.5px;font-weight:700;color:var(--cream);font-feature-settings:'tnum';}
     .mt-vol{margin-top:8px;padding-top:8px;border-top:1px solid var(--bdl);font-size:10.5px;color:var(--muted);font-weight:600;letter-spacing:.04em;font-feature-settings:'tnum';}
+    .px-stale{color:#f0a050;font-size:10px;font-weight:600;letter-spacing:.03em;margin-left:4px;}
     .mt-chg{font-size:11.5px;font-weight:700;font-feature-settings:'tnum';}
 
     /* Crypto rows + sparkline */
@@ -402,7 +403,7 @@
         <button class="tf"     data-tf="1W">1W</button>
         <button class="tf"     data-tf="1M">1M</button>
         <span class="tf-spacer"></span>
-        <span class="tf-info"><span class="live"></span>Live · refresh 10s</span>
+        <span class="tf-info"><span class="live"></span>Live · refresh 15s</span>
       </div>
       <div class="chart-host" id="chartHost">
         <div class="chart-skel">Loading chart…</div>
@@ -719,18 +720,20 @@ async function fetchPrices(symbols) {
 
   const tasks = [];
 
-  // Crypto via CoinGecko
+  // Crypto via CoinGecko in AUD — TradeArena's audience is Aussie uni
+  // students, and the All Markets crypto top-20 already shows AUD prices,
+  // so the simple/price feed must match for consistency.
   if (groups.crypto.length) {
     const ids = groups.crypto.map(s => CATALOG[s].cgId).filter(Boolean).join(',');
     if (ids) tasks.push(
-      fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`)
+      fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=aud&include_24hr_change=true`)
         .then(r => r.ok ? r.json() : Promise.reject(new Error('cg ' + r.status)))
         .then(j => {
           groups.crypto.forEach(s => {
             const row = j[CATALOG[s].cgId];
-            if (row && typeof row.usd === 'number') {
-              const cg = row.usd_24h_change || 0;
-              out[s] = { price: row.usd, change: cg, changePct: cg };
+            if (row && typeof row.aud === 'number') {
+              const cg = row.aud_24h_change || 0;
+              out[s] = { price: row.aud, change: cg, changePct: cg };
             }
           });
         })
@@ -768,79 +771,17 @@ async function fetchPrices(symbols) {
     );
   }
 
-  // US stocks via Alpaca direct (sandbox first, fallback to live data host)
-  if (groups.us.length) {
-    const syms = groups.us.join(',');
-    const tryAlpaca = (base) => fetch(`${base}/stocks/snapshots?symbols=${syms}`, {
-      headers: { 'APCA-API-KEY-ID': ALPACA.key, 'APCA-API-SECRET-KEY': ALPACA.secret }
-    }).then(r => r.ok ? r.json() : Promise.reject(new Error('alp ' + r.status)));
-    tasks.push(
-      tryAlpaca(ALPACA.base).catch(() => tryAlpaca(ALPACA.baseFb))
-        .then(j => {
-          // Snapshot shape: { AAPL: {latestTrade:{p}, dailyBar:{c,h,l,v,o}, prevDailyBar:{c}} }
-          groups.us.forEach(s => {
-            const r = j && j[s];
-            const p = r && (r.latestTrade?.p || r.minuteBar?.c || r.dailyBar?.c);
-            const prev = r && r.prevDailyBar && r.prevDailyBar.c;
-            if (p) {
-              const chg = prev ? ((p - prev) / prev) * 100 : 0;
-              out[s] = { price: p, change: chg, changePct: chg, _hi: r.dailyBar?.h, _lo: r.dailyBar?.l, _vol: r.dailyBar?.v };
-            }
-          });
-        })
-        .catch(async (e) => {
-          // CORS or 4xx → fall back to existing TArenaDatafeed proxy
-          console.warn('Alpaca direct failed, using data-proxy fallback', e.message);
-          try {
-            const q = await TArenaDatafeed.fetchQuotes(groups.us);
-            groups.us.forEach(s => {
-              const row = q[s];
-              if (row && typeof row.price === 'number') {
-                const c = row.changePct || 0;
-                out[s] = { price: row.price, change: c, changePct: c };
-              }
-            });
-          } catch (e2) {
-            console.warn('data-proxy US fallback also failed', e2.message);
-          }
-        })
-    );
-  }
-
-  // ASX via TArenaDatafeed (Yahoo via data-proxy) — Alpaca has no ASX
-  if (groups.asx.length) {
-    tasks.push(
-      TArenaDatafeed.fetchQuotes(groups.asx)
-        .then(q => {
-          groups.asx.forEach(s => {
-            const row = q[s];
-            if (row && typeof row.price === 'number') {
-              const c = row.changePct || 0;
-              out[s] = { price: row.price, change: c, changePct: c };
-            }
-          });
-        })
-        .catch(e => console.warn('ASX fetchQuotes failed', e.message))
-    );
+  // ASX + US stocks via Yahoo Finance direct (CORS-friendly, no API key,
+  // returns price + change + 52w high/low + day volume in one call). This
+  // is the canonical source for both markets — the data-proxy edge fn and
+  // Alpaca sandbox both have failure modes (proxy may not be deployed,
+  // Alpaca sandbox has no ASX and is geo-blocked from some Replit DCs).
+  const stocksToFetch = [...(groups.us || []), ...(groups.asx || [])];
+  if (stocksToFetch.length) {
+    tasks.push(fetchExtendedSnapshots(stocksToFetch, out));
   }
 
   await Promise.allSettled(tasks);
-
-  // Backfill 52w high/low + day volume + ASX price from Yahoo if any stocks
-  // are missing extended fields. Yahoo's chart endpoint is CORS-friendly,
-  // doesn't need an API key, and works for both .AX and US tickers — making
-  // it the cheapest single source for 52w stats and an ASX price fallback
-  // when the data-proxy edge function isn't deployed.
-  const stocksNeedingExt = symbols.filter(s => {
-    const m = CATALOG[s] && CATALOG[s].market;
-    if (m !== 'asx' && m !== 'us') return false;
-    const px = PRICES[s] || {};
-    const fresh = out[s];
-    return !px._h52 || !px._l52 || (!px._vol && !(fresh && fresh._vol));
-  });
-  if (stocksNeedingExt.length) {
-    await fetchExtendedSnapshots(stocksNeedingExt, out);
-  }
 
   // Merge into PRICES store, preserving _anchor / fields not refreshed.
   Object.keys(out).forEach(s => {
@@ -856,7 +797,12 @@ async function fetchPrices(symbols) {
 // so the caller's merge step picks them up. Cached per symbol for 5 min so
 // the 10s price tick doesn't re-hammer Yahoo for slow-moving 52w stats.
 const _extCache = {};                   // symbol → { ts, h52, l52, vol }
-const _EXT_TTL  = 5 * 60 * 1000;
+// 12s TTL: shorter than the 15s poll so every tick gets fresh upstream
+// data (price/change/52w/vol all arrive in one Yahoo call so we don't
+// split into fast/slow caches). Cache only exists to absorb the rare
+// case of two fetchPrices() calls within the same tick (e.g. init →
+// tick overlap on a slow first paint).
+const _EXT_TTL  = 12 * 1000;
 async function fetchExtendedSnapshots(symbols, out) {
   const now = Date.now();
   // Browsers cap concurrent connections per host (~6) and Yahoo throttles
@@ -1008,11 +954,18 @@ async function refreshChart() {
   const tf       = state.tf;
   const interval = tfToInterval(tf);              // seconds per candle
   const reqId    = ++chartReqId;
+  // Reset chart-tip handle so a `nudgeChartTip` racing with this load
+  // can't poke the previous symbol's candle into the new series.
+  lastCandle = null;
   // Show synthetic placeholder immediately so the chart is never empty
   // while the real bars load (especially on slow ASX/US proxy hops).
   const px = (PRICES[state.symbol] && PRICES[state.symbol].price) || 100;
-  candleSeries.setData(genCandles(px, tf));
+  const synth = genCandles(px, tf);
+  candleSeries.setData(synth);
   chart.timeScale().fitContent();
+  // Seed lastCandle from the synthetic tail so chart-tip nudges work
+  // even before real bars arrive (or for forex which never gets them).
+  lastCandle = synth[synth.length - 1] || null;
   // Forex has no bars provider — synthetic is the final answer.
   if (def.market === 'forex') return;
   // Fetch real OHLCV.  Window = 200 candles back from now so all timeframes
@@ -1039,6 +992,7 @@ async function refreshChart() {
     out.sort((a, b) => a.time - b.time);
     candleSeries.setData(out);
     chart.timeScale().fitContent();
+    lastCandle = out[out.length - 1] || null;
   } catch (e) {
     // Stick with the synthetic placeholder; surface in console for ops.
     console.warn('chart bars failed for', state.symbol, e.message);
@@ -1393,6 +1347,14 @@ let forexCur      = null;         // {USD: {rates}, AUD: {rates}}
 let forexPrev     = null;         // yesterday's rates for daily change %
 const sortState   = {};           // per-tab {col, dir}
 
+// Returns a "(delayed)" pill if a price snapshot is older than 60s. Used by
+// Most Traded cards + stock tables to flag prices that may not reflect the
+// last upstream tick (e.g. Yahoo CORS hiccup, network lag).
+function isStale(px) { return !!(px && px.ts && (Date.now() - px.ts) > 60000); }
+function stalePill(px) {
+  return isStale(px) ? ' <span class="px-stale" title="Last update >60s ago">(delayed)</span>' : '';
+}
+
 function fmtMcap(n) {
   if (!n || !isFinite(n)) return '—';
   if (n >= 1e12) return '$' + (n/1e12).toFixed(2) + 'T';
@@ -1528,13 +1490,6 @@ function setMarketsTab(t) {
   renderMarkets();
   if ((t === 'all' || t === 'crypto') && !cryptoTop.length) fetchCoinGeckoTop().then(renderMarkets);
   if ((t === 'all' || t === 'forex')  && !forexCur)        fetchForex().then(renderMarkets);
-  // Lazily fetch extended Yahoo data (52w + day volume) the first time the
-  // user opens an ASX or US table — keeps init light and bounded to 8-10
-  // throttled requests on demand instead of 18 at boot.
-  if (t === 'asx' || t === 'us') {
-    const stocks = Object.keys(CATALOG).filter(s => CATALOG[s].market === t);
-    fetchPrices(stocks).then(renderMarkets);
-  }
   // Auto-jump chart symbol if user navigated into a different market.
   const def = CATALOG[state.symbol];
   const targetSym = MARKET_DEFAULT[t];
@@ -1613,10 +1568,10 @@ function renderMostTradedSection() {
         </div>
       </div>
       <div class="mt-bot">
-        <div class="mt-price">${px ? fmtMoney(px.price) : '<span class="text-muted">—</span>'}</div>
-        <div class="mt-chg ${up?'text-green':'text-red'}">${px ? fmtPct(px.changePct) : '—'}</div>
+        <div class="mt-price">${px && px.price ? fmtMoney(px.price) : '<span class="text-muted">—</span>'}</div>
+        <div class="mt-chg ${up?'text-green':'text-red'}">${px && px.price ? fmtPct(px.changePct) : '—'}</div>
       </div>
-      <div class="mt-vol">Vol ${vol ? fmtVol(vol) : '—'}</div>
+      <div class="mt-vol">Vol ${vol ? fmtVol(vol) : '—'}${stalePill(px)}</div>
     </div>`;
   }).filter(Boolean).join('');
   return `<div class="mb-section">
@@ -1727,7 +1682,7 @@ function renderStockTable(market) {
         return `<tr data-sym="${it.s}" data-name="${esc(it.def.name).toLowerCase()}" onclick="selectSymbolFromMarkets('${it.s}')" style="cursor:pointer;">
           <td><strong>${esc(it.s.replace('.AX',''))}</strong></td>
           <td class="text-muted" style="font-weight:500;">${esc(it.def.name)}</td>
-          <td class="num">${it.price ? fmtMoney(it.price) : '<span class="text-muted">—</span>'}</td>
+          <td class="num">${it.price ? fmtMoney(it.price) : '<span class="text-muted">—</span>'}${stalePill(PRICES[it.s])}</td>
           <td class="num ${up?'text-green':'text-red'}">${it.price ? fmtPct(it.chg) : '—'}</td>
           <td class="num text-muted">${it.vol ? fmtVol(it.vol) : '—'}</td>
           <td class="num">${it.h52 ? fmtMoney(it.h52) : '—'}</td>
@@ -1853,14 +1808,23 @@ function attachMarketsHandlers() {
 }
 
 // ============ POLL LOOP — refresh every 10s ============
+// Guard against overlapping ticks if the network stalls — at 18 stocks
+// throttled to 4 concurrent, a slow Yahoo response could outlive the 15s
+// interval and pile up. Skip new ticks while one is in flight.
+let tickInFlight = false;
 async function tick() {
-  // Fetch prices for: every watchlist symbol + the currently-selected symbol +
-  // every held symbol. De-dup with a Set.
-  const wanted = new Set([...watchlist(), state.symbol, ...state.holdings.map(h => h.symbol)]);
+  if (tickInFlight) return;
+  tickInFlight = true;
+  try {
+  // Fetch prices for every catalogued symbol so the Markets browser, Most
+  // Traded cards, watchlist and ticker all stay in lock-step. De-dup w/ Set.
+  const wanted = new Set([...Object.keys(CATALOG), state.symbol]);
   await fetchPrices([...wanted].filter(s => CATALOG[s]));
   renderWatchlist();
   renderSymbolHeader();
   renderStatsBar();
+  syncTickerStrip();
+  nudgeChartTip();
   if (state.lowerTab === 'hold') renderLower();
   // Re-render the markets browser with fresh prices, but never wipe out a
   // search the user is typing (focus & value are preserved across renders).
@@ -1869,6 +1833,43 @@ async function tick() {
   if (!typing && (marketsTab === 'all' || marketsTab === 'asx' || marketsTab === 'us')) {
     renderMarkets();
   }
+  } finally { tickInFlight = false; }
+}
+
+// Mirror trade.html's PRICES store into the global ticker strip's data
+// source (TArenaMarket) so the marquee above the nav reflects live ASX
+// + US + crypto prices instead of the seeded random-walk values.
+function syncTickerStrip() {
+  const M = window.TArenaMarket;
+  if (!M || !M.find) return;
+  ['BTC','ETH','AAPL','BHP.AX'].forEach(s => {
+    const px = PRICES[s];
+    const m  = M.find(s);
+    if (!px || !m || !px.price) return;
+    m.price  = px.price;
+    m.change = px.changePct || 0;
+  });
+  if (window.TArenaUI && window.TArenaUI.repaintTicker) window.TArenaUI.repaintTicker();
+}
+
+// Nudge the latest candle's close to the freshest price so the chart
+// reflects the price update without re-fetching 200 bars every 15s.
+// `lastCandle` is captured by `refreshChart` whenever it loads new bars.
+let lastCandle = null;
+function nudgeChartTip() {
+  if (!candleSeries || !lastCandle) return;
+  const px = PRICES[state.symbol];
+  if (!px || !px.price) return;
+  const c = px.price;
+  const next = {
+    time:  lastCandle.time,
+    open:  lastCandle.open,
+    high:  Math.max(lastCandle.high, c),
+    low:   Math.min(lastCandle.low,  c),
+    close: c,
+  };
+  try { candleSeries.update(next); lastCandle = next; }
+  catch (_) { /* series may have been torn down */ }
 }
 
 // Refresh CoinGecko (30s) and Frankfurter (60s) on their own cadences.
@@ -1886,11 +1887,12 @@ function startMarketsPolling() {
   mountChart();
   // 2. Load holdings + trades from Supabase
   await loadHoldings();
-  // 3. First price fetch for the catalogue (covers watchlist, current, holdings)
-  const initSyms = new Set([...watchlist(), state.symbol, ...state.holdings.map(h => h.symbol),
-                            // also seed forex + a couple of crypto so movers tab has data
-                            'AUDUSD','EURUSD','SOL']);
-  await fetchPrices([...initSyms].filter(s => CATALOG[s]));
+  // 3. First price fetch — every catalogued symbol so the Markets browser,
+  //    Most Traded row, watchlist and ticker strip all come up populated on
+  //    first paint instead of "$0.0000". Yahoo + CoinGecko + Frankfurter
+  //    are CORS-friendly and don't need API keys.
+  await fetchPrices(Object.keys(CATALOG));
+  syncTickerStrip();
   // 4. Initial render
   renderWatchlist();
   renderSymbolHeader();
@@ -1907,7 +1909,7 @@ function startMarketsPolling() {
   ]);
   startMarketsPolling();
   // 6. Start the 10s poll (handle saved for clean teardown on unload)
-  pollHandle = setInterval(tick, 10000);
+  pollHandle = setInterval(tick, 15000);
   console.log('%cTradeArena · Markets ready', 'color:#e8c060;font-weight:700;');
 })();
 </script>

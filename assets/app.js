@@ -892,6 +892,6 @@
     // admin
     getRegistrations,
   };
-  global.TArenaUI = { renderNav, renderFooter, fmtMoney, fmtPct, logoSvg, getAvatar, avatarHtml };
+  global.TArenaUI = { renderNav, renderFooter, fmtMoney, fmtPct, logoSvg, getAvatar, avatarHtml, repaintTicker };
 
 })(window);
