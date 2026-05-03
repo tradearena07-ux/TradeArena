@@ -44,8 +44,8 @@ TradeArena is built as a pure static HTML/CSS/JS application with no build step,
     - **Learn Feed (`reels.html`)**: Instagram-style lesson grid with hero banner ("Teach Trading. Build Your Audience."), four tabs (For You / Following / Trending / New), search bar, responsive card grid (chart snapshot, single gold subject pill, symbol + direction badge, creator avatar/handle/follower count, 2-line thesis, Entry/Stop/Target mini-table, live P&L pill, Watch/Mirror/Save/Share action row, hover Follow CTA), and a 280px right rail showing "Top Educators This Week" + "Most Mirrored Strategies" derived client-side from loaded rows. Mirror sheet + deep-link `?reel=<uuid>` preserved.
     - **Creator Studio (`reels-new.html`)**: 3-step wizard (Trade Setup → Add Chart → Write Thesis) with progress bar, sticky live preview rail, and creator benefits callout. Step 1: symbol search, LONG/SHORT pill toggle, four number inputs (Entry/Stop/Target/Risk%), live R:R verdict, timeframe selector. Step 2: drag-drop upload OR Snap-from-TradeArena, max 5 numbered pin annotations with free-text labels. Step 3: 280-char thesis, single subject dropdown, public/followers/private visibility, full-width gold Publish button. Subject + timeframe + pin labels are mapped onto the existing `tags[]` schema (strategy/indicator types) so `publish_reel` RPC needs no backend changes.
     - **Portfolio**: Groww-style portfolio overview with performance charts, asset allocation, holdings list, and top movers.
-    - **Schools**: Curated learning modules with reels playlists, quizzes, and paper-trade challenges, progressive unlocking based on completion.
-    - **Admin Panel**: For managing registrations, universities, and schools (modules, quizzes, challenges).
+    - **Schools (CMS, May 2026 rebuild)**: Flat 2-level hierarchy — `schools` (modules) → `lessons`. Each lesson has rich text content, optional video URL (YouTube/Vimeo/MP4), and optional inline quiz JSON. Students see published modules on `schools.html`, drill into `school.html?id=…` for an accordion of lessons, and call `complete_lesson(uuid)` to mark progress. When all lessons in a module are done, `school_completions` is inserted (idempotent) and the module's `reward_capital` is added to the user's bonus.
+    - **Admin Panel**: 4-tab control panel at `admin.html` — Schools & Lessons (CMS), Announcements (CRUD; latest published shows as a dismissible banner on `trade.html`), User Management (registrations, university breakdown, CSV export), Leaderboard Management (list users + award bonus paper-capital via `admin_award_capital`). Gated by `is_admin_user()` (email allow-list `tradearena07@gmail.com` OR `profiles.is_admin = true`).
 - **Client-side Storage**: Uses `localStorage` for session management, pending states (e.g., chart snaps), and user preferences (watchlist).
 
 ### Feature Specifications
@@ -53,7 +53,7 @@ TradeArena is built as a pure static HTML/CSS/JS application with no build step,
 - **Paper Trading**: Simulated trading with a starting capital of $25,000.
 - **Leaderboard**: Displays top traders.
 - **Strategy Reels**: Users can create and share trading strategies with chart annotations.
-- **Learning Modules**: Structured educational content with quizzes and challenges to unlock perks.
+- **Learning Modules**: Admin-authored modules with text lessons, optional embedded videos and inline quizzes; bonus paper-capital awarded on full module completion.
 - **Trader Scorecard**: Detailed performance analytics, social features (follow/unfollow), and customizable privacy settings.
 - **Real-time Data**: Live price updates for quotes and charts.
 - **Order Management**: Simulated order entry and execution.

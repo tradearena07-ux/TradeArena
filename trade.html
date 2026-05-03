@@ -327,6 +327,52 @@
   <div id="userPillSlot" style="display:flex;align-items:center;gap:10px;"></div>
 </header>
 
+<!-- ============ Announcement banner (top published announcement) ============ -->
+<div id="annBanner" style="display:none;padding:10px 24px;border-bottom:1px solid var(--bdl);font-size:13.5px;align-items:center;gap:12px;">
+  <i class="fa-solid fa-bullhorn" id="annBannerIcon" style="color:var(--gold2);"></i>
+  <div style="flex:1;min-width:0;">
+    <strong id="annBannerTitle" style="color:var(--cream);font-family:'Cinzel',serif;letter-spacing:.04em;margin-right:10px;"></strong>
+    <span id="annBannerMsg" style="color:var(--muted);"></span>
+  </div>
+  <button onclick="dismissAnn()" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:4px 8px;" aria-label="Dismiss"><i class="fa-solid fa-xmark"></i></button>
+</div>
+<script>
+  (async function loadAnnouncement(){
+    try {
+      const sb = window.TArenaDB;
+      if (!sb) return;
+      const { data } = await sb.from('announcements')
+        .select('id,title,message,type,created_at')
+        .eq('published', true)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      const a = (data && data[0]);
+      if (!a) return;
+      if (localStorage.getItem('tarena_ann_dismiss') === a.id) return;
+      const palette = {
+        info:    { bg: 'rgba(96,165,250,.10)',  bd: 'rgba(96,165,250,.35)',  ic: '#93c5fd', icn: 'fa-circle-info' },
+        warning: { bg: 'rgba(251,191,36,.10)',  bd: 'rgba(251,191,36,.35)',  ic: '#fcd34d', icn: 'fa-triangle-exclamation' },
+        success: { bg: 'rgba(74,222,128,.10)',  bd: 'rgba(74,222,128,.35)',  ic: '#86efac', icn: 'fa-circle-check' },
+      };
+      const p = palette[a.type] || palette.info;
+      const el = document.getElementById('annBanner');
+      el.style.background    = p.bg;
+      el.style.borderBottom  = '1px solid ' + p.bd;
+      document.getElementById('annBannerIcon').style.color = p.ic;
+      document.getElementById('annBannerIcon').className   = 'fa-solid ' + p.icn;
+      document.getElementById('annBannerTitle').textContent = a.title;
+      document.getElementById('annBannerMsg').textContent   = a.message;
+      el.dataset.annId = a.id;
+      el.style.display = 'flex';
+    } catch (e) { console.warn('[announcement] load failed', e); }
+  })();
+  window.dismissAnn = function(){
+    const el = document.getElementById('annBanner');
+    if (el.dataset.annId) localStorage.setItem('tarena_ann_dismiss', el.dataset.annId);
+    el.style.display = 'none';
+  };
+</script>
+
 <!-- ============ Stats bar ============ -->
 <section class="sb">
   <div class="sb-k">

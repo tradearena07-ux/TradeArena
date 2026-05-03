@@ -3,51 +3,86 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TradeArena · School</title>
+  <title>TradeArena · Module</title>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
   <link rel="stylesheet" href="assets/styles.css"/>
   <style>
-    .s-shell{ max-width:900px;margin:0 auto;padding:32px 24px 60px;flex:1;width:100%; }
+    .s-shell{ max-width:880px;margin:0 auto;padding:32px 24px 60px;flex:1;width:100%; }
     .s-back{ display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;text-decoration:none;margin-bottom:18px; }
     .s-back:hover{ color:var(--gold2); }
-    .s-head{ display:flex;align-items:center;gap:18px;padding-bottom:24px;border-bottom:1px solid var(--bdl);margin-bottom:24px; }
-    .s-head .icn{ width:60px;height:60px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;color:var(--navy); }
-    .s-head h1{ font-family:'Cinzel',serif;font-size:1.75rem;letter-spacing:-.02em;margin-bottom:4px; }
-    .s-head p{ color:var(--muted);font-size:14px;line-height:1.55;max-width:580px; }
-
-    .mod-list{ display:flex;flex-direction:column;gap:12px; }
-    .mod-row{
-      background:var(--navy3);border:1px solid var(--bdl);border-radius:12px;padding:18px 20px;
-      display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;
-      text-decoration:none;color:inherit;transition:border-color .12s, background .12s;
+    .s-head{ padding-bottom:22px;border-bottom:1px solid var(--bdl);margin-bottom:24px; }
+    .s-head h1{ font-family:'Cinzel',serif;font-size:1.85rem;letter-spacing:-.02em;margin-bottom:8px; }
+    .s-head p{ color:var(--muted);font-size:14px;line-height:1.6;max-width:640px; }
+    .s-meta{ display:flex;gap:18px;margin-top:14px;flex-wrap:wrap; }
+    .s-meta .pill{
+      display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:9999px;
+      background:var(--navy3);border:1px solid var(--bdl);font-size:12px;color:var(--muted);
     }
-    .mod-row.unlocked:hover{ border-color:var(--gold);background:rgba(201,160,48,.04); }
-    .mod-row.locked{ opacity:.55;cursor:not-allowed; }
-    .mod-row.complete{ border-color:rgba(74,222,128,.4);background:rgba(74,222,128,.04); }
+    .s-meta .pill.gold{ color:var(--gold2);border-color:rgba(201,160,48,.35); }
 
-    .mod-num{
-      width:42px;height:42px;border-radius:50%;background:var(--navy);
-      border:1px solid var(--bdl);display:flex;align-items:center;justify-content:center;
-      font-family:'Cinzel',serif;font-weight:700;color:var(--gold2);font-size:1.05rem;
+    .s-progress{ display:flex;align-items:center;gap:14px;margin-bottom:24px; }
+    .s-progress-bar{ flex:1;height:8px;background:rgba(122,138,170,.15);border-radius:99px;overflow:hidden; }
+    .s-progress-bar > span{ display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:99px;transition:width .4s; }
+    .s-progress-meta{ font-family:'Cinzel',serif;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted); }
+
+    .lsn-list{ display:flex;flex-direction:column;gap:10px; }
+    .lsn{
+      background:var(--navy3);border:1px solid var(--bdl);border-radius:12px;overflow:hidden;
     }
-    .mod-row.complete .mod-num{ background:rgba(74,222,128,.15);border-color:rgba(74,222,128,.5);color:#86efac; }
-    .mod-row.locked .mod-num{ color:var(--muted); }
+    .lsn-row{
+      padding:16px 20px;display:flex;align-items:center;gap:14px;cursor:pointer;
+    }
+    .lsn-row:hover{ background:rgba(201,160,48,.04); }
+    .lsn.complete{ border-color:rgba(74,222,128,.35); }
+    .lsn-num{
+      width:34px;height:34px;border-radius:50%;background:var(--navy);border:1px solid var(--bdl);
+      display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-weight:700;color:var(--gold2);font-size:13px;flex-shrink:0;
+    }
+    .lsn.complete .lsn-num{ background:rgba(74,222,128,.15);border-color:rgba(74,222,128,.4);color:#86efac; }
+    .lsn-ttl{ flex:1;font-family:'Cinzel',serif;font-size:1rem;color:var(--cream); }
+    .lsn-icns{ display:flex;gap:8px;color:var(--muted);font-size:11px; }
 
-    .mod-body .ttl{ font-family:'Cinzel',serif;font-size:1.05rem;font-weight:700;color:var(--cream);letter-spacing:.02em; }
-    .mod-body .sum{ color:var(--muted);font-size:13px;line-height:1.5;margin-top:4px; }
-    .mod-body .meta{ display:flex;gap:14px;font-size:11.5px;color:var(--muted);margin-top:8px;font-family:'DM Sans',sans-serif; }
-    .mod-body .meta .ok{ color:#86efac; }
-    .mod-body .meta i{ margin-right:4px; }
+    .lsn-body{
+      display:none;padding:0 24px 24px;border-top:1px solid var(--bdl);
+    }
+    .lsn.open .lsn-body{ display:block; }
+    .lsn-content{ font-size:14.5px;line-height:1.75;color:var(--cream);padding:18px 0; }
+    .lsn-content p{ margin:0 0 14px; }
+    .lsn-content strong{ color:var(--gold2); }
+    .lsn-video{ margin:18px 0;border-radius:12px;overflow:hidden;border:1px solid var(--bdl); }
+    .lsn-video iframe, .lsn-video video{ width:100%;aspect-ratio:16/9;display:block;border:0; }
 
-    .mod-cta{ font-family:'Cinzel',serif;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2); }
-    .mod-row.complete .mod-cta{ color:#86efac; }
-    .mod-row.locked .mod-cta{ color:var(--muted); }
+    .quiz{ background:var(--navy);border:1px solid var(--bdl);border-radius:12px;padding:18px 20px;margin-top:14px; }
+    .quiz h4{ font-family:'Cinzel',serif;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold2);margin-bottom:14px; }
+    .qq{ margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--bdl); }
+    .qq:last-of-type{ border-bottom:none;margin-bottom:0;padding-bottom:0; }
+    .qq .q{ font-size:14px;color:var(--cream);margin-bottom:10px; }
+    .choice{
+      display:block;padding:9px 14px;border:1px solid var(--bdl);border-radius:8px;margin-bottom:6px;cursor:pointer;
+      font-size:13.5px;color:var(--cream);background:var(--navy3);transition:border-color .12s;
+    }
+    .choice:hover{ border-color:var(--gold); }
+    .choice.right{ border-color:rgba(74,222,128,.5);background:rgba(74,222,128,.08);color:#86efac; }
+    .choice.wrong{ border-color:rgba(248,113,113,.5);background:rgba(248,113,113,.08);color:#fca5a5; }
+    .quiz .explain{ font-size:12.5px;color:var(--muted);margin-top:6px;font-style:italic; }
 
-    .empty-state{ text-align:center;padding:48px 20px;color:var(--muted);background:var(--navy3);border:1px dashed var(--bdl);border-radius:12px; }
+    .lsn-actions{ display:flex;gap:10px;margin-top:14px;align-items:center;flex-wrap:wrap; }
+    .lsn-done-pill{ font-size:12px;color:#86efac;display:inline-flex;align-items:center;gap:6px; }
+
+    .empty-state{ text-align:center;padding:48px 24px;color:var(--muted);background:var(--navy3);border:1px dashed var(--bdl);border-radius:14px; }
     .empty-state i{ font-size:32px;color:var(--gold);opacity:.5;margin-bottom:14px;display:block; }
+
+    .reward-banner{
+      background:linear-gradient(135deg, rgba(74,222,128,.18), rgba(74,222,128,.04));
+      border:1px solid rgba(74,222,128,.4);border-radius:14px;padding:18px 22px;margin-bottom:18px;
+      display:flex;align-items:center;gap:14px;
+    }
+    .reward-banner i{ font-size:24px;color:#86efac; }
+    .reward-banner .t{ font-family:'Cinzel',serif;color:#86efac;font-size:15px;font-weight:700; }
+    .reward-banner .s{ color:var(--muted);font-size:13px;margin-top:2px; }
   </style>
 </head>
 <body>
@@ -55,9 +90,9 @@
 <div id="tarena-nav"></div>
 
 <div class="s-shell">
-  <a class="s-back" href="schools.html"><i class="fa-solid fa-arrow-left"></i> All schools</a>
+  <a class="s-back" href="schools.html"><i class="fa-solid fa-arrow-left"></i> All modules</a>
   <div id="content">
-    <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i><div>Loading school…</div></div>
+    <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i><div>Loading…</div></div>
   </div>
 </div>
 
@@ -67,81 +102,178 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="assets/supabase.js"></script>
 <script src="assets/app.js"></script>
-<script src="assets/market.js"></script>
 <script>
-(() => {
-  'use strict';
   TArenaUI.renderNav('schools');
   TArenaUI.renderFooter();
-
-  const session = TArenaAuth.requireAuth();
-  if (!session) throw new Error('redirect');
   const sb = window.TArenaDB;
 
-  const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  function escHtml(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function fmtMoney(n){ return '$' + (n||0).toLocaleString(); }
 
-  const id = new URLSearchParams(location.search).get('id');
-  if (!id) {
-    document.getElementById('content').innerHTML =
-      `<div class="empty-state"><i class="fa-solid fa-link-slash"></i><div>No school specified.</div>
-       <a href="schools.html" class="btn-gold" style="margin-top:14px;">Browse schools</a></div>`;
-    return;
+  // Lightweight markdown-ish renderer: paragraphs, **bold**, blank lines.
+  function renderContent(text){
+    if (!text) return '<p style="color:var(--muted);font-style:italic;">No content yet.</p>';
+    return text.split(/\n\s*\n/).map(p => {
+      const inline = escHtml(p).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>');
+      return `<p>${inline}</p>`;
+    }).join('');
   }
 
-  function moduleRow(m) {
-    const cls = m.is_complete ? 'complete' : (m.is_unlocked ? 'unlocked' : 'locked');
-    const inner = `
-      <div class="mod-num">${m.is_complete ? '<i class="fa-solid fa-check"></i>' :
-                              (m.is_unlocked ? m.ordinal : '<i class="fa-solid fa-lock"></i>')}</div>
-      <div class="mod-body">
-        <div class="ttl">${esc(m.title)}</div>
-        <div class="sum">${esc(m.summary || '')}</div>
-        <div class="meta">
-          <span><i class="fa-solid fa-clapperboard"></i> ${m.reel_count} reel${m.reel_count === 1 ? '' : 's'}</span>
-          <span class="${m.quiz_passed ? 'ok' : ''}"><i class="fa-solid ${m.quiz_passed ? 'fa-circle-check' : 'fa-circle-question'}"></i> Quiz ${m.quiz_passed ? 'passed' : (m.has_quiz ? 'pending' : 'n/a')}</span>
-          <span class="${m.challenge_passed ? 'ok' : ''}"><i class="fa-solid ${m.challenge_passed ? 'fa-circle-check' : 'fa-bullseye'}"></i> Challenge ${m.challenge_passed ? 'passed' : (m.has_challenge ? 'pending' : 'n/a')}</span>
-        </div>
-      </div>
-      <div class="mod-cta">${m.is_complete ? 'Complete' : (m.is_unlocked ? 'Open →' : 'Locked')}</div>`;
-    return m.is_unlocked
-      ? `<a class="mod-row ${cls}" href="module.html?id=${encodeURIComponent(m.id)}">${inner}</a>`
-      : `<div class="mod-row ${cls}" title="Complete the previous module to unlock.">${inner}</div>`;
+  // YouTube/Vimeo embed normaliser; falls back to <video> for direct files.
+  // URLs are http(s)-only and embed paths are rebuilt from extracted IDs so
+  // a malicious admin can't inject javascript: URLs or arbitrary iframe src.
+  function videoEmbed(url){
+    if (!url) return '';
+    if (!/^https?:\/\//i.test(url)) return '';
+    const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{6,})/);
+    if (yt) return `<div class="lsn-video"><iframe src="https://www.youtube.com/embed/${encodeURIComponent(yt[1])}" allowfullscreen></iframe></div>`;
+    const vm = url.match(/vimeo\.com\/(\d+)/);
+    if (vm) return `<div class="lsn-video"><iframe src="https://player.vimeo.com/video/${encodeURIComponent(vm[1])}" allowfullscreen></iframe></div>`;
+    if (/\.(mp4|webm|ogg)(\?.*)?$/i.test(url)) return `<div class="lsn-video"><video controls src="${escHtml(url)}"></video></div>`;
+    return `<p><a href="${escHtml(url)}" target="_blank" rel="noopener" style="color:var(--gold2);">Open video ↗</a></p>`;
   }
 
-  async function load() {
-    const { data, error } = await sb.rpc('get_school', { p_id: id });
-    const c = document.getElementById('content');
-    if (error || !data || !data.school) {
-      c.innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>
-        <div>Couldn't load this school.</div>
-        <div style="font-size:12px;margin-top:6px;">${(error && error.message) || 'Not found'}</div></div>`;
+  const params = new URLSearchParams(window.location.search);
+  const schoolId = params.get('id');
+  const state = { school: null, lessons: [], doneIds: new Set(), open: null };
+
+  async function load(){
+    if (!schoolId){ window.location.href = 'schools.html'; return; }
+    const session = TArenaAuth.getSession();
+    if (!session){ window.location.href = 'auth.html'; return; }
+
+    const [schRes, lsnRes, progRes] = await Promise.all([
+      sb.from('schools').select('*').eq('id', schoolId).maybeSingle(),
+      sb.from('lessons').select('*').eq('school_id', schoolId).order('order_index', { ascending: true }),
+      sb.rpc('get_my_progress'),
+    ]);
+
+    if (schRes.error || !schRes.data){
+      document.getElementById('content').innerHTML =
+        `<div class="empty-state"><i class="fa-solid fa-circle-question"></i><div>Module not found.</div></div>`;
       return;
     }
-    const s = data.school;
-    const mods = Array.isArray(data.modules) ? data.modules : [];
-    // Whitelist admin-supplied accent + icon (same rationale as schools.html).
-    const accent = /^#[0-9a-fA-F]{3,8}$/.test(s.accent_color || '') ? s.accent_color : '#c9a030';
-    const icon = /^fa-[a-z0-9-]+$/.test(s.icon || '') ? s.icon : 'fa-graduation-cap';
-    document.title = 'TradeArena · ' + s.title;
+    state.school = schRes.data;
+    state.lessons = lsnRes.data || [];
+    const prog = (progRes.data && progRes.data[0]) || { lesson_ids: [] };
+    state.doneIds = new Set(prog.lesson_ids || []);
+    render();
+  }
 
-    c.innerHTML = `
+  function render(){
+    const s = state.school;
+    const total = state.lessons.length;
+    const done  = state.lessons.filter(l => state.doneIds.has(l.id)).length;
+    const pct   = total ? Math.round((done/total)*100) : 0;
+    const isComplete = total > 0 && done >= total;
+
+    document.getElementById('content').innerHTML = `
       <div class="s-head">
-        <div class="icn" style="background:linear-gradient(135deg, ${accent}, ${accent}cc);">
-          <i class="fa-solid ${icon}"></i>
-        </div>
-        <div>
-          <h1>${esc(s.title)}</h1>
-          <p>${esc(s.summary || '')}</p>
+        <h1>${escHtml(s.title)}</h1>
+        <p>${escHtml(s.description||'')}</p>
+        <div class="s-meta">
+          <span class="pill"><i class="fa-solid fa-signal"></i> ${escHtml(s.difficulty||'Beginner')}</span>
+          <span class="pill"><i class="fa-solid fa-book-open"></i> ${total} lesson${total===1?'':'s'}</span>
+          <span class="pill gold"><i class="fa-solid fa-coins"></i> +${fmtMoney(s.reward_capital)} reward</span>
         </div>
       </div>
-      <div class="mod-list">
-        ${mods.length ? mods.map(moduleRow).join('') :
-          `<div class="empty-state"><i class="fa-solid fa-list-ol"></i><div>No modules yet in this school.</div></div>`}
+
+      ${isComplete ? `
+        <div class="reward-banner">
+          <i class="fa-solid fa-trophy"></i>
+          <div>
+            <div class="t">Module complete</div>
+            <div class="s">You earned ${fmtMoney(s.reward_capital)} bonus paper-capital. It's already in your account.</div>
+          </div>
+        </div>` : ''}
+
+      <div class="s-progress">
+        <div class="s-progress-bar"><span style="width:${pct}%"></span></div>
+        <div class="s-progress-meta">${done}/${total} · ${pct}%</div>
+      </div>
+
+      ${total ? `<div class="lsn-list" id="lsnList">${state.lessons.map((l,i) => lessonHtml(l, i)).join('')}</div>`
+              : `<div class="empty-state"><i class="fa-solid fa-book"></i><div>No lessons in this module yet.</div></div>`}
+    `;
+  }
+
+  function lessonHtml(l, idx){
+    const isDone = state.doneIds.has(l.id);
+    const isOpen = state.open === l.id;
+    const hasQuiz = Array.isArray(l.quiz) && l.quiz.length;
+    return `
+      <div class="lsn ${isDone?'complete':''} ${isOpen?'open':''}" id="lsn-${l.id}">
+        <div class="lsn-row" onclick="toggleLesson('${l.id}')">
+          <div class="lsn-num">${isDone ? '<i class="fa-solid fa-check"></i>' : (idx+1)}</div>
+          <div class="lsn-ttl">${escHtml(l.title)}</div>
+          <div class="lsn-icns">
+            ${l.video_url ? '<i class="fa-solid fa-video"></i>' : ''}
+            ${hasQuiz ? '<i class="fa-solid fa-circle-question"></i>' : ''}
+            <i class="fa-solid fa-chevron-${isOpen?'up':'down'}"></i>
+          </div>
+        </div>
+        <div class="lsn-body">
+          ${videoEmbed(l.video_url)}
+          <div class="lsn-content">${renderContent(l.content)}</div>
+          ${hasQuiz ? quizHtml(l) : ''}
+          <div class="lsn-actions">
+            ${isDone
+              ? '<span class="lsn-done-pill"><i class="fa-solid fa-circle-check"></i> Lesson complete</span>'
+              : `<button class="btn-gold" onclick="completeLesson('${l.id}')"><i class="fa-solid fa-check"></i> Mark complete</button>`}
+          </div>
+        </div>
       </div>`;
   }
 
+  function quizHtml(l){
+    return `<div class="quiz">
+      <h4><i class="fa-solid fa-circle-question"></i> Quick check</h4>
+      ${l.quiz.map((q, qi) => `
+        <div class="qq" data-correct="${q.correct}" data-explain="${escHtml(q.explain||'')}">
+          <div class="q">${qi+1}. ${escHtml(q.q)}</div>
+          ${(q.choices||[]).map((c, ci) => `
+            <div class="choice" onclick="answer(this, ${ci}, ${q.correct})">${escHtml(c)}</div>
+          `).join('')}
+          <div class="explain" style="display:none;"></div>
+        </div>`).join('')}
+    </div>`;
+  }
+
+  function toggleLesson(id){
+    state.open = (state.open === id) ? null : id;
+    render();
+  }
+  window.toggleLesson = toggleLesson;
+
+  function answer(el, picked, correct){
+    const qq = el.closest('.qq');
+    qq.querySelectorAll('.choice').forEach(c => { c.classList.remove('right','wrong'); });
+    if (picked === correct){ el.classList.add('right'); }
+    else {
+      el.classList.add('wrong');
+      qq.querySelectorAll('.choice')[correct].classList.add('right');
+    }
+    const exp = qq.querySelector('.explain');
+    if (qq.dataset.explain){ exp.textContent = qq.dataset.explain; exp.style.display = 'block'; }
+  }
+  window.answer = answer;
+
+  async function completeLesson(id){
+    const { data, error } = await sb.rpc('complete_lesson', { p_lesson_id: id });
+    if (error){ alert('Could not mark complete: '+error.message); return; }
+    state.doneIds.add(id);
+    const row = (data && data[0]) || {};
+    if (row.newly_completed_school && row.reward_amount){
+      // Re-fetch progress so the banner + bonus reflect immediately.
+      const { data: p } = await sb.rpc('get_my_progress');
+      if (p && p[0]) state.doneIds = new Set(p[0].lesson_ids || []);
+    }
+    state.open = id;  // keep the just-completed lesson expanded
+    render();
+  }
+  window.completeLesson = completeLesson;
+
   load();
-})();
 </script>
 </body>
 </html>

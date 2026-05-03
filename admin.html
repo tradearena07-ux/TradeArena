@@ -6,7 +6,7 @@
   <title>TradeArena · Admin</title>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=Cinzel+Decorative:wght@700&amp;family=DM+Sans:wght@300;400;500&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500&amp;display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
   <link rel="stylesheet" href="assets/styles.css"/>
   <style>
@@ -15,34 +15,43 @@
     .admin-header p{color:var(--muted);margin-top:4px;font-size:14px;}
     .admin-body{padding:0 5% 60px;display:flex;flex-direction:column;gap:24px;flex:1;}
 
-    .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;}
-    .stat-tile{background:var(--navy3);border:1px solid var(--border);border-radius:18px;padding:22px;}
-    .stat-tile .icon{width:42px;height:42px;border-radius:12px;background:rgba(201,160,48,.12);color:var(--gold2);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:14px;}
-    .stat-tile .lbl{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
-    .stat-tile .val{font-family:'Cinzel',serif;font-size:1.9rem;font-weight:700;}
-    .stat-tile .sub{color:var(--muted);font-size:12.5px;margin-top:6px;}
+    /* Tab strip */
+    .tabs{display:flex;gap:6px;background:var(--navy3);border:1px solid var(--bdl);padding:6px;border-radius:14px;flex-wrap:wrap;}
+    .tabs button{
+      flex:1;min-width:160px;padding:12px 16px;border-radius:10px;border:none;cursor:pointer;background:transparent;color:var(--muted);
+      font-family:'Cinzel',serif;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;
+      display:flex;align-items:center;justify-content:center;gap:8px;transition:all .12s;
+    }
+    .tabs button.on{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);}
+    .tabs button:not(.on):hover{color:var(--gold2);}
 
-    .grid-admin{display:grid;grid-template-columns:1.6fr 1fr;gap:24px;}
-    @media(max-width:1100px){.grid-admin{grid-template-columns:1fr;}}
+    .pane{display:none;}
+    .pane.on{display:flex;flex-direction:column;gap:18px;}
 
-    .uni-bar{display:flex;flex-direction:column;gap:14px;}
+    .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;}
+    .stat-tile{background:var(--navy3);border:1px solid var(--border);border-radius:16px;padding:18px;}
+    .stat-tile .icon{width:36px;height:36px;border-radius:10px;background:rgba(201,160,48,.12);color:var(--gold2);display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:10px;}
+    .stat-tile .lbl{font-family:'Cinzel',serif;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+    .stat-tile .val{font-family:'Cinzel',serif;font-size:1.6rem;font-weight:700;}
+    .stat-tile .sub{color:var(--muted);font-size:12px;margin-top:4px;}
+
+    .grid-2{display:grid;grid-template-columns:1.6fr 1fr;gap:18px;}
+    @media(max-width:1100px){.grid-2{grid-template-columns:1fr;}}
+
+    .uni-bar{display:flex;flex-direction:column;gap:12px;}
     .uni-row{display:flex;align-items:center;gap:14px;}
-    .uni-row .name{flex:0 0 180px;font-size:13.5px;}
-    .uni-row .bar{flex:1;height:10px;background:var(--navy3);border-radius:9999px;overflow:hidden;border:1px solid var(--bdl);}
-    .uni-row .bar > div{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:9999px;transition:width .6s;}
-    .uni-row .count{flex:0 0 60px;text-align:right;font-family:'Cinzel',serif;color:var(--gold2);font-size:13px;}
+    .uni-row .name{flex:0 0 180px;font-size:13px;}
+    .uni-row .bar{flex:1;height:8px;background:var(--navy3);border-radius:9999px;overflow:hidden;border:1px solid var(--bdl);}
+    .uni-row .bar > div{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:9999px;}
+    .uni-row .count{flex:0 0 50px;text-align:right;font-family:'Cinzel',serif;color:var(--gold2);font-size:13px;}
 
-    .actions{display:flex;gap:10px;flex-wrap:wrap;}
     .empty{text-align:center;padding:48px 18px;color:var(--muted);}
-    .empty i{font-size:36px;color:var(--gold);opacity:.4;margin-bottom:14px;display:block;}
+    .empty i{font-size:32px;color:var(--gold);opacity:.4;margin-bottom:14px;display:block;}
 
-    /* ---- Schools curator ---- */
-    .sec-h{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:14px;}
-    .sec-h h2{font-family:'Cinzel',serif;font-size:1.5rem;letter-spacing:-.5px;}
-    .sec-h p{color:var(--muted);font-size:13px;margin-top:2px;}
+    /* CMS curator: list + editor */
     .cur-grid{display:grid;grid-template-columns:340px 1fr;gap:18px;}
     @media(max-width:1100px){.cur-grid{grid-template-columns:1fr;}}
-    .cur-list{display:flex;flex-direction:column;gap:8px;max-height:520px;overflow:auto;}
+    .cur-list{display:flex;flex-direction:column;gap:8px;max-height:560px;overflow:auto;}
     .cur-item{
       background:var(--navy);border:1px solid var(--bdl);border-radius:10px;padding:12px 14px;cursor:pointer;
       display:flex;justify-content:space-between;align-items:center;gap:10px;transition:border-color .12s;
@@ -51,62 +60,59 @@
     .cur-item.selected{border-color:var(--gold);background:rgba(201,160,48,.06);}
     .cur-item .ttl{font-family:'Cinzel',serif;font-weight:600;color:var(--cream);font-size:13.5px;}
     .cur-item .meta{font-size:11px;color:var(--muted);margin-top:2px;}
+    .cur-item .pill{font-size:10px;padding:2px 8px;border-radius:9999px;background:var(--navy3);color:var(--muted);font-family:'Cinzel',serif;letter-spacing:.06em;}
+    .cur-item .pill.pub{background:rgba(74,222,128,.15);color:#86efac;}
     .cur-add{
       background:transparent;border:1px dashed var(--gold);color:var(--gold2);
-      border-radius:10px;padding:10px;cursor:pointer;font-family:'Cinzel',serif;font-size:12px;letter-spacing:.1em;text-transform:uppercase;
+      border-radius:10px;padding:10px;cursor:pointer;font-family:'Cinzel',serif;font-size:12px;letter-spacing:.1em;text-transform:uppercase;width:100%;margin-top:10px;
     }
     .cur-add:hover{background:rgba(201,160,48,.08);}
 
     .cur-form{display:grid;grid-template-columns:repeat(2, 1fr);gap:10px;margin-bottom:14px;}
-    .cur-form label{display:flex;flex-direction:column;gap:4px;font-size:11.5px;color:var(--muted);font-family:'Cinzel',serif;letter-spacing:.08em;text-transform:uppercase;}
+    .cur-form label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--muted);font-family:'Cinzel',serif;letter-spacing:.08em;text-transform:uppercase;}
     .cur-form label.full{grid-column:1/-1;}
     .cur-form input, .cur-form textarea, .cur-form select{
-      background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--cream);
+      background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--cream);
       font-family:'DM Sans',sans-serif;font-size:13px;outline:none;
     }
-    .cur-form textarea{resize:vertical;min-height:80px;font-family:'JetBrains Mono', ui-monospace, monospace;font-size:12px;}
+    .cur-form textarea{resize:vertical;min-height:90px;}
+    .cur-form textarea.code{font-family:'JetBrains Mono', ui-monospace, monospace;font-size:12px;min-height:140px;}
+    .cur-form .check{flex-direction:row;align-items:center;gap:8px;text-transform:none;letter-spacing:0;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:13px;}
+    .cur-form .check input{width:auto;}
     .cur-row-btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
 
     .cur-sub-h{font-family:'Cinzel',serif;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);
                 margin:18px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--bdl);}
 
-    .reel-search{display:flex;gap:8px;margin-bottom:10px;}
-    .reel-search input{flex:1;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--cream);font-size:13px;outline:none;}
-    .reel-pick{
-      background:var(--navy);border:1px solid var(--bdl);border-radius:8px;padding:8px 12px;
-      display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12.5px;cursor:pointer;
+    .lesson-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+    .lesson-row{
+      background:var(--navy);border:1px solid var(--bdl);border-radius:8px;padding:10px 12px;
+      display:flex;align-items:center;gap:10px;cursor:pointer;
     }
-    .reel-pick:hover{border-color:var(--gold);}
-    .reel-pick .sym{font-family:'Cinzel',serif;font-weight:700;color:var(--gold2);}
-    .reel-pick .by{color:var(--muted);font-size:11px;}
-    .reel-pick .th{color:var(--cream);font-size:12px;flex:1;margin:0 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-    .reel-results{display:flex;flex-direction:column;gap:6px;max-height:240px;overflow:auto;margin-bottom:14px;}
-
-    .attached-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
-    .attached-item{
-      background:rgba(201,160,48,.06);border:1px solid rgba(201,160,48,.3);border-radius:8px;padding:8px 12px;
-      display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12.5px;
+    .lesson-row:hover{border-color:var(--gold);}
+    .lesson-row.selected{border-color:var(--gold);background:rgba(201,160,48,.06);}
+    .lesson-row .ord{
+      width:24px;height:24px;border-radius:50%;background:var(--navy3);
+      display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-weight:700;font-size:11px;color:var(--gold2);flex-shrink:0;
     }
-    .attached-item .ord{
-      width:22px;height:22px;border-radius:50%;background:var(--gold);color:var(--navy);
-      display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-weight:700;font-size:11px;flex-shrink:0;
-    }
-    .attached-item .icn-btn{
-      background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:4px 6px;
-    }
-    .attached-item .icn-btn:hover{color:var(--gold2);}
+    .lesson-row .t{flex:1;font-size:13px;color:var(--cream);}
+    .lesson-row .icns{display:flex;gap:6px;color:var(--muted);font-size:11px;}
 
     .json-help{
       background:var(--navy3);border:1px solid var(--bdl);border-radius:8px;padding:10px 14px;font-size:11.5px;
       color:var(--muted);line-height:1.55;margin-bottom:10px;
     }
     .json-help code{background:var(--navy);padding:1px 6px;border-radius:4px;color:var(--gold2);font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11px;}
-    .tpl-btns{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
-    .tpl-btns button{
-      background:var(--navy3);border:1px solid var(--bdl);color:var(--gold2);border-radius:9999px;padding:5px 12px;
-      font-size:11px;font-family:'Cinzel',serif;letter-spacing:.06em;cursor:pointer;
-    }
-    .tpl-btns button:hover{border-color:var(--gold);}
+
+    .ann-card{background:var(--navy);border:1px solid var(--bdl);border-radius:10px;padding:14px 16px;margin-bottom:8px;}
+    .ann-card .head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;}
+    .ann-card .ttl{font-family:'Cinzel',serif;font-weight:700;color:var(--cream);font-size:14px;}
+    .ann-card .typ{font-size:10px;padding:2px 8px;border-radius:9999px;font-family:'Cinzel',serif;letter-spacing:.06em;}
+    .ann-card .typ.info{background:rgba(96,165,250,.15);color:#93c5fd;}
+    .ann-card .typ.warning{background:rgba(251,191,36,.15);color:#fcd34d;}
+    .ann-card .typ.success{background:rgba(74,222,128,.15);color:#86efac;}
+    .ann-card .msg{color:var(--muted);font-size:13px;line-height:1.55;}
+    .ann-card .actns{display:flex;gap:6px;margin-top:8px;}
 
     .gate{position:fixed;inset:0;background:rgba(6,14,28,.95);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(6px);}
     .gate .gate-card{max-width:420px;width:90%;background:var(--navy2);border:1px solid var(--border);border-radius:20px;padding:34px;text-align:center;}
@@ -117,7 +123,6 @@
 </head>
 <body>
 
-<!-- Admin gate (shown until we confirm the signed-in user has profiles.is_admin = true) -->
 <div class="gate" id="gate">
   <div class="gate-card">
     <h2 id="gateTitle">Checking access…</h2>
@@ -131,96 +136,120 @@
 <div class="admin-header">
   <div>
     <h1>Admin · Control Panel</h1>
-    <p>Manage members, monitor activity.</p>
-  </div>
-  <div class="actions">
-    <button class="btn-ghost" onclick="reload()"><i class="fa-solid fa-rotate"></i> Refresh</button>
-    <button class="btn-ghost" onclick="exportRegs()"><i class="fa-solid fa-download"></i> Export CSV</button>
+    <p>Manage learning content, announcements, members and the leaderboard.</p>
   </div>
 </div>
 
 <div class="admin-body">
 
-  <!-- Stat tiles -->
-  <div class="stat-grid">
-    <div class="stat-tile">
-      <div class="icon"><i class="fa-solid fa-users"></i></div>
-      <div class="lbl">Total Members</div>
-      <div class="val" id="statTotal">0</div>
-      <div class="sub" id="statTotalSub">All time</div>
-    </div>
-    <div class="stat-tile">
-      <div class="icon"><i class="fa-solid fa-graduation-cap"></i></div>
-      <div class="lbl">Students</div>
-      <div class="val text-gold" id="statStudents">0</div>
-      <div class="sub">University verified</div>
-    </div>
-    <div class="stat-tile">
-      <div class="icon"><i class="fa-solid fa-globe"></i></div>
-      <div class="lbl">Public</div>
-      <div class="val text-blue" id="statPublic">0</div>
-      <div class="sub">Open access</div>
-    </div>
-    <div class="stat-tile">
-      <div class="icon"><i class="fa-solid fa-clock"></i></div>
-      <div class="lbl">Last 7 Days</div>
-      <div class="val text-green" id="statRecent">0</div>
-      <div class="sub">New sign-ups</div>
+  <div class="tabs" role="tablist">
+    <button id="tab-schools" class="on" onclick="switchTab('schools')"><i class="fa-solid fa-graduation-cap"></i> Schools &amp; Lessons</button>
+    <button id="tab-ann" onclick="switchTab('ann')"><i class="fa-solid fa-bullhorn"></i> Announcements</button>
+    <button id="tab-users" onclick="switchTab('users')"><i class="fa-solid fa-users"></i> User Management</button>
+    <button id="tab-board" onclick="switchTab('board')"><i class="fa-solid fa-trophy"></i> Leaderboard Mgmt</button>
+  </div>
+
+  <!-- ========== TAB 1 · SCHOOLS & LESSONS ========== -->
+  <div id="pane-schools" class="pane on">
+    <div class="card-flat">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:18px;">
+        <div>
+          <h3 style="font-family:'Cinzel',serif;font-size:1.15rem;">Module Manager</h3>
+          <p style="color:var(--muted);font-size:13px;margin-top:4px;">Create modules (schools), then add lessons inside each. Students earn the reward when they complete every lesson in a module.</p>
+        </div>
+        <button class="btn-ghost" onclick="reloadSchools()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+      </div>
+
+      <div class="cur-grid">
+        <div>
+          <div class="cur-sub-h" style="margin-top:0;">Modules</div>
+          <div id="schoolList" class="cur-list"></div>
+          <button class="cur-add" onclick="newSchool()"><i class="fa-solid fa-plus"></i> New module</button>
+        </div>
+        <div id="schoolEditor">
+          <div class="empty"><i class="fa-solid fa-arrow-left"></i><div>Select a module on the left, or click <strong>New module</strong>.</div></div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="grid-admin">
-
-    <!-- Registrations table -->
+  <!-- ========== TAB 2 · ANNOUNCEMENTS ========== -->
+  <div id="pane-ann" class="pane">
     <div class="card-flat">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:12px;">
-        <h3 style="font-family:'Cinzel',serif;font-size:1.05rem;letter-spacing:.04em;">Registrations</h3>
-        <input type="text" id="searchReg" placeholder="Search email, username or university…" style="background:var(--navy3);border:1px solid var(--border);border-radius:9999px;padding:8px 18px;color:var(--cream);font-size:13px;outline:none;width:300px;max-width:100%;"/>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:18px;">
+        <div>
+          <h3 style="font-family:'Cinzel',serif;font-size:1.15rem;">Announcements</h3>
+          <p style="color:var(--muted);font-size:13px;margin-top:4px;">The most recent published announcement appears as a banner on the trade page.</p>
+        </div>
+        <button class="btn-gold" onclick="newAnnouncement()"><i class="fa-solid fa-plus"></i> New</button>
       </div>
-      <div style="overflow:auto;max-height:520px;">
-        <table class="tarena" id="regTable">
-          <thead>
-            <tr><th>Email</th><th>Username</th><th>University</th><th>Type</th><th class="text-right">Joined</th></tr>
-          </thead>
-          <tbody id="regBody"></tbody>
+      <div id="annEditor"></div>
+      <div id="annList" style="margin-top:14px;"></div>
+    </div>
+  </div>
+
+  <!-- ========== TAB 3 · USER MANAGEMENT ========== -->
+  <div id="pane-users" class="pane">
+    <div class="stat-grid">
+      <div class="stat-tile"><div class="icon"><i class="fa-solid fa-users"></i></div><div class="lbl">Total Members</div><div class="val" id="statTotal">0</div><div class="sub">All time</div></div>
+      <div class="stat-tile"><div class="icon"><i class="fa-solid fa-graduation-cap"></i></div><div class="lbl">Students</div><div class="val text-gold" id="statStudents">0</div><div class="sub">University verified</div></div>
+      <div class="stat-tile"><div class="icon"><i class="fa-solid fa-globe"></i></div><div class="lbl">Public</div><div class="val text-blue" id="statPublic">0</div><div class="sub">Open access</div></div>
+      <div class="stat-tile"><div class="icon"><i class="fa-solid fa-clock"></i></div><div class="lbl">Last 7 Days</div><div class="val text-green" id="statRecent">0</div><div class="sub">New sign-ups</div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card-flat">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:12px;">
+          <h3 style="font-family:'Cinzel',serif;font-size:1.05rem;">Registrations</h3>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="searchReg" placeholder="Search…" style="background:var(--navy3);border:1px solid var(--border);border-radius:9999px;padding:8px 16px;color:var(--cream);font-size:13px;outline:none;width:220px;"/>
+            <button class="btn-ghost" onclick="exportRegs()"><i class="fa-solid fa-download"></i></button>
+          </div>
+        </div>
+        <div style="overflow:auto;max-height:520px;">
+          <table class="tarena" id="regTable">
+            <thead><tr><th>Email</th><th>Username</th><th>University</th><th>Type</th><th class="text-right">Joined</th></tr></thead>
+            <tbody id="regBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-flat">
+        <div style="margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;">
+          <h3 style="font-family:'Cinzel',serif;font-size:1.05rem;">By University</h3>
+          <span class="badge-gold badge" style="font-size:11px;">Top 10</span>
+        </div>
+        <div class="uni-bar" id="uniBar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== TAB 4 · LEADERBOARD MANAGEMENT ========== -->
+  <div id="pane-board" class="pane">
+    <div class="card-flat">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:18px;">
+        <div>
+          <h3 style="font-family:'Cinzel',serif;font-size:1.15rem;">Award bonus paper-capital</h3>
+          <p style="color:var(--muted);font-size:13px;margin-top:4px;">Grants stack on top of the $100k starting balance and any module rewards. Logged in <code>admin_actions</code>.</p>
+        </div>
+        <button class="btn-ghost" onclick="reloadUsersTable()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+      </div>
+
+      <div class="cur-form" style="grid-template-columns:2fr 1fr 2fr auto;">
+        <label class="full" style="grid-column:1/2;">Target email<input id="awardEmail" placeholder="user@example.edu.au"/></label>
+        <label>Amount (AUD)<input id="awardAmount" type="number" value="5000"/></label>
+        <label>Reason<input id="awardReason" placeholder="e.g. tournament prize"/></label>
+        <label style="justify-content:flex-end;"><span style="visibility:hidden;">Submit</span><button class="btn-gold" onclick="awardCapital()" style="height:38px;"><i class="fa-solid fa-coins"></i> Grant</button></label>
+      </div>
+      <div id="awardMsg" style="font-size:12.5px;color:var(--muted);margin-bottom:14px;"></div>
+
+      <div style="overflow:auto;max-height:540px;">
+        <table class="tarena">
+          <thead><tr>
+            <th>Email</th><th>@User</th><th>University</th><th class="text-right">Total Bonus</th>
+            <th class="text-right">Modules</th><th class="text-right">Lessons</th><th class="text-right">Joined</th>
+          </tr></thead>
+          <tbody id="boardBody"></tbody>
         </table>
-      </div>
-    </div>
-
-    <!-- By university -->
-    <div class="card-flat">
-      <div style="margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;">
-        <h3 style="font-family:'Cinzel',serif;font-size:1.05rem;letter-spacing:.04em;">By University</h3>
-        <span class="badge-gold badge" style="font-size:11px;">Top 10</span>
-      </div>
-      <div class="uni-bar" id="uniBar"></div>
-    </div>
-
-  </div>
-
-  <!-- Schools curator -->
-  <div class="card-flat">
-    <div class="sec-h">
-      <div>
-        <h2><i class="fa-solid fa-graduation-cap" style="color:var(--gold);margin-right:8px;"></i> Schools curator</h2>
-        <p>Build curated playlists of reels with quizzes and paper-trade challenges. Run <code>select public.seed_starter_schools();</code> in the SQL editor to load the two starter schools.</p>
-      </div>
-      <button class="btn-ghost" onclick="reloadSchools()"><i class="fa-solid fa-rotate"></i> Refresh</button>
-    </div>
-
-    <div class="cur-grid">
-      <!-- LEFT: school list -->
-      <div>
-        <div class="cur-sub-h" style="margin-top:0;">Schools</div>
-        <div id="curSchools" class="cur-list"></div>
-        <button class="cur-add" style="margin-top:10px;width:100%;" onclick="newSchool()">
-          <i class="fa-solid fa-plus"></i> New school
-        </button>
-      </div>
-
-      <!-- RIGHT: editor -->
-      <div id="curEditor">
-        <div class="empty"><i class="fa-solid fa-arrow-left"></i><div>Select a school on the left, or click <strong>New school</strong> to create one.</div></div>
       </div>
     </div>
   </div>
@@ -233,11 +262,382 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="assets/supabase.js"></script>
 <script src="assets/app.js"></script>
-<script src="assets/market.js"></script>
 <script>
   TArenaUI.renderNav('admin');
   TArenaUI.renderFooter();
 
+  const sb = window.TArenaDB;
+  const ADMIN_EMAIL = 'tradearena07@gmail.com';
+
+  function escAttr(s){ return String(s == null ? '' : s).replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+  function escHtml(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function gate(title, msg, actions){
+    document.getElementById('gateTitle').textContent = title;
+    document.getElementById('gateMsg').textContent = msg;
+    document.getElementById('gateActions').innerHTML = (actions||[]).map(a =>
+      `<a href="${a.href}" class="${a.cls||'btn-gold'}">${a.label}</a>`).join('');
+    document.getElementById('gate').classList.remove('hide');
+  }
+
+  async function init(){
+    await TArenaAuth.reloadSession();
+    const session = TArenaAuth.getSession();
+    if (!session){
+      gate('Sign in required', 'You need to sign in with the admin account.',
+           [{href:'auth.html', label:'Sign in →'}]);
+      return;
+    }
+    const isAdmin = (session.user.email || '').toLowerCase() === ADMIN_EMAIL || session.user.isAdmin;
+    if (!isAdmin){
+      gate('Admin access only', `Signed in as ${session.user.email}, but this account isn't an admin.`,
+           [{href:'profile.html', label:'Back to profile', cls:'btn-ghost'}]);
+      return;
+    }
+    document.getElementById('gate').classList.add('hide');
+    // Initial loads — schools tab is open by default
+    await reloadSchools();
+    await loadUsers();
+    await reloadAnnouncements();
+    await reloadUsersTable();
+  }
+
+  function switchTab(t){
+    ['schools','ann','users','board'].forEach(k => {
+      document.getElementById('tab-'+k).classList.toggle('on', k===t);
+      document.getElementById('pane-'+k).classList.toggle('on', k===t);
+    });
+  }
+  window.switchTab = switchTab;
+
+  // ============================================================
+  // TAB 1 · Schools & Lessons
+  // ============================================================
+  const cur = { schools: [], selSchoolId: null, lessons: [], selLessonId: null };
+
+  async function reloadSchools(){
+    const { data, error } = await sb.from('schools')
+      .select('id,title,description,difficulty,reward_capital,order_index,published')
+      .order('order_index', { ascending: true })
+      .order('created_at', { ascending: true });
+    if (error){ alert('Load modules failed: '+error.message); return; }
+    cur.schools = data || [];
+    renderSchoolList();
+    if (cur.selSchoolId && cur.schools.find(s => s.id === cur.selSchoolId)){
+      await selectSchool(cur.selSchoolId);
+    }
+  }
+
+  function renderSchoolList(){
+    const wrap = document.getElementById('schoolList');
+    if (!cur.schools.length){
+      wrap.innerHTML = '<div class="empty" style="padding:24px 12px;"><i class="fa-solid fa-graduation-cap"></i><div>No modules yet.</div></div>';
+      return;
+    }
+    wrap.innerHTML = cur.schools.map(s => `
+      <div class="cur-item ${cur.selSchoolId === s.id ? 'selected':''}" onclick="selectSchool('${s.id}')">
+        <div style="flex:1;min-width:0;">
+          <div class="ttl">${escHtml(s.title)}</div>
+          <div class="meta">${escHtml(s.difficulty || 'Beginner')} · $${(s.reward_capital||0).toLocaleString()} reward · order ${s.order_index}</div>
+        </div>
+        <span class="pill ${s.published?'pub':''}">${s.published?'LIVE':'DRAFT'}</span>
+      </div>`).join('');
+  }
+
+  function newSchool(){
+    cur.selSchoolId = null;
+    cur.selLessonId = null;
+    cur.lessons = [];
+    renderSchoolList();
+    document.getElementById('schoolEditor').innerHTML = schoolFormHtml({});
+  }
+  window.newSchool = newSchool;
+
+  async function selectSchool(id){
+    cur.selSchoolId = id;
+    cur.selLessonId = null;
+    renderSchoolList();
+    const s = cur.schools.find(x => x.id === id) || {};
+    const { data: lessons, error } = await sb.from('lessons')
+      .select('id,title,content,video_url,quiz,order_index')
+      .eq('school_id', id)
+      .order('order_index', { ascending: true });
+    if (error){ alert('Load lessons failed: '+error.message); return; }
+    cur.lessons = lessons || [];
+    document.getElementById('schoolEditor').innerHTML = schoolFormHtml(s);
+  }
+  window.selectSchool = selectSchool;
+
+  function schoolFormHtml(s){
+    const isNew = !s.id;
+    return `<div class="cur-sub-h" style="margin-top:0;">${isNew ? 'New module' : 'Edit module'}</div>
+      <div class="cur-form">
+        <label class="full">Title<input id="schTitle" value="${escAttr(s.title)}" placeholder="e.g. Risk Management 101"/></label>
+        <label class="full">Description<textarea id="schDesc" placeholder="One-paragraph pitch shown on the schools list.">${escHtml(s.description)}</textarea></label>
+        <label>Difficulty
+          <select id="schDiff">
+            ${['Beginner','Intermediate','Advanced'].map(d => `<option ${(s.difficulty||'Beginner')===d?'selected':''}>${d}</option>`).join('')}
+          </select>
+        </label>
+        <label>Reward capital (AUD)<input id="schReward" type="number" value="${s.reward_capital != null ? s.reward_capital : 5000}"/></label>
+        <label>Order index<input id="schOrder" type="number" value="${s.order_index != null ? s.order_index : (cur.schools.length + 1)}"/></label>
+        <label class="check"><input id="schPub" type="checkbox" ${s.published?'checked':''}/> Published (visible to students)</label>
+      </div>
+      <div class="cur-row-btns">
+        <button class="btn-gold" onclick="saveSchool()"><i class="fa-solid fa-save"></i> ${isNew?'Create':'Save'}</button>
+        ${!isNew ? `<button class="btn-ghost" onclick="deleteSchool()"><i class="fa-solid fa-trash"></i> Delete module</button>` : ''}
+      </div>
+      ${!isNew ? renderLessonsSection(s.id) : ''}`;
+  }
+
+  function renderLessonsSection(schoolId){
+    const lessonsHtml = cur.lessons.length ? cur.lessons.map((l,i) => `
+      <div class="lesson-row ${cur.selLessonId===l.id?'selected':''}" onclick="selectLesson('${l.id}')">
+        <div class="ord">${l.order_index || (i+1)}</div>
+        <div class="t">${escHtml(l.title)}</div>
+        <div class="icns">
+          ${l.video_url ? '<i class="fa-solid fa-video" title="Has video"></i>' : ''}
+          ${l.quiz ? '<i class="fa-solid fa-circle-question" title="Has quiz"></i>' : ''}
+        </div>
+      </div>`).join('') : '<div class="empty" style="padding:18px;"><div>No lessons yet — add one below.</div></div>';
+
+    return `
+      <div class="cur-sub-h">Lessons</div>
+      <div class="lesson-list">${lessonsHtml}</div>
+      <button class="cur-add" onclick="newLesson()"><i class="fa-solid fa-plus"></i> New lesson</button>
+      <div id="lessonEditor" style="margin-top:14px;"></div>
+    `;
+  }
+
+  function newLesson(){
+    cur.selLessonId = null;
+    document.getElementById('lessonEditor').innerHTML = lessonFormHtml({
+      order_index: cur.lessons.length + 1
+    });
+    document.getElementById('lessonEditor').scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+  window.newLesson = newLesson;
+
+  function selectLesson(id){
+    cur.selLessonId = id;
+    document.querySelectorAll('.lesson-row').forEach(el => el.classList.remove('selected'));
+    const l = cur.lessons.find(x => x.id === id) || {};
+    document.getElementById('lessonEditor').innerHTML = lessonFormHtml(l);
+    document.getElementById('lessonEditor').scrollIntoView({behavior:'smooth', block:'nearest'});
+    selectSchool(cur.selSchoolId).then(() => {
+      // re-highlight after re-render
+      const row = document.querySelector(`.lesson-row[onclick*="${id}"]`);
+      if (row) row.classList.add('selected');
+    });
+  }
+  window.selectLesson = selectLesson;
+
+  function lessonFormHtml(l){
+    const isNew = !l.id;
+    const quizText = l.quiz ? JSON.stringify(l.quiz, null, 2) : '';
+    return `
+      <div class="cur-sub-h" style="margin-top:0;">${isNew?'New lesson':'Edit lesson'}</div>
+      <div class="cur-form">
+        <label class="full">Title<input id="lsnTitle" value="${escAttr(l.title)}" placeholder="e.g. What is a stock?"/></label>
+        <label>Order<input id="lsnOrder" type="number" value="${l.order_index != null ? l.order_index : (cur.lessons.length+1)}"/></label>
+        <label>Video URL (optional)<input id="lsnVideo" value="${escAttr(l.video_url)}" placeholder="https://…"/></label>
+        <label class="full">Content (markdown-ish)<textarea id="lsnContent" placeholder="Body text — paragraphs separated by a blank line.">${escHtml(l.content)}</textarea></label>
+        <label class="full">Quiz JSON (optional)
+          <textarea id="lsnQuiz" class="code" placeholder='[{"q":"…","choices":["A","B","C"],"correct":0,"explain":"…"}]'>${escHtml(quizText)}</textarea>
+        </label>
+      </div>
+      <div class="json-help">
+        Quiz format: <code>[{"q":"Question?","choices":["A","B","C"],"correct":0,"explain":"why A"}]</code> — leave blank for no quiz.
+      </div>
+      <div class="cur-row-btns">
+        <button class="btn-gold" onclick="saveLesson()"><i class="fa-solid fa-save"></i> ${isNew?'Create lesson':'Save lesson'}</button>
+        ${!isNew ? `<button class="btn-ghost" onclick="deleteLesson()"><i class="fa-solid fa-trash"></i> Delete lesson</button>` : ''}
+      </div>`;
+  }
+
+  async function saveSchool(){
+    const payload = {
+      title:          document.getElementById('schTitle').value.trim(),
+      description:    document.getElementById('schDesc').value.trim(),
+      difficulty:     document.getElementById('schDiff').value,
+      reward_capital: parseInt(document.getElementById('schReward').value, 10) || 0,
+      order_index:    parseInt(document.getElementById('schOrder').value, 10) || 0,
+      published:      document.getElementById('schPub').checked,
+    };
+    if (!payload.title){ alert('Title is required.'); return; }
+    let result;
+    if (cur.selSchoolId){
+      result = await sb.from('schools').update(payload).eq('id', cur.selSchoolId).select().single();
+    } else {
+      result = await sb.from('schools').insert(payload).select().single();
+    }
+    if (result.error){ alert('Save failed: '+result.error.message); return; }
+    cur.selSchoolId = result.data.id;
+    await reloadSchools();
+  }
+  window.saveSchool = saveSchool;
+
+  async function deleteSchool(){
+    if (!cur.selSchoolId) return;
+    if (!confirm('Delete this module and ALL its lessons + student progress?')) return;
+    const { error } = await sb.from('schools').delete().eq('id', cur.selSchoolId);
+    if (error){ alert('Delete failed: '+error.message); return; }
+    cur.selSchoolId = null;
+    cur.lessons = [];
+    document.getElementById('schoolEditor').innerHTML =
+      '<div class="empty"><i class="fa-solid fa-arrow-left"></i><div>Select a module on the left.</div></div>';
+    await reloadSchools();
+  }
+  window.deleteSchool = deleteSchool;
+
+  async function saveLesson(){
+    let quiz = null;
+    const rawQuiz = document.getElementById('lsnQuiz').value.trim();
+    if (rawQuiz){
+      try { quiz = JSON.parse(rawQuiz); }
+      catch(e){ alert('Quiz JSON invalid: '+e.message); return; }
+    }
+    const payload = {
+      school_id:   cur.selSchoolId,
+      title:       document.getElementById('lsnTitle').value.trim(),
+      content:     document.getElementById('lsnContent').value,
+      video_url:   document.getElementById('lsnVideo').value.trim() || null,
+      quiz:        quiz,
+      order_index: parseInt(document.getElementById('lsnOrder').value, 10) || 0,
+    };
+    if (!payload.title){ alert('Lesson title is required.'); return; }
+    let result;
+    if (cur.selLessonId){
+      result = await sb.from('lessons').update(payload).eq('id', cur.selLessonId).select().single();
+    } else {
+      result = await sb.from('lessons').insert(payload).select().single();
+    }
+    if (result.error){ alert('Save failed: '+result.error.message); return; }
+    cur.selLessonId = result.data.id;
+    await selectSchool(cur.selSchoolId);
+  }
+  window.saveLesson = saveLesson;
+
+  async function deleteLesson(){
+    if (!cur.selLessonId) return;
+    if (!confirm('Delete this lesson?')) return;
+    const { error } = await sb.from('lessons').delete().eq('id', cur.selLessonId);
+    if (error){ alert('Delete failed: '+error.message); return; }
+    cur.selLessonId = null;
+    await selectSchool(cur.selSchoolId);
+  }
+  window.deleteLesson = deleteLesson;
+
+  // ============================================================
+  // TAB 2 · Announcements
+  // ============================================================
+  let ann = { list: [], editing: null };
+
+  async function reloadAnnouncements(){
+    const { data, error } = await sb.from('announcements')
+      .select('*').order('created_at', { ascending: false });
+    if (error){ console.warn('Load announcements failed:', error); return; }
+    ann.list = data || [];
+    renderAnnouncements();
+  }
+
+  function renderAnnouncements(){
+    const wrap = document.getElementById('annList');
+    if (!ann.list.length){
+      wrap.innerHTML = '<div class="empty" style="padding:32px 18px;"><i class="fa-solid fa-bullhorn"></i><div>No announcements yet.</div></div>';
+      return;
+    }
+    wrap.innerHTML = ann.list.map(a => `
+      <div class="ann-card">
+        <div class="head">
+          <div class="ttl">${escHtml(a.title)}</div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span class="typ ${a.type}">${(a.type||'info').toUpperCase()}</span>
+            ${a.published ? '<span class="typ success" style="background:rgba(74,222,128,.15);color:#86efac;">PUBLISHED</span>'
+                          : '<span class="typ" style="background:var(--navy3);color:var(--muted);">DRAFT</span>'}
+          </div>
+        </div>
+        <div class="msg">${escHtml(a.message)}</div>
+        <div class="actns">
+          <button class="btn-ghost" onclick="editAnnouncement('${a.id}')"><i class="fa-solid fa-pen"></i> Edit</button>
+          <button class="btn-ghost" onclick="togglePub('${a.id}', ${!a.published})">${a.published?'<i class="fa-solid fa-eye-slash"></i> Unpublish':'<i class="fa-solid fa-eye"></i> Publish'}</button>
+          <button class="btn-ghost" onclick="deleteAnn('${a.id}')"><i class="fa-solid fa-trash"></i></button>
+          <span style="font-size:11px;color:var(--muted);margin-left:auto;align-self:center;">${new Date(a.created_at).toLocaleString('en-AU')}</span>
+        </div>
+      </div>`).join('');
+  }
+
+  function newAnnouncement(){
+    ann.editing = {};
+    renderAnnEditor();
+  }
+  window.newAnnouncement = newAnnouncement;
+
+  function editAnnouncement(id){
+    ann.editing = ann.list.find(a => a.id === id) || {};
+    renderAnnEditor();
+  }
+  window.editAnnouncement = editAnnouncement;
+
+  function renderAnnEditor(){
+    const a = ann.editing;
+    if (!a){ document.getElementById('annEditor').innerHTML = ''; return; }
+    document.getElementById('annEditor').innerHTML = `
+      <div class="cur-form" style="background:var(--navy3);padding:16px;border:1px solid var(--bdl);border-radius:12px;">
+        <label class="full">Title<input id="annTitle" value="${escAttr(a.title)}"/></label>
+        <label class="full">Message<textarea id="annMsg">${escHtml(a.message)}</textarea></label>
+        <label>Type
+          <select id="annType">
+            ${['info','warning','success'].map(t => `<option ${(a.type||'info')===t?'selected':''}>${t}</option>`).join('')}
+          </select>
+        </label>
+        <label class="check"><input id="annPub" type="checkbox" ${a.published!==false?'checked':''}/> Published</label>
+        <div class="cur-row-btns" style="grid-column:1/-1;margin-bottom:0;">
+          <button class="btn-gold" onclick="saveAnnouncement()"><i class="fa-solid fa-save"></i> ${a.id?'Save':'Create'}</button>
+          <button class="btn-ghost" onclick="cancelAnn()">Cancel</button>
+        </div>
+      </div>`;
+  }
+
+  async function saveAnnouncement(){
+    const a = ann.editing;
+    const payload = {
+      title:     document.getElementById('annTitle').value.trim(),
+      message:   document.getElementById('annMsg').value.trim(),
+      type:      document.getElementById('annType').value,
+      published: document.getElementById('annPub').checked,
+    };
+    if (!payload.title || !payload.message){ alert('Title and message are required.'); return; }
+    const result = a.id
+      ? await sb.from('announcements').update(payload).eq('id', a.id)
+      : await sb.from('announcements').insert(payload);
+    if (result.error){ alert('Save failed: '+result.error.message); return; }
+    ann.editing = null;
+    document.getElementById('annEditor').innerHTML = '';
+    await reloadAnnouncements();
+  }
+  window.saveAnnouncement = saveAnnouncement;
+
+  function cancelAnn(){ ann.editing = null; document.getElementById('annEditor').innerHTML = ''; }
+  window.cancelAnn = cancelAnn;
+
+  async function togglePub(id, pub){
+    const { error } = await sb.from('announcements').update({ published: pub }).eq('id', id);
+    if (error){ alert('Update failed: '+error.message); return; }
+    await reloadAnnouncements();
+  }
+  window.togglePub = togglePub;
+
+  async function deleteAnn(id){
+    if (!confirm('Delete this announcement?')) return;
+    const { error } = await sb.from('announcements').delete().eq('id', id);
+    if (error){ alert('Delete failed: '+error.message); return; }
+    await reloadAnnouncements();
+  }
+  window.deleteAnn = deleteAnn;
+
+  // ============================================================
+  // TAB 3 · User Management (preserved)
+  // ============================================================
   let allRegs = [];
   let searchTerm = '';
   document.getElementById('searchReg').addEventListener('input', e => {
@@ -245,44 +645,14 @@
     renderRegs();
   });
 
-  function gate(title, msg, actions) {
-    document.getElementById('gateTitle').textContent = title;
-    document.getElementById('gateMsg').textContent = msg;
-    const wrap = document.getElementById('gateActions');
-    wrap.innerHTML = (actions || []).map(a =>
-      `<a href="${a.href}" class="${a.cls || 'btn-gold'}">${a.label}</a>`
-    ).join('');
-    document.getElementById('gate').classList.remove('hide');
-  }
-
-  async function init() {
-    // Wait briefly for the session cache to hydrate from Supabase storage
-    await TArenaAuth.reloadSession();
-    const session = TArenaAuth.getSession();
-    if (!session) {
-      gate('Sign in required', 'You need to sign in with an admin account.',
-           [{href: 'auth.html', label: 'Sign in →'}]);
-      return;
-    }
-    if (!session.user.isAdmin) {
-      gate('Admin access only', `Signed in as ${session.user.handle}, but this account is not an admin. Set profiles.is_admin = true in Supabase to grant access.`,
-           [{href: 'profile.html', label: 'Back to profile', cls: 'btn-ghost'}]);
-      return;
-    }
-    document.getElementById('gate').classList.add('hide');
-    await reload();
-  }
-
-  async function reload() {
+  async function loadUsers(){
     allRegs = await TArenaAuth.getRegistrations();
-    renderStats();
-    renderRegs();
-    renderUniBar();
+    renderStats(); renderRegs(); renderUniBar();
   }
 
-  function renderStats() {
+  function renderStats(){
     const students = allRegs.filter(r => r.type === 'student').length;
-    const pub      = allRegs.filter(r => r.type !== 'student').length;
+    const pub      = allRegs.length - students;
     const weekAgo  = Date.now() - 7 * 86400000;
     const recent   = allRegs.filter(r => r.joinedAt > weekAgo).length;
     document.getElementById('statTotal').textContent    = allRegs.length.toLocaleString();
@@ -291,474 +661,105 @@
     document.getElementById('statRecent').textContent   = '+' + recent.toLocaleString();
   }
 
-  function renderRegs() {
-    const regs = allRegs
-      .slice()
-      .filter(r => !searchTerm
-        || (r.email      || '').toLowerCase().includes(searchTerm)
-        || (r.username   || '').toLowerCase().includes(searchTerm)
-        || (r.university || '').toLowerCase().includes(searchTerm));
+  function renderRegs(){
+    const regs = allRegs.filter(r => !searchTerm
+      || (r.email||'').toLowerCase().includes(searchTerm)
+      || (r.username||'').toLowerCase().includes(searchTerm)
+      || (r.university||'').toLowerCase().includes(searchTerm));
     const body = document.getElementById('regBody');
-    if (!regs.length) {
-      body.innerHTML = `<tr><td colspan="5"><div class="empty"><i class="fa-solid fa-user-plus"></i><div>No registrations yet.</div><div style="margin-top:8px;font-size:13px;">Send the link to your first testers — sign-ups will appear here in real time.</div></div></td></tr>`;
+    if (!regs.length){
+      body.innerHTML = '<tr><td colspan="5"><div class="empty"><i class="fa-solid fa-user-plus"></i><div>No registrations.</div></div></td></tr>';
       return;
     }
     body.innerHTML = regs.map(r => `<tr>
-      <td><strong>${r.email}</strong></td>
-      <td>@${r.username}</td>
-      <td>${r.university}</td>
-      <td>${r.type === 'student' ? '<span class="badge-gold badge">Student</span>' : '<span class="badge-blue badge">Public</span>'}${r.isAdmin ? ' <span class="badge badge-blue" style="background:rgba(96,165,250,.15);color:#93c5fd;">admin</span>' : ''}</td>
+      <td><strong>${escHtml(r.email)}</strong></td>
+      <td>@${escHtml(r.username)}</td>
+      <td>${escHtml(r.university)}</td>
+      <td>${r.type==='student' ? '<span class="badge-gold badge">Student</span>' : '<span class="badge-blue badge">Public</span>'}${r.isAdmin ? ' <span class="badge badge-blue">admin</span>' : ''}</td>
       <td class="text-right text-muted" style="font-size:12.5px;">${new Date(r.joinedAt).toLocaleString('en-AU')}</td>
     </tr>`).join('');
   }
 
-  function renderUniBar() {
+  function renderUniBar(){
     const counts = {};
-    allRegs.forEach(r => { counts[r.university || 'Public'] = (counts[r.university || 'Public'] || 0) + 1; });
-    const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]).slice(0, 10);
+    allRegs.forEach(r => { counts[r.university||'Public'] = (counts[r.university||'Public']||0) + 1; });
+    const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0, 10);
     const max = sorted[0] ? sorted[0][1] : 1;
     const bar = document.getElementById('uniBar');
-    if (!sorted.length) {
-      bar.innerHTML = '<div class="empty"><i class="fa-solid fa-graduation-cap"></i><div>No universities yet.</div></div>';
-      return;
-    }
-    bar.innerHTML = sorted.map(([uni, n]) => `
+    bar.innerHTML = sorted.length ? sorted.map(([uni,n]) => `
       <div class="uni-row">
-        <div class="name">${uni}</div>
+        <div class="name">${escHtml(uni)}</div>
         <div class="bar"><div style="width:${(n/max)*100}%"></div></div>
         <div class="count">${n}</div>
-      </div>`).join('');
+      </div>`).join('') : '<div class="empty"><i class="fa-solid fa-graduation-cap"></i><div>No data.</div></div>';
   }
 
-  function exportRegs() {
-    if (!allRegs.length) { alert('Nothing to export.'); return; }
+  function exportRegs(){
+    if (!allRegs.length){ alert('Nothing to export.'); return; }
     const rows = [['Email','Username','University','Type','Admin','Joined']];
-    allRegs.forEach(r => rows.push([r.email, r.username, r.university, r.type, r.isAdmin ? 'yes' : '', new Date(r.joinedAt).toISOString()]));
-    const csv = rows.map(r => r.map(c => `"${String(c == null ? '' : c).replace(/"/g,'""')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], {type: 'text/csv'});
+    allRegs.forEach(r => rows.push([r.email, r.username, r.university, r.type, r.isAdmin?'yes':'', new Date(r.joinedAt).toISOString()]));
+    const csv = rows.map(r => r.map(c => `"${String(c==null?'':c).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], {type:'text/csv'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = 'tradearena-registrations-' + new Date().toISOString().slice(0,10) + '.csv';
+    a.href = url; a.download = 'tradearena-registrations-'+new Date().toISOString().slice(0,10)+'.csv';
     a.click();
     URL.revokeObjectURL(url);
   }
   window.exportRegs = exportRegs;
-  window.reload = reload;
 
   // ============================================================
-  // Schools curator
+  // TAB 4 · Leaderboard Mgmt — list users + award capital
   // ============================================================
-  const sb = window.TArenaDB;
-  const cur = {
-    schools: [],
-    selSchoolId: null,
-    school: null,        // {school, modules}
-    selModuleId: null,
-    moduleData: null,    // get_module response
-    reelResults: [],
-  };
+  let boardUsers = [];
 
-  function escAttr(s) { return String(s == null ? '' : s).replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
-  function escHtml(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-
-  async function reloadSchools() {
-    const { data, error } = await sb.rpc('list_schools');
-    if (error) { alert('Load schools failed: ' + error.message); return; }
-    cur.schools = Array.isArray(data) ? data : [];
-    renderSchoolList();
-    if (cur.selSchoolId) await selectSchool(cur.selSchoolId);
+  async function reloadUsersTable(){
+    const { data, error } = await sb.rpc('admin_list_users');
+    if (error){ console.warn('admin_list_users failed:', error); return; }
+    boardUsers = data || [];
+    renderBoard();
   }
 
-  function renderSchoolList() {
-    const wrap = document.getElementById('curSchools');
-    if (!cur.schools.length) {
-      wrap.innerHTML = '<div class="empty" style="padding:24px 12px;"><i class="fa-solid fa-graduation-cap"></i><div>No schools yet.</div></div>';
+  function renderBoard(){
+    const body = document.getElementById('boardBody');
+    if (!boardUsers.length){
+      body.innerHTML = '<tr><td colspan="7"><div class="empty"><i class="fa-solid fa-trophy"></i><div>No users.</div></div></td></tr>';
       return;
     }
-    wrap.innerHTML = cur.schools.map(s => `
-      <div class="cur-item ${cur.selSchoolId === s.id ? 'selected' : ''}" onclick="selectSchool('${s.id}')">
-        <div>
-          <div class="ttl">${escHtml(s.title)}</div>
-          <div class="meta">${escHtml(s.slug)} · ${s.module_count || 0} modules</div>
-        </div>
-        <i class="fa-solid fa-chevron-right text-muted"></i>
-      </div>`).join('');
+    body.innerHTML = boardUsers.map(u => `<tr>
+      <td><strong>${escHtml(u.email)}</strong></td>
+      <td>@${escHtml(u.username)}</td>
+      <td>${escHtml(u.university)}</td>
+      <td class="text-right text-gold">$${(u.total_bonus||0).toLocaleString()}</td>
+      <td class="text-right">${u.schools_completed}</td>
+      <td class="text-right">${u.lessons_completed}</td>
+      <td class="text-right text-muted" style="font-size:12px;">${new Date(u.joined_at).toLocaleDateString('en-AU')}</td>
+    </tr>`).join('');
   }
 
-  function newSchool() {
-    cur.selSchoolId = null;
-    cur.school = null;
-    cur.selModuleId = null;
-    cur.moduleData = null;
-    renderSchoolList();
-    document.getElementById('curEditor').innerHTML = schoolFormHtml({});
-  }
-
-  async function selectSchool(id) {
-    cur.selSchoolId = id;
-    cur.selModuleId = null;
-    cur.moduleData = null;
-    renderSchoolList();
-    const { data, error } = await sb.rpc('get_school', { p_id: id });
-    if (error) { alert('Load school failed: ' + error.message); return; }
-    cur.school = data;
-    renderEditor();
-  }
-
-  function schoolFormHtml(s) {
-    const isNew = !s.id;
-    return `<div class="cur-sub-h" style="margin-top:0;">${isNew ? 'New school' : 'Edit school'}</div>
-      <div class="cur-form">
-        <label class="full">Title<input id="schTitle" value="${escAttr(s.title)}" placeholder="e.g. Risk 101"/></label>
-        <label>Slug<input id="schSlug" value="${escAttr(s.slug)}" placeholder="risk-101"/></label>
-        <label>Ordinal<input id="schOrdinal" type="number" value="${s.ordinal != null ? s.ordinal : ''}" placeholder="1"/></label>
-        <label>Icon (Font Awesome)<input id="schIcon" value="${escAttr(s.icon || 'fa-graduation-cap')}"/></label>
-        <label>Accent colour<input id="schAccent" value="${escAttr(s.accent_color || '#c9a030')}"/></label>
-        <label class="full">Summary<textarea id="schSummary" placeholder="One-line pitch shown on the card.">${escHtml(s.summary)}</textarea></label>
-      </div>
-      <div class="cur-row-btns">
-        <button class="btn-gold" onclick="saveSchool()"><i class="fa-solid fa-save"></i> ${isNew ? 'Create' : 'Save'}</button>
-        ${!isNew ? `<button class="btn-ghost" onclick="deleteSchool()"><i class="fa-solid fa-trash"></i> Delete</button>` : ''}
-        <button class="btn-ghost" onclick="cancelEditSchool()">Cancel</button>
-      </div>
-      ${!isNew ? renderModulesSection(s.id) : ''}`;
-  }
-
-  function renderEditor() {
-    const s = (cur.school && cur.school.school) || {};
-    document.getElementById('curEditor').innerHTML = schoolFormHtml(s);
-    if (cur.selModuleId) renderModuleEditor();
-  }
-
-  function cancelEditSchool() {
-    cur.selSchoolId = null;
-    cur.school = null;
-    document.getElementById('curEditor').innerHTML =
-      '<div class="empty"><i class="fa-solid fa-arrow-left"></i><div>Select a school on the left.</div></div>';
-    renderSchoolList();
-  }
-
-  async function saveSchool() {
-    const s = (cur.school && cur.school.school) || {};
-    const payload = {
-      id: s.id || null,
-      slug:  document.getElementById('schSlug').value.trim(),
-      title: document.getElementById('schTitle').value.trim(),
-      summary: document.getElementById('schSummary').value,
-      icon: document.getElementById('schIcon').value.trim(),
-      accent_color: document.getElementById('schAccent').value.trim(),
-      ordinal: parseInt(document.getElementById('schOrdinal').value, 10) || 0,
-    };
-    if (!payload.title || !payload.slug) { alert('Title and slug are required.'); return; }
-    const { data, error } = await sb.rpc('admin_upsert_school', { p: payload });
-    if (error) { alert('Save failed: ' + error.message); return; }
-    cur.selSchoolId = data;
-    await reloadSchools();
-  }
-
-  async function deleteSchool() {
-    const s = cur.school && cur.school.school;
-    if (!s) return;
-    if (!confirm(`Delete school "${s.title}" and all its modules / quizzes / challenges? This cannot be undone.`)) return;
-    const { error } = await sb.rpc('admin_delete_school', { p_id: s.id });
-    if (error) { alert('Delete failed: ' + error.message); return; }
-    cancelEditSchool();
-    await reloadSchools();
-  }
-
-  function renderModulesSection(schoolId) {
-    const mods = (cur.school && cur.school.modules) || [];
-    return `<div class="cur-sub-h">Modules</div>
-      <div class="cur-list" style="max-height:none;">
-        ${mods.length ? mods.map(m => `
-          <div class="cur-item ${cur.selModuleId === m.id ? 'selected' : ''}" onclick="selectModule('${m.id}')">
-            <div>
-              <div class="ttl">M${m.ordinal} · ${escHtml(m.title)}</div>
-              <div class="meta">${m.reel_count} reels · ${m.has_quiz ? 'quiz' : 'no quiz'} · ${m.has_challenge ? 'challenge' : 'no challenge'}</div>
-            </div>
-            <i class="fa-solid fa-chevron-right text-muted"></i>
-          </div>`).join('') : '<div class="text-muted" style="font-size:12.5px;padding:10px 0;">No modules yet.</div>'}
-      </div>
-      <button class="cur-add" style="margin-top:10px;width:100%;" onclick="newModule('${schoolId}')">
-        <i class="fa-solid fa-plus"></i> New module
-      </button>
-      <div id="modEditor"></div>`;
-  }
-
-  function newModule(schoolId) {
-    cur.selModuleId = null;
-    cur.moduleData = null;
-    const nextOrd = ((cur.school && cur.school.modules) || []).reduce((mx, m) => Math.max(mx, m.ordinal), 0) + 1;
-    document.getElementById('modEditor').innerHTML = moduleFormHtml({ school_id: schoolId, ordinal: nextOrd });
-  }
-
-  async function selectModule(id) {
-    cur.selModuleId = id;
-    const { data, error } = await sb.rpc('get_module', { p_id: id });
-    if (error) { alert('Load module failed: ' + error.message); return; }
-    cur.moduleData = data;
-    renderEditor();
-  }
-
-  function moduleFormHtml(m) {
-    const isNew = !m.id;
-    return `<div class="cur-sub-h">${isNew ? 'New module' : 'Edit module'}</div>
-      <div class="cur-form">
-        <label class="full">Title<input id="modTitle" value="${escAttr(m.title)}" placeholder="e.g. Position sizing"/></label>
-        <label>Ordinal<input id="modOrdinal" type="number" value="${m.ordinal != null ? m.ordinal : ''}"/></label>
-        <label class="full">Summary<textarea id="modSummary" placeholder="One-line summary.">${escHtml(m.summary)}</textarea></label>
-      </div>
-      <div class="cur-row-btns">
-        <button class="btn-gold" onclick="saveModule()"><i class="fa-solid fa-save"></i> ${isNew ? 'Create' : 'Save'}</button>
-        ${!isNew ? `<button class="btn-ghost" onclick="deleteModule()"><i class="fa-solid fa-trash"></i> Delete</button>` : ''}
-      </div>
-      ${!isNew ? `
-        <div class="cur-sub-h">Reels playlist</div>
-        <div id="reelsAttached"></div>
-        <div class="reel-search">
-          <input id="reelQ" placeholder="Search reels by symbol, thesis or author…" onkeyup="if(event.key==='Enter') searchReels()"/>
-          <button class="btn-ghost" onclick="searchReels()"><i class="fa-solid fa-search"></i></button>
-        </div>
-        <div id="reelResults" class="reel-results"></div>
-
-        <div class="cur-sub-h">Quiz</div>
-        <div class="json-help">
-          JSON array. Each question: <code>{"q":"…","choices":["A","B","C"],"correct":0,"explain":"…"}</code>.
-          <code>correct</code> is the 0-based index. Submit to update or create the quiz.
-        </div>
-        <label style="display:block;font-size:11.5px;color:var(--muted);font-family:'Cinzel',serif;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;">Pass mark (%)</label>
-        <input id="quizPass" type="number" value="${(cur.moduleData && cur.moduleData.quiz && cur.moduleData.quiz.pass_pct) || 70}" style="background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--cream);font-size:13px;width:100px;margin-bottom:8px;"/>
-        <textarea id="quizJson" style="width:100%;min-height:160px;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--cream);font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;outline:none;"></textarea>
-        <div class="cur-row-btns" style="margin-top:8px;">
-          <button class="btn-gold" onclick="saveQuiz()"><i class="fa-solid fa-save"></i> Save quiz</button>
-        </div>
-
-        <div class="cur-sub-h">Challenge</div>
-        <div class="cur-form">
-          <label class="full">Title<input id="chTitle" value="${escAttr(cur.moduleData && cur.moduleData.challenge && cur.moduleData.challenge.title)}"/></label>
-          <label class="full">Summary<textarea id="chSummary">${escHtml(cur.moduleData && cur.moduleData.challenge && cur.moduleData.challenge.summary)}</textarea></label>
-        </div>
-        <div class="json-help">
-          Spec JSON shape: <code>{"kind":"min_trades","params":{"n":3,"market":"asx"},"perk":{"kind":"extra_capital","value":{"amount":5000}}}</code>.
-          Kinds: <code>min_trades</code>, <code>consecutive_wins</code> (params.tag optional), <code>min_rr</code> (params.ratio, params.min_hold_days), <code>journal_count</code> (params.n, params.days).
-          Perk kinds: <code>extra_capital</code> (value.amount), <code>indicator_unlock</code> (value.indicator + value.label), <code>badge</code> (value.key + value.label + value.icon).
-        </div>
-        <div class="tpl-btns">
-          <button onclick="chTemplate('min_trades')">+ min_trades</button>
-          <button onclick="chTemplate('consecutive_wins')">+ consecutive_wins</button>
-          <button onclick="chTemplate('min_rr')">+ min_rr</button>
-          <button onclick="chTemplate('journal_count')">+ journal_count</button>
-        </div>
-        <textarea id="chSpec" style="width:100%;min-height:140px;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--cream);font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;outline:none;"></textarea>
-        <div class="cur-row-btns" style="margin-top:8px;">
-          <button class="btn-gold" onclick="saveChallenge()"><i class="fa-solid fa-save"></i> Save challenge</button>
-        </div>
-      ` : ''}`;
-  }
-
-  function renderModuleEditor() {
-    const m = cur.moduleData && cur.moduleData.module;
-    if (!m) return;
-    const wrap = document.getElementById('modEditor');
-    if (!wrap) return;
-    wrap.innerHTML = moduleFormHtml(m);
-    renderAttachedReels();
-    // Pre-fill quiz JSON. The public get_module strips correct + explain,
-    // so we round-trip through the admin-only admin_get_quiz RPC to avoid
-    // silently zero-ing answers when an admin re-saves an existing quiz.
-    const qta = document.getElementById('quizJson');
-    if (qta) {
-      qta.value = '[\n  { "q": "Loading…", "choices": [], "correct": 0, "explain": "" }\n]';
-      sb.rpc('admin_get_quiz', { p_module_id: cur.selModuleId }).then(({ data, error }) => {
-        if (error) { qta.value = '// admin_get_quiz failed: ' + error.message; return; }
-        if (data && Array.isArray(data.questions)) {
-          qta.value = JSON.stringify(data.questions, null, 2);
-          const passInput = document.getElementById('quizPass');
-          if (passInput && data.pass_pct) passInput.value = data.pass_pct;
-        } else {
-          qta.value = '[\n  { "q": "", "choices": ["A","B","C","D"], "correct": 0, "explain": "" }\n]';
-        }
-      });
-    }
-    // Pre-fill challenge spec JSON
-    const csp = document.getElementById('chSpec');
-    if (csp) {
-      const c = cur.moduleData.challenge;
-      csp.value = c && c.spec
-        ? JSON.stringify(c.spec, null, 2)
-        : JSON.stringify({ kind: 'min_trades', params: { n: 3 }, perk: { kind: 'extra_capital', value: { amount: 5000 } } }, null, 2);
-    }
-  }
-
-  function renderAttachedReels() {
-    const wrap = document.getElementById('reelsAttached');
-    if (!wrap) return;
-    const reels = (cur.moduleData && cur.moduleData.reels) || [];
-    if (!reels.length) {
-      wrap.innerHTML = '<div class="text-muted" style="font-size:12.5px;padding:8px 0 12px;">No reels attached. Search below to add some.</div>';
-      return;
-    }
-    wrap.innerHTML = `<div class="attached-list">${reels.map((item, i) => {
-      const r = item.reel || {};
-      return `<div class="attached-item">
-        <div class="ord">${i + 1}</div>
-        <div style="flex:1;min-width:0;">
-          <span style="font-family:'Cinzel',serif;font-weight:700;color:var(--gold2);">${escHtml(r.symbol || '?')}</span>
-          <span style="color:var(--muted);font-size:11px;">@${escHtml((r.author && r.author.username) || '?')}</span>
-        </div>
-        <button class="icn-btn" title="Move up"  onclick="moveReel(${i}, -1)" ${i === 0 ? 'disabled' : ''}><i class="fa-solid fa-arrow-up"></i></button>
-        <button class="icn-btn" title="Move down" onclick="moveReel(${i},  1)" ${i === reels.length - 1 ? 'disabled' : ''}><i class="fa-solid fa-arrow-down"></i></button>
-        <button class="icn-btn" title="Remove" onclick="detachReel(${i})"><i class="fa-solid fa-xmark"></i></button>
-      </div>`;
-    }).join('')}</div>`;
-  }
-
-  async function saveModule() {
-    const m = (cur.moduleData && cur.moduleData.module) || {};
-    const schoolId = m.school_id || cur.selSchoolId;
-    const payload = {
-      id: m.id || null,
-      school_id: schoolId,
-      title:    document.getElementById('modTitle').value.trim(),
-      summary:  document.getElementById('modSummary').value,
-      ordinal:  parseInt(document.getElementById('modOrdinal').value, 10) || 1,
-    };
-    if (!payload.title) { alert('Title is required.'); return; }
-    const { data, error } = await sb.rpc('admin_upsert_module', { p: payload });
-    if (error) { alert('Save failed: ' + error.message); return; }
-    cur.selModuleId = data;
-    await selectSchool(schoolId);
-    await selectModule(data);
-  }
-
-  async function deleteModule() {
-    const m = cur.moduleData && cur.moduleData.module;
-    if (!m) return;
-    if (!confirm(`Delete module "${m.title}" and its quiz / challenge?`)) return;
-    const { error } = await sb.rpc('admin_delete_module', { p_id: m.id });
-    if (error) { alert('Delete failed: ' + error.message); return; }
-    cur.selModuleId = null;
-    cur.moduleData = null;
-    await selectSchool(m.school_id);
-  }
-
-  async function searchReels() {
-    const q = document.getElementById('reelQ').value.trim();
-    const { data, error } = await sb.rpc('admin_list_reels', { p_q: q, p_limit: 30 });
-    if (error) { alert('Search failed: ' + error.message); return; }
-    cur.reelResults = Array.isArray(data) ? data : [];
-    const wrap = document.getElementById('reelResults');
-    const attachedIds = new Set(((cur.moduleData && cur.moduleData.reels) || []).map(r => r.reel.id));
-    wrap.innerHTML = cur.reelResults.length
-      ? cur.reelResults.map(r => `<div class="reel-pick" onclick="attachReel('${r.id}')">
-          <span class="sym">${escHtml(r.symbol)}</span>
-          <span class="th">${escHtml(r.thesis)}</span>
-          <span class="by">@${escHtml(r.author)}</span>
-          ${attachedIds.has(r.id)
-            ? `<i class="fa-solid fa-check" style="color:#86efac;"></i>`
-            : `<i class="fa-solid fa-plus" style="color:var(--gold2);"></i>`}
-        </div>`).join('')
-      : '<div class="text-muted" style="font-size:12.5px;padding:8px 0;">No matching reels.</div>';
-  }
-
-  async function applyReelOrder(ids) {
-    const { error } = await sb.rpc('admin_set_module_reels',
-      { p_module_id: cur.selModuleId, p_reel_ids: ids });
-    if (error) { alert('Reorder failed: ' + error.message); return; }
-    await selectModule(cur.selModuleId);
-  }
-
-  async function attachReel(reelId) {
-    const ids = ((cur.moduleData && cur.moduleData.reels) || []).map(r => r.reel.id);
-    if (ids.includes(reelId)) {
-      // toggle off
-      await applyReelOrder(ids.filter(x => x !== reelId));
-    } else {
-      await applyReelOrder([...ids, reelId]);
-    }
-  }
-
-  async function detachReel(idx) {
-    const ids = ((cur.moduleData && cur.moduleData.reels) || []).map(r => r.reel.id);
-    ids.splice(idx, 1);
-    await applyReelOrder(ids);
-  }
-
-  async function moveReel(idx, delta) {
-    const ids = ((cur.moduleData && cur.moduleData.reels) || []).map(r => r.reel.id);
-    const j = idx + delta;
-    if (j < 0 || j >= ids.length) return;
-    [ids[idx], ids[j]] = [ids[j], ids[idx]];
-    await applyReelOrder(ids);
-  }
-
-  async function saveQuiz() {
-    let questions;
-    try { questions = JSON.parse(document.getElementById('quizJson').value); }
-    catch (e) { alert('Quiz JSON is invalid: ' + e.message); return; }
-    if (!Array.isArray(questions) || !questions.length) { alert('Provide at least one question.'); return; }
-    const pass = parseInt(document.getElementById('quizPass').value, 10) || 70;
-    const { error } = await sb.rpc('admin_upsert_quiz',
-      { p_module_id: cur.selModuleId, p_questions: questions, p_pass_pct: pass });
-    if (error) { alert('Save quiz failed: ' + error.message); return; }
-    alert('Quiz saved.');
-    await selectModule(cur.selModuleId);
-  }
-
-  async function saveChallenge() {
-    let spec;
-    try { spec = JSON.parse(document.getElementById('chSpec').value); }
-    catch (e) { alert('Challenge spec JSON is invalid: ' + e.message); return; }
-    const title = document.getElementById('chTitle').value.trim();
-    if (!title) { alert('Challenge title is required.'); return; }
-    const { error } = await sb.rpc('admin_upsert_challenge', {
-      p_module_id: cur.selModuleId,
-      p_title:     title,
-      p_summary:   document.getElementById('chSummary').value,
-      p_spec:      spec,
+  async function awardCapital(){
+    const email = document.getElementById('awardEmail').value.trim();
+    const amt   = parseInt(document.getElementById('awardAmount').value, 10);
+    const reason= document.getElementById('awardReason').value.trim();
+    const msg   = document.getElementById('awardMsg');
+    msg.textContent = '';
+    if (!email || !amt){ msg.style.color='var(--red,#f87171)'; msg.textContent='Email and amount are required.'; return; }
+    const { error } = await sb.rpc('admin_award_capital', {
+      p_target_email: email, p_amount: amt, p_reason: reason || null,
     });
-    if (error) { alert('Save challenge failed: ' + error.message); return; }
-    alert('Challenge saved.');
-    await selectModule(cur.selModuleId);
+    if (error){ msg.style.color='var(--red,#f87171)'; msg.textContent='Failed: '+error.message; return; }
+    msg.style.color='#86efac';
+    msg.textContent = `Granted $${amt.toLocaleString()} to ${email}.`;
+    document.getElementById('awardAmount').value = '';
+    document.getElementById('awardReason').value = '';
+    await reloadUsersTable();
   }
+  window.awardCapital = awardCapital;
+  window.reloadSchools = reloadSchools;
+  window.reloadAnnouncements = reloadAnnouncements;
+  window.reloadUsersTable = reloadUsersTable;
 
-  function chTemplate(kind) {
-    const tpls = {
-      min_trades:        { kind: 'min_trades',        params: { n: 3, market: 'asx' },                                perk: { kind: 'extra_capital',    value: { amount: 5000 } } },
-      consecutive_wins:  { kind: 'consecutive_wins',  params: { n: 3, tag: 'breakout' },                              perk: { kind: 'badge',            value: { key: 'streaker', label: 'Streaker', icon: 'fa-fire' } } },
-      min_rr:            { kind: 'min_rr',            params: { n: 2, ratio: 2.0, min_hold_days: 1 },                 perk: { kind: 'indicator_unlock', value: { indicator: 'rsi', label: 'RSI' } } },
-      journal_count:     { kind: 'journal_count',     params: { n: 5, days: 14 },                                     perk: { kind: 'badge',            value: { key: 'journaler', label: 'Journaller', icon: 'fa-book' } } },
-    };
-    document.getElementById('chSpec').value = JSON.stringify(tpls[kind], null, 2);
-  }
-
-  // expose curator handlers
-  window.reloadSchools  = reloadSchools;
-  window.newSchool      = newSchool;
-  window.selectSchool   = selectSchool;
-  window.saveSchool     = saveSchool;
-  window.deleteSchool   = deleteSchool;
-  window.cancelEditSchool = cancelEditSchool;
-  window.newModule      = newModule;
-  window.selectModule   = selectModule;
-  window.saveModule     = saveModule;
-  window.deleteModule   = deleteModule;
-  window.searchReels    = searchReels;
-  window.attachReel     = attachReel;
-  window.detachReel     = detachReel;
-  window.moveReel       = moveReel;
-  window.saveQuiz       = saveQuiz;
-  window.saveChallenge  = saveChallenge;
-  window.chTemplate     = chTemplate;
-
-  // After the original init() finishes (and the admin gate clears),
-  // load the curator schools list.
-  (async () => {
-    await init();
-    if (document.getElementById('gate').classList.contains('hide')) {
-      await reloadSchools();
-    }
-  })();
+  init();
   console.log('%c⚔️ TradeArena · Admin loaded.', 'color:#e8c060;font-weight:700;');
 </script>
 </body>

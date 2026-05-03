@@ -10,200 +10,62 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
   <link rel="stylesheet" href="assets/styles.css"/>
   <style>
-    .sch-shell{ max-width:1180px;margin:0 auto;padding:36px 24px 80px;flex:1;width:100%; }
+    .sh-shell{ max-width:1080px;margin:0 auto;padding:32px 24px 60px;flex:1;width:100%; }
+    .sh-hero{
+      background:linear-gradient(135deg, rgba(201,160,48,.12), rgba(201,160,48,.02));
+      border:1px solid var(--bdl);border-radius:18px;padding:30px 32px;margin-bottom:28px;
+    }
+    .sh-hero h1{ font-family:'Cinzel',serif;font-size:2rem;letter-spacing:-.02em;margin-bottom:8px; }
+    .sh-hero p{ color:var(--muted);font-size:14.5px;line-height:1.6;max-width:680px; }
+    .sh-stats{ display:flex;gap:18px;margin-top:18px;flex-wrap:wrap; }
+    .sh-stats .k{ font-family:'Cinzel',serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted); }
+    .sh-stats .v{ font-family:'Cinzel',serif;font-size:1.3rem;color:var(--gold2);font-weight:700; }
 
-    .sch-hero{
-      background:linear-gradient(135deg, var(--navy3) 0%, var(--navy2) 100%);
-      border:1px solid var(--border);border-radius:20px;
-      padding:32px 32px 28px;margin-bottom:28px;position:relative;overflow:hidden;
+    .mod-grid{ display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px; }
+    .mod-card{
+      background:var(--navy3);border:1px solid var(--bdl);border-radius:14px;padding:22px 24px;
+      display:flex;flex-direction:column;gap:14px;text-decoration:none;color:inherit;
+      transition:border-color .15s, transform .15s;
     }
-    .sch-hero::before{
-      content:'';position:absolute;inset:-2px;border-radius:20px;
-      background:radial-gradient(800px 240px at 80% 0%, rgba(232,192,96,.10), transparent 60%);
-      pointer-events:none;
+    .mod-card:hover{ border-color:var(--gold);transform:translateY(-2px); }
+    .mod-card.complete{ border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.04); }
+    .mod-card .topr{ display:flex;justify-content:space-between;align-items:center;gap:10px; }
+    .mod-card .diff{
+      font-family:'Cinzel',serif;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+      padding:3px 10px;border-radius:9999px;background:var(--navy);border:1px solid var(--bdl);color:var(--muted);
     }
-    .sch-hero h1{
-      font-family:'Cinzel',serif;font-size:2.4rem;letter-spacing:-.5px;margin:0 0 6px;
-      display:flex;align-items:center;gap:14px;
-    }
-    .sch-hero h1 i{ color:var(--gold); }
-    .sch-hero p{ color:var(--muted);font-size:14.5px;line-height:1.6;max-width:680px;margin:0 0 18px; }
-    .sch-progress-row{ display:flex;align-items:center;gap:14px;margin-top:18px;flex-wrap:wrap; }
-    .sch-progress-bar{
-      flex:1;min-width:240px;height:10px;background:rgba(122,138,170,.15);
-      border-radius:99px;overflow:hidden;position:relative;
-    }
-    .sch-progress-bar > span{
-      display:block;height:100%;background:linear-gradient(90deg, var(--gold), var(--gold2));
-      border-radius:99px;transition:width .6s ease;
-    }
-    .sch-progress-meta{ font-family:'Cinzel',serif;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2); }
-    .sch-bonus-badge{
-      display:inline-flex;align-items:center;gap:6px;padding:5px 11px;
-      background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);
-      border-radius:99px;font-size:12px;color:#10b981;font-weight:600;
-    }
+    .mod-card .diff.beg{ color:#86efac;border-color:rgba(74,222,128,.35); }
+    .mod-card .diff.int{ color:#fcd34d;border-color:rgba(251,191,36,.35); }
+    .mod-card .diff.adv{ color:#fca5a5;border-color:rgba(248,113,113,.35); }
+    .mod-card .badge-done{ font-size:11px;color:#86efac; }
+    .mod-card h3{ font-family:'Cinzel',serif;font-size:1.15rem;letter-spacing:-.02em;color:var(--cream); }
+    .mod-card p{ color:var(--muted);font-size:13.5px;line-height:1.55;flex:1; }
+    .mod-card .meta{ display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--bdl);padding-top:12px;font-size:12px;color:var(--muted); }
+    .mod-card .meta .reward{ color:var(--gold2);font-family:'Cinzel',serif;letter-spacing:.04em; }
+    .mod-card .progress{ height:6px;background:rgba(122,138,170,.15);border-radius:99px;overflow:hidden; }
+    .mod-card .progress > span{ display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:99px;transition:width .4s; }
 
-    .admin-pill{
-      position:absolute;top:18px;right:18px;
-      display:inline-flex;align-items:center;gap:6px;padding:5px 11px;
-      background:rgba(232,192,96,.15);border:1px solid var(--gold);border-radius:99px;
-      font-family:'Cinzel',serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold2);font-weight:700;
-    }
-
-    .sch-grid{ display:grid;grid-template-columns:repeat(auto-fill, minmax(330px,1fr));gap:20px; }
-    .sch-card{
-      background:var(--navy3);border:1px solid var(--bdl);border-radius:16px;
-      padding:22px;display:flex;flex-direction:column;gap:14px;
-      text-decoration:none;color:inherit;
-      transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease;
-      position:relative;overflow:hidden;cursor:pointer;
-    }
-    .sch-card:not(.locked):hover{ transform:translateY(-2px);border-color:var(--gold);box-shadow:0 12px 28px -16px rgba(232,192,96,.35); }
-    .sch-card.locked{ opacity:.55;cursor:not-allowed; }
-    .sch-card.complete{ border-color:rgba(16,185,129,.45); }
-    .sch-card-head{ display:flex;align-items:flex-start;gap:14px; }
-    .sch-icn{
-      width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;
-      font-size:22px;color:var(--navy);flex-shrink:0;
-    }
-    .sch-ttl{ font-family:'Cinzel',serif;font-size:1.18rem;font-weight:700;color:var(--cream);letter-spacing:.02em;line-height:1.25; }
-    .sch-meta{ color:var(--muted);font-size:12px;letter-spacing:.04em;margin-top:4px; }
-    .sch-meta i{ width:14px;text-align:center;margin-right:4px;opacity:.7; }
-    .sch-sum{ color:var(--muted);font-size:13.5px;line-height:1.55;flex:1;margin:0; }
-    .sch-bar{
-      height:6px;background:rgba(122,138,170,.15);border-radius:99px;overflow:hidden;
-    }
-    .sch-bar > span{ display:block;height:100%;background:linear-gradient(90deg, var(--gold), var(--gold2));border-radius:99px;transition:width .4s ease; }
-    .sch-bar.done > span{ background:linear-gradient(90deg, #10b981, #34d399); }
-    .sch-card-ftr{ display:flex;align-items:center;justify-content:space-between;gap:10px; }
-    .sch-cta{
-      display:inline-flex;align-items:center;gap:6px;padding:8px 14px;
-      background:var(--gold);color:var(--navy);border-radius:10px;
-      font-weight:700;font-size:13px;letter-spacing:.04em;text-decoration:none;
-      transition:background .12s ease;
-    }
-    .sch-card:not(.locked):hover .sch-cta{ background:var(--gold2); }
-    .sch-cta.outline{ background:transparent;border:1px solid var(--gold);color:var(--gold2); }
-    .sch-cta.complete{ background:rgba(16,185,129,.18);border:1px solid rgba(16,185,129,.5);color:#10b981; }
-    .sch-lock{
-      position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:50%;
-      background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;
-    }
-    .sch-rwd{ display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#10b981; }
-    .sch-rwd i{ font-size:11px; }
-
-    /* Admin panel */
-    .admin-panel{
-      margin-top:34px;padding:24px;background:var(--navy3);border:1px dashed var(--gold);border-radius:16px;
-    }
-    .admin-panel h2{ font-family:'Cinzel',serif;font-size:1.2rem;color:var(--gold2);margin:0 0 6px;display:flex;align-items:center;gap:10px; }
-    .admin-panel p{ color:var(--muted);font-size:13px;margin:0 0 16px; }
-    .admin-stats{ display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:18px; }
-    .admin-stat{
-      background:var(--navy2);border:1px solid var(--bdl);border-radius:12px;padding:12px 14px;
-    }
-    .admin-stat .k{ font-family:'Cinzel',serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted); }
-    .admin-stat .v{ font-family:'Cinzel',serif;font-size:1.2rem;color:var(--cream);margin-top:2px; }
-    .admin-stat .v small{ font-size:12px;color:var(--muted);font-weight:400; }
-
-    .admin-actions{ display:flex;flex-wrap:wrap;gap:10px; }
-    .admin-btn{
-      padding:8px 14px;background:var(--navy2);border:1px solid var(--gold);
-      color:var(--gold2);border-radius:10px;font-weight:600;font-size:13px;cursor:pointer;
-      display:inline-flex;align-items:center;gap:6px;
-    }
-    .admin-btn:hover{ background:rgba(232,192,96,.1); }
-
-    /* Modal (admin edit) */
-    .modal-back{
-      position:fixed;inset:0;background:rgba(6,14,28,.85);backdrop-filter:blur(6px);
-      display:none;align-items:center;justify-content:center;z-index:1000;padding:24px;
-    }
-    .modal-back.show{ display:flex; }
-    .modal{
-      background:var(--navy2);border:1px solid var(--border);border-radius:18px;
-      max-width:680px;width:100%;max-height:90vh;overflow:auto;padding:26px;
-    }
-    .modal h3{ font-family:'Cinzel',serif;font-size:1.25rem;margin:0 0 14px;color:var(--cream); }
-    .modal label{ display:block;font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:14px 0 6px; }
-    .modal input, .modal textarea{
-      width:100%;background:var(--navy3);border:1px solid var(--bdl);border-radius:10px;
-      padding:10px 12px;color:var(--cream);font-family:inherit;font-size:13.5px;
-    }
-    .modal textarea{ min-height:120px;resize:vertical;font-family:'DM Sans',monospace; }
-    .modal-actions{ display:flex;justify-content:flex-end;gap:10px;margin-top:20px; }
-    .btn-cancel{ padding:9px 16px;background:transparent;border:1px solid var(--bdl);color:var(--muted);border-radius:10px;cursor:pointer;font-weight:600; }
-    .btn-save{ padding:9px 16px;background:var(--gold);color:var(--navy);border:none;border-radius:10px;cursor:pointer;font-weight:700; }
-
-    .gate{ position:fixed;inset:0;background:rgba(6,14,28,.95);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(6px); }
-    .gate.hide{ display:none; }
-    .gate-card{ max-width:420px;width:90%;background:var(--navy2);border:1px solid var(--border);border-radius:20px;padding:34px;text-align:center; }
-    .gate-card h2{ font-family:'Cinzel',serif;font-size:1.4rem;margin-bottom:8px; }
-    .gate-card p{ color:var(--muted);font-size:13.5px;line-height:1.6;margin-bottom:16px; }
-
-    @media (max-width: 640px){
-      .sch-hero{ padding:24px 20px 22px; }
-      .sch-hero h1{ font-size:1.8rem; }
-      .admin-pill{ position:static;margin-bottom:12px; }
-    }
+    .empty-state{ text-align:center;padding:60px 24px;color:var(--muted);background:var(--navy3);border:1px dashed var(--bdl);border-radius:14px; }
+    .empty-state i{ font-size:36px;color:var(--gold);opacity:.5;margin-bottom:14px;display:block; }
   </style>
 </head>
 <body>
 
 <div id="tarena-nav"></div>
 
-<div class="gate hide" id="gate"><div class="gate-card">
-  <h2 id="gateTitle">Sign in required</h2>
-  <p id="gateMsg">You need an account to access TradeArena School.</p>
-  <a href="auth.html" class="btn-gold">Sign in →</a>
-</div></div>
-
-<div class="sch-shell">
-
-  <section class="sch-hero">
-    <span class="admin-pill" id="adminPill" style="display:none;"><i class="fa-solid fa-shield-halved"></i> Admin Mode</span>
-    <h1><i class="fa-solid fa-graduation-cap"></i> TradeArena School</h1>
-    <p>Learn to trade. Earn paper capital. Climb the leaderboard.</p>
-    <div class="sch-progress-row">
-      <div class="sch-progress-bar"><span id="overallBar" style="width:0%"></span></div>
-      <div class="sch-progress-meta" id="overallMeta">0 / 0 lessons</div>
-      <span class="sch-bonus-badge" id="rewardBadge" style="display:none;">
-        <i class="fa-solid fa-coins"></i> <span id="rewardEarned">$0</span> earned
-      </span>
+<div class="sh-shell">
+  <div class="sh-hero">
+    <h1>School of Trading</h1>
+    <p>Bite-sized lessons that take you from "what is a stock?" to running a real risk-managed paper book. Finish every lesson in a module to unlock the bonus paper-capital reward.</p>
+    <div class="sh-stats">
+      <div><div class="k">Modules</div><div class="v" id="hCount">—</div></div>
+      <div><div class="k">Lessons completed</div><div class="v" id="hLessons">0</div></div>
+      <div><div class="k">Bonus earned</div><div class="v" id="hBonus">$0</div></div>
     </div>
-  </section>
+  </div>
 
-  <div id="grid" class="sch-grid"></div>
-
-  <section class="admin-panel" id="adminPanel" style="display:none;">
-    <h2><i class="fa-solid fa-chart-bar"></i> Module completion stats</h2>
-    <p>Per-module learners (started a lesson) and completers (finished + earned the reward).</p>
-    <div class="admin-stats" id="adminStats"></div>
-    <div class="admin-actions">
-      <button class="admin-btn" id="btnRefreshStats"><i class="fa-solid fa-rotate"></i> Refresh stats</button>
-    </div>
-  </section>
-
-</div>
-
-<!-- Admin edit modal -->
-<div class="modal-back" id="editBack">
-  <div class="modal">
-    <h3 id="editTtl">Edit module</h3>
-    <input type="hidden" id="editKey"/>
-    <label>Title</label>
-    <input id="editTitle" maxlength="80"/>
-    <label>Summary</label>
-    <textarea id="editSummary" maxlength="400" style="min-height:70px;"></textarea>
-    <label>Reward amount (paper $)</label>
-    <input id="editReward" type="number" min="0" max="10000" step="100"/>
-    <label>Lessons (advanced — JSON array)</label>
-    <textarea id="editLessons" placeholder="Leave blank to keep default lessons" spellcheck="false"></textarea>
-    <div class="modal-actions">
-      <button class="btn-cancel" id="btnCancel">Cancel</button>
-      <button class="btn-save" id="btnSave">Save changes</button>
-    </div>
+  <div id="content">
+    <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i><div>Loading modules…</div></div>
   </div>
 </div>
 
@@ -213,211 +75,92 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="assets/supabase.js"></script>
 <script src="assets/app.js"></script>
-<script src="assets/market.js"></script>
-<script src="assets/school-content.js"></script>
 <script>
-(async () => {
-  'use strict';
   TArenaUI.renderNav('schools');
   TArenaUI.renderFooter();
-
-  const session = TArenaAuth.getSession();
-  if (!session) { document.getElementById('gate').classList.remove('hide'); return; }
-
   const sb = window.TArenaDB;
-  const isAdmin = !!session.user.isAdmin;
-  if (isAdmin) {
-    document.getElementById('adminPill').style.display = 'inline-flex';
-    document.getElementById('adminPanel').style.display = 'block';
-  }
 
-  const esc = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  const fmt$ = n => '$' + (n||0).toLocaleString('en-AU');
+  function escHtml(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function fmtMoney(n){ return '$' + (n||0).toLocaleString(); }
 
-  // ---- progress + overrides loading ------------------------------------
-  // Try server first, fall back to localStorage so the page works even
-  // before the migration has been applied.
-  const LSKEY = 'tarena.school.progress.v1';
-  function loadLocal() {
-    try { return JSON.parse(localStorage.getItem(LSKEY) || '{"l":[],"m":[]}'); }
-    catch(_) { return { l:[], m:[] }; }
-  }
-  function saveLocal(p) { try { localStorage.setItem(LSKEY, JSON.stringify(p)); } catch(_){} }
-
-  let progress = { lessons: new Set(), modules: new Set(), totalReward: 0 };
-  try {
-    const { data, error } = await sb.rpc('get_my_school_progress');
-    if (error) throw error;
-    const row = (Array.isArray(data) ? data[0] : data) || {};
-    progress.lessons = new Set(row.lesson_keys || []);
-    progress.modules = new Set(row.module_keys || []);
-    progress.totalReward = Number(row.total_reward) || 0;
-  } catch (e) {
-    console.warn('[school] using localStorage fallback', e?.message || e);
-    const local = loadLocal();
-    progress.lessons = new Set(local.l || []);
-    progress.modules = new Set(local.m || []);
-  }
-
-  let overrides = [];
-  try {
-    const { data } = await sb.from('school_module_overrides').select('*');
-    overrides = data || [];
-  } catch(_) { overrides = []; }
-  const MODULES = TArenaSchool.applyOverrides(overrides);
-
-  // ---- render ----------------------------------------------------------
-  function renderHero() {
-    const totalLessons = MODULES.reduce((s,m) => s + m.lessons.length, 0);
-    const doneLessons = MODULES.reduce((s,m) =>
-      s + m.lessons.filter(l => progress.lessons.has(l.key)).length, 0);
-    const pct = totalLessons ? Math.round(100 * doneLessons / totalLessons) : 0;
-    document.getElementById('overallBar').style.width = pct + '%';
-    document.getElementById('overallMeta').textContent =
-      `${doneLessons} / ${totalLessons} lessons · ${pct}%`;
-    if (progress.totalReward > 0) {
-      document.getElementById('rewardBadge').style.display = 'inline-flex';
-      document.getElementById('rewardEarned').textContent = fmt$(progress.totalReward);
+  async function load(){
+    const session = TArenaAuth.getSession();
+    // Schools/lessons rows are gated by RLS: only signed-in users see them.
+    if (!session){
+      document.getElementById('content').innerHTML = `
+        <div class="empty-state">
+          <i class="fa-solid fa-lock"></i>
+          <div style="font-size:16px;color:var(--cream);margin-bottom:8px;font-family:'Cinzel',serif;">Sign in to start learning</div>
+          <div>Lessons, progress and rewards live behind your account.</div>
+          <a href="auth.html" class="btn-gold" style="margin-top:18px;display:inline-block;">Sign in →</a>
+        </div>`;
+      return;
     }
-  }
 
-  function renderGrid() {
-    const grid = document.getElementById('grid');
-    const html = MODULES.map((m, i) => {
-      const lessonsDone = m.lessons.filter(l => progress.lessons.has(l.key)).length;
-      const totalMin = m.lessons.reduce((s,l) => s + (l.minutes || 4), 0);
-      const pct = m.lessons.length ? Math.round(100 * lessonsDone / m.lessons.length) : 0;
-      const moduleDone = progress.modules.has(m.key);
-      const prevDone = i === 0 ? true : progress.modules.has(MODULES[i-1].key);
-      const locked = !prevDone && !moduleDone;
-      const accent = /^#[0-9a-fA-F]{3,8}$/.test(m.accent) ? m.accent : '#c9a030';
-      const icon   = /^fa-[a-z0-9-]+$/.test(m.icon || '') ? m.icon : 'fa-graduation-cap';
-      const tint   = `linear-gradient(135deg, ${accent}, ${accent}cc)`;
-      const cls    = ['sch-card', locked ? 'locked' : '', moduleDone ? 'complete' : ''].filter(Boolean).join(' ');
-      const cta    = moduleDone
-        ? `<span class="sch-cta complete"><i class="fa-solid fa-check"></i> Completed</span>`
-        : (lessonsDone > 0
-            ? `<span class="sch-cta"><i class="fa-solid fa-arrow-right"></i> Continue</span>`
-            : (locked
-                ? `<span class="sch-cta outline"><i class="fa-solid fa-lock"></i> Locked</span>`
-                : `<span class="sch-cta"><i class="fa-solid fa-play"></i> Start module</span>`));
-      const lock = locked ? `<div class="sch-lock"><i class="fa-solid fa-lock"></i></div>` : '';
-      const editBtn = isAdmin
-        ? `<button class="admin-btn" data-edit="${esc(m.key)}" style="position:absolute;bottom:14px;right:14px;padding:5px 10px;font-size:11px;"><i class="fa-solid fa-pen"></i> Edit</button>`
-        : '';
-      const startUrl = locked ? '#' : `lesson.html?m=${encodeURIComponent(m.key)}&l=${encodeURIComponent(m.lessons[0].key)}`;
+    // Run schools, lesson counts, and progress in parallel.
+    const [schoolsRes, lessonsRes, progRes] = await Promise.all([
+      sb.from('schools')
+        .select('id,title,description,difficulty,reward_capital,order_index')
+        .eq('published', true)
+        .order('order_index', { ascending: true }),
+      sb.from('lessons').select('id,school_id'),
+      sb.rpc('get_my_progress'),
+    ]);
 
-      return `<div class="${cls}" data-href="${esc(startUrl)}" data-locked="${locked}">
-        ${lock}
-        <div class="sch-card-head">
-          <div class="sch-icn" style="background:${tint};"><i class="fa-solid ${icon}"></i></div>
-          <div style="flex:1;">
-            <div class="sch-ttl">${esc(m.title)}</div>
-            <div class="sch-meta">
-              <i class="fa-regular fa-circle-dot"></i>${m.lessons.length} lessons
-              <span style="margin:0 6px;opacity:.4;">·</span>
-              <i class="fa-regular fa-clock"></i>~${totalMin} mins
-            </div>
-          </div>
-        </div>
-        <p class="sch-sum">${esc(m.summary)}</p>
-        <div class="sch-bar ${pct === 100 ? 'done' : ''}"><span style="width:${pct}%"></span></div>
-        <div class="sch-card-ftr">
-          <span class="sch-rwd"><i class="fa-solid fa-coins"></i> +${fmt$(m.reward)} on completion</span>
-          ${cta}
-        </div>
-        ${editBtn}
-      </div>`;
-    }).join('');
-    grid.innerHTML = html;
+    if (schoolsRes.error){
+      document.getElementById('content').innerHTML =
+        `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i><div>Couldn't load modules: ${escHtml(schoolsRes.error.message)}</div></div>`;
+      return;
+    }
 
-    grid.querySelectorAll('.sch-card').forEach(card => {
-      card.addEventListener('click', e => {
-        if (e.target.closest('[data-edit]')) return;
-        if (card.dataset.locked === 'true') return;
-        const href = card.dataset.href;
-        if (href && href !== '#') window.location.href = href;
-      });
+    const schools = schoolsRes.data || [];
+    const lessonsBySchool = {};
+    (lessonsRes.data || []).forEach(l => {
+      lessonsBySchool[l.school_id] = lessonsBySchool[l.school_id] || [];
+      lessonsBySchool[l.school_id].push(l.id);
     });
 
-    if (isAdmin) {
-      grid.querySelectorAll('[data-edit]').forEach(btn => {
-        btn.addEventListener('click', e => {
-          e.stopPropagation();
-          openEdit(btn.dataset.edit);
-        });
-      });
+    const prog = (progRes.data && progRes.data[0]) || { lesson_ids: [], school_ids: [], total_bonus: 0 };
+    const doneLessons = new Set(prog.lesson_ids || []);
+    const doneSchools = new Set(prog.school_ids || []);
+
+    document.getElementById('hCount').textContent   = schools.length;
+    document.getElementById('hLessons').textContent = doneLessons.size;
+    document.getElementById('hBonus').textContent   = fmtMoney(prog.total_bonus);
+
+    if (!schools.length){
+      document.getElementById('content').innerHTML =
+        '<div class="empty-state"><i class="fa-solid fa-graduation-cap"></i><div>No published modules yet — check back soon.</div></div>';
+      return;
     }
+
+    document.getElementById('content').innerHTML = `<div class="mod-grid">
+      ${schools.map(s => {
+        const lessons = lessonsBySchool[s.id] || [];
+        const total   = lessons.length;
+        const done    = lessons.filter(id => doneLessons.has(id)).length;
+        const pct     = total ? Math.round((done/total)*100) : 0;
+        const isDone  = doneSchools.has(s.id);
+        const diffKey = (s.difficulty||'Beginner').toLowerCase().slice(0,3);
+        return `
+        <a class="mod-card ${isDone?'complete':''}" href="school.html?id=${encodeURIComponent(s.id)}">
+          <div class="topr">
+            <span class="diff ${diffKey}">${escHtml(s.difficulty||'Beginner')}</span>
+            ${isDone ? '<span class="badge-done"><i class="fa-solid fa-circle-check"></i> Complete</span>' : ''}
+          </div>
+          <h3>${escHtml(s.title)}</h3>
+          <p>${escHtml(s.description || '')}</p>
+          <div class="progress"><span style="width:${pct}%"></span></div>
+          <div class="meta">
+            <span>${done} / ${total} lessons</span>
+            <span class="reward">+${fmtMoney(s.reward_capital)}</span>
+          </div>
+        </a>`;
+      }).join('')}
+    </div>`;
   }
 
-  // ---- admin: stats + edit --------------------------------------------
-  async function loadStats() {
-    if (!isAdmin) return;
-    const wrap = document.getElementById('adminStats');
-    wrap.innerHTML = `<div class="admin-stat"><div class="k">Loading…</div></div>`;
-    try {
-      const { data, error } = await sb.rpc('admin_school_completion_stats');
-      if (error) throw error;
-      const map = {};
-      (data || []).forEach(r => { map[r.module_key] = r; });
-      wrap.innerHTML = MODULES.map(m => {
-        const r = map[m.key] || { learners: 0, completions: 0 };
-        return `<div class="admin-stat">
-          <div class="k">${esc(m.title)}</div>
-          <div class="v">${r.completions} <small>/ ${r.learners} started</small></div>
-        </div>`;
-      }).join('');
-    } catch (e) {
-      wrap.innerHTML = `<div class="admin-stat"><div class="k">Error</div><div class="v" style="font-size:13px;">${esc(e.message || e)}</div></div>`;
-    }
-  }
-
-  function openEdit(moduleKey) {
-    const m = MODULES.find(x => x.key === moduleKey);
-    if (!m) return;
-    document.getElementById('editTtl').textContent = `Edit · ${m.title}`;
-    document.getElementById('editKey').value = m.key;
-    document.getElementById('editTitle').value = m.title;
-    document.getElementById('editSummary').value = m.summary;
-    document.getElementById('editReward').value = m.reward;
-    document.getElementById('editLessons').value = '';
-    document.getElementById('editBack').classList.add('show');
-  }
-  function closeEdit() { document.getElementById('editBack').classList.remove('show'); }
-  document.getElementById('btnCancel').addEventListener('click', closeEdit);
-  document.getElementById('editBack').addEventListener('click', e => {
-    if (e.target.id === 'editBack') closeEdit();
-  });
-  document.getElementById('btnSave').addEventListener('click', async () => {
-    const payload = {
-      module_key:    document.getElementById('editKey').value,
-      title:         document.getElementById('editTitle').value.trim(),
-      summary:       document.getElementById('editSummary').value.trim(),
-      reward_amount: String(parseInt(document.getElementById('editReward').value, 10) || 0),
-    };
-    const lessonsRaw = document.getElementById('editLessons').value.trim();
-    if (lessonsRaw) {
-      try {
-        const parsed = JSON.parse(lessonsRaw);
-        if (!Array.isArray(parsed)) throw new Error('Must be a JSON array');
-        payload.lessons = parsed;
-      } catch (e) { alert('Lessons JSON invalid: ' + e.message); return; }
-    }
-    try {
-      const { error } = await sb.rpc('admin_upsert_school_module_override', { p: payload });
-      if (error) throw error;
-      closeEdit();
-      // Reload to reflect overrides
-      window.location.reload();
-    } catch (e) { alert('Save failed: ' + (e.message || e)); }
-  });
-  document.getElementById('btnRefreshStats').addEventListener('click', loadStats);
-
-  // ---- boot ------------------------------------------------------------
-  renderHero();
-  renderGrid();
-  if (isAdmin) loadStats();
-})();
+  load();
 </script>
 </body>
 </html>
