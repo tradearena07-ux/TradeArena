@@ -3,7 +3,14 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TradeArena · Trader Profile</title>
+  
+  <link rel="manifest" href="/manifest.json"/>
+  <meta name="theme-color" content="#c9a030"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="TradeArena"/>
+  <link rel="apple-touch-icon" href="/assets/icon-192.png"/>
+<title>TradeArena · Trader Profile</title>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
@@ -1435,6 +1442,16 @@
 
   console.log('%c⚔️ TradeArena · Profile (' + (isOwnProfile ? 'own' : 'viewing @' + wantedHandle) + ')', 'color:#e8c060;font-weight:700;');
 })();
+</script>
+<script>
+  // TradeArena · PWA service-worker registration
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/service-worker.js').catch(function (err) {
+        console.warn('[TradeArena] SW registration failed:', err);
+      });
+    });
+  }
 </script>
 </body>
 </html>

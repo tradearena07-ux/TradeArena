@@ -3,7 +3,14 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TradeArena · Markets</title>
+  
+  <link rel="manifest" href="/manifest.json"/>
+  <meta name="theme-color" content="#c9a030"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="TradeArena"/>
+  <link rel="apple-touch-icon" href="/assets/icon-192.png"/>
+<title>TradeArena · Markets</title>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
@@ -331,8 +338,51 @@
   <!-- Bell + user pill: rendered by JS below using TArenaUI.avatarHtml so
        trade.html uses the same .ta-bell / .ta-pill / .ta-menu component
        as every other page (renderNav in assets/app.js). -->
-  <div id="userPillSlot" style="display:flex;align-items:center;gap:10px;"></div>
+  <div id="userPillSlot" style="display:flex;align-items:center;gap:10px;">
+    <button id="pwaInstallBtn" type="button" onclick="installPwa()"
+      style="display:none;align-items:center;gap:7px;padding:7px 13px;border-radius:8px;
+             border:1px solid rgba(201,160,48,.45);background:rgba(201,160,48,.08);
+             color:var(--gold2);font-family:'DM Sans',sans-serif;font-size:12.5px;
+             font-weight:600;cursor:pointer;transition:all .15s;"
+      onmouseover="this.style.background='rgba(201,160,48,.18)'"
+      onmouseout="this.style.background='rgba(201,160,48,.08)'"
+      title="Install TradeArena as an app">
+      <i class="fa-solid fa-arrow-down-to-bracket"></i> Install App
+    </button>
+  </div>
 </header>
+<script>
+  // --------- PWA install prompt -------------------------------------
+  // Capture the browser-fired beforeinstallprompt event, reveal the
+  // "Install App" pill, and replay the prompt on click. Hides itself
+  // permanently once the app is installed (or already running as a
+  // standalone PWA).
+  (function () {
+    let deferredPrompt = null;
+    const btn = document.getElementById('pwaInstallBtn');
+    if (!btn) return;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                      || window.navigator.standalone === true;
+    if (isStandalone) return;
+
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();
+      deferredPrompt = e;
+      btn.style.display = 'inline-flex';
+    });
+    window.addEventListener('appinstalled', function () {
+      btn.style.display = 'none';
+      deferredPrompt = null;
+    });
+    window.installPwa = async function () {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      try { await deferredPrompt.userChoice; } catch (_) {}
+      deferredPrompt = null;
+      btn.style.display = 'none';
+    };
+  })();
+</script>
 
 <!-- ============ Announcement banner (top published announcement) ============ -->
 <div id="annBanner" style="display:none;padding:10px 24px;border-bottom:1px solid var(--bdl);font-size:13.5px;align-items:center;gap:12px;">
@@ -2105,5 +2155,15 @@ function startMarketsPolling() {
 })();
 </script>
 
+<script>
+  // TradeArena · PWA service-worker registration
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/service-worker.js').catch(function (err) {
+        console.warn('[TradeArena] SW registration failed:', err);
+      });
+    });
+  }
+</script>
 </body>
 </html>

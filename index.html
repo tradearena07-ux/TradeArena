@@ -3,7 +3,14 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TradeArena — Australia's first campus trading arena</title>
+  
+  <link rel="manifest" href="/manifest.json"/>
+  <meta name="theme-color" content="#c9a030"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="TradeArena"/>
+  <link rel="apple-touch-icon" href="/assets/icon-192.png"/>
+<title>TradeArena — Australia's first campus trading arena</title>
   <meta name="description" content="Paper trade real ASX, US stocks & crypto. Compete against every Australian uni. Free for students with a .edu.au email."/>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -848,6 +855,16 @@
   setInterval(() => { window.TArenaMarket?.tick(); paintTicker(); }, 4000);
 
   console.log('%cTradeArena · Welcome.', 'color:#e8c060;font-size:14px;font-weight:700;');
+</script>
+<script>
+  // TradeArena · PWA service-worker registration
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/service-worker.js').catch(function (err) {
+        console.warn('[TradeArena] SW registration failed:', err);
+      });
+    });
+  }
 </script>
 </body>
 </html>

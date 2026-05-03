@@ -1,5 +1,10 @@
 uploads = []
-generated = []
+
+[[generated]]
+id = "kXXyNkmKZa3bmuLu15_5H"
+uri = "file://assets/icon-512.png"
+type = "image"
+title = "tradearena gold shield icon"
 
 [[outputs]]
 id = "efbj8QyyTIk3dHYZnjLnr"
