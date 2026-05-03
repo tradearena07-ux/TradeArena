@@ -14,7 +14,10 @@ alter table public.profiles
   add column if not exists avatar_url text;
 
 -- 2. Expose avatar_url through the public profile RPC ---------
-create or replace function public.get_profile_card(p_username text)
+-- Postgres won't let CREATE OR REPLACE change a function's return
+-- columns, so drop the old signature first (42P13 otherwise).
+drop function if exists public.get_profile_card(text);
+create function public.get_profile_card(p_username text)
 returns table (
   id              uuid,
   username        text,
