@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TradeArena · Module</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <style>
+    .m-shell{ max-width:880px;margin:0 auto;padding:32px 24px 60px;flex:1;width:100%; }
+    .m-back{ display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;text-decoration:none;margin-bottom:18px; }
+    .m-back:hover{ color:var(--gold2); }
+    .m-head{ padding-bottom:22px;border-bottom:1px solid var(--bdl);margin-bottom:24px; }
+    .m-head h1{ font-family:'Cinzel',serif;font-size:1.85rem;letter-spacing:-.02em;margin-bottom:8px; }
+    .m-head p{ color:var(--muted);font-size:14px;line-height:1.6;max-width:640px; }
+    .m-meta{ display:flex;gap:10px;margin-top:14px;flex-wrap:wrap; }
+    .m-meta .pill{
+      display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:9999px;
+      background:var(--navy3);border:1px solid var(--bdl);font-size:12px;color:var(--muted);
+    }
+    .m-meta .pill.gold{ color:var(--gold2);border-color:rgba(201,160,48,.35); }
+    .m-meta .pill.beg{ color:#86efac;border-color:rgba(74,222,128,.35); }
+    .m-meta .pill.int{ color:#fcd34d;border-color:rgba(251,191,36,.35); }
+    .m-meta .pill.adv{ color:#fca5a5;border-color:rgba(248,113,113,.35); }
+
+    .m-progress{ display:flex;align-items:center;gap:14px;margin-bottom:24px; }
+    .m-progress-bar{ flex:1;height:8px;background:rgba(122,138,170,.15);border-radius:99px;overflow:hidden; }
+    .m-progress-bar > span{ display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:99px;transition:width .4s; }
+    .m-progress-meta{ font-family:'Cinzel',serif;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted); }
+
+    .lsn-list{ display:flex;flex-direction:column;gap:10px; }
+    .lsn{
+      background:var(--navy3);border:1px solid var(--bdl);border-radius:12px;
+      padding:16px 20px;display:flex;align-items:center;gap:14px;
+      text-decoration:none;color:inherit;transition:border-color .15s, transform .15s;
+    }
+    .lsn:hover{ border-color:var(--gold);transform:translateY(-1px); }
+    .lsn.complete{ border-color:rgba(74,222,128,.35); }
+    .lsn.locked{ opacity:.55;cursor:not-allowed;pointer-events:none; }
+    .lsn-num{
+      width:34px;height:34px;border-radius:50%;background:var(--navy);border:1px solid var(--bdl);
+      display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-weight:700;color:var(--gold2);font-size:13px;flex-shrink:0;
+    }
+    .lsn.complete .lsn-num{ background:rgba(74,222,128,.15);border-color:rgba(74,222,128,.4);color:#86efac; }
+    .lsn.locked .lsn-num{ color:var(--muted); }
+    .lsn-body{ flex:1;min-width:0; }
+    .lsn-ttl{ font-family:'Cinzel',serif;font-size:1rem;color:var(--cream);margin-bottom:3px; }
+    .lsn-sub{ color:var(--muted);font-size:12px;display:flex;gap:12px;flex-wrap:wrap; }
+    .lsn-sub i{ margin-right:4px; }
+    .lsn-status{ color:var(--muted);font-size:18px;flex-shrink:0; }
+    .lsn.complete .lsn-status{ color:#86efac; }
+
+    .empty-state{ text-align:center;padding:48px 24px;color:var(--muted);background:var(--navy3);border:1px dashed var(--bdl);border-radius:14px; }
+    .empty-state i{ font-size:32px;color:var(--gold);opacity:.5;margin-bottom:14px;display:block; }
+    .empty-state .h{ font-family:'Cinzel',serif;font-size:16px;color:var(--cream);margin-bottom:6px; }
+
+    .reward-banner{
+      background:linear-gradient(135deg, rgba(74,222,128,.18), rgba(74,222,128,.04));
+      border:1px solid rgba(74,222,128,.4);border-radius:14px;padding:18px 22px;margin-bottom:18px;
+      display:flex;align-items:center;gap:14px;
+    }
+    .reward-banner i{ font-size:24px;color:#86efac; }
+    .reward-banner .t{ font-family:'Cinzel',serif;color:#86efac;font-size:15px;font-weight:700; }
+    .reward-banner .s{ color:var(--muted);font-size:13px;margin-top:2px; }
+  </style>
+</head>
+<body>
+
+<div id="tarena-nav"></div>
+
+<div class="m-shell">
+  <a class="m-back" href="schools.html"><i class="fa-solid fa-arrow-left"></i> All modules</a>
+  <div id="content">
+    <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i><div>Loading…</div></div>
+  </div>
+</div>
+
+<div id="tarena-footer"></div>
+
+<script src="assets/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="assets/supabase.js"></script>
+<script src="assets/app.js"></script>
+<script>
+  TArenaUI.renderNav('schools');
+  TArenaUI.renderFooter();
+  const sb = window.TArenaDB;
+
+  function escHtml(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function fmtMoney(n){ return '$' + (n||0).toLocaleString(); }
+
+  const params = new URLSearchParams(window.location.search);
+  const schoolId = params.get('id');
+
+  async function load(){
+    if (!schoolId){ window.location.href = 'schools.html'; return; }
+    const session = TArenaAuth.getSession();
+    if (!session){ window.location.href = 'auth.html'; return; }
+
+    const [schRes, lsnRes, progRes] = await Promise.all([
+      sb.from('schools').select('*').eq('id', schoolId).maybeSingle(),
+      sb.from('lessons').select('id,title,video_url,quiz,order_index').eq('school_id', schoolId).order('order_index', { ascending: true }),
+      sb.rpc('get_my_progress'),
+    ]);
+
+    if (schRes.error || !schRes.data){
+      document.getElementById('content').innerHTML =
+        `<div class="empty-state"><i class="fa-solid fa-circle-question"></i><div class="h">Module not found</div><div>It may have been unpublished.</div></div>`;
+      return;
+    }
+    const s = schRes.data;
+    const lessons = lsnRes.data || [];
+    const prog = (progRes.data && progRes.data[0]) || { lesson_ids: [] };
+    const doneIds = new Set(prog.lesson_ids || []);
+
+    const total = lessons.length;
+    const done  = lessons.filter(l => doneIds.has(l.id)).length;
+    const pct   = total ? Math.round((done/total)*100) : 0;
+    const isComplete = total > 0 && done >= total;
+    const diffKey = (s.difficulty||'Beginner').toLowerCase().slice(0,3);
+    const reward  = s.reward_capital || 500;
+
+    // Sequential unlock: a lesson is unlocked iff it's the first one OR
+    // every prior lesson is already complete.
+    let unlockedThrough = 0;
+    for (let i = 0; i < lessons.length; i++){
+      if (doneIds.has(lessons[i].id)) unlockedThrough = i + 1;
+      else break;
+    }
+
+    document.getElementById('content').innerHTML = `
+      <div class="m-head">
+        <h1>${escHtml(s.title)}</h1>
+        <p>${escHtml(s.description||'')}</p>
+        <div class="m-meta">
+          <span class="pill ${diffKey}"><i class="fa-solid fa-signal"></i> ${escHtml(s.difficulty||'Beginner')}</span>
+          <span class="pill"><i class="fa-solid fa-book-open"></i> ${total} lesson${total===1?'':'s'}</span>
+          <span class="pill"><i class="fa-regular fa-clock"></i> ~${total*5} min</span>
+          <span class="pill gold"><i class="fa-solid fa-coins"></i> +${fmtMoney(reward)} reward</span>
+        </div>
+      </div>
+
+      ${isComplete ? `
+        <div class="reward-banner">
+          <i class="fa-solid fa-trophy"></i>
+          <div>
+            <div class="t">Module complete</div>
+            <div class="s">You earned ${fmtMoney(reward)} bonus paper-capital. It's already in your account.</div>
+          </div>
+        </div>` : ''}
+
+      <div class="m-progress">
+        <div class="m-progress-bar"><span style="width:${pct}%"></span></div>
+        <div class="m-progress-meta">${done}/${total} · ${pct}%</div>
+      </div>
+
+      ${total ? `<div class="lsn-list">${lessons.map((l, i) => {
+        const isDone = doneIds.has(l.id);
+        const isLocked = i > unlockedThrough;
+        const hasQuiz  = Array.isArray(l.quiz) && l.quiz.length;
+        const tag = isLocked ? 'div' : 'a';
+        const href = isLocked ? '' : ` href="lesson.html?id=${encodeURIComponent(l.id)}"`;
+        const statusIcon = isDone
+          ? '<i class="fa-solid fa-circle-check"></i>'
+          : (isLocked ? '<i class="fa-solid fa-lock"></i>' : '<i class="fa-solid fa-arrow-right"></i>');
+        return `
+          <${tag} class="lsn ${isDone?'complete':''} ${isLocked?'locked':''}"${href}>
+            <div class="lsn-num">${isDone ? '<i class="fa-solid fa-check"></i>' : (i+1)}</div>
+            <div class="lsn-body">
+              <div class="lsn-ttl">${escHtml(l.title)}</div>
+              <div class="lsn-sub">
+                <span><i class="fa-regular fa-clock"></i>~5 min</span>
+                ${l.video_url ? '<span><i class="fa-solid fa-video"></i>Video</span>' : ''}
+                ${hasQuiz ? '<span><i class="fa-solid fa-circle-question"></i>Quiz</span>' : ''}
+              </div>
+            </div>
+            <div class="lsn-status">${statusIcon}</div>
+          </${tag}>`;
+      }).join('')}</div>`
+      : `<div class="empty-state"><i class="fa-solid fa-book"></i><div class="h">No lessons yet</div><div>Lessons for this module are being prepared.</div></div>`}
+    `;
+  }
+
+  load();
+</script>
+</body>
+</html>

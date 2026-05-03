@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TradeArena · Lesson</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <style>
+    .l-shell{ max-width:780px;margin:0 auto;padding:32px 24px 60px;flex:1;width:100%; }
+    .l-back{ display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;text-decoration:none;margin-bottom:18px; }
+    .l-back:hover{ color:var(--gold2); }
+    .l-crumb{ color:var(--muted);font-size:12px;letter-spacing:.06em;margin-bottom:8px;text-transform:uppercase;font-family:'Cinzel',serif; }
+    .l-crumb a{ color:var(--gold2);text-decoration:none; }
+    .l-crumb a:hover{ text-decoration:underline; }
+    .l-head{ padding-bottom:22px;border-bottom:1px solid var(--bdl);margin-bottom:24px; }
+    .l-head h1{ font-family:'Cinzel',serif;font-size:1.85rem;letter-spacing:-.02em;margin-bottom:6px; }
+    .l-pos{ color:var(--muted);font-size:13px; }
+
+    .l-video{ margin:0 0 24px;border-radius:12px;overflow:hidden;border:1px solid var(--bdl); }
+    .l-video iframe, .l-video video{ width:100%;aspect-ratio:16/9;display:block;border:0; }
+
+    .l-content{ font-size:15px;line-height:1.8;color:var(--cream); }
+    .l-content > *:first-child{ margin-top:0; }
+    .l-content p{ margin:0 0 16px; }
+    .l-content h1, .l-content h2, .l-content h3{ font-family:'Cinzel',serif;color:var(--gold2);margin:28px 0 12px;letter-spacing:-.01em; }
+    .l-content h1{ font-size:1.5rem; } .l-content h2{ font-size:1.25rem; } .l-content h3{ font-size:1.1rem; }
+    .l-content strong{ color:var(--gold2); }
+    .l-content em{ color:var(--cream);font-style:italic; }
+    .l-content ul, .l-content ol{ margin:0 0 16px;padding-left:24px; }
+    .l-content li{ margin-bottom:6px; }
+    .l-content a{ color:var(--gold2); }
+    .l-content code{ background:var(--navy);padding:2px 6px;border-radius:4px;font-size:13px;color:var(--gold2); }
+    .l-content blockquote{ border-left:3px solid var(--gold);padding:6px 16px;margin:0 0 16px;color:var(--muted);background:rgba(201,160,48,.04); }
+
+    .quiz{ background:var(--navy3);border:1px solid var(--bdl);border-radius:14px;padding:22px 24px;margin:28px 0; }
+    .quiz h3{ font-family:'Cinzel',serif;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);margin-bottom:18px; }
+    .qq{ margin-bottom:22px;padding-bottom:22px;border-bottom:1px solid var(--bdl); }
+    .qq:last-of-type{ border-bottom:none;margin-bottom:0;padding-bottom:0; }
+    .qq .q{ font-size:15px;color:var(--cream);margin-bottom:12px;font-weight:500; }
+    .choice{
+      display:block;width:100%;text-align:left;padding:11px 16px;border:1px solid var(--bdl);border-radius:9px;margin-bottom:8px;cursor:pointer;
+      font-size:14px;color:var(--cream);background:var(--navy);transition:border-color .12s,background .12s;font-family:inherit;
+    }
+    .choice:hover:not(:disabled){ border-color:var(--gold); }
+    .choice:disabled{ cursor:default; }
+    .choice.right{ border-color:rgba(74,222,128,.55);background:rgba(74,222,128,.1);color:#86efac; }
+    .choice.wrong{ border-color:rgba(248,113,113,.55);background:rgba(248,113,113,.08);color:#fca5a5; }
+    .quiz .feedback{
+      margin-top:10px;font-size:13px;padding:10px 14px;border-radius:8px;display:none;
+    }
+    .quiz .feedback.show{ display:block; }
+    .quiz .feedback.ok{ background:rgba(74,222,128,.1);color:#86efac;border:1px solid rgba(74,222,128,.3); }
+    .quiz .feedback.no{ background:rgba(248,113,113,.08);color:#fca5a5;border:1px solid rgba(248,113,113,.3); }
+    .quiz-status{
+      margin-top:14px;padding:10px 14px;border-radius:8px;font-size:13px;display:none;
+      background:rgba(251,191,36,.08);color:#fcd34d;border:1px solid rgba(251,191,36,.3);
+    }
+    .quiz-status.show{ display:block; }
+
+    .l-actions{
+      display:flex;gap:12px;align-items:center;margin-top:32px;padding-top:24px;border-top:1px solid var(--bdl);flex-wrap:wrap;
+    }
+    .l-done-pill{
+      display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:9px;
+      background:rgba(74,222,128,.12);color:#86efac;border:1px solid rgba(74,222,128,.4);font-size:13px;font-weight:500;
+    }
+
+    .l-nav{ display:flex;justify-content:space-between;gap:12px;margin-top:32px; }
+    .l-nav a, .l-nav span{
+      flex:1;display:flex;align-items:center;gap:10px;padding:14px 18px;border:1px solid var(--bdl);border-radius:12px;
+      background:var(--navy3);text-decoration:none;color:var(--cream);font-size:13.5px;transition:border-color .15s;
+    }
+    .l-nav a:hover{ border-color:var(--gold); }
+    .l-nav span{ opacity:.4;cursor:not-allowed; }
+    .l-nav .dir{ font-family:'Cinzel',serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:2px; }
+    .l-nav .ttl{ color:var(--cream); }
+    .l-nav .next{ text-align:right;justify-content:flex-end; }
+    .l-nav .next .ttl{ text-align:right; }
+
+    .reward-pop{
+      position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);
+      background:linear-gradient(135deg,#0a1628,#152138);border:1px solid rgba(201,160,48,.5);border-radius:18px;
+      padding:36px 44px;text-align:center;z-index:1000;box-shadow:0 24px 60px rgba(0,0,0,.5);
+      max-width:400px;display:none;
+    }
+    .reward-pop.show{ display:block;animation:pop .3s ease-out; }
+    @keyframes pop{ from{transform:translate(-50%,-50%) scale(.85);opacity:0;} to{transform:translate(-50%,-50%) scale(1);opacity:1;} }
+    .reward-pop i{ font-size:48px;color:var(--gold);margin-bottom:14px;display:block; }
+    .reward-pop .t{ font-family:'Cinzel',serif;font-size:22px;color:var(--gold2);margin-bottom:8px; }
+    .reward-pop .s{ color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:18px; }
+    .reward-bg{ position:fixed;inset:0;background:rgba(5,11,22,.7);z-index:999;display:none; }
+    .reward-bg.show{ display:block; }
+
+    .empty-state{ text-align:center;padding:48px 24px;color:var(--muted);background:var(--navy3);border:1px dashed var(--bdl);border-radius:14px; }
+    .empty-state i{ font-size:32px;color:var(--gold);opacity:.5;margin-bottom:14px;display:block; }
+  </style>
+</head>
+<body>
+
+<div id="tarena-nav"></div>
+
+<div class="l-shell">
+  <a class="l-back" id="backLink" href="schools.html"><i class="fa-solid fa-arrow-left"></i> Back to module</a>
+  <div id="content">
+    <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i><div>Loading lesson…</div></div>
+  </div>
+</div>
+
+<div class="reward-bg" id="rewardBg"></div>
+<div class="reward-pop" id="rewardPop">
+  <i class="fa-solid fa-trophy"></i>
+  <div class="t">Module Complete!</div>
+  <div class="s" id="rewardMsg"></div>
+  <button class="btn-gold" onclick="closeReward()">Continue</button>
+</div>
+
+<div id="tarena-footer"></div>
+
+<script src="assets/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="assets/supabase.js"></script>
+<script src="assets/app.js"></script>
+<script>
+  TArenaUI.renderNav('schools');
+  TArenaUI.renderFooter();
+  const sb = window.TArenaDB;
+
+  function escHtml(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function fmtMoney(n){ return '$' + (n||0).toLocaleString(); }
+
+  // Render content as HTML if it looks like HTML; otherwise treat as
+  // light markdown (paragraphs, **bold**, *em*, headers, lists).
+  function renderContent(text){
+    if (!text) return '<p style="color:var(--muted);font-style:italic;">No content yet.</p>';
+    const trimmed = text.trim();
+    // If it contains real HTML tags, render as-is so admins can author rich content.
+    if (/<(p|h[1-6]|ul|ol|li|strong|em|br|blockquote|a|img|div|span|code)[\s>]/i.test(trimmed)) {
+      return trimmed;
+    }
+    // Lightweight markdown renderer.
+    const lines = trimmed.split('\n');
+    const out = []; let inList = null;
+    for (let raw of lines) {
+      const line = raw.trim();
+      if (!line) { if (inList) { out.push(inList === 'ul' ? '</ul>' : '</ol>'); inList = null; } out.push(''); continue; }
+      let h;
+      if ((h = line.match(/^(#{1,3})\s+(.*)/))) {
+        if (inList) { out.push(inList === 'ul' ? '</ul>' : '</ol>'); inList = null; }
+        const lvl = h[1].length;
+        out.push(`<h${lvl}>${inline(h[2])}</h${lvl}>`); continue;
+      }
+      if (/^[-*]\s+/.test(line)) {
+        if (inList !== 'ul') { if (inList) out.push('</ol>'); out.push('<ul>'); inList = 'ul'; }
+        out.push(`<li>${inline(line.replace(/^[-*]\s+/, ''))}</li>`); continue;
+      }
+      if (/^\d+\.\s+/.test(line)) {
+        if (inList !== 'ol') { if (inList) out.push('</ul>'); out.push('<ol>'); inList = 'ol'; }
+        out.push(`<li>${inline(line.replace(/^\d+\.\s+/, ''))}</li>`); continue;
+      }
+      if (inList) { out.push(inList === 'ul' ? '</ul>' : '</ol>'); inList = null; }
+      out.push(`<p>${inline(line)}</p>`);
+    }
+    if (inList) out.push(inList === 'ul' ? '</ul>' : '</ol>');
+    return out.join('\n');
+
+    function inline(s){
+      return escHtml(s)
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>');
+    }
+  }
+
+  function videoEmbed(url){
+    if (!url) return '';
+    if (!/^https?:\/\//i.test(url)) return '';
+    const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{6,})/);
+    if (yt) return `<div class="l-video"><iframe src="https://www.youtube.com/embed/${encodeURIComponent(yt[1])}" allowfullscreen></iframe></div>`;
+    const vm = url.match(/vimeo\.com\/(\d+)/);
+    if (vm) return `<div class="l-video"><iframe src="https://player.vimeo.com/video/${encodeURIComponent(vm[1])}" allowfullscreen></iframe></div>`;
+    if (/\.(mp4|webm|ogg)(\?.*)?$/i.test(url)) return `<div class="l-video"><video controls src="${escHtml(url)}"></video></div>`;
+    return `<p><a href="${escHtml(url)}" target="_blank" rel="noopener" style="color:var(--gold2);">Open video ↗</a></p>`;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const lessonId = params.get('id');
+  const state = { lesson: null, school: null, siblings: [], idx: -1, done: false, quizState: {} };
+
+  async function load(){
+    if (!lessonId){ window.location.href = 'schools.html'; return; }
+    const session = TArenaAuth.getSession();
+    if (!session){ window.location.href = 'auth.html'; return; }
+
+    const { data: lesson, error: lErr } = await sb.from('lessons').select('*').eq('id', lessonId).maybeSingle();
+    if (lErr || !lesson){
+      document.getElementById('content').innerHTML =
+        `<div class="empty-state"><i class="fa-solid fa-circle-question"></i><div>Lesson not found.</div></div>`;
+      return;
+    }
+    state.lesson = lesson;
+
+    const [schRes, sibRes, progRes] = await Promise.all([
+      sb.from('schools').select('id,title,reward_capital').eq('id', lesson.school_id).maybeSingle(),
+      sb.from('lessons').select('id,title,order_index').eq('school_id', lesson.school_id).order('order_index', { ascending: true }),
+      sb.rpc('get_my_progress'),
+    ]);
+    state.school = schRes.data;
+    state.siblings = sibRes.data || [];
+    state.idx = state.siblings.findIndex(l => l.id === lessonId);
+    const prog = (progRes.data && progRes.data[0]) || { lesson_ids: [] };
+    state.done = (prog.lesson_ids || []).includes(lessonId);
+
+    document.getElementById('backLink').href = `module.html?id=${encodeURIComponent(lesson.school_id)}`;
+    render();
+  }
+
+  function render(){
+    const l = state.lesson;
+    const hasQuiz = Array.isArray(l.quiz) && l.quiz.length;
+    const quizPassed = !hasQuiz || allQuizCorrect();
+    const prev = state.idx > 0 ? state.siblings[state.idx - 1] : null;
+    const next = state.idx >= 0 && state.idx < state.siblings.length - 1 ? state.siblings[state.idx + 1] : null;
+    const schoolTitle = state.school ? state.school.title : '';
+    const schoolId    = state.school ? state.school.id    : '';
+
+    document.getElementById('content').innerHTML = `
+      <div class="l-crumb">
+        ${schoolTitle ? `<a href="module.html?id=${encodeURIComponent(schoolId)}">${escHtml(schoolTitle)}</a> · ` : ''}
+        Lesson ${state.idx + 1} of ${state.siblings.length}
+      </div>
+      <div class="l-head">
+        <h1>${escHtml(l.title)}</h1>
+        <div class="l-pos">${state.done ? '<i class="fa-solid fa-circle-check" style="color:#86efac;"></i> Completed' : 'In progress'}</div>
+      </div>
+
+      ${videoEmbed(l.video_url)}
+
+      <div class="l-content">${renderContent(l.content)}</div>
+
+      ${hasQuiz ? `
+        <div class="quiz">
+          <h3><i class="fa-solid fa-circle-question"></i> Knowledge check</h3>
+          ${l.quiz.map((q, qi) => `
+            <div class="qq" data-qi="${qi}">
+              <div class="q">${qi+1}. ${escHtml(q.q)}</div>
+              ${(q.choices||[]).map((c, ci) => `
+                <button class="choice" type="button" onclick="answerQ(${qi}, ${ci}, ${q.correct})">${escHtml(c)}</button>
+              `).join('')}
+              <div class="feedback"></div>
+            </div>`).join('')}
+          <div class="quiz-status" id="quizStatus">Answer all questions correctly to mark this lesson complete.</div>
+        </div>` : ''}
+
+      <div class="l-actions">
+        ${state.done
+          ? '<span class="l-done-pill"><i class="fa-solid fa-circle-check"></i> Lesson complete</span>'
+          : `<button class="btn-gold" id="markBtn" ${quizPassed ? '' : 'disabled'} onclick="markComplete()">
+               <i class="fa-solid fa-check"></i> Mark as Complete
+             </button>`}
+      </div>
+
+      <div class="l-nav">
+        ${prev
+          ? `<a href="lesson.html?id=${encodeURIComponent(prev.id)}"><i class="fa-solid fa-arrow-left"></i><div><div class="dir">Previous</div><div class="ttl">${escHtml(prev.title)}</div></div></a>`
+          : '<span><i class="fa-solid fa-arrow-left"></i><div><div class="dir">Previous</div><div class="ttl">—</div></div></span>'}
+        ${next
+          ? `<a class="next" href="lesson.html?id=${encodeURIComponent(next.id)}"><div><div class="dir">Next</div><div class="ttl">${escHtml(next.title)}</div></div><i class="fa-solid fa-arrow-right"></i></a>`
+          : `<a class="next" href="module.html?id=${encodeURIComponent(schoolId)}"><div><div class="dir">Finish</div><div class="ttl">Back to module</div></div><i class="fa-solid fa-flag-checkered"></i></a>`}
+      </div>
+    `;
+  }
+
+  function allQuizCorrect(){
+    const l = state.lesson;
+    if (!Array.isArray(l.quiz) || !l.quiz.length) return true;
+    return l.quiz.every((q, qi) => state.quizState[qi] === q.correct);
+  }
+
+  function answerQ(qi, picked, correct){
+    state.quizState[qi] = picked;
+    const qq = document.querySelector(`.qq[data-qi="${qi}"]`);
+    if (!qq) return;
+    qq.querySelectorAll('.choice').forEach((c, ci) => {
+      c.classList.remove('right','wrong');
+      c.disabled = true;
+      if (ci === correct) c.classList.add('right');
+      if (ci === picked && picked !== correct) c.classList.add('wrong');
+    });
+    const fb = qq.querySelector('.feedback');
+    const q  = state.lesson.quiz[qi];
+    if (picked === correct){
+      fb.className = 'feedback show ok';
+      fb.innerHTML = `<i class="fa-solid fa-circle-check"></i> Correct${q.explain ? ' — ' + escHtml(q.explain) : '!'}`;
+    } else {
+      fb.className = 'feedback show no';
+      fb.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Not quite — the right answer is highlighted${q.explain ? '. ' + escHtml(q.explain) : '.'}`;
+    }
+    // Update mark-complete button + status
+    const allDone = state.lesson.quiz.every((_, i) => state.quizState[i] !== undefined);
+    const allRight = allQuizCorrect();
+    const status = document.getElementById('quizStatus');
+    if (status){
+      if (allDone && allRight){
+        status.className = 'quiz-status show';
+        status.style.background = 'rgba(74,222,128,.1)';
+        status.style.color = '#86efac';
+        status.style.borderColor = 'rgba(74,222,128,.3)';
+        status.innerHTML = '<i class="fa-solid fa-circle-check"></i> All correct! You can mark this lesson complete.';
+      } else if (allDone){
+        status.className = 'quiz-status show';
+        status.style.background = 'rgba(248,113,113,.08)';
+        status.style.color = '#fca5a5';
+        status.style.borderColor = 'rgba(248,113,113,.3)';
+        status.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Some answers were wrong. Re-read the lesson and try again — refresh to retake.';
+      }
+    }
+    const btn = document.getElementById('markBtn');
+    if (btn) btn.disabled = !allRight;
+  }
+  window.answerQ = answerQ;
+
+  async function markComplete(){
+    const btn = document.getElementById('markBtn');
+    if (btn){ btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…'; }
+    const { data, error } = await sb.rpc('complete_lesson', { p_lesson_id: lessonId });
+    if (error){
+      alert('Could not mark complete: ' + error.message);
+      if (btn){ btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check"></i> Mark as Complete'; }
+      return;
+    }
+    state.done = true;
+    const row = (data && data[0]) || {};
+    if (row.newly_completed_school && row.reward_amount){
+      showReward(row.reward_amount);
+    } else {
+      render();
+    }
+  }
+  window.markComplete = markComplete;
+
+  function showReward(amount){
+    document.getElementById('rewardMsg').textContent =
+      `You've completed every lesson in ${state.school ? state.school.title : 'this module'}. ${fmtMoney(amount)} bonus paper-capital has been added to your account.`;
+    document.getElementById('rewardBg').classList.add('show');
+    document.getElementById('rewardPop').classList.add('show');
+  }
+  function closeReward(){
+    document.getElementById('rewardBg').classList.remove('show');
+    document.getElementById('rewardPop').classList.remove('show');
+    render();
+  }
+  window.closeReward = closeReward;
+
+  load();
+</script>
+</body>
+</html>

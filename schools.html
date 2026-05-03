@@ -29,7 +29,13 @@
     }
     .mod-card:hover{ border-color:var(--gold);transform:translateY(-2px); }
     .mod-card.complete{ border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.04); }
-    .mod-card .topr{ display:flex;justify-content:space-between;align-items:center;gap:10px; }
+    .mod-card .topr{ display:flex;justify-content:space-between;align-items:flex-start;gap:10px; }
+    .mod-icon{
+      width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,rgba(201,160,48,.18),rgba(201,160,48,.04));
+      border:1px solid rgba(201,160,48,.3);display:flex;align-items:center;justify-content:center;
+      color:var(--gold2);font-size:20px;flex-shrink:0;
+    }
+    .mod-card.complete .mod-icon{ color:#86efac;background:linear-gradient(135deg,rgba(74,222,128,.18),rgba(74,222,128,.04));border-color:rgba(74,222,128,.4); }
     .mod-card .diff{
       font-family:'Cinzel',serif;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
       padding:3px 10px;border-radius:9999px;background:var(--navy);border:1px solid var(--bdl);color:var(--muted);
@@ -37,16 +43,27 @@
     .mod-card .diff.beg{ color:#86efac;border-color:rgba(74,222,128,.35); }
     .mod-card .diff.int{ color:#fcd34d;border-color:rgba(251,191,36,.35); }
     .mod-card .diff.adv{ color:#fca5a5;border-color:rgba(248,113,113,.35); }
-    .mod-card .badge-done{ font-size:11px;color:#86efac; }
     .mod-card h3{ font-family:'Cinzel',serif;font-size:1.15rem;letter-spacing:-.02em;color:var(--cream); }
     .mod-card p{ color:var(--muted);font-size:13.5px;line-height:1.55;flex:1; }
-    .mod-card .meta{ display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--bdl);padding-top:12px;font-size:12px;color:var(--muted); }
-    .mod-card .meta .reward{ color:var(--gold2);font-family:'Cinzel',serif;letter-spacing:.04em; }
+    .mod-card .meta{
+      display:flex;justify-content:space-between;align-items:center;
+      border-top:1px solid var(--bdl);padding-top:12px;font-size:12px;color:var(--muted);gap:10px;
+    }
+    .mod-card .meta .reward{ color:var(--gold2);font-family:'Cinzel',serif;letter-spacing:.04em;font-weight:600; }
+    .mod-card .meta .item{ display:inline-flex;align-items:center;gap:5px; }
     .mod-card .progress{ height:6px;background:rgba(122,138,170,.15);border-radius:99px;overflow:hidden; }
     .mod-card .progress > span{ display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:99px;transition:width .4s; }
+    .mod-cta{
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      padding:10px 16px;border-radius:10px;font-family:'Cinzel',serif;font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;
+      background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a1628;border:none;
+    }
+    .mod-card.complete .mod-cta{ background:rgba(74,222,128,.18);color:#86efac;border:1px solid rgba(74,222,128,.4); }
+    .mod-card.in-progress .mod-cta{ background:transparent;color:var(--gold2);border:1px solid var(--gold); }
 
     .empty-state{ text-align:center;padding:60px 24px;color:var(--muted);background:var(--navy3);border:1px dashed var(--bdl);border-radius:14px; }
     .empty-state i{ font-size:36px;color:var(--gold);opacity:.5;margin-bottom:14px;display:block; }
+    .empty-state .h{ font-family:'Cinzel',serif;font-size:18px;color:var(--cream);margin-bottom:6px;letter-spacing:-.01em; }
   </style>
 </head>
 <body>
@@ -83,6 +100,21 @@
   function escHtml(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function fmtMoney(n){ return '$' + (n||0).toLocaleString(); }
 
+  // Pick a Font Awesome icon based on module title keywords.
+  function moduleIcon(title){
+    const t = (title||'').toLowerCase();
+    if (/chart|technical|candle|pattern/.test(t))      return 'fa-chart-line';
+    if (/risk|psychology|mindset|emotion/.test(t))     return 'fa-brain';
+    if (/option|deriv|future/.test(t))                 return 'fa-layer-group';
+    if (/crypto|bitcoin|btc|blockchain/.test(t))       return 'fa-coins';
+    if (/forex|currency|fx/.test(t))                   return 'fa-money-bill-wave';
+    if (/portfolio|alloc|diversif/.test(t))            return 'fa-briefcase';
+    if (/fundamental|earning|valuation|economic/.test(t)) return 'fa-building-columns';
+    if (/strategy|trade|entry|exit/.test(t))           return 'fa-chess-knight';
+    if (/start|basic|intro|begin|welcome/.test(t))     return 'fa-flag-checkered';
+    return 'fa-graduation-cap';
+  }
+
   async function load(){
     const session = TArenaAuth.getSession();
     // Schools/lessons rows are gated by RLS: only signed-in users see them.
@@ -90,14 +122,13 @@
       document.getElementById('content').innerHTML = `
         <div class="empty-state">
           <i class="fa-solid fa-lock"></i>
-          <div style="font-size:16px;color:var(--cream);margin-bottom:8px;font-family:'Cinzel',serif;">Sign in to start learning</div>
+          <div class="h">Sign in to start learning</div>
           <div>Lessons, progress and rewards live behind your account.</div>
           <a href="auth.html" class="btn-gold" style="margin-top:18px;display:inline-block;">Sign in →</a>
         </div>`;
       return;
     }
 
-    // Run schools, lesson counts, and progress in parallel.
     const [schoolsRes, lessonsRes, progRes] = await Promise.all([
       sb.from('schools')
         .select('id,title,description,difficulty,reward_capital,order_index')
@@ -108,8 +139,10 @@
     ]);
 
     if (schoolsRes.error){
+      // Surface a friendly empty state instead of the raw SQL error.
+      console.error('schools load failed', schoolsRes.error);
       document.getElementById('content').innerHTML =
-        `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i><div>Couldn't load modules: ${escHtml(schoolsRes.error.message)}</div></div>`;
+        `<div class="empty-state"><i class="fa-solid fa-graduation-cap"></i><div class="h">Content coming soon</div><div>Check back shortly!</div></div>`;
       return;
     }
 
@@ -130,7 +163,7 @@
 
     if (!schools.length){
       document.getElementById('content').innerHTML =
-        '<div class="empty-state"><i class="fa-solid fa-graduation-cap"></i><div>No published modules yet — check back soon.</div></div>';
+        `<div class="empty-state"><i class="fa-solid fa-graduation-cap"></i><div class="h">Content coming soon</div><div>Check back shortly!</div></div>`;
       return;
     }
 
@@ -140,21 +173,27 @@
         const total   = lessons.length;
         const done    = lessons.filter(id => doneLessons.has(id)).length;
         const pct     = total ? Math.round((done/total)*100) : 0;
-        const isDone  = doneSchools.has(s.id);
+        const isDone  = doneSchools.has(s.id) || (total > 0 && done >= total);
+        const inProg  = !isDone && done > 0;
         const diffKey = (s.difficulty||'Beginner').toLowerCase().slice(0,3);
+        const reward  = s.reward_capital || 500;
+        const minutes = total * 5;
+        const cta     = isDone ? 'Completed ✓' : (inProg ? 'Continue' : 'Start Learning');
         return `
-        <a class="mod-card ${isDone?'complete':''}" href="school.html?id=${encodeURIComponent(s.id)}">
+        <a class="mod-card ${isDone?'complete':''} ${inProg?'in-progress':''}" href="module.html?id=${encodeURIComponent(s.id)}">
           <div class="topr">
+            <div class="mod-icon"><i class="fa-solid ${moduleIcon(s.title)}"></i></div>
             <span class="diff ${diffKey}">${escHtml(s.difficulty||'Beginner')}</span>
-            ${isDone ? '<span class="badge-done"><i class="fa-solid fa-circle-check"></i> Complete</span>' : ''}
           </div>
           <h3>${escHtml(s.title)}</h3>
           <p>${escHtml(s.description || '')}</p>
           <div class="progress"><span style="width:${pct}%"></span></div>
           <div class="meta">
-            <span>${done} / ${total} lessons</span>
-            <span class="reward">+${fmtMoney(s.reward_capital)}</span>
+            <span class="item"><i class="fa-solid fa-book-open"></i> ${total} lesson${total===1?'':'s'}</span>
+            <span class="item"><i class="fa-regular fa-clock"></i> ~${minutes} min</span>
+            <span class="reward">+${fmtMoney(reward)}</span>
           </div>
+          <button class="mod-cta" type="button">${cta}</button>
         </a>`;
       }).join('')}
     </div>`;
