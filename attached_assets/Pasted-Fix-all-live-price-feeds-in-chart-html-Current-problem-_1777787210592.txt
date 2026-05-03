@@ -1,0 +1,77 @@
+Fix all live price feeds in chart.html. 
+Current problem: ASX 200, S&P 500, NASDAQ showing "——" 
+and some asset prices not loading.
+
+Fix the index prices in the top bar:
+ASX 200 → fetch from Yahoo Finance via proxy:
+https://api.allorigins.win/raw?url=https://query1.finance.yahoo.com/v8/finance/chart/%5EAORD?interval=1d&range=1d
+
+S&P 500 → symbol: %5EGSPC
+NASDAQ → symbol: %5EIXIC
+
+For individual stocks use this exact working fetch:
+async function getLivePrice(symbol) {
+  const proxies = [
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`)}`,
+    `https://corsproxy.io/?${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`)}`,
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`)}`
+  ];
+  
+  for (const url of proxies) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+      const data = await res.json();
+      const meta = data?.chart?.result?.[0]?.meta;
+      if (meta && meta.regularMarketPrice > 0) {
+        return {
+          price: meta.regularMarketPrice,
+          change: meta.regularMarketChangePercent,
+          open: meta.regularMarketOpen,
+          high: meta.regularMarketDayHigh,
+          low: meta.regularMarketDayLow,
+          prevClose: meta.chartPreviousClose,
+          volume: meta.regularMarketVolume
+        };
+      }
+    } catch(e) { continue; }
+  }
+  return null;
+}
+
+For historical OHLCV chart data:
+async function getChartData(symbol, interval, range) {
+  const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(
+    `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=${interval}&range=${range}`
+  )}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  const result = data?.chart?.result?.[0];
+  if (!result) return [];
+  
+  const timestamps = result.timestamp;
+  const ohlcv = result.indicators.quote[0];
+  
+  return timestamps.map((t, i) => ({
+    time: t,
+    open: ohlcv.open[i],
+    high: ohlcv.high[i],
+    low: ohlcv.low[i],
+    close: ohlcv.close[i],
+    volume: ohlcv.volume[i]
+  })).filter(c => c.open && c.high && c.low && c.close);
+}
+
+Timeframe to Yahoo Finance interval/range mapping:
+1m  → interval=1m,  range=1d
+5m  → interval=5m,  range=5d
+15m → interval=15m, range=5d
+1h  → interval=1h,  range=1mo
+4h  → interval=1h,  range=3mo
+1D  → interval=1d,  range=1y
+1W  → interval=1wk, range=5y
+1M  → interval=1mo, range=10y
+
+On chart symbol change → call getChartData with 
+current timeframe and update the TradingView chart.
+Refresh live price every 15 seconds.
+Update the price label on chart in real time.

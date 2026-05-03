@@ -687,9 +687,19 @@ async function loadBars(){
     const raw = await window.TArenaDatafeed.fetchBars(state.symbol, tfRes, fromSec, now);
     bars = (raw || []).filter(b => isFinite(b.c) && b.c > 0).slice(-1000);
   } catch (e) {
-    console.warn('[chart] fetchBars failed', e);
-    bars = synthBars(state.tf, fromSec, now);
+    console.warn('[chart] fetchBars failed, trying Yahoo direct', e);
   }
+  // If the edge function returned nothing usable, fall back to Yahoo
+  // direct via the public CORS proxies before giving up to synthetic
+  // data — this is what keeps the chart populated for index symbols
+  // and during data-proxy outages.
+  if (!bars.length && state.symbol) {
+    try {
+      const y = await getChartData(state.symbol, state.tf);
+      bars = (y || []).filter(b => isFinite(b.c) && b.c > 0).slice(-1000);
+    } catch(e){ console.warn('[chart] Yahoo getChartData failed', e); }
+  }
+  if (!bars.length) bars = synthBars(state.tf, fromSec, now);
   // Single token check covers BOTH the success and error paths so a
   // stale request can never overwrite the current symbol/tf state.
   if (tk !== state.fetchToken) return;
@@ -1059,34 +1069,148 @@ document.getElementById('btnBuy').addEventListener('click', () => location.href 
 document.getElementById('btnSell').addEventListener('click', () => location.href = `trade.html?symbol=${encodeURIComponent(state.symbol)}&side=sell`);
 
 // =====================================================================
+//  YAHOO DIRECT — public-CORS-proxy fallback chain
+// ---------------------------------------------------------------------
+// The Supabase data-proxy edge function works for normal tickers, but
+// index symbols (^AXJO / ^GSPC / ^IXIC) and the occasional rate-limited
+// stock fetch return nothing. This block hits Yahoo Finance directly
+// through three rotating public CORS proxies so the index strip, the
+// symbol header and the chart all degrade gracefully when the edge
+// function is unavailable. Crypto continues to use Binance via the
+// existing TArenaDatafeed (more reliable than Yahoo for live ticks).
+// =====================================================================
+const YAHOO_PROXIES = [
+  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+  u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+  u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+];
+// Yahoo treats ^AXJO/^GSPC/^IXIC as URL-safe when % -encoded — let the
+// browser handle that via encodeURIComponent in the proxy wrappers.
+async function yahooFetchJson(yahooUrl){
+  for (const wrap of YAHOO_PROXIES){
+    try {
+      const ctl = new AbortController();
+      const timer = setTimeout(() => ctl.abort(), 5000);
+      const res = await fetch(wrap(yahooUrl), { signal: ctl.signal });
+      clearTimeout(timer);
+      if (!res.ok) continue;
+      return await res.json();
+    } catch(_){ /* try next proxy */ }
+  }
+  return null;
+}
+async function getLivePrice(symbol){
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`;
+  const data = await yahooFetchJson(url);
+  const meta = data?.chart?.result?.[0]?.meta;
+  if (!meta || !(meta.regularMarketPrice > 0)) return null;
+  return {
+    price:     meta.regularMarketPrice,
+    changePct: meta.regularMarketChangePercent,
+    change:    (meta.regularMarketPrice - (meta.chartPreviousClose ?? meta.previousClose ?? meta.regularMarketPrice)),
+    open:      meta.regularMarketOpen,
+    high:      meta.regularMarketDayHigh,
+    low:       meta.regularMarketDayLow,
+    prevClose: meta.chartPreviousClose ?? meta.previousClose,
+    volume:    meta.regularMarketVolume,
+  };
+}
+// Map our internal timeframe codes → Yahoo (interval, range) pairs.
+const TF_YAHOO = {
+  '1m':['1m','1d'], '5m':['5m','5d'], '15m':['15m','5d'],
+  '1h':['1h','1mo'], '4h':['1h','3mo'],
+  '1D':['1d','1y'], '1W':['1wk','5y'], '1M':['1mo','10y'],
+};
+async function getChartData(symbol, tf){
+  const [interval, range] = TF_YAHOO[tf] || TF_YAHOO['1D'];
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${interval}&range=${range}`;
+  const data = await yahooFetchJson(url);
+  const r = data?.chart?.result?.[0];
+  if (!r) return [];
+  const ts = r.timestamp || [];
+  const o = r.indicators?.quote?.[0] || {};
+  const out = [];
+  for (let i=0;i<ts.length;i++){
+    const c = o.close?.[i];
+    if (!isFinite(c) || c == null) continue;
+    out.push({
+      t: ts[i]*1000,
+      o: o.open?.[i]  ?? c,
+      h: o.high?.[i]  ?? c,
+      l: o.low?.[i]   ?? c,
+      c,
+      v: o.volume?.[i] ?? 0,
+    });
+  }
+  return out;
+}
+
+// =====================================================================
 //  INDEX STRIP — small live tape across the top
 // =====================================================================
 async function paintIndexStrip(){
+  const tk = ++indexStripToken;
   const wrap = document.getElementById('ixStrip');
-  wrap.innerHTML = INDEX_STRIP.map(s =>
-    `<div class="ix-it" data-s="${s}" onclick="${CATALOG[s] ? `selectSymbol('${s}')` : ''}" style="${CATALOG[s] ? 'cursor:pointer;':''}">
-      <span class="ix-n">${esc(INDEX_LABELS[s] || s)}</span>
-      <span class="ix-p" id="ix_${s.replace(/[^A-Z0-9]/g,'')}">—</span>
-      <span class="ix-c" id="ixc_${s.replace(/[^A-Z0-9]/g,'')}">—</span>
-    </div>`).join('');
-  if (!window.TArenaDatafeed?.fetchQuotes) return;
-  // Index symbols (^AXJO, ^GSPC, ^IXIC) need Yahoo via the proxy. Single-asset
-  // symbols (BTC/ETH/AAPL/TSLA) are normal lookups. fetchQuotes handles both.
+  if (!wrap.children.length){
+    wrap.innerHTML = INDEX_STRIP.map(s =>
+      `<div class="ix-it" data-s="${s}" onclick="${CATALOG[s] ? `selectSymbol('${s}')` : ''}" style="${CATALOG[s] ? 'cursor:pointer;':''}">
+        <span class="ix-n">${esc(INDEX_LABELS[s] || s)}</span>
+        <span class="ix-p" id="ix_${s.replace(/[^A-Z0-9]/g,'')}">—</span>
+        <span class="ix-c" id="ixc_${s.replace(/[^A-Z0-9]/g,'')}">—</span>
+      </div>`).join('');
+  }
+  // Two-track strategy: try the edge-function batch first (fast, single
+  // request) and fill any blanks via Yahoo direct so index symbols always
+  // show a price even when the proxy is missing.
+  let q = {};
   try {
-    const q = await window.TArenaDatafeed.fetchQuotes(INDEX_STRIP);
-    INDEX_STRIP.forEach(s => {
-      const v = q[s]; if (!v) return;
-      const idP = 'ix_' + s.replace(/[^A-Z0-9]/g,'');
-      const idC = 'ixc_' + s.replace(/[^A-Z0-9]/g,'');
-      const elP = document.getElementById(idP), elC = document.getElementById(idC);
-      if (elP) elP.textContent = fmtNum(v.price);
-      if (elC) {
-        elC.textContent = fmtPct(v.changePct);
-        elC.className = 'ix-c ' + (v.changePct >= 0 ? 'up' : 'dn');
-      }
-    });
-  } catch(e){ /* leave dashes if proxy fails */ }
+    if (window.TArenaDatafeed?.fetchQuotes) q = await window.TArenaDatafeed.fetchQuotes(INDEX_STRIP) || {};
+  } catch(_){}
+  await Promise.all(INDEX_STRIP.map(async (s) => {
+    let v = q[s];
+    if (!v || !(v.price > 0)) {
+      // Crypto uses Binance via TArenaDatafeed; only use Yahoo for
+      // index symbols and equities.
+      if (s !== 'BTC' && s !== 'ETH') v = await getLivePrice(s);
+    }
+    if (tk !== indexStripToken) return; // a newer run is in flight
+    const idP = 'ix_' + s.replace(/[^A-Z0-9]/g,'');
+    const idC = 'ixc_' + s.replace(/[^A-Z0-9]/g,'');
+    const elP = document.getElementById(idP), elC = document.getElementById(idC);
+    if (!v || !(v.price > 0)) return;
+    if (elP) elP.textContent = fmtNum(v.price);
+    if (elC) {
+      const pct = v.changePct ?? 0;
+      elC.textContent = fmtPct(pct);
+      elC.className = 'ix-c ' + (pct >= 0 ? 'up' : 'dn');
+    }
+  }));
 }
+
+// =====================================================================
+//  LIVE PRICE REFRESH — header sync every 15s for non-crypto symbols
+// ---------------------------------------------------------------------
+// Crypto symbols already get sub-second updates via the Binance WebSocket
+// in TArenaDatafeed.subscribeQuote, so this poll only fires for equities
+// and indices where the WS doesn't apply.
+// =====================================================================
+// Monotonic token guards against overlapping 15s polls landing out of
+// order — only the latest call is allowed to mutate the header.
+let livePriceToken = 0;
+async function refreshLivePrice(){
+  const sym = state.symbol;
+  if (!sym) return;
+  // Skip crypto — handled by WS subscription on the main chart.
+  if (['BTC','ETH','SOL','XRP','ADA','DOGE','LTC','BNB'].includes(sym)) return;
+  const tk = ++livePriceToken;
+  const v = await getLivePrice(sym);
+  if (tk !== livePriceToken || sym !== state.symbol) return;
+  if (!v) return;
+  state.last = v.price;
+  paintLivePrice({ price: v.price, change: v.change, changePct: v.changePct });
+}
+// Same guard for the index strip so a slow run can't clobber a newer one.
+let indexStripToken = 0;
 
 // =====================================================================
 //  BOOT
@@ -1098,6 +1222,8 @@ refreshWatchlistQuotes();
 paintRightRail();
 setInterval(paintIndexStrip, 30_000);
 setInterval(refreshWatchlistQuotes, 30_000);
+// Refresh the active symbol's header price every 15s for stocks/indices.
+setInterval(refreshLivePrice, 15_000);
 // Re-render right rail every 15s when on a quote-driven tab so chain/depth ladders track price.
 setInterval(() => { if (['chain','depth'].includes(state.rrTab)) paintRightRail(); }, 15_000);
 </script>
