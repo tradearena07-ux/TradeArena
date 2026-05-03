@@ -814,17 +814,17 @@
           </div>
           <div class="ta-foot-col">
             <h4>Company</h4>
-            <a href="#" data-foot="about">About</a>
-            <a href="#" data-foot="contact">Contact</a>
-            <a href="#" data-foot="careers">Careers</a>
-            <a href="#" data-foot="press">Press</a>
+            <a href="about.html">About</a>
+            <a href="contact.html">Contact</a>
+            <a href="careers.html">Careers</a>
+            <a href="press.html">Press</a>
           </div>
           <div class="ta-foot-col">
             <h4>Legal</h4>
-            <a href="#" data-foot="terms">Terms of Use</a>
-            <a href="#" data-foot="privacy">Privacy Policy</a>
-            <a href="#" data-foot="disclaimer">Risk Disclaimer</a>
-            <a href="#" data-foot="cookies">Cookie Policy</a>
+            <a href="terms.html">Terms of Use</a>
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="risk.html">Risk Disclaimer</a>
+            <a href="cookies.html">Cookie Policy</a>
           </div>
         </div>
 
@@ -841,24 +841,15 @@
         <div class="ta-foot-bottom">
           <span>© ${year} TradeArena · Made with care in Sydney, Australia</span>
           <span class="ta-foot-bottom-links">
-            <a href="#" data-foot="status">Status</a>
-            <a href="#" data-foot="changelog">Changelog</a>
-            <a href="#" data-foot="security">Security</a>
+            <a href="about.html">About</a>
+            <a href="contact.html">Contact</a>
+            <a href="risk.html">Risk</a>
           </span>
         </div>
         ${signInHtml}
       </footer>`;
     const mount = document.getElementById('tarena-footer');
-    if (mount) {
-      mount.innerHTML = html;
-      // Stub the "coming soon" links so accidental clicks don't 404.
-      mount.querySelectorAll('a[data-foot]').forEach(a => {
-        a.addEventListener('click', (e) => {
-          e.preventDefault();
-          alert(a.textContent.trim() + ' — coming soon.');
-        });
-      });
-    }
+    if (mount) mount.innerHTML = html;
   }
 
   function fmtMoney(n, opts) {

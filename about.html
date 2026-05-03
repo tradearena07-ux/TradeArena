@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TradeArena · About</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/styles.css"/>
+</head>
+<body>
+<div id="tarena-nav"></div>
+
+<main class="lp-shell">
+  <header class="lp-hero">
+    <div class="lp-eyebrow">About</div>
+    <h1>Built by students, for students.</h1>
+    <div class="lp-meta">Sydney, Australia · Founded 2025</div>
+  </header>
+
+  <article class="lp-prose">
+    <h2>Our mission</h2>
+    <p>Make investing education <strong>accessible, social and consequence-free</strong> for every Australian university student. The market is the most expensive classroom in the world — TradeArena lets you learn in it without paying tuition in real losses.</p>
+
+    <h2>What you get</h2>
+    <ul>
+      <li><strong>Paper trade real markets</strong> — ASX-listed equities, US stocks, the major crypto pairs and FX, with live prices, candle charts, market and limit orders, and a real-feeling order panel.</li>
+      <li><strong>Campus leagues</strong> — UNSW vs USYD vs Monash vs UQ. Weekly leaderboards by university, by faculty, by year. Bragging rights are very real, even when the dollars aren't.</li>
+      <li><strong>School of Trading</strong> — bite-sized lessons that take you from "what is a stock?" to running a risk-managed paper book, with quizzes that unlock bonus paper-capital.</li>
+      <li><strong>Reels</strong> — share your trade theses, follow educators on your campus, mirror their setups one-tap.</li>
+    </ul>
+
+    <h2>Why we built it</h2>
+    <p>Most "trading apps" are built by adults trying to extract fees from students. We're building TradeArena the other way around — a platform we'd actually want our friends to use, with no real money on the line until you're genuinely ready and the product is licensed by ASIC.</p>
+
+    <h2>Built in Sydney, 2025</h2>
+    <p>TradeArena was started in 2025 by a small group of Sydney uni students who were tired of seeing classmates blow up their first $500 on options they didn't understand. We use Supabase, Yahoo Finance, CoinGecko, Frankfurter and Alpaca to power the simulation, and the navy/gold visual identity is a quiet nod to the Cinzel-and-cream aesthetic of old finance done with new tools.</p>
+
+    <h2>The team</h2>
+    <p><strong>Built by students, for students.</strong> Want to help? See <a href="careers.html">Careers</a>.</p>
+
+    <h2>Contact</h2>
+    <p>Press, partnerships, university clubs, anything else: <a href="mailto:tradearena07@gmail.com">tradearena07@gmail.com</a>.</p>
+  </article>
+</main>
+
+<div id="tarena-footer"></div>
+
+<script src="assets/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="assets/supabase.js"></script>
+<script src="assets/app.js"></script>
+<script>
+  TArenaUI.renderNav('');
+  TArenaUI.renderFooter();
+</script>
+</body>
+</html>

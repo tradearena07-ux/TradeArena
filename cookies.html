@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TradeArena · Cookie Policy</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/styles.css"/>
+</head>
+<body>
+<div id="tarena-nav"></div>
+
+<main class="lp-shell">
+  <header class="lp-hero">
+    <div class="lp-eyebrow">Legal</div>
+    <h1>Cookie Policy</h1>
+    <div class="lp-meta">Last updated: May 2026</div>
+  </header>
+
+  <article class="lp-prose">
+    <p>TradeArena uses a small set of cookies and equivalent browser-storage items (<code>localStorage</code>, <code>sessionStorage</code>) to keep the platform working. We do not use third-party advertising cookies, and we do not track you across other sites.</p>
+
+    <h2>Cookies and storage we use</h2>
+
+    <h3>Strictly necessary</h3>
+    <ul>
+      <li><strong>Supabase auth</strong> (<code>sb-*-auth-token</code>) — keeps you signed in across page loads. Set by our authentication provider, Supabase. Without these you cannot use the platform.</li>
+      <li><strong>Session state</strong> — short-lived items used during sign-up, OTP verification and password reset.</li>
+    </ul>
+
+    <h3>Functional preferences</h3>
+    <ul>
+      <li><code>ta_wl_v2</code> — your saved watchlist of symbols on the Trade page.</li>
+      <li><code>ta_*_pending</code> — temporary state such as a chart "snap" you are about to attach to a reel.</li>
+    </ul>
+
+    <h3>Analytics</h3>
+    <p>We use minimal first-party analytics to count visits and identify broken pages. We do not load Google Analytics, Meta Pixel or other third-party trackers.</p>
+
+    <h2>Disabling cookies</h2>
+    <p>You can clear or block cookies in your browser settings:</p>
+    <ul>
+      <li><strong>Chrome</strong>: Settings → Privacy and security → Cookies and other site data;</li>
+      <li><strong>Safari</strong>: Settings → Privacy → Manage Website Data;</li>
+      <li><strong>Firefox</strong>: Settings → Privacy &amp; Security → Cookies and Site Data;</li>
+      <li><strong>Edge</strong>: Settings → Cookies and site permissions → Manage and delete cookies.</li>
+    </ul>
+    <div class="lp-callout"><strong>Heads up:</strong> If you block strictly-necessary cookies you will be signed out and the platform will not function correctly.</div>
+
+    <h2>Third-party cookies</h2>
+    <p>The only third party that sets cookies on TradeArena is <strong>Supabase</strong> (auth tokens). Market-data providers (Yahoo Finance, CoinGecko, Frankfurter) are called from your browser but do not set persistent cookies that we control.</p>
+
+    <h2>Questions</h2>
+    <p>Email <a href="mailto:tradearena07@gmail.com">tradearena07@gmail.com</a>.</p>
+  </article>
+</main>
+
+<div id="tarena-footer"></div>
+
+<script src="assets/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="assets/supabase.js"></script>
+<script src="assets/app.js"></script>
+<script>
+  TArenaUI.renderNav('');
+  TArenaUI.renderFooter();
+</script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TradeArena · Contact</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/styles.css"/>
+</head>
+<body>
+<div id="tarena-nav"></div>
+
+<main class="lp-shell">
+  <header class="lp-hero">
+    <div class="lp-eyebrow">Get in touch</div>
+    <h1>Contact us</h1>
+    <div class="lp-meta">We aim to reply within 48 hours.</div>
+  </header>
+
+  <article class="lp-prose">
+    <p>The fastest way to reach us is email — <a href="mailto:tradearena07@gmail.com">tradearena07@gmail.com</a>. You can also use the form below; it opens your email client pre-filled.</p>
+
+    <form class="lp-form" id="contactForm" onsubmit="return sendContact(event)">
+      <label for="cName">Your name</label>
+      <input type="text" id="cName" name="name" required autocomplete="name" placeholder="Jane Doe"/>
+
+      <label for="cEmail">Email</label>
+      <input type="email" id="cEmail" name="email" required autocomplete="email" placeholder="you@uni.edu.au"/>
+
+      <label for="cMsg">Message</label>
+      <textarea id="cMsg" name="message" required placeholder="What's on your mind?"></textarea>
+
+      <button type="submit"><i class="fa-solid fa-paper-plane"></i>&nbsp;&nbsp;Send message</button>
+    </form>
+
+    <h2>Other ways to find us</h2>
+    <div class="lp-socials">
+      <a href="mailto:tradearena07@gmail.com"><i class="fa-solid fa-envelope"></i> tradearena07@gmail.com</a>
+      <a href="https://discord.gg/tradearena" target="_blank" rel="noopener"><i class="fa-brands fa-discord"></i> Discord</a>
+      <a href="https://www.instagram.com/tradearena" target="_blank" rel="noopener"><i class="fa-brands fa-instagram"></i> Instagram</a>
+    </div>
+
+    <div class="lp-callout"><strong>Response time:</strong> within 48 hours during the academic year. Slightly slower during exam blocks — we are also students.</div>
+  </article>
+</main>
+
+<div id="tarena-footer"></div>
+
+<script src="assets/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="assets/supabase.js"></script>
+<script src="assets/app.js"></script>
+<script>
+  TArenaUI.renderNav('');
+  TArenaUI.renderFooter();
+  function sendContact(ev){
+    ev.preventDefault();
+    const name = document.getElementById('cName').value.trim();
+    const email = document.getElementById('cEmail').value.trim();
+    const msg = document.getElementById('cMsg').value.trim();
+    const subject = encodeURIComponent('TradeArena contact from ' + name);
+    const body = encodeURIComponent(msg + '\n\n— ' + name + ' (' + email + ')');
+    window.location.href = 'mailto:tradearena07@gmail.com?subject=' + subject + '&body=' + body;
+    return false;
+  }
+</script>
+</body>
+</html>

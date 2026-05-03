@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TradeArena · Privacy Policy</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/styles.css"/>
+</head>
+<body>
+<div id="tarena-nav"></div>
+
+<main class="lp-shell">
+  <header class="lp-hero">
+    <div class="lp-eyebrow">Legal</div>
+    <h1>Privacy Policy</h1>
+    <div class="lp-meta">Last updated: May 2026</div>
+  </header>
+
+  <article class="lp-prose">
+    <p>TradeArena ("we", "us") respects your privacy. This policy explains what personal information we collect, how we use it, and the choices you have. We handle personal information in accordance with the <strong>Australian Privacy Act 1988 (Cth)</strong> and the Australian Privacy Principles (APPs).</p>
+
+    <h2>1. What we collect</h2>
+    <ul>
+      <li><strong>Account data</strong> — your university email address, chosen username, display name, password (stored as a salted hash), and (optionally) your university and campus.</li>
+      <li><strong>Trading activity</strong> — every paper order you submit, every position you hold, every reel or thesis you publish, your leaderboard rank, and lesson/quiz progress.</li>
+      <li><strong>Device data</strong> — IP address, browser type, device type and basic usage analytics so we can keep the site working.</li>
+      <li><strong>Communications</strong> — anything you send us via the contact form or by emailing us.</li>
+    </ul>
+
+    <h2>2. How we use it</h2>
+    <ul>
+      <li>To create and operate your account and authenticate your sessions;</li>
+      <li>To run leaderboards, campus leagues and educational rewards;</li>
+      <li>To improve the platform — fix bugs, add features and tune performance;</li>
+      <li>To send you essential service emails (verification, password resets, important announcements). We do not send marketing email without your consent.</li>
+    </ul>
+
+    <h2>3. Where your data lives</h2>
+    <p>TradeArena uses <strong>Supabase</strong> as our backend. Supabase hosts our database and authentication on <strong>Amazon Web Services (AWS)</strong> infrastructure. Where possible we choose AWS regions in Australia or the closest equivalent. A small amount of data necessarily transits the United States (e.g. when Supabase issues authentication tokens via its global edge network).</p>
+
+    <h2>4. We do not sell your data</h2>
+    <p>We do not, and will never, sell your personal information to third parties. We do not share your individual trading activity with brokers, advertisers or data brokers.</p>
+
+    <h2>5. Who we share data with</h2>
+    <ul>
+      <li><strong>Supabase</strong> (our database and auth provider);</li>
+      <li><strong>Market-data providers</strong> (Yahoo Finance, CoinGecko, Frankfurter, Alpaca) — these requests are sent from your browser; we do not forward your account information to them;</li>
+      <li><strong>Law enforcement or regulators</strong> if we are legally required to do so.</li>
+    </ul>
+
+    <h2>6. Your rights</h2>
+    <p>Under the Privacy Act you have the right to:</p>
+    <ul>
+      <li>Access the personal information we hold about you;</li>
+      <li>Ask us to correct inaccurate information;</li>
+      <li>Ask us to delete your account and associated personal information; and</li>
+      <li>Lodge a complaint with the Office of the Australian Information Commissioner (OAIC) if you believe we have breached the APPs.</li>
+    </ul>
+    <p>To exercise any of these rights, email <a href="mailto:tradearena07@gmail.com">tradearena07@gmail.com</a> from the address on your account. We aim to respond within 30 days.</p>
+
+    <h2>7. Cookies</h2>
+    <p>We use a small number of cookies and equivalent browser-storage items — primarily for keeping you signed in and remembering your watchlist preferences. See our <a href="cookies.html">Cookie Policy</a> for the full list and how to disable them.</p>
+
+    <h2>8. Children</h2>
+    <p>TradeArena is intended for users aged 16 and over. If you believe a child under 16 has created an account, please contact us and we will delete it.</p>
+
+    <h2>9. Changes to this policy</h2>
+    <p>If we make a material change we will notify you via the in-app announcement banner and update the "Last updated" date above.</p>
+
+    <h2>10. Contact</h2>
+    <p>Privacy questions or data requests: <a href="mailto:tradearena07@gmail.com">tradearena07@gmail.com</a>.</p>
+  </article>
+</main>
+
+<div id="tarena-footer"></div>
+
+<script src="assets/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="assets/supabase.js"></script>
+<script src="assets/app.js"></script>
+<script>
+  TArenaUI.renderNav('');
+  TArenaUI.renderFooter();
+</script>
+</body>
+</html>

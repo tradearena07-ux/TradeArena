@@ -538,3 +538,33 @@ footer.tarena-footer .row{
   .ta-ticker-row{gap:24px;padding:0 12px;}
   .ta-tk-item{font-size:10.5px;gap:6px;}
 }
+
+/* ============ Static info pages (legal/about/contact) ============ */
+.lp-shell{ max-width:820px; margin:0 auto; padding:48px 24px 80px; flex:1; width:100%; }
+.lp-hero{ margin-bottom:32px; padding-bottom:22px; border-bottom:1px solid var(--bdl); }
+.lp-eyebrow{ font-family:'Cinzel',serif; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--gold2); margin-bottom:10px; }
+.lp-hero h1{ font-family:'Cinzel',serif; font-size:2.2rem; letter-spacing:-.02em; color:var(--cream); margin-bottom:8px; }
+.lp-meta{ color:var(--muted); font-size:13px; }
+.lp-prose{ color:var(--cream); font-size:15px; line-height:1.72; }
+.lp-prose h2{ font-family:'Cinzel',serif; font-size:1.25rem; letter-spacing:-.01em; color:var(--gold2); margin:30px 0 10px; }
+.lp-prose h3{ font-family:'DM Sans',sans-serif; font-size:1rem; font-weight:600; color:var(--cream); margin:20px 0 6px; }
+.lp-prose p{ margin:0 0 14px; color:#dfe6f5; }
+.lp-prose ul, .lp-prose ol{ margin:0 0 14px 22px; color:#dfe6f5; }
+.lp-prose li{ margin-bottom:6px; }
+.lp-prose a{ color:var(--gold2); text-decoration:none; border-bottom:1px solid rgba(232,192,96,.35); }
+.lp-prose a:hover{ border-bottom-color:var(--gold2); }
+.lp-prose strong{ color:var(--cream); font-weight:600; }
+.lp-callout{ background:rgba(201,160,48,.06); border:1px solid rgba(201,160,48,.25); border-radius:12px; padding:16px 20px; margin:18px 0; color:#f0e6cc; font-size:14px; line-height:1.65; }
+.lp-callout.warn{ background:rgba(248,113,113,.05); border-color:rgba(248,113,113,.25); color:#fde2e2; }
+.lp-form{ background:var(--navy3); border:1px solid var(--bdl); border-radius:14px; padding:24px; margin-top:18px; }
+.lp-form label{ display:block; font-size:12px; font-family:'Cinzel',serif; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:14px 0 6px; }
+.lp-form label:first-child{ margin-top:0; }
+.lp-form input, .lp-form textarea{ width:100%; padding:11px 14px; background:var(--navy); border:1px solid var(--bdl); border-radius:9px; color:var(--cream); font-family:inherit; font-size:14px; transition:border-color .15s; }
+.lp-form input:focus, .lp-form textarea:focus{ outline:none; border-color:var(--gold); }
+.lp-form textarea{ min-height:140px; resize:vertical; }
+.lp-form button{ margin-top:18px; padding:12px 26px; background:linear-gradient(135deg,var(--gold),var(--gold2)); color:#0a1628; border:none; border-radius:10px; font-family:'Cinzel',serif; font-size:12px; letter-spacing:.14em; text-transform:uppercase; font-weight:700; cursor:pointer; transition:transform .12s; }
+.lp-form button:hover{ transform:translateY(-1px); }
+.lp-socials{ display:flex; gap:14px; margin-top:18px; flex-wrap:wrap; }
+.lp-socials a{ display:inline-flex; align-items:center; gap:8px; padding:10px 16px; background:var(--navy3); border:1px solid var(--bdl); border-radius:10px; color:var(--cream); text-decoration:none; font-size:13px; font-weight:500; transition:border-color .14s,color .14s; }
+.lp-socials a:hover{ border-color:var(--gold); color:var(--gold2); }
+.lp-socials i{ color:var(--gold2); font-size:15px; }

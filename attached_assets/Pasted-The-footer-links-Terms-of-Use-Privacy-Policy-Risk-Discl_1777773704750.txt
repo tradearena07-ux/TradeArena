@@ -1,0 +1,63 @@
+The footer links (Terms of Use, Privacy Policy, Risk Disclaimer, 
+Cookie Policy, About, Contact, Careers, Press) all lead to 
+empty or broken pages. Fix all of them.
+
+Create these pages if they don't exist, 
+all matching the TradeArena navy/gold theme:
+
+1. terms.html — Terms of Use
+Content must include:
+- Acceptance of terms
+- Paper trading disclaimer (no real money)
+- User eligibility (must be university student)
+- Prohibited conduct
+- Intellectual property
+- Limitation of liability
+- Governing law: New South Wales, Australia
+- Contact: tradearena07@gmail.com
+- Last updated: May 2026
+
+2. privacy.html — Privacy Policy  
+Content must include:
+- What data we collect (email, university, trading activity)
+- How we use it (platform improvement, leaderboards)
+- Supabase data storage (servers in AWS)
+- We never sell user data
+- Australian Privacy Act 1988 compliance
+- Data deletion requests: tradearena07@gmail.com
+- Cookies policy
+- Last updated: May 2026
+
+3. risk.html — Risk Disclaimer
+Content must include:
+- All trading on TradeArena is paper trading (simulated)
+- No real money is at risk on the platform currently
+- When live trading launches it will be through ASIC regulated brokers
+- Past simulated performance does not indicate future results
+- Not financial advice
+- Seek advice from licensed Australian financial adviser (AFSL)
+
+4. cookies.html — Cookie Policy
+Content must include:
+- What cookies we use (session, auth, analytics)
+- How to disable cookies
+- Third party cookies (Supabase auth)
+
+5. about.html — About TradeArena
+Content must include:
+- Mission: Make investing education accessible to Australian students
+- Founded: 2025, Sydney Australia
+- Paper trading platform for university students
+- Campus vs campus battle leagues
+- Team section (just "Built by students, for students" is fine)
+- Contact: tradearena07@gmail.com
+
+6. contact.html — Contact Page
+- Simple contact form (name, email, message)
+- Email: tradearena07@gmail.com
+- Discord link
+- Instagram link
+- Response time: within 48 hours
+
+Update ALL footer links across ALL pages to point to these files.
+All pages must have the same header nav and footer as trade.html.
