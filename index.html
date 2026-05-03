@@ -115,8 +115,33 @@
     .mk-sym .small{color:var(--muted);font-weight:500;font-size:11px;margin-left:6px;}
     .mk-px{font-family:'DM Sans',sans-serif;font-weight:700;color:var(--green);font-variant-numeric:tabular-nums;}
     .mk-px .pct{font-size:11px;font-weight:600;margin-left:6px;}
-    .mk-chart{height:200px;background:#060e1c;border-radius:12px;margin:14px 0;position:relative;overflow:hidden;}
-    .mk-chart svg{position:absolute;inset:0;width:100%;height:100%;}
+    .mk-chart{height:200px;background:radial-gradient(ellipse at top right,rgba(201,160,48,.06),#060e1c 60%);border-radius:12px;margin:14px 0;position:relative;overflow:hidden;border:1px solid rgba(201,160,48,.08);}
+    .mk-chart canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+    /* Live indicator badge — pulsing green dot in the top-left of the chart. */
+    .mk-live{position:absolute;top:10px;left:12px;display:flex;align-items:center;gap:6px;
+      font-size:9.5px;font-weight:700;letter-spacing:.14em;color:#7fe3a4;text-transform:uppercase;
+      font-family:'DM Sans',sans-serif;z-index:2;pointer-events:none;text-shadow:0 0 8px rgba(127,227,164,.4);}
+    .mk-live::before{content:'';width:6px;height:6px;border-radius:50%;background:#7fe3a4;
+      box-shadow:0 0 0 0 rgba(127,227,164,.7);animation:mkLivePulse 1.6s ease-out infinite;}
+    @keyframes mkLivePulse{
+      0%   {box-shadow:0 0 0 0 rgba(127,227,164,.55);}
+      70%  {box-shadow:0 0 0 8px rgba(127,227,164,0);}
+      100% {box-shadow:0 0 0 0 rgba(127,227,164,0);}
+    }
+    /* Right-edge price label that floats with the latest candle close. */
+    .mk-lastpx{position:absolute;right:8px;top:50%;transform:translateY(-50%);
+      background:rgba(232,192,96,.16);border:1px solid rgba(232,192,96,.5);color:#e8c060;
+      font-family:'DM Sans',sans-serif;font-weight:700;font-size:10.5px;font-variant-numeric:tabular-nums;
+      padding:3px 7px;border-radius:5px;z-index:2;pointer-events:none;
+      transition:top .35s ease-out;box-shadow:0 4px 12px rgba(0,0,0,.35);}
+    .mk-lastpx::before{content:'';position:absolute;left:-6px;top:50%;transform:translateY(-50%);
+      width:0;height:0;border-style:solid;border-width:4px 6px 4px 0;
+      border-color:transparent rgba(232,192,96,.5) transparent transparent;}
+    /* Volume bar legend at the bottom-left. */
+    .mk-tag{position:absolute;bottom:8px;left:12px;display:flex;gap:10px;z-index:2;
+      font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+      font-family:'DM Sans',sans-serif;color:rgba(232,192,96,.55);pointer-events:none;}
+    .mk-tag b{color:rgba(232,192,96,.85);font-weight:700;}
     .mk-wl{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px;}
     .mk-wl-it{background:rgba(255,255,255,.03);border:1px solid var(--bdl);border-radius:10px;padding:8px 10px;
         font-size:11px;}
@@ -385,17 +410,10 @@
           <div class="mk-px" id="hMockPx">$54.94 <span class="pct">+2.27%</span></div>
         </div>
         <div class="mk-chart">
-          <svg viewBox="0 0 400 200" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="gArea" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#e8c060" stop-opacity=".35"/>
-                <stop offset="100%" stop-color="#e8c060" stop-opacity="0"/>
-              </linearGradient>
-            </defs>
-            <path d="M0,150 L30,140 L60,145 L90,125 L120,130 L150,115 L180,118 L210,95 L240,98 L270,75 L300,82 L330,60 L360,68 L400,50 L400,200 L0,200 Z" fill="url(#gArea)"/>
-            <polyline fill="none" stroke="#e8c060" stroke-width="2" stroke-linejoin="round"
-              points="0,150 30,140 60,145 90,125 120,130 150,115 180,118 210,95 240,98 270,75 300,82 330,60 360,68 400,50"/>
-          </svg>
+          <canvas id="hMockChart" aria-hidden="true"></canvas>
+          <div class="mk-live">Live · ASX</div>
+          <div class="mk-lastpx" id="hMockLastPx">$54.94</div>
+          <div class="mk-tag"><span><b>30</b> 1m candles</span><span><b>MA(8)</b></span></div>
         </div>
         <div class="mk-wl">
           <div class="mk-wl-it"><span class="s">CBA</span><span class="p">$112.45</span><span class="c" style="color:var(--green);">+1.2%</span></div>
@@ -844,6 +862,230 @@
   }
   refreshMockPrice();
   setInterval(() => { window.TArenaMarket && window.TArenaMarket.tick(); refreshMockPrice(); }, 6000);
+
+  /* =================================================================
+     Hero animated candlestick chart
+     -----------------------------------------------------------------
+     Replaces the old static SVG sparkline with a live, ticking
+     candlestick chart so the hero feels like a real trading terminal
+     instead of a marketing illustration.
+
+     Behaviour:
+       * 30 candles, oldest on the left, newest on the right.
+       * The right-most candle is "live" and re-renders every animation
+         frame as price ticks within its 1-second window.
+       * A new candle rolls in every 1.0s — older candles slide left.
+       * Gold moving-average (MA8) line overlays the candles.
+       * A miniature order-book depth ladder hugs the right edge.
+       * Occasional buy / sell pulses ping at the live price.
+       * Pauses entirely when the tab is hidden or the canvas is off
+         screen, so the page idle cost is essentially zero.
+
+     Pure vanilla canvas — no deps. ~140 lines. Respects DPR for
+     crisp rendering on retina displays.
+  ============================================================== */
+  (function heroCandleChart(){
+    const cvs = document.getElementById('hMockChart');
+    const lastPxEl = document.getElementById('hMockLastPx');
+    if (!cvs || !cvs.getContext) return;
+    const ctx = cvs.getContext('2d');
+
+    const N = 30;            // total candles in view
+    const PAD_R = 60;        // reserve right strip for orderbook + label
+    const PAD_TOP = 14;
+    const PAD_BOT = 14;
+    const TICK_MS = 1000;    // new candle cadence
+    const MA_LEN = 8;
+
+    // ------- Seed candles -----------------------------------------
+    // OHLC values are in dollars centred around 54.5 (BHP-ish).
+    let price = 54.5;
+    const candles = [];
+    for (let i = 0; i < N; i++) {
+      const o = price;
+      const drift = (Math.random() - 0.45) * 0.4;
+      const c = +(o + drift).toFixed(2);
+      const h = +(Math.max(o, c) + Math.random() * 0.18).toFixed(2);
+      const l = +(Math.min(o, c) - Math.random() * 0.18).toFixed(2);
+      candles.push({ o, h, l, c });
+      price = c;
+    }
+
+    // ------- Pulse markers (transient buy/sell pings) --------------
+    const pulses = [];
+    function spawnPulse() {
+      const last = candles[candles.length - 1];
+      pulses.push({ side: last.c >= last.o ? 'buy' : 'sell', price: last.c, age: 0 });
+    }
+
+    // ------- Resize handling (DPR-aware) ---------------------------
+    let W = 0, H = 0, DPR = 1;
+    function resize() {
+      const r = cvs.getBoundingClientRect();
+      DPR = window.devicePixelRatio || 1;
+      W = Math.max(1, r.width);
+      H = Math.max(1, r.height);
+      cvs.width = Math.round(W * DPR);
+      cvs.height = Math.round(H * DPR);
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // ------- Per-frame tick of the live (rightmost) candle ---------
+    let liveStart = performance.now();
+    function tickLive(now) {
+      const live = candles[candles.length - 1];
+      // Tiny per-frame jitter to make the live candle visibly move.
+      const jitter = (Math.random() - 0.5) * 0.04;
+      live.c = +(live.c + jitter).toFixed(2);
+      if (live.c > live.h) live.h = live.c;
+      if (live.c < live.l) live.l = live.c;
+      // Roll a fresh candle every TICK_MS.
+      if (now - liveStart >= TICK_MS) {
+        liveStart = now;
+        const o = live.c;
+        const drift = (Math.random() - 0.48) * 0.45;
+        const c = +(o + drift).toFixed(2);
+        candles.push({ o, h: Math.max(o, c), l: Math.min(o, c), c });
+        candles.shift();
+        if (Math.random() < 0.35) spawnPulse();
+      }
+    }
+
+    // ------- Draw helpers ------------------------------------------
+    function priceRange() {
+      let lo = Infinity, hi = -Infinity;
+      for (const k of candles) { if (k.l < lo) lo = k.l; if (k.h > hi) hi = k.h; }
+      const pad = (hi - lo) * 0.18 || 0.5;
+      return { lo: lo - pad, hi: hi + pad };
+    }
+    function ma(i) {
+      const s = Math.max(0, i - MA_LEN + 1);
+      let sum = 0, n = 0;
+      for (let j = s; j <= i; j++) { sum += candles[j].c; n++; }
+      return sum / n;
+    }
+
+    function draw() {
+      const { lo, hi } = priceRange();
+      const chartW = W - PAD_R;
+      const chartH = H - PAD_TOP - PAD_BOT;
+      const yOf = (p) => PAD_TOP + (1 - (p - lo) / (hi - lo)) * chartH;
+      const slot = chartW / N;
+      const bodyW = Math.max(2, slot * 0.62);
+
+      ctx.clearRect(0, 0, W, H);
+
+      // Subtle horizontal grid.
+      ctx.strokeStyle = 'rgba(232,192,96,.06)';
+      ctx.lineWidth = 1;
+      for (let g = 1; g < 4; g++) {
+        const y = PAD_TOP + (chartH * g) / 4;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(chartW, y); ctx.stroke();
+      }
+
+      // Candles.
+      for (let i = 0; i < N; i++) {
+        const k = candles[i];
+        const cx = slot * i + slot / 2;
+        const up = k.c >= k.o;
+        const col = up ? '#3ed47e' : '#ef4f5e';
+        // Wick.
+        ctx.strokeStyle = col;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(cx, yOf(k.h));
+        ctx.lineTo(cx, yOf(k.l));
+        ctx.stroke();
+        // Body.
+        const yO = yOf(k.o), yC = yOf(k.c);
+        const top = Math.min(yO, yC);
+        const bh = Math.max(1.2, Math.abs(yC - yO));
+        ctx.fillStyle = col;
+        ctx.globalAlpha = (i === N - 1) ? 1 : 0.85;
+        ctx.fillRect(cx - bodyW / 2, top, bodyW, bh);
+        ctx.globalAlpha = 1;
+      }
+
+      // MA(8) line in gold.
+      ctx.strokeStyle = '#e8c060';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      for (let i = MA_LEN - 1; i < N; i++) {
+        const x = slot * i + slot / 2;
+        const y = yOf(ma(i));
+        if (i === MA_LEN - 1) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // Live price line (dashed gold) running across to the orderbook.
+      const last = candles[N - 1];
+      const yL = yOf(last.c);
+      ctx.setLineDash([3, 3]);
+      ctx.strokeStyle = 'rgba(232,192,96,.45)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(0, yL); ctx.lineTo(W, yL); ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Right-edge order-book depth ladder (15 rungs above + below).
+      const rungH = chartH / 30;
+      for (let r = 0; r < 30; r++) {
+        const y = PAD_TOP + r * rungH;
+        const aboveLive = (PAD_TOP + chartH / 2) > y;
+        const widthFrac = 0.25 + Math.random() * 0.7; // varied depth
+        const w = (PAD_R - 16) * widthFrac;
+        ctx.fillStyle = aboveLive
+          ? 'rgba(239,79,94,' + (0.08 + widthFrac * 0.18) + ')'
+          : 'rgba(62,212,126,' + (0.08 + widthFrac * 0.18) + ')';
+        ctx.fillRect(chartW + 4, y + 1, w, rungH - 2);
+      }
+
+      // Buy/sell pulses (expanding rings at the live price).
+      for (let i = pulses.length - 1; i >= 0; i--) {
+        const p = pulses[i];
+        p.age += 1;
+        const a = 1 - p.age / 35;
+        if (a <= 0) { pulses.splice(i, 1); continue; }
+        const radius = 4 + p.age * 1.4;
+        ctx.strokeStyle = p.side === 'buy'
+          ? 'rgba(62,212,126,' + a + ')'
+          : 'rgba(239,79,94,' + a + ')';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(slot * (N - 1) + slot / 2, yOf(p.price), radius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Update floating right-edge price tag.
+      if (lastPxEl) {
+        lastPxEl.textContent = '$' + last.c.toFixed(2);
+        lastPxEl.style.top = (yL / H * 100) + '%';
+      }
+    }
+
+    // ------- Animation loop (paused when off-screen / hidden) ------
+    let visible = true, running = true, raf = 0;
+    function loop(now) {
+      if (!running) return;
+      tickLive(now);
+      draw();
+      raf = requestAnimationFrame(loop);
+    }
+    document.addEventListener('visibilitychange', () => {
+      running = !document.hidden && visible;
+      if (running) { liveStart = performance.now(); raf = requestAnimationFrame(loop); }
+    });
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver((entries) => {
+        visible = entries[0].isIntersecting;
+        const want = visible && !document.hidden;
+        if (want && !running) { running = true; liveStart = performance.now(); raf = requestAnimationFrame(loop); }
+        else if (!want) { running = false; cancelAnimationFrame(raf); }
+      }, { threshold: 0.05 }).observe(cvs);
+    }
+    raf = requestAnimationFrame(loop);
+  })();
 
   /* ----- Global ticker strip -----
      Section 3 of the spec. The #taTicker rails are pre-rendered in
