@@ -771,38 +771,27 @@ async function fetchPrices(symbols) {
     );
   }
 
-  // ASX + US stocks via the data-proxy edge fn (TArenaDatafeed.fetchQuotes).
-  // The proxy already powers chart bars (Yahoo for *.AX, Finnhub for US,
-  // Binance for crypto) and is CORS-allowlisted from the production origin
-  // — Yahoo /v8/finance/chart called directly from the browser is blocked
-  // by CORS on tradearena.com.au, so the proxy is the only reliable source
-  // for stock quotes in production.
+  // ASX + US stocks via Yahoo Finance (CORS-bypassed through corsproxy.io).
+  // Yahoo's /v8/finance/chart endpoint returns price + change% + day high/low
+  // + volume + 52w high/low in `meta` — single call per symbol gets every
+  // field the UI needs. Per-symbol promises so a slow ticker doesn't block
+  // the rest of the table.
   const stocksToFetch = [...(groups.us || []), ...(groups.asx || [])];
-  if (stocksToFetch.length) {
+  stocksToFetch.forEach(s => {
     tasks.push(
-      TArenaDatafeed.fetchQuotes(stocksToFetch)
-        .then(q => {
-          stocksToFetch.forEach(s => {
-            const row = q[s];
-            if (row && typeof row.price === 'number' && row.price > 0) {
-              const c = row.changePct || 0;
-              out[s] = { price: row.price, change: c, changePct: c };
-            }
-          });
-        })
-        .catch(e => console.warn('proxy fetchQuotes failed', e.message))
+      fetchYahooQuote(s).then(q => {
+        if (q && q.price > 0) {
+          out[s] = {
+            price: q.price, change: q.changePct, changePct: q.changePct,
+            _hi: q.dayHigh, _lo: q.dayLow, _vol: q.volume,
+            _h52: q.h52, _l52: q.l52,
+          };
+        }
+      }).catch(e => console.warn('Yahoo failed for', s, e.message))
     );
-  }
+  });
 
-  await Promise.allSettled(tasks);
-
-  // Best-effort backfill of 52w high/low + day volume from Yahoo direct.
-  // CORS may block this in production — the per-symbol catch in
-  // fetchExtendedSnapshots swallows failures so the table still renders
-  // with proxy prices, just without the 52w columns populated.
-  if (stocksToFetch.length) {
-    await fetchExtendedSnapshots(stocksToFetch, out);
-  }
+  await Promise.all(tasks);
 
   // Merge into PRICES store, preserving _anchor / fields not refreshed.
   Object.keys(out).forEach(s => {
@@ -812,66 +801,70 @@ async function fetchPrices(symbols) {
   return out;
 }
 
-// Fetch 52w high/low + day volume (and price/change as fallback) for stock
-// symbols via Yahoo's chart endpoint. CORS-friendly, no API key, works for
-// both ASX (.AX) and US tickers. Writes _h52/_l52/_vol into the `out` map
-// so the caller's merge step picks them up. Cached per symbol for 5 min so
-// the 10s price tick doesn't re-hammer Yahoo for slow-moving 52w stats.
-const _extCache = {};                   // symbol → { ts, h52, l52, vol }
-// 12s TTL: shorter than the 15s poll so every tick gets fresh upstream
-// data (price/change/52w/vol all arrive in one Yahoo call so we don't
-// split into fast/slow caches). Cache only exists to absorb the rare
-// case of two fetchPrices() calls within the same tick (e.g. init →
-// tick overlap on a slow first paint).
-const _EXT_TTL  = 12 * 1000;
-async function fetchExtendedSnapshots(symbols, out) {
-  // Skip on file:// / non-https origins where Yahoo CORS preflight always
-  // fails — saves the network thrash and the noisy console warns.
-  if (typeof location !== 'undefined' && location.protocol === 'file:') return;
-  const now = Date.now();
-  // Browsers cap concurrent connections per host (~6) and Yahoo throttles
-  // bursty clients. Cap to 4 in-flight requests so a 10-stock table doesn't
-  // saturate the connection pool or trip Yahoo's rate limiter.
-  const CONCURRENCY = 4;
-  const queue = symbols.slice();
-  async function worker() {
-    while (queue.length) {
-      const s = queue.shift();
-      const cached = _extCache[s];
-      if (cached && (now - cached.ts) < _EXT_TTL) {
-        out[s] = Object.assign({}, out[s], {
-          _h52: cached.h52, _l52: cached.l52, _vol: cached.vol,
-        });
-        if (!out[s].price && cached.price) {
-          out[s].price = cached.price; out[s].change = cached.chg; out[s].changePct = cached.chg;
-        }
-        continue;
-      }
-      try {
-        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s)}?range=1d&interval=1d`;
-        const r   = await fetch(url);
-        if (!r.ok) continue;
-        const j = await r.json();
-        const m = j && j.chart && j.chart.result && j.chart.result[0] && j.chart.result[0].meta;
-        if (!m) continue;
-        const h52   = Number(m.fiftyTwoWeekHigh)    || 0;
-        const l52   = Number(m.fiftyTwoWeekLow)     || 0;
-        const vol   = Number(m.regularMarketVolume) || 0;
-        const price = Number(m.regularMarketPrice)  || 0;
-        const prev  = Number(m.chartPreviousClose)  || 0;
-        const chg   = (price && prev) ? ((price - prev) / prev) * 100 : 0;
-        _extCache[s] = { ts: now, h52, l52, vol, price, chg };
-        out[s] = Object.assign({}, out[s], { _h52: h52, _l52: l52, _vol: vol });
-        // ASX fallback: if data-proxy is offline the existing branch returned
-        // nothing for ASX, so seed price/change here so the table is alive.
-        if (!out[s].price && price) {
-          out[s].price = price; out[s].change = chg; out[s].changePct = chg;
-        }
-      } catch (e) { /* swallow per-symbol; Yahoo CORS may vary */ }
-    }
-  }
-  await Promise.all(Array.from({length: Math.min(CONCURRENCY, symbols.length)}, worker));
+// Yahoo Finance via corsproxy.io. Yahoo's /v8/finance/chart endpoint has no
+// CORS headers so direct browser calls fail; corsproxy.io's free tier
+// rewrites the response with `access-control-allow-origin: *`. Single call
+// per symbol returns price + change% + day OHLCV + 52w high/low in `meta`.
+const YAHOO_BASE = 'https://corsproxy.io/?https://query1.finance.yahoo.com/v8/finance/chart/';
+// 10s per-symbol cache so two fetchPrices() calls inside one tick (e.g.
+// init → first poll overlap) don't hit corsproxy.io twice. Shorter than
+// the 15s poll so each tick gets a fresh upstream snapshot.
+const _yfCache = {}; // symbol → { ts, payload }
+const _YF_TTL  = 10 * 1000;
+
+async function fetchYahooQuote(symbol) {
+  const cached = _yfCache[symbol];
+  if (cached && (Date.now() - cached.ts) < _YF_TTL) return cached.payload;
+  const url = `${YAHOO_BASE}${encodeURIComponent(symbol)}?interval=1d&range=1d`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const j = await r.json();
+  const m = j && j.chart && j.chart.result && j.chart.result[0] && j.chart.result[0].meta;
+  if (!m) throw new Error('no meta');
+  const price = Number(m.regularMarketPrice) || 0;
+  const prev  = Number(m.chartPreviousClose) || Number(m.previousClose) || 0;
+  // Yahoo doesn't always include regularMarketChangePercent — derive from
+  // price vs previous close as a deterministic fallback.
+  const yfChg = m.regularMarketChangePercent;
+  const changePct = (typeof yfChg === 'number') ? yfChg
+    : (price && prev) ? ((price - prev) / prev) * 100 : 0;
+  const payload = {
+    price, changePct,
+    dayHigh: Number(m.regularMarketDayHigh) || 0,
+    dayLow:  Number(m.regularMarketDayLow)  || 0,
+    volume:  Number(m.regularMarketVolume)  || 0,
+    h52:     Number(m.fiftyTwoWeekHigh)     || 0,
+    l52:     Number(m.fiftyTwoWeekLow)      || 0,
+  };
+  _yfCache[symbol] = { ts: Date.now(), payload };
+  return payload;
 }
+
+// Daily OHLCV bars for the candlestick chart. Same CORS-bypassed Yahoo
+// endpoint with range=1y so the chart has a full year of history.
+async function fetchYahooBars(symbol, range, interval) {
+  const url = `${YAHOO_BASE}${encodeURIComponent(symbol)}?interval=${interval || '1d'}&range=${range || '1y'}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const j = await r.json();
+  const result = j && j.chart && j.chart.result && j.chart.result[0];
+  if (!result) throw new Error('no result');
+  const ts  = result.timestamp || [];
+  const q   = (result.indicators && result.indicators.quote && result.indicators.quote[0]) || {};
+  const O = q.open || [], H = q.high || [], L = q.low || [], C = q.close || [], V = q.volume || [];
+  const bars = [];
+  for (let i = 0; i < ts.length; i++) {
+    const o = O[i], h = H[i], l = L[i], c = C[i];
+    if (o == null || h == null || l == null || c == null) continue;
+    bars.push({ time: ts[i], open: +o, high: +h, low: +l, close: +c, volume: +(V[i] || 0) });
+  }
+  return bars;
+}
+
+// Legacy shim — older call sites still reference fetchExtendedSnapshots.
+// Now a no-op since fetchYahooQuote already returns every extended field
+// in one round trip and writes them into `out` via fetchPrices.
+async function fetchExtendedSnapshots(symbols, out) { return; }
 
 // ============ CHART (Lightweight Charts, synthetic OHLCV) ============
 let chart, candleSeries;
@@ -992,26 +985,40 @@ async function refreshChart() {
   lastCandle = synth[synth.length - 1] || null;
   // Forex has no bars provider — synthetic is the final answer.
   if (def.market === 'forex') return;
-  // Fetch real OHLCV.  Window = 200 candles back from now so all timeframes
-  // get a useful history length without hammering the upstream.
-  const toSec   = Math.floor(Date.now() / 1000);
-  const fromSec = toSec - 200 * interval;
+  // Crypto: keep the existing Binance-direct path (CORS-allowed, intraday
+  // resolutions). Stocks: pull 1y of daily candles from Yahoo via corsproxy
+  // — single source of truth for both ASX and US.
   try {
-    const bars = await TArenaDatafeed.fetchBars(
-      state.symbol, tfToResolution(tf), fromSec, toSec
-    );
+    let bars;
+    if (def.market === 'crypto') {
+      const toSec   = Math.floor(Date.now() / 1000);
+      const fromSec = toSec - 200 * interval;
+      const raw = await TArenaDatafeed.fetchBars(state.symbol, tfToResolution(tf), fromSec, toSec);
+      bars = (raw || []).map(b => ({ time: Math.floor(b.t / 1000), open: +b.o, high: +b.h, low: +b.l, close: +b.c }));
+    } else {
+      // Map TradeArena tf → Yahoo (range, interval). Intraday tfs ask Yahoo
+      // for ~6 months @ 1h; daily/weekly/monthly tfs ask for the full year
+      // at the right granularity. Yahoo refuses some combos (e.g. 1m+1y),
+      // so we cap to safe pairs.
+      const yfMap = {
+        '1m':  ['5d',  '1m'],  '5m':  ['1mo', '5m'],   '15m': ['1mo', '15m'],
+        '1h':  ['6mo', '60m'], '4h':  ['1y',  '60m'],
+        '1D':  ['1y',  '1d'],  '1W':  ['5y',  '1wk'],  '1M':  ['10y', '1mo'],
+      };
+      const [range, ivl] = yfMap[tf] || ['1y', '1d'];
+      const raw = await fetchYahooBars(state.symbol, range, ivl);
+      bars = raw.map(b => ({ time: b.time, open: b.open, high: b.high, low: b.low, close: b.close }));
+    }
     // Bail if the user navigated to another symbol/tf in the meantime.
     if (reqId !== chartReqId) return;
     if (!bars || !bars.length) return;
-    // Datafeed returns {t:ms, o, h, l, c, v}; LightweightCharts wants
-    // {time:sec, open, high, low, close}.  De-dup + sort defensively.
+    // De-dup + sort defensively.
     const seen = new Set();
     const out  = [];
     for (const b of bars) {
-      const t = Math.floor(b.t / 1000);
-      if (seen.has(t)) continue;
-      seen.add(t);
-      out.push({ time: t, open: +b.o, high: +b.h, low: +b.l, close: +b.c });
+      if (seen.has(b.time)) continue;
+      seen.add(b.time);
+      out.push(b);
     }
     out.sort((a, b) => a.time - b.time);
     candleSeries.setData(out);
