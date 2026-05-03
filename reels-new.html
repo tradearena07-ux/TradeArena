@@ -626,6 +626,30 @@
 (function () {
   TArenaUI.renderNav('reels');
   TArenaUI.renderFooter();
+
+  // Pre-fill from quick-draft handed off by reels.html (sessionStorage).
+  (function prefillFromDraft(){
+    let raw = null;
+    try { raw = JSON.parse(sessionStorage.getItem('ta_reel_draft') || 'null'); } catch(_) {}
+    if (!raw) return;
+    sessionStorage.removeItem('ta_reel_draft');
+    setTimeout(() => {
+      try {
+        if (raw.title) {
+          const t = document.getElementById('subjectInput') || document.querySelector('input[name="title"]');
+          if (t) { t.value = raw.title; t.dispatchEvent(new Event('input', {bubbles:true})); }
+        }
+        if (raw.content) {
+          const th = document.getElementById('thesisInput');
+          if (th) { th.value = raw.content; th.dispatchEvent(new Event('input', {bubbles:true})); }
+        }
+        if (raw.ticker) {
+          const si = document.getElementById('symInput');
+          if (si) { si.value = raw.ticker; si.dispatchEvent(new Event('input', {bubbles:true})); }
+        }
+      } catch(_) {}
+    }, 200);
+  })();
   if (!TArenaAuth.requireAuth()) return;
 
   const sb       = window.TArenaDB;
