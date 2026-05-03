@@ -1,0 +1,260 @@
+Completely rebuild profile.html to look exactly like 
+Chess.com's profile page but in TradeArena navy/gold theme.
+
+REFERENCE: Chess.com profile layout
+- Large profile photo (not just initials)
+- Clean header with name + handle + status
+- Horizontal tabs: Overview | Trades | Stats | Achievements | Following
+- Stats shown as big prominent numbers with icons
+- Activity feed / game history style trade history
+- Streak counter with fire icon
+- League/rank badge on the side
+
+═══════════════════════════════════════
+SECTION 1 — PROFILE HEADER (Chess.com style)
+═══════════════════════════════════════
+
+LEFT SIDE:
+- Large square profile photo (200x200px) with rounded corners
+- Clicking photo → opens file picker to upload new photo
+- Upload to Supabase storage bucket "avatars"
+- If no photo → gold gradient square with large initials
+- Camera icon overlay on hover: "Change Photo"
+- Online status dot (green = online, grey = offline)
+
+RIGHT SIDE of photo:
+- Display name (large, Cinzel bold)
+- @username handle (muted, smaller)
+- University badge (like Chess.com country flag):
+  → Gold shield icon + university name
+- Status line (editable, click to edit):
+  → "Enter a status..." placeholder
+- Meta row (like Chess.com joined/friends/views):
+  → 📅 Member since May 2026
+  → 🎓 University of Sydney  
+  → 📊 0 Trades
+  → 👁 0 Profile views
+  → 🟢 Online now
+
+TOP RIGHT:
+- "Edit Profile" button (gold outlined)
+- Share profile button (icon only)
+- If viewing own profile: Edit button shows
+- If viewing other's profile: Follow button shows
+
+═══════════════════════════════════════
+SECTION 2 — STATS ROW (Chess.com rating boxes)
+═══════════════════════════════════════
+
+3 prominent stat boxes side by side 
+(like Chess.com's Blitz/Bullet/Rapid rating boxes):
+
+Box 1: ⚡ PAPER TRADING
+- Big number: Total P&L (e.g. +$1,247)
+- Mini sparkline chart below (last 7 days)
+- Green/red color based on positive/negative
+
+Box 2: 📈 WIN RATE  
+- Big number: Win % (e.g. 67%)
+- Progress bar below
+- "from X closed trades"
+
+Box 3: 🏆 ARENA RANK
+- Big number: Campus rank (e.g. #3)
+- "at UNSW" below
+- Gold trophy icon if top 10
+
+Below the 3 boxes, smaller stats row:
+Sharpe | Max DD | Best Trade | Total Trades | Streak
+(like Chess.com's secondary stats)
+
+═══════════════════════════════════════
+SECTION 3 — HORIZONTAL TABS (Chess.com style)
+═══════════════════════════════════════
+
+Tab row with gold underline on active:
+[Overview] [Trade History] [Stats] [Achievements] [Following]
+
+OVERVIEW TAB (default):
+Left column (70%):
+
+"Recent Trades" section (like Chess.com "Daily Games"):
+- If no trades: 
+  "No trades yet"
+  [Start Trading] button (gold)
+- If trades exist: show last 5 trades as rows:
+  → Buy/Sell badge | Symbol | Shares | Price | P&L | Date
+  → Green P&L if profitable, red if loss
+  → "View all trades →" link at bottom
+
+"Holdings" section below:
+- Current open positions
+- Symbol | Shares | Value | P&L
+- Empty state: "No open positions"
+
+Right column (30%):
+"Streak" box (like Chess.com streak):
+🔥 X Day Streak
+"Keep trading daily to maintain your streak"
+[Trade Now →]
+
+"League" box (like Chess.com Legend League):
+🏅 CURRENT LEAGUE
+Show league based on P&L:
+- Bronze (< 0%)
+- Silver (0-5%)
+- Gold (5-15%)
+- Platinum (15-30%)  
+- Diamond (30%+)
+"You are rank #X at [University]"
+
+"Learning Progress" box:
+🎓 SCHOOL PROGRESS
+X modules completed
+[Continue Learning →]
+
+TRADE HISTORY TAB:
+Full table of all trades:
+Columns: Type | Symbol | Shares | Price | Total | P&L | Date
+- Buy badge (green) / Sell badge (red)
+- Sort by date (newest first)
+- Filter: All | Buy | Sell | This Week | This Month
+- Pagination (20 per page)
+- Empty state: "No trades yet — make your first trade"
+
+STATS TAB:
+2 column layout:
+
+Left: Trading Statistics
+- Total Trades
+- Win Rate %
+- Avg Win $
+- Avg Loss $
+- Best Single Trade $
+- Worst Single Trade $
+- Avg Hold Time
+- Total Volume Traded $
+
+Right: Quant Metrics  
+- Sharpe Ratio
+- Sortino Ratio
+- Max Drawdown %
+- Recovery Factor
+- Profit Factor
+- Expectancy $
+- Avg R:R
+
+Below: Equity Curve chart (COMPACT, 180px height max)
+- Toggle: 1M | 3M | 6M | 1Y | ALL
+- Compare vs ASX200 (off by default)
+- Simple line chart, gold color
+
+ACHIEVEMENTS TAB (like Chess.com Awards):
+Grid of achievement badges:
+
+Row 1 - Trading Badges:
+🥇 "First Trade" — Made your first trade (LOCKED if not done)
+💎 "Diamond Hands" — Held a position 7+ days
+🎯 "Sharpshooter" — 5 winning trades in a row
+📈 "Bull Run" — Portfolio up 10%+
+🐻 "Bear Slayer" — Profitable in a down market
+
+Row 2 - Learning Badges:
+📚 "Scholar" — Completed first school module
+🎓 "Graduate" — Completed all 6 modules
+🧠 "Analyst" — Passed technical analysis module
+💡 "Strategist" — Completed portfolio strategy module
+
+Row 3 - Community Badges:
+👑 "Campus King" — Ranked #1 at your university
+⚔️ "Arena Warrior" — Top 10 nationally
+🌟 "Early Adopter" — Joined in beta (first 500)
+🔥 "On Fire" — 7 day trading streak
+
+Each badge:
+- Gold color when earned
+- Grey/locked when not earned
+- Show date earned on hover
+- Tooltip explaining how to earn if locked
+
+FOLLOWING TAB:
+- List of traders you follow (empty state: "Not following anyone yet")
+- Suggested traders to follow:
+  → Top 5 traders at your university
+  → Top 5 nationally
+- Each row: Avatar | Name | University | P&L | Follow button
+
+═══════════════════════════════════════
+SECTION 4 — PUBLIC PROFILE VIEW
+═══════════════════════════════════════
+When someone visits /profile.html?user=USERNAME:
+- Show their profile in read-only mode
+- Edit Profile → Follow button instead
+- Can see their Overview, Trade History, Stats, Achievements
+- Cannot see their Following tab
+- "Trader not found" if username doesn't exist
+
+═══════════════════════════════════════
+SUPABASE — Save profile data:
+═══════════════════════════════════════
+
+Profiles table (create if not exists):
+create table if not exists profiles (
+  id uuid references auth.users(id) primary key,
+  username text unique,
+  full_name text,
+  university text,
+  avatar_url text,
+  status_text text,
+  profile_views integer default 0,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+Follows table:
+create table if not exists follows (
+  id uuid default gen_random_uuid() primary key,
+  follower_id uuid references auth.users(id),
+  following_id uuid references auth.users(id),
+  created_at timestamptz default now(),
+  unique(follower_id, following_id)
+);
+
+Enable RLS on both tables.
+Users can read all profiles.
+Users can only update their own profile.
+
+Avatar upload to Supabase Storage:
+- Bucket: "avatars" (public)
+- Path: userId/avatar.jpg
+- Show upload progress bar
+- Compress image before upload if > 1MB
+- Support jpg, png, webp
+
+═══════════════════════════════════════
+DESIGN RULES:
+═══════════════════════════════════════
+- Background: #060e1c (navy)
+- Cards: #091528 (navy2)
+- Borders: rgba(201,160,48,0.15)
+- Gold: #c9a030 / #e8c060
+- Green P&L: #4ade80
+- Red P&L: #f87171
+- Font: Cinzel for headings, DM Sans for body
+- Tab active: gold underline, gold text
+- Tab inactive: muted text
+- Stat boxes: navy3 background, hover lifts slightly
+- Achievement badges: 60x60px circles
+- Earned badges: gold gradient background
+- Locked badges: grey with lock icon overlay
+
+Mobile responsive:
+- Profile header stacks vertically on mobile
+- Photo centers on mobile
+- Tabs become horizontal scroll on mobile
+- Stat boxes: 1 column on mobile
+- Achievement grid: 3 columns on mobile
+
+Keep existing Supabase auth.
+Keep existing nav header.
+Keep existing ticker bar.

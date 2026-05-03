@@ -6,210 +6,352 @@
   <title>TradeArena · Trader Profile</title>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
   <link rel="stylesheet" href="assets/styles.css"/>
   <style>
-    .pf-shell      { max-width:1080px;margin:0 auto;padding:32px 24px 60px;flex:1;width:100%; }
-    .num           { font-feature-settings:'tnum';font-variant-numeric:tabular-nums; }
-    .text-amber    { color:#fbbf24; }
-    .pf-stale      { font-size:11px;color:var(--muted);font-style:italic;margin-left:6px; }
+    /* ==========================================================
+       PROFILE — Chess.com layout in TradeArena navy/gold theme
+       ========================================================== */
+    .pf-shell  { max-width:1080px;margin:0 auto;padding:32px 24px 60px;flex:1;width:100%; }
+    .num       { font-feature-settings:'tnum';font-variant-numeric:tabular-nums; }
+    .text-amber{ color:#fbbf24; }
 
-    /* ---- Header ---------------------------------------------- */
-    .pf-head{
-      display:grid;grid-template-columns:auto 1fr auto;gap:32px;align-items:center;
-      padding-bottom:28px;border-bottom:1px solid var(--bdl);
-    }
+    /* ----- Header ----- */
+    .pf-head{ display:grid;grid-template-columns:auto 1fr auto;gap:32px;align-items:flex-start;
+              padding-bottom:28px;border-bottom:1px solid var(--bdl); }
     .pf-avatar{
-      width:120px;height:120px;border-radius:50%;
+      position:relative;width:200px;height:200px;border-radius:18px;overflow:hidden;
       display:flex;align-items:center;justify-content:center;
-      color:var(--navy);font-family:'Cinzel',serif;font-weight:700;font-size:2.4rem;letter-spacing:.03em;
-      border:3px solid rgba(201,160,48,.45);text-shadow:0 2px 6px rgba(0,0,0,.18);
-      position:relative;overflow:hidden;background-size:cover;background-position:center;
+      color:var(--navy);font-family:'Cinzel',serif;font-weight:700;font-size:4.6rem;
+      letter-spacing:.02em;border:1px solid rgba(201,160,48,.35);
+      background-size:cover;background-position:center;flex-shrink:0;
+      box-shadow:0 14px 30px -10px rgba(0,0,0,.45);
     }
-    .pf-avatar.editable{cursor:pointer;}
-    .pf-avatar.editable .cam-overlay{
-      position:absolute;inset:0;border-radius:50%;
-      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
-      color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;
-      background:rgba(6,14,28,.66);opacity:0;transition:opacity .15s;pointer-events:none;
+    .pf-avatar.editable{ cursor:pointer; }
+    .pf-avatar .cam-overlay{
+      position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+      justify-content:center;gap:6px;color:#fff;font-family:'DM Sans',sans-serif;
+      font-size:12px;font-weight:600;background:rgba(6,14,28,.66);
+      opacity:0;transition:opacity .15s;pointer-events:none;
     }
-    .pf-avatar.editable:hover .cam-overlay{opacity:1;}
-    .pf-avatar.editable .cam-overlay i{font-size:18px;color:var(--gold2);}
-    .pf-avatar.uploading .cam-overlay{opacity:1;}
-    .pf-avatar.uploading .cam-overlay i{animation:spin 1s linear infinite;}
-    @keyframes spin{to{transform:rotate(360deg);}}
-    .pf-meta-line{color:var(--muted);font-size:12px;margin-top:6px;}
-    .pf-meta-line i{color:var(--gold);margin-right:4px;}
-    .pf-id .name { font-family:'Cinzel',serif;font-size:1.75rem;font-weight:700;color:var(--cream);letter-spacing:.02em; }
-    .pf-id .handle { color:var(--muted);font-size:14px;margin-top:2px; }
-    .pf-id .badges-row { margin-top:10px;display:flex;gap:8px;flex-wrap:wrap; }
-    .pf-tier{ display:inline-flex;align-items:center;gap:6px;background:rgba(201,160,48,.12);color:var(--gold2);padding:4px 12px;border-radius:9999px;font-size:11.5px;font-weight:600;letter-spacing:.04em; }
-    .pf-uni{ display:inline-flex;align-items:center;gap:6px;background:rgba(96,165,250,.10);color:var(--blue);padding:4px 12px;border-radius:9999px;font-size:11.5px;font-weight:600; }
+    .pf-avatar.editable:hover .cam-overlay{ opacity:1; }
+    .pf-avatar.editable .cam-overlay i{ font-size:22px;color:var(--gold2); }
+    .pf-avatar.uploading .cam-overlay{ opacity:1; }
+    .pf-avatar.uploading .cam-overlay i{ animation:spin 1s linear infinite; }
+    @keyframes spin{ to{ transform:rotate(360deg); } }
+    /* Online status dot in the corner of the photo */
+    .pf-online{ position:absolute;right:10px;bottom:10px;width:18px;height:18px;border-radius:50%;
+                background:var(--green);border:3px solid var(--navy);box-shadow:0 0 10px rgba(74,222,128,.55); }
 
-    .pf-social{ display:flex;flex-direction:column;align-items:flex-end;gap:14px; }
-    .pf-counts{ display:flex;gap:22px;font-size:13px;color:var(--muted); }
-    .pf-counts strong{ display:block;color:var(--cream);font-family:'Cinzel',serif;font-size:18px;letter-spacing:.02em; }
-    .pf-actbtn{
+    .pf-id .name{ font-family:'Cinzel',serif;font-size:2rem;font-weight:700;color:var(--cream);
+                  letter-spacing:.02em;line-height:1.1; }
+    .pf-id .handle{ color:var(--muted);font-size:14px;margin-top:4px; }
+    .pf-id .uni-pill{
+      display:inline-flex;align-items:center;gap:7px;background:rgba(201,160,48,.12);
+      border:1px solid rgba(201,160,48,.32);color:var(--gold2);
+      padding:5px 12px;border-radius:9999px;font-size:12px;font-weight:600;margin-top:12px;
+    }
+    .pf-status{
+      margin-top:14px;color:var(--cream);font-size:14px;line-height:1.5;cursor:default;
+      max-width:520px;font-style:italic;
+    }
+    .pf-status.editable{ cursor:pointer; }
+    .pf-status.editable:hover{ color:var(--gold2); }
+    .pf-status .placeholder{ color:var(--muted);font-style:italic;font-weight:400; }
+    .pf-meta{ margin-top:16px;display:flex;flex-wrap:wrap;gap:6px 22px;font-size:12.5px;
+              color:var(--muted); }
+    .pf-meta span{ display:inline-flex;align-items:center;gap:7px; }
+    .pf-meta i{ color:var(--gold);font-size:11px; }
+    .pf-meta .online-dot{ display:inline-block;width:8px;height:8px;border-radius:50%;
+                          background:var(--green);box-shadow:0 0 6px rgba(74,222,128,.7); }
+
+    .pf-actions{ display:flex;gap:8px;flex-shrink:0; }
+    .pf-btn{
       padding:9px 18px;border-radius:9px;border:1px solid var(--border);
-      background:var(--navy3);color:var(--cream);font-size:13px;font-weight:600;cursor:pointer;
-      display:inline-flex;align-items:center;gap:8px;transition:all .15s;font-family:'DM Sans',sans-serif;
+      background:transparent;color:var(--gold2);font-size:13px;font-weight:600;cursor:pointer;
+      display:inline-flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;
+      transition:all .15s;
     }
-    .pf-actbtn:hover{ border-color:var(--gold);color:var(--gold2); }
-    .pf-actbtn.primary{ background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);border:none;font-weight:700; }
-    .pf-actbtn.primary:hover{ filter:brightness(1.08);color:var(--navy); }
-    .pf-actbtn.following{ background:rgba(74,222,128,.10);border-color:rgba(74,222,128,.4);color:#86efac; }
+    .pf-btn:hover{ background:rgba(201,160,48,.08);border-color:var(--gold); }
+    .pf-btn.primary{ background:linear-gradient(135deg,var(--gold),var(--gold2));
+                     color:var(--navy);border:none;font-weight:700; }
+    .pf-btn.primary:hover{ filter:brightness(1.08); }
+    .pf-btn.following{ background:rgba(74,222,128,.10);border-color:rgba(74,222,128,.4);
+                       color:#86efac; }
+    .pf-btn.icon{ padding:9px 11px; }
+    .pf-btn.danger{ color:#fca5a5;border-color:rgba(248,113,113,.3); }
+    .pf-btn.danger:hover{ background:rgba(248,113,113,.08);border-color:#f87171; }
 
-    /* ---- Stats tiles ---------------------------------------- */
-    .stats-grid{ display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:24px; }
-    .stat-tile{
-      background:var(--navy3);border:1px solid var(--bdl);border-radius:12px;padding:16px 14px;
+    /* ----- Hero stat boxes (Chess.com rating tiles) ----- */
+    .stats3{ display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:26px; }
+    .stat-box{
+      background:var(--navy3);border:1px solid var(--bdl);border-radius:14px;padding:20px 22px;
+      transition:transform .18s, border-color .18s, box-shadow .18s;cursor:default;
       display:flex;flex-direction:column;gap:6px;
     }
-    .stat-tile .lbl{ font-family:'Cinzel',serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted); }
-    .stat-tile .val{ font-family:'Cinzel',serif;font-size:1.5rem;font-weight:700;color:var(--cream);letter-spacing:.02em; }
-    .stat-tile.pos .val{ color:var(--green); }
-    .stat-tile.neg .val{ color:var(--red); }
-    .stat-tile.amb .val{ color:#fbbf24; }
-    .stat-tile.lock { opacity:.55;border-style:dashed; }
-    .stat-tile.lock .val{ color:var(--muted);font-size:1rem; }
+    .stat-box:hover{ transform:translateY(-3px);border-color:rgba(201,160,48,.4);
+                     box-shadow:0 14px 30px -16px rgba(201,160,48,.25); }
+    .stat-box .sb-h{ display:flex;align-items:center;justify-content:space-between;
+                     font-family:'Cinzel',serif;font-size:11px;letter-spacing:.18em;
+                     text-transform:uppercase;color:var(--muted); }
+    .stat-box .sb-h i{ color:var(--gold2);font-size:14px; }
+    .stat-box .sb-v{ font-family:'Cinzel',serif;font-size:2rem;font-weight:700;color:var(--cream);
+                     line-height:1.1;margin-top:2px; }
+    .stat-box .sb-sub{ color:var(--muted);font-size:12px;margin-top:auto; }
+    .stat-box.pos .sb-v{ color:var(--green); }
+    .stat-box.neg .sb-v{ color:var(--red); }
+    .stat-box.gold .sb-v{ color:var(--gold2); }
+    .sparkline{ width:100%;height:34px;display:block;margin-top:6px; }
+    .winbar{ height:6px;border-radius:9999px;background:var(--navy);overflow:hidden;margin-top:8px; }
+    .winbar .fill{ height:100%;background:linear-gradient(90deg,var(--green),#86efac);
+                   border-radius:9999px;transition:width .8s; }
 
-    @media(max-width:980px){ .stats-grid{ grid-template-columns:repeat(3,1fr); } }
-    @media(max-width:560px){ .stats-grid{ grid-template-columns:repeat(2,1fr); } }
-
-    /* ---- Cards ----------------------------------------------- */
-    .pcard{
-      background:var(--navy3);border:1px solid var(--bdl);border-radius:14px;padding:22px;
-      margin-top:22px;
+    /* Smaller secondary stat row */
+    .stats5{ display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px; }
+    .stat-mini{
+      background:var(--navy2);border:1px solid var(--bdl);border-radius:10px;padding:12px 14px;
     }
-    .pcard-head{ display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap; }
-    .pcard-title{ font-family:'Cinzel',serif;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold2); }
-    .pcard-sub{ font-size:12px;color:var(--muted); }
-
-    .range-tabs, .bench-select{ display:flex;gap:4px;background:var(--navy);padding:3px;border-radius:8px;border:1px solid var(--bdl); }
-    .range-tabs button, .bench-select button{
-      padding:5px 11px;border-radius:6px;background:transparent;border:none;color:var(--muted);
-      font-size:11.5px;font-weight:600;cursor:pointer;font-family:'Cinzel',serif;letter-spacing:.06em;
+    .stat-mini .lbl{ font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+                     color:var(--muted);font-weight:600; }
+    .stat-mini .val{ font-family:'Cinzel',serif;font-size:1.05rem;font-weight:700;
+                     color:var(--cream);margin-top:4px;font-variant-numeric:tabular-nums; }
+    .stat-mini.pos .val{ color:var(--green); }
+    .stat-mini.neg .val{ color:var(--red); }
+    @media(max-width:780px){
+      .stats3{ grid-template-columns:1fr; }
+      .stats5{ grid-template-columns:repeat(2,1fr); }
     }
-    .range-tabs button.active, .bench-select button.active{ background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy); }
 
-    /* ---- Quant breakdown grid ------------------------------- */
-    .quant-grid{ display:grid;grid-template-columns:repeat(4,1fr);gap:18px 24px; }
-    @media(max-width:780px){ .quant-grid{ grid-template-columns:repeat(2,1fr); } }
-    .quant-row .l{ font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:4px; }
-    .quant-row .v{ font-family:'Cinzel',serif;font-size:1.05rem;font-weight:600;color:var(--cream);letter-spacing:.02em; }
-
-    /* ---- Badges row ----------------------------------------- */
-    .badge-row{ display:flex;flex-wrap:wrap;gap:10px; }
-    .badge{
-      display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:9999px;
-      background:linear-gradient(135deg,rgba(201,160,48,.12),rgba(232,192,96,.04));
-      border:1px solid rgba(201,160,48,.35);color:var(--gold2);
-      font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;
-    }
-    .badge i{ color:var(--gold); }
-
-    /* ---- Tabs ----------------------------------------------- */
-    .pf-tabs{ display:flex;gap:0;border-bottom:1px solid var(--bdl);margin:24px 0 18px; }
+    /* ----- Tabs ----- */
+    .pf-tabs{ display:flex;gap:0;border-bottom:1px solid var(--bdl);margin:30px 0 22px;
+              overflow-x:auto;scrollbar-width:none; }
+    .pf-tabs::-webkit-scrollbar{ display:none; }
     .pf-tab{
-      padding:14px 22px;cursor:pointer;
-      font-family:'Cinzel',serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
-      color:var(--muted);background:transparent;border:none;border-bottom:2px solid transparent;
-      transition:all .15s;display:inline-flex;align-items:center;gap:8px;
+      padding:14px 22px;cursor:pointer;background:transparent;border:none;
+      font-family:'Cinzel',serif;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;
+      color:var(--muted);border-bottom:2px solid transparent;transition:.15s;
+      display:inline-flex;align-items:center;gap:8px;white-space:nowrap;
     }
     .pf-tab:hover{ color:var(--cream); }
     .pf-tab.active{ color:var(--gold2);border-bottom-color:var(--gold); }
-    .pf-tab.lock-tab{ opacity:.55; }
 
-    /* ---- Tab content ---------------------------------------- */
-    .cash-row{
-      display:flex;align-items:center;justify-content:space-between;gap:14px;
-      margin-top:14px;padding:12px 16px;border-radius:10px;
-      background:var(--navy);border:1px solid var(--bdl);
+    /* ----- Tab layouts ----- */
+    .ov-grid{ display:grid;grid-template-columns:7fr 3fr;gap:22px; }
+    @media(max-width:920px){ .ov-grid{ grid-template-columns:1fr; } }
+    .pcard{
+      background:var(--navy3);border:1px solid var(--bdl);border-radius:14px;padding:22px;
     }
-    .cash-row .l{ font-family:'Cinzel',serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted); }
-    .cash-row .v{ font-family:'Cinzel',serif;font-size:1.15rem;font-weight:700;color:var(--cream);letter-spacing:.02em; }
-    .cash-row.lock .v{ color:var(--muted);font-size:0.95rem; }
+    .pcard + .pcard{ margin-top:18px; }
+    .pcard-head{ display:flex;align-items:center;justify-content:space-between;
+                 margin-bottom:14px;gap:10px;flex-wrap:wrap; }
+    .pcard-title{ font-family:'Cinzel',serif;font-size:13px;letter-spacing:.18em;
+                  text-transform:uppercase;color:var(--gold2); }
+    .pcard-sub{ font-size:12px;color:var(--muted); }
+    .pcard-link{ color:var(--gold2);font-size:12.5px;font-weight:600; }
 
-    .strat-grid{ display:grid;grid-template-columns:repeat(2,1fr);gap:14px; }
-    @media(max-width:780px){ .strat-grid{ grid-template-columns:1fr; } }
-    .strat-card{ background:var(--navy);border:1px solid var(--bdl);border-radius:10px;padding:16px; }
-    .strat-card .name{ font-family:'Cinzel',serif;font-weight:700;color:var(--cream);font-size:1.05rem; }
-    .strat-card .desc{ color:var(--muted);font-size:13px;margin:6px 0 10px;line-height:1.5; }
-    .strat-card .stats{ display:flex;gap:18px;font-size:12px;color:var(--muted); }
-    .strat-card .stats strong{ color:var(--cream);font-family:'Cinzel',serif;font-size:14px;display:block; }
+    /* Trade rows — list style for Overview ("Recent Trades") */
+    .trow{
+      display:grid;grid-template-columns:60px 1fr auto auto auto;gap:14px;align-items:center;
+      padding:13px 4px;border-bottom:1px solid var(--bdl);font-size:13.5px;
+    }
+    .trow:last-child{ border-bottom:none; }
+    .tag-buy, .tag-sell{
+      font-family:'Cinzel',serif;font-size:10.5px;letter-spacing:.1em;font-weight:700;
+      padding:4px 9px;border-radius:6px;text-align:center;
+    }
+    .tag-buy{ background:rgba(74,222,128,.18);color:var(--green); }
+    .tag-sell{ background:rgba(248,113,113,.18);color:var(--red); }
+    .trow .tsym{ font-family:'Cinzel',serif;font-weight:700;color:var(--cream); }
+    .trow .tsym small{ display:block;color:var(--muted);font-weight:400;font-size:11.5px;
+                       font-family:'DM Sans',sans-serif;margin-top:2px; }
+    .trow .tqty{ color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums; }
+    .trow .tpnl{ font-family:'Cinzel',serif;font-weight:700;text-align:right;
+                 font-variant-numeric:tabular-nums; }
+    .trow .tdate{ color:var(--muted);font-size:12px;text-align:right; }
 
-    .journal-list .jrow{ display:grid;grid-template-columns:80px 1fr auto auto;gap:14px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--bdl); }
-    .journal-list .jrow:last-child{ border-bottom:none; }
-    .jrow .jthumb{ width:80px;height:50px;border-radius:6px;background:var(--navy);border:1px solid var(--bdl);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px; }
-    .jrow .jthumb img{ width:100%;height:100%;object-fit:cover;border-radius:6px; }
-    .jrow .jbody strong{ display:block;color:var(--cream);font-weight:600;font-family:'Cinzel',serif;letter-spacing:.02em; }
-    .jrow .jbody small{ color:var(--muted);font-size:12px; }
-    .jrow .jpnl{ font-family:'Cinzel',serif;font-weight:700;text-align:right; }
-    .jrow .jpnl small{ display:block;font-size:11px;color:var(--muted);font-weight:400; }
-    .jrow .jr{ font-family:'Cinzel',serif;font-weight:600;color:var(--gold2);text-align:right; }
-
-    .holdings-grid{ display:grid;grid-template-columns:repeat(3,1fr);gap:8px; }
-    @media(max-width:780px){ .holdings-grid{ grid-template-columns:repeat(2,1fr); } }
+    /* Holdings cards on Overview */
+    .hgrid{ display:grid;grid-template-columns:repeat(3,1fr);gap:8px; }
+    @media(max-width:780px){ .hgrid{ grid-template-columns:repeat(2,1fr); } }
     .hcard{ background:var(--navy);border:1px solid var(--bdl);border-radius:10px;padding:14px; }
     .hcard .sym{ font-family:'Cinzel',serif;font-weight:700;color:var(--cream);font-size:1.1rem; }
     .hcard .qty{ color:var(--muted);font-size:12px;margin-top:2px; }
-    .hcard .val{ font-family:'Cinzel',serif;font-weight:600;color:var(--cream);margin-top:8px;font-size:0.95rem; }
+    .hcard .val{ font-family:'Cinzel',serif;font-weight:600;color:var(--cream);
+                 margin-top:8px;font-size:0.95rem; }
     .hcard .pnl{ font-size:12.5px;font-weight:600;font-family:'Cinzel',serif; }
 
-    /* ---- Locked card --------------------------------------- */
+    /* Right-column boxes (streak, league, learning) */
+    .sidecard{
+      background:var(--navy3);border:1px solid var(--bdl);border-radius:14px;padding:20px;
+      text-align:center;margin-bottom:14px;
+    }
+    .sidecard .sc-h{
+      font-family:'Cinzel',serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+      color:var(--gold2);margin-bottom:10px;
+    }
+    .sidecard .sc-big{ font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;
+                       color:var(--cream);line-height:1; }
+    .sidecard .sc-sub{ color:var(--muted);font-size:12.5px;margin-top:8px;line-height:1.5; }
+    .sidecard .fire{ color:#fb923c;font-size:30px;margin-bottom:6px; }
+    /* League pills */
+    .league-badge{
+      display:inline-flex;align-items:center;gap:8px;font-family:'Cinzel',serif;font-weight:700;
+      font-size:1.1rem;padding:8px 18px;border-radius:9999px;margin:6px 0;
+    }
+    .lg-bronze  { background:rgba(180,83,9,.18);   color:#fdba74;border:1px solid rgba(180,83,9,.35); }
+    .lg-silver  { background:rgba(168,193,219,.15);color:#cbd5e1;border:1px solid rgba(168,193,219,.3); }
+    .lg-gold    { background:rgba(201,160,48,.18); color:var(--gold2);border:1px solid rgba(201,160,48,.4); }
+    .lg-platinum{ background:rgba(96,165,250,.15); color:#93c5fd;border:1px solid rgba(96,165,250,.35); }
+    .lg-diamond { background:rgba(167,139,250,.15);color:#c4b5fd;border:1px solid rgba(167,139,250,.4); }
+
+    /* ----- Trade History tab ----- */
+    .th-filters{ display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px; }
+    .th-filters button{
+      background:var(--navy);border:1px solid var(--bdl);color:var(--muted);
+      padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;
+      font-family:'DM Sans',sans-serif;transition:.15s;
+    }
+    .th-filters button:hover{ color:var(--cream);border-color:var(--gold); }
+    .th-filters button.active{ background:linear-gradient(135deg,var(--gold),var(--gold2));
+                               color:var(--navy);border-color:transparent; }
+    .th-table{ width:100%;border-collapse:collapse;font-size:13.5px; }
+    .th-table th{
+      text-align:left;padding:10px 12px;font-family:'Cinzel',serif;font-size:10.5px;
+      letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+      border-bottom:1px solid var(--bdl);font-weight:700;
+    }
+    .th-table td{ padding:14px 12px;border-bottom:1px solid var(--bdl);
+                  font-variant-numeric:tabular-nums; }
+    .th-table tbody tr:hover td{ background:rgba(201,160,48,.04); }
+    .th-table .tnum{ text-align:right; }
+    .th-pager{ display:flex;align-items:center;justify-content:space-between;margin-top:14px;
+               font-size:12.5px;color:var(--muted); }
+    .th-pager button{ background:var(--navy);border:1px solid var(--bdl);color:var(--cream);
+                      padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;
+                      cursor:pointer;font-family:'DM Sans',sans-serif; }
+    .th-pager button:disabled{ opacity:.4;cursor:not-allowed; }
+
+    /* ----- Stats tab (2-column grid) ----- */
+    .stats-2col{ display:grid;grid-template-columns:1fr 1fr;gap:18px; }
+    @media(max-width:780px){ .stats-2col{ grid-template-columns:1fr; } }
+    .quant-list{ display:flex;flex-direction:column; }
+    .qrow{ display:flex;align-items:center;justify-content:space-between;padding:10px 0;
+           border-bottom:1px solid var(--bdl);font-size:13.5px; }
+    .qrow:last-child{ border-bottom:none; }
+    .qrow .ql{ color:var(--muted); }
+    .qrow .qv{ font-family:'Cinzel',serif;font-weight:700;color:var(--cream);
+               font-variant-numeric:tabular-nums; }
+    .qrow.pos .qv{ color:var(--green); }
+    .qrow.neg .qv{ color:var(--red); }
+
+    /* Compact equity curve toggle + chart (180px) */
+    .ec-tabs{ display:flex;gap:4px;background:var(--navy);padding:3px;border-radius:8px;
+              border:1px solid var(--bdl); }
+    .ec-tabs button{
+      padding:5px 11px;border-radius:6px;background:transparent;border:none;color:var(--muted);
+      font-family:'Cinzel',serif;font-size:11px;font-weight:600;letter-spacing:.06em;cursor:pointer;
+    }
+    .ec-tabs button.active{ background:linear-gradient(135deg,var(--gold),var(--gold2));
+                            color:var(--navy); }
+    .bench-toggle{
+      display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);
+      cursor:pointer;user-select:none;
+    }
+    .bench-toggle input{ accent-color:var(--gold); }
+
+    /* ----- Achievements tab ----- */
+    .ach-section{ margin-bottom:26px; }
+    .ach-h{ font-family:'Cinzel',serif;font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+            color:var(--gold2);margin-bottom:14px; }
+    .ach-grid{ display:grid;grid-template-columns:repeat(5,1fr);gap:14px; }
+    @media(max-width:780px){ .ach-grid{ grid-template-columns:repeat(3,1fr); } }
+    @media(max-width:480px){ .ach-grid{ grid-template-columns:repeat(2,1fr); } }
+    .ach{
+      background:var(--navy3);border:1px solid var(--bdl);border-radius:14px;padding:16px 12px;
+      text-align:center;position:relative;transition:transform .15s,border-color .15s;
+    }
+    .ach:hover{ transform:translateY(-3px);border-color:rgba(201,160,48,.45); }
+    .ach .a-circle{
+      width:60px;height:60px;border-radius:50%;display:inline-flex;align-items:center;
+      justify-content:center;font-size:24px;margin:0 auto 10px;position:relative;
+    }
+    .ach.earned .a-circle{
+      background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);
+      box-shadow:0 6px 18px -6px rgba(232,192,96,.55);
+    }
+    .ach.locked .a-circle{
+      background:var(--navy);border:1px dashed var(--bdl);color:var(--muted);
+    }
+    .ach.locked .a-circle::after{
+      content:'\f023';font-family:'Font Awesome 6 Free';font-weight:900;
+      position:absolute;bottom:-3px;right:-3px;width:22px;height:22px;border-radius:50%;
+      background:var(--navy);border:1px solid var(--bdl);font-size:10px;color:var(--muted);
+      display:inline-flex;align-items:center;justify-content:center;
+    }
+    .ach .a-name{ font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:var(--cream); }
+    .ach.locked .a-name{ color:var(--muted); }
+    .ach .a-tip{ font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4;min-height:30px; }
+
+    /* ----- Following tab ----- */
+    .follow-row{
+      display:grid;grid-template-columns:auto 1fr auto auto;gap:14px;align-items:center;
+      padding:12px 4px;border-bottom:1px solid var(--bdl);
+    }
+    .follow-row:last-child{ border-bottom:none; }
+    .fav{ width:42px;height:42px;border-radius:50%;display:inline-flex;align-items:center;
+          justify-content:center;background:linear-gradient(135deg,var(--gold),var(--gold2));
+          color:var(--navy);font-family:'Cinzel',serif;font-weight:700;font-size:14px; }
+    .fnm{ font-weight:600;color:var(--cream);font-size:14px; }
+    .fnm small{ display:block;color:var(--muted);font-size:11.5px;font-weight:400;margin-top:2px; }
+    .fpl{ font-family:'Cinzel',serif;font-weight:700;color:var(--green);
+          font-variant-numeric:tabular-nums; }
+
+    /* ----- Empty / locked / loading states ----- */
+    .empty-state, .locked-card{ text-align:center;padding:46px 20px;color:var(--muted); }
+    .empty-state i, .locked-card i{ font-size:32px;color:var(--gold);opacity:.45;
+                                    margin-bottom:14px;display:block; }
+    .empty-state .title{ color:var(--cream);font-weight:600;margin-bottom:8px;font-size:15px; }
     .locked-card{
-      text-align:center;padding:46px 20px;color:var(--muted);
-      background:repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(168,193,219,0.025) 8px, rgba(168,193,219,0.025) 16px);
+      background:repeating-linear-gradient(45deg, transparent, transparent 8px,
+                 rgba(168,193,219,0.025) 8px, rgba(168,193,219,0.025) 16px);
       border:1px dashed var(--bdl);border-radius:12px;
     }
-    .locked-card i{ font-size:32px;color:var(--gold);opacity:.5;margin-bottom:14px;display:block; }
-    .locked-card .lt{ color:var(--cream);font-weight:600;margin-bottom:6px; }
 
-    .empty-state{ text-align:center;padding:46px 20px;color:var(--muted); }
-    .empty-state i{ font-size:32px;color:var(--gold);opacity:.4;margin-bottom:14px;display:block; }
-
-    /* ---- Edit modal --------------------------------------- */
+    /* ----- Edit modal ----- */
     .modal{ max-width:560px; }
     .modal-row{ margin-bottom:14px; }
-    .modal-row label{ display:block;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px; }
+    .modal-row label{ display:block;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.18em;
+                      text-transform:uppercase;color:var(--muted);margin-bottom:8px; }
     .modal-row input, .modal-row textarea{
-      width:100%;padding:11px 13px;background:var(--navy);
-      border:1px solid var(--border);color:var(--cream);
-      font-family:'DM Sans',sans-serif;font-size:14px;
-      border-radius:8px;outline:none;resize:vertical;
+      width:100%;padding:11px 13px;background:var(--navy);border:1px solid var(--border);
+      color:var(--cream);font-family:'DM Sans',sans-serif;font-size:14px;border-radius:8px;
+      outline:none;resize:vertical;
     }
     .modal-row input:focus, .modal-row textarea:focus{ border-color:var(--gold); }
-
-    .privacy-grid{
-      background:var(--navy);border:1px solid var(--bdl);border-radius:10px;padding:14px;
-    }
-    .privacy-grid .ph{
-      font-family:'Cinzel',serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
-      color:var(--gold2);margin-bottom:10px;display:flex;align-items:center;gap:8px;
-    }
-    .priv-row{
-      display:flex;align-items:center;justify-content:space-between;
-      padding:10px 0;border-top:1px solid var(--bdl);
-    }
+    .privacy-grid{ background:var(--navy);border:1px solid var(--bdl);border-radius:10px;padding:14px; }
+    .privacy-grid .ph{ font-family:'Cinzel',serif;font-size:11px;letter-spacing:.18em;
+                       text-transform:uppercase;color:var(--gold2);margin-bottom:10px;
+                       display:flex;align-items:center;gap:8px; }
+    .priv-row{ display:flex;align-items:center;justify-content:space-between;padding:10px 0;
+               border-top:1px solid var(--bdl); }
     .priv-row:first-of-type{ border-top:none; }
     .priv-row .pl{ color:var(--cream);font-size:13.5px;font-weight:500; }
     .priv-row .pl small{ display:block;color:var(--muted);font-size:11.5px;margin-top:2px;font-weight:400; }
-    .toggle{
-      position:relative;width:42px;height:24px;background:var(--navy3);border:1px solid var(--bdl);
-      border-radius:9999px;cursor:pointer;flex-shrink:0;transition:background .15s;
-    }
-    .toggle::after{
-      content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;
-      background:var(--cream);border-radius:50%;transition:left .15s;
-    }
+    .toggle{ position:relative;width:42px;height:24px;background:var(--navy3);border:1px solid var(--bdl);
+             border-radius:9999px;cursor:pointer;flex-shrink:0;transition:background .15s; }
+    .toggle::after{ content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;
+                    background:var(--cream);border-radius:50%;transition:left .15s; }
     .toggle.on{ background:linear-gradient(135deg,var(--gold),var(--gold2)); }
     .toggle.on::after{ left:20px;background:var(--navy); }
 
+    /* ----- Mobile ----- */
     @media(max-width:780px){
-      .pf-head{ grid-template-columns:auto 1fr;gap:18px; }
-      .pf-social{ grid-column:1 / -1;align-items:flex-start;flex-direction:row;justify-content:space-between;width:100%; }
-      .pf-avatar{ width:72px;height:72px;font-size:1.6rem; }
+      .pf-head{ grid-template-columns:1fr;gap:18px;text-align:center; }
+      .pf-avatar{ width:140px;height:140px;font-size:3rem;margin:0 auto;border-radius:14px; }
+      .pf-id{ text-align:center; }
+      .pf-id .uni-pill{ margin:12px auto 0; }
+      .pf-meta{ justify-content:center; }
+      .pf-actions{ justify-content:center;margin:0 auto; }
     }
   </style>
 </head>
@@ -217,25 +359,29 @@
 
 <div id="tarena-nav"></div>
 
-<input type="file" id="avatarInput" accept="image/png,image/jpeg,image/webp" style="display:none;" onchange="onAvatarPicked(event)"/>
+<input type="file" id="avatarInput" accept="image/png,image/jpeg,image/webp"
+       style="display:none;" onchange="onAvatarPicked(event)"/>
 
 <div class="pf-shell" id="pfShell">
-  <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i><div>Loading scorecard…</div></div>
+  <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i><div>Loading profile…</div></div>
 </div>
 
 <!-- Edit Profile Modal -->
 <div class="modal-backdrop" id="editModal" onclick="if(event.target.id==='editModal') closeEdit()">
   <div class="modal">
     <h3 style="margin:0 0 4px;font-family:'Cinzel',serif;letter-spacing:.04em;">Edit profile</h3>
-    <div style="color:var(--muted);font-size:12.5px;margin-bottom:18px;">Update your public scorecard and choose what other traders can see.</div>
+    <div style="color:var(--muted);font-size:12.5px;margin-bottom:18px;">
+      Update your public scorecard and choose what other traders can see.
+    </div>
 
     <div class="modal-row">
       <label>Display name</label>
       <input type="text" id="editName" maxlength="40" placeholder="e.g. Alex Chen"/>
     </div>
     <div class="modal-row">
-      <label>Bio</label>
-      <textarea id="editBio" rows="2" maxlength="160" placeholder="Quant-leaning swing trader · ASX + crypto"></textarea>
+      <label>Status / Bio</label>
+      <textarea id="editBio" rows="2" maxlength="160"
+                placeholder="Quant-leaning swing trader · ASX + crypto"></textarea>
     </div>
     <div class="modal-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
       <div>
@@ -278,70 +424,53 @@
   TArenaUI.renderNav('profile');
   TArenaUI.renderFooter();
 
-  // ---- Page state ------------------------------------------------
+  // ============================================================
+  // Page state and data layer
+  // ============================================================
   const sb = window.TArenaDB;
   const params = new URLSearchParams(location.search);
 
-  // The sync session cache primed from localStorage may carry a stale
-  // username (email-derived fallback) when the profiles row hasn't been
-  // hydrated yet. For own-profile views this would cause the username
-  // RPC to miss and render "Trader not found." Force a server hydrate
-  // first so we always look up the real profiles.username.
-  const hasUParam = !!params.get('u');
+  // Force a fresh server hydrate so own-profile lookups never miss on
+  // a stale localStorage username.
+  const hasUParam = !!params.get('u') || !!params.get('user');
   if (!hasUParam && TArenaAuth.reloadSession) {
     try { const fresh = await TArenaAuth.reloadSession(); if (fresh) session = fresh; } catch (_) {}
   }
 
-  const ownUsername = (session.user.username || '').toLowerCase();
-  const wantedHandle = (params.get('u') || ownUsername).replace(/^@/, '').toLowerCase();
+  const ownUsername  = (session.user.username || '').toLowerCase();
+  const wantedHandle = (params.get('u') || params.get('user') || ownUsername).replace(/^@/, '').toLowerCase();
   const isOwnProfile = !hasUParam || wantedHandle === ownUsername;
 
-  // Default visibility mask matches the SQL default — everything but
-  // holdings/cash starts visible. We only fall back to this when a
-  // viewer is the owner (own profile is always fully visible).
+  // Default visibility mask — matches the SQL default (everything but
+  // holdings/cash starts visible).
   const DEFAULT_MASK = {
     holdings: false, cash: false, equity_curve: true, metrics: true,
     strategies: true, journal: true, reels: true, university: true,
   };
-
   const PRIV_FIELDS = [
     { k: 'holdings',     l: 'Holdings',         d: 'Show open positions on your profile.' },
     { k: 'cash',         l: 'Cash balance',     d: 'Reveal your portfolio cash buffer.' },
     { k: 'equity_curve', l: 'Equity curve',     d: 'Account value over time vs benchmarks.' },
     { k: 'metrics',      l: 'Quant metrics',    d: 'Sharpe, Sortino, win rate, drawdown, etc.' },
     { k: 'strategies',   l: 'Playbook',         d: 'Your published strategy library.' },
-    { k: 'journal',      l: 'Trade journal',    d: 'Closed trade history with reasoning.' },
+    { k: 'journal',      l: 'Trade history',    d: 'Closed trade history with P&L.' },
     { k: 'reels',        l: 'Strategies',       d: 'Trade-idea strategies you have posted.' },
     { k: 'university',   l: 'University',       d: 'Show your school on your profile.' },
   ];
 
-  const BADGE_LABELS = {
-    '100_trades':         { i: 'fa-medal',     t: '100+ trades' },
-    '6_profitable_months':{ i: 'fa-calendar-check', t: '6 profitable months' },
-    'top_sharpe_q3_26':   { i: 'fa-trophy',    t: 'Top 1% Sharpe · Q3 2026' },
-    'mirror_master':      { i: 'fa-clone',     t: 'Mirror master · 50+ mirrors' },
-    'strategy_curator':   { i: 'fa-book-open', t: 'Strategy curator · 5+ published' },
-  };
-
   const STARTING_CAPITAL = 100000;
 
   let state = {
-    profile:     null,   // { id, username, display_name, tier, type, university, bio, badges, visibility_mask, joined_at }
-    follows:     { followers: 0, following: 0 },
-    amFollowing: false,
-    trades:      [],     // closed trades for journal + metrics
-    openHoldings:[],     // owner-only holdings list (empty when locked)
-    strategies:  [],
-    summary:     null,   // metrics summary
-    benchmark:   'asx200',
-    range:       'ALL',
-    activeTab:   'strategies',
-    cashBalance: null,
-    equityChart: null,
+    profile: null, follows: { followers: 0, following: 0 }, amFollowing: false,
+    trades: [], openHoldings: [], strategies: [], summary: null,
+    range: '3M', benchCompare: false, benchmark: 'asx200',
+    cashBalance: null, computedBadges: [], learning: null,
+    activeTab: 'overview', equityChart: null,
+    historyFilter: 'all', historyPage: 1, HISTORY_PAGE_SIZE: 20,
   };
 
   // ============================================================
-  // Data loaders
+  // Visibility / data loaders
   // ============================================================
   function isVisible(field) {
     if (isOwnProfile) return true;
@@ -350,18 +479,15 @@
     return DEFAULT_MASK[field];
   }
 
+  // Look up the profile via username RPC. Falls back to a direct
+  // profiles read for own-profile (handles stale username caches).
+  // Self-heals a missing profiles row for own-profile so the user
+  // never sees "Trader not found" on their own page.
   async function loadProfile() {
-    // Try the username RPC first (works for any public profile).
     const { data, error } = await sb.rpc('get_profile_card', { p_username: wantedHandle });
     if (error) console.warn('[profile] get_profile_card error', error);
     if (data && data.length) return data[0];
 
-    // Own-profile fallback: if the username lookup missed (stale cache,
-    // username changed in DB, etc.) but we know the auth user id, read
-    // the profiles row directly. If still missing (signup completed at
-    // auth layer but the profiles row was never inserted), self-heal by
-    // creating one from session metadata so the user never sees
-    // "Trader not found" on their own page.
     if (isOwnProfile && session.user.id) {
       const sel = 'id,username,display_name,tier,type,university,bio,avatar_color,avatar_url,badges,visibility_mask,created_at';
       let { data: row, error: e2 } = await sb
@@ -369,7 +495,6 @@
       if (e2) { console.error('[profile] own-profile fallback error', e2); return null; }
       if (row) return { ...row, joined_at: row.created_at };
 
-      // Self-heal: create the missing profiles row.
       console.warn('[profile] no profiles row for', session.user.id, '— self-healing');
       const u = session.user;
       const rawName = (u.username || (u.email || '').split('@')[0] || 'trader').toLowerCase();
@@ -380,13 +505,11 @@
 
       async function tryInsert(uname) {
         return await sb.from('profiles').insert({
-          id:           u.id,
-          username:     uname,
+          id: u.id, username: uname,
           display_name: u.displayName || uname,
-          university:   u.university || 'Public',
-          type:         u.type || 'public',
-          tier:         u.tier || (u.type === 'student' ? 'Student' : 'Member'),
-          bio:          '',
+          university: u.university || 'Public', type: u.type || 'public',
+          tier: u.tier || (u.type === 'student' ? 'Student' : 'Member'),
+          bio: '',
         });
       }
       let { error: iErr } = await tryInsert(safe);
@@ -410,57 +533,41 @@
     const r = (data && data[0]) || {};
     return { followers: Number(r.followers) || 0, following: Number(r.following) || 0 };
   }
-
   async function loadAmFollowing(ownerId) {
     if (isOwnProfile) return false;
     const { data, error } = await sb.rpc('am_following', { p_target: ownerId });
     if (error) { console.warn(error); return false; }
     return !!data;
   }
-
   async function loadJournalTrades(ownerId) {
-    // Full journal rows (with notes / symbols) for the Journal tab.
-    // Server-side `get_journal_for` returns 0 rows when journal mask
-    // is off, so we don't need a client-side gate.
     if (!isOwnProfile && !isVisible('journal')) return [];
     const { data, error } = await sb.rpc('get_journal_for', { p_owner: ownerId });
     if (error) { console.warn('journal load failed', error); return []; }
     return data || [];
   }
-
   async function loadPerfTrades(ownerId) {
-    // Stripped projection for metrics / equity curve. Gated server-side
-    // by `metrics OR equity_curve OR owner`.
     if (!isOwnProfile && !isVisible('metrics') && !isVisible('equity_curve')) return [];
     const { data, error } = await sb.rpc('get_perf_trades_for', { p_owner: ownerId });
     if (error) { console.warn('perf load failed', error); return []; }
     return data || [];
   }
-
   async function loadCashBalance(ownerId) {
-    // Server-side gate uses visibility_mask.cash only — independent of
-    // metrics / equity_curve / holdings. Returns null when private.
     if (!isOwnProfile && !isVisible('cash')) return null;
     const { data, error } = await sb.rpc('get_cash_balance_for', { p_owner: ownerId });
     if (error) { console.warn('cash load failed', error); return null; }
     return data == null ? null : Number(data);
   }
-
   async function loadComputedBadges(ownerId) {
-    // Always safe to call — it returns a public-ish list of achievement
-    // tokens (no PII, no numerics). Failures fall through to curated.
     const { data, error } = await sb.rpc('compute_badges_for', { p_owner: ownerId });
     if (error) { console.warn('badges load failed', error); return []; }
     return Array.isArray(data) ? data : [];
   }
-
   async function loadStrategies(ownerId) {
     if (!isVisible('strategies')) return [];
     const { data, error } = await sb.rpc('get_strategies_for', { p_owner: ownerId });
     if (error) { console.warn('strategies load failed', error); return []; }
     return data || [];
   }
-
   async function loadHoldings(ownerId) {
     if (!isVisible('holdings')) return [];
     const { data, error } = await sb.rpc('get_holdings_for', { p_owner: ownerId });
@@ -469,93 +576,80 @@
   }
 
   // ============================================================
-  // Render helpers
+  // Format helpers
   // ============================================================
   const fmtPct  = (n, d) => (n == null ? '—' : (n >= 0 ? '+' : '') + (n * 100).toFixed(d == null ? 2 : d) + '%');
   const fmtNum  = (n, d) => (n == null || !isFinite(n) ? '—' : n.toFixed(d == null ? 2 : d));
   const fmtDays = n => (n == null ? '—' : n.toFixed(1) + 'd');
   const fmtMoney = (n) => TArenaUI.fmtMoney(n, { decimals: n == null ? 0 : (Math.abs(n) >= 1000 ? 0 : 2) });
+  const fmtDate  = ts => ts ? new Date(ts).toLocaleDateString('en-AU', { month:'short', day:'numeric', year:'numeric' }) : '—';
+  const fmtMonth = ts => ts ? new Date(ts).toLocaleDateString('en-AU', { month:'long', year:'numeric' }) : '—';
+  function escapeHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function escapeAttr(s) { return escapeHtml(s); }
+  function classify(n) {
+    if (n == null || !isFinite(n)) return '';
+    return n > 0 ? 'pos' : (n < 0 ? 'neg' : '');
+  }
 
+  // ============================================================
+  // Avatar (renders the 200x200 photo tile)
+  // ============================================================
   function avatarFor(p) {
     const fakeUser = { username: p.username, email: p.username + '@trade.local' };
     const a = TArenaUI.getAvatar(fakeUser);
-    // Brand-default = gold gradient (#c9a030 → #e8c060). The owner can
-    // override with a custom hex tint via Edit Profile, or — best of all
-    // — upload a photo, which renders as the actual background image.
     const goldGrad = 'linear-gradient(135deg,#c9a030,#e8c060)';
-    const tintBg   = p.avatar_color
+    const tintBg = p.avatar_color
       ? `linear-gradient(135deg, ${p.avatar_color}, ${p.avatar_color})`
       : goldGrad;
-    // NOTE: single quotes inside url(...) are required — the outer
-    // style attribute is double-quoted, so a nested double quote would
-    // terminate the attribute and the avatar would render as a blank
-    // bordered circle. Also strip any single quote from the URL just
-    // in case the cache-buster ever changes shape.
-    const safeUrl = String(p.avatar_url).replace(/'/g, '%27');
+    const safeUrl = String(p.avatar_url || '').replace(/'/g, '%27');
     const bg = p.avatar_url
       ? `url('${safeUrl}') center/cover no-repeat, ${tintBg}`
       : tintBg;
     const editable = isOwnProfile ? 'editable' : '';
     const overlay  = isOwnProfile
-      ? `<div class="cam-overlay"><i class="fa-solid fa-camera"></i><span>Change photo</span></div>`
-      : '';
-    // When a photo is set we hide the initials so they don't bleed
-    // through translucent uploads.
+      ? `<div class="cam-overlay"><i class="fa-solid fa-camera"></i><span>Change photo</span></div>` : '';
     const initials = p.avatar_url ? '' : a.initials;
     return `<div class="pf-avatar ${editable}" id="pfAvatar" style="background:${bg};"
       ${isOwnProfile ? `onclick="document.getElementById('avatarInput').click()"` : ''}>
       ${initials}${overlay}
+      <span class="pf-online" title="Online now"></span>
     </div>`;
   }
 
   // ============================================================
-  // Avatar upload — Supabase Storage `avatars` bucket
+  // Avatar upload (Supabase Storage `avatars` bucket)
   // ============================================================
   async function onAvatarPicked(e) {
     const file = e.target.files && e.target.files[0];
-    e.target.value = ''; // allow re-picking the same file
+    e.target.value = '';
     if (!file) return;
-    if (!/^image\//.test(file.type)) {
-      alert('Please choose an image file (PNG, JPG, WEBP).');
-      return;
-    }
-    if (file.size > 4 * 1024 * 1024) {
-      alert('Avatar must be 4 MB or smaller.');
-      return;
-    }
+    if (!/^image\//.test(file.type)) { alert('Please choose an image (PNG, JPG, WEBP).'); return; }
+    if (file.size > 4 * 1024 * 1024)  { alert('Avatar must be 4 MB or smaller.');         return; }
+
     const av = document.getElementById('pfAvatar');
     if (av) av.classList.add('uploading');
     try {
-      // Path is `<uid>/avatar.<ext>` so the storage RLS policy
-      // (foldername[1] = auth.uid()) allows the upload.
       const ext  = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
       const path = `${session.user.id}/avatar.${ext}`;
-      // Bucket id in Supabase is case-sensitive. Migration 0007 creates
-      // `avatars` (lowercase, canonical). Some users created the bucket
-      // by hand from the dashboard with a capital `Avatars` — try both
-      // so the UI stops failing while they sort out the rename.
       const BUCKET_CANDIDATES = ['avatars', 'Avatars'];
       let bucket = null, lastErr = null, pub = null;
       for (const b of BUCKET_CANDIDATES) {
         const { error: upErr } = await sb.storage
           .from(b).upload(path, file, { cacheControl: '3600', upsert: true, contentType: file.type });
-        if (!upErr) {
-          bucket = b;
-          pub = sb.storage.from(b).getPublicUrl(path).data;
-          break;
-        }
+        if (!upErr) { bucket = b; pub = sb.storage.from(b).getPublicUrl(path).data; break; }
         lastErr = upErr;
-        // "Bucket not found" → fall through to next candidate. Anything
-        // else (RLS, mime, size) is a real error — abort.
         if (!/bucket not found|not_found|404/i.test(upErr.message || '')) break;
       }
       if (!bucket) {
         const msg = (lastErr && /bucket not found|not_found|404/i.test(lastErr.message || ''))
-          ? 'Storage bucket "avatars" not set up yet. Run supabase/migrations/0007_avatar_url.sql in the Supabase SQL editor (it creates the bucket + RLS policies).'
+          ? 'Storage bucket "avatars" not set up yet. Run supabase/migrations/0007_avatar_url.sql.'
           : (lastErr && lastErr.message) || 'upload failed';
         throw new Error(msg);
       }
-      // Bust browser cache so the freshly-uploaded image shows immediately
       const busted = pub.publicUrl + '?t=' + Date.now();
       const r = await TArenaAuth.saveProfile({ avatarUrl: busted });
       if (!r.ok) throw new Error(r.error || 'save failed');
@@ -570,333 +664,551 @@
     }
   }
 
-  function statTile(lbl, val, cls) {
-    return `<div class="stat-tile ${cls || ''}"><div class="lbl">${lbl}</div><div class="val num">${val}</div></div>`;
+  // ============================================================
+  // Status inline edit (own-profile only) — wraps saveProfile so the
+  // bio doubles as the "click to edit status" line.
+  // ============================================================
+  function editStatus() {
+    if (!isOwnProfile) return;
+    const cur = state.profile.bio || '';
+    const next = prompt('Update your status (max 160 characters):', cur);
+    if (next == null) return;
+    const trimmed = next.trim().slice(0, 160);
+    TArenaAuth.saveProfile({ bio: trimmed }).then(r => {
+      if (!r.ok) { alert('Could not save: ' + r.error); return; }
+      state.profile.bio = trimmed;
+      render();
+    });
   }
 
-  function lockTile(lbl) {
-    return `<div class="stat-tile lock"><div class="lbl">${lbl}</div><div class="val"><i class="fa-solid fa-lock"></i> Private</div></div>`;
-  }
+  // ============================================================
+  // Achievement evaluator — pure rules over current state.
+  // Returns { earned: boolean, ts?: number } per badge id.
+  // ============================================================
+  function evaluateAchievements() {
+    const trades = state.trades || [];
+    const perf   = state.perfTrades || trades;
+    const m      = state.summary || {};
+    const learn  = state.learning || { schools_completed: 0, modules_completed: 0, streak: 0 };
+    const join   = state.profile && state.profile.joined_at ? new Date(state.profile.joined_at).getTime() : null;
 
-  function locked(field, label) {
-    const map = {
-      holdings:    'This trader keeps holdings private.',
-      cash:        'Cash balance hidden by this trader.',
-      equity_curve:'Equity curve is private.',
-      metrics:     'Quant metrics are private.',
-      strategies:  'Strategy library is private.',
-      journal:     'Trade journal is private.',
-      reels:       'Strategies are private.',
+    // diamond_hands: any closed trade held >= 7 days
+    const diamond = trades.some(t => {
+      if (!t.opened_at || !t.closed_at) return false;
+      return (new Date(t.closed_at) - new Date(t.opened_at)) >= 7 * 86400000;
+    });
+    // sharpshooter: 5 winning trades in a row (chronological)
+    const chrono = [...trades]
+      .filter(t => t.closed_at)
+      .sort((a, b) => new Date(a.closed_at) - new Date(b.closed_at));
+    let streakWins = 0, maxStreak = 0;
+    for (const t of chrono) {
+      if (TArenaMetrics.pnl(t) > 0) { streakWins++; maxStreak = Math.max(maxStreak, streakWins); }
+      else streakWins = 0;
+    }
+    // bear_slayer proxy: at least 3 winning trades while running max DD
+    // (i.e. survived a drawdown profitably). Cheap, deterministic, no
+    // external benchmark dependency.
+    const winsOverall = chrono.filter(t => TArenaMetrics.pnl(t) > 0).length;
+    const bearSlayer  = (m.maxDrawdown != null && m.maxDrawdown >= 0.05 && winsOverall >= 3);
+
+    return {
+      first_trade:    { earned: trades.length >= 1 },
+      diamond_hands:  { earned: diamond },
+      sharpshooter:   { earned: maxStreak >= 5 },
+      bull_run:       { earned: m.totalReturnPct != null && m.totalReturnPct >= 0.10 },
+      bear_slayer:    { earned: bearSlayer },
+
+      scholar:        { earned: (learn.modules_completed || 0) >= 1 },
+      graduate:       { earned: (learn.modules_completed || 0) >= 6 },
+      analyst:        { earned: (learn.modules_completed || 0) >= 3 },
+      strategist:     { earned: (learn.modules_completed || 0) >= 4 },
+
+      // campus_king + arena_warrior need a leaderboard/rank backend
+      // that doesn't exist yet — they stay locked until that lands.
+      campus_king:    { earned: false },
+      arena_warrior:  { earned: false },
+      // early_adopter: joined before the public-launch cutoff.
+      early_adopter:  { earned: join != null && join < Date.UTC(2026, 11, 31) },
+      on_fire:        { earned: (learn.streak || 0) >= 7 },
     };
-    return `<div class="locked-card"><i class="fa-solid fa-lock"></i>
-      <div class="lt">${label || 'Private'}</div>
-      <div>${map[field] || 'This section is hidden by the trader.'}</div></div>`;
   }
 
-  function emptyState(icon, msg, action) {
-    return `<div class="empty-state"><i class="fa-solid ${icon}"></i><div>${msg}</div>
-      ${action ? `<button class="btn-gold" style="margin-top:18px;" onclick="${action.onclick}">${action.label}</button>` : ''}
+  const ACH_DEFS = {
+    trading: [
+      { id:'first_trade',   icon:'fa-medal',          name:'First Trade',   tip:'Make your first paper trade.' },
+      { id:'diamond_hands', icon:'fa-gem',            name:'Diamond Hands', tip:'Hold a position 7+ days.' },
+      { id:'sharpshooter',  icon:'fa-bullseye',       name:'Sharpshooter',  tip:'5 winning trades in a row.' },
+      { id:'bull_run',      icon:'fa-arrow-trend-up', name:'Bull Run',      tip:'Portfolio up 10%+.' },
+      { id:'bear_slayer',   icon:'fa-shield-halved',  name:'Bear Slayer',   tip:'Stay profitable through a drawdown.' },
+    ],
+    learning: [
+      { id:'scholar',     icon:'fa-book',         name:'Scholar',     tip:'Complete your first school module.' },
+      { id:'graduate',    icon:'fa-graduation-cap', name:'Graduate',  tip:'Complete all 6 modules.' },
+      { id:'analyst',     icon:'fa-brain',        name:'Analyst',     tip:'Pass the technical analysis module.' },
+      { id:'strategist',  icon:'fa-lightbulb',    name:'Strategist',  tip:'Complete portfolio strategy.' },
+    ],
+    community: [
+      { id:'campus_king',   icon:'fa-crown',     name:'Campus King',   tip:'Rank #1 at your university.' },
+      { id:'arena_warrior', icon:'fa-khanda',    name:'Arena Warrior', tip:'Top 10 nationally.' },
+      { id:'early_adopter', icon:'fa-star',      name:'Early Adopter', tip:'Joined in beta (first 500).' },
+      { id:'on_fire',       icon:'fa-fire',      name:'On Fire',       tip:'7-day trading streak.' },
+    ],
+  };
+
+  // ============================================================
+  // League calculation — Bronze / Silver / Gold / Platinum / Diamond
+  // ============================================================
+  function getLeague(returnPct) {
+    if (returnPct == null) return { name:'Unranked', cls:'lg-bronze', icon:'fa-medal' };
+    const p = returnPct;
+    if (p < 0)     return { name:'Bronze',   cls:'lg-bronze',   icon:'fa-medal' };
+    if (p < 0.05)  return { name:'Silver',   cls:'lg-silver',   icon:'fa-award' };
+    if (p < 0.15)  return { name:'Gold',     cls:'lg-gold',     icon:'fa-trophy' };
+    if (p < 0.30)  return { name:'Platinum', cls:'lg-platinum', icon:'fa-crown' };
+    return            { name:'Diamond',  cls:'lg-diamond',  icon:'fa-gem' };
+  }
+
+  // Build a tiny SVG sparkline (last 7 equity-curve points) for the
+  // P&L hero box. Returns '' when there's no data.
+  function sparklineSvg(vals, color) {
+    if (!vals || vals.length < 2) return '';
+    const w = 220, h = 34, pad = 2;
+    const min = Math.min(...vals), max = Math.max(...vals);
+    const span = (max - min) || 1;
+    const pts = vals.map((v, i) => {
+      const x = pad + (i * (w - pad * 2)) / (vals.length - 1);
+      const y = h - pad - ((v - min) / span) * (h - pad * 2);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+    return `<svg class="sparkline" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+      <polyline fill="none" stroke="${color}" stroke-width="1.8" points="${pts}"/>
+    </svg>`;
+  }
+
+  // ============================================================
+  // RENDER — page header
+  // ============================================================
+  function renderHeader() {
+    const p = state.profile;
+    const m = state.summary || {};
+    const showCash = isVisible('cash');
+
+    const headerActions = isOwnProfile
+      ? `<button class="pf-btn primary" onclick="openEdit()"><i class="fa-solid fa-pen"></i> Edit Profile</button>
+         <button class="pf-btn icon" onclick="shareProfile()" title="Share profile"><i class="fa-solid fa-share-nodes"></i></button>
+         <button class="pf-btn icon danger" onclick="signOut()" title="Sign out"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>`
+      : `<button class="pf-btn ${state.amFollowing ? 'following' : 'primary'}" id="followBtn" onclick="toggleFollow()">
+            ${state.amFollowing ? '<i class="fa-solid fa-check"></i> Following' : '<i class="fa-solid fa-user-plus"></i> Follow'}
+         </button>
+         <button class="pf-btn icon" onclick="shareProfile()" title="Share profile"><i class="fa-solid fa-share-nodes"></i></button>`;
+
+    // University chip is a Student-tier signal — hide for working pros etc.
+    const isStudent = (p.tier || '').toLowerCase().includes('student')
+                   || (p.type || '').toLowerCase() === 'student';
+    const uniChip = (p.university && isStudent && isVisible('university'))
+      ? `<span class="uni-pill"><i class="fa-solid fa-shield-halved"></i> ${escapeHtml(p.university)}</span>` : '';
+
+    const statusHtml = p.bio
+      ? `<div class="pf-status ${isOwnProfile ? 'editable' : ''}" ${isOwnProfile ? 'onclick="editStatus()"' : ''}>${escapeHtml(p.bio)}</div>`
+      : (isOwnProfile
+          ? `<div class="pf-status editable" onclick="editStatus()"><span class="placeholder">Enter a status…</span></div>`
+          : '');
+
+    const tradesCount = m.tradesCount || 0;
+    const onlineHtml = `<span><span class="online-dot"></span> Online now</span>`;
+
+    return `<div class="pf-head">
+      ${avatarFor(p)}
+      <div class="pf-id">
+        <div class="name">${escapeHtml(p.display_name || p.username)}</div>
+        <div class="handle num">@${p.username}</div>
+        ${uniChip}
+        ${statusHtml}
+        <div class="pf-meta">
+          ${p.joined_at ? `<span><i class="fa-solid fa-calendar"></i> Member since ${fmtMonth(p.joined_at)}</span>` : ''}
+          ${(p.university && isVisible('university')) ? `<span><i class="fa-solid fa-graduation-cap"></i> ${escapeHtml(p.university)}</span>` : ''}
+          <span><i class="fa-solid fa-chart-simple"></i> ${tradesCount} Trades</span>
+          <span><i class="fa-solid fa-user-group"></i> ${state.follows.followers} Followers</span>
+          ${onlineHtml}
+        </div>
+      </div>
+      <div class="pf-actions">${headerActions}</div>
     </div>`;
   }
 
-  function classify(n) {
-    if (n == null || !isFinite(n)) return '';
-    return n > 0 ? 'pos' : (n < 0 ? 'neg' : '');
-  }
-
   // ============================================================
-  // Top-level render
+  // RENDER — 3 hero stat boxes + 5 secondary tiles
   // ============================================================
-  function render() {
-    const p = state.profile;
+  function renderHeroStats() {
     const m = state.summary || {};
     const showMetrics = isVisible('metrics');
     const showCurve   = isVisible('equity_curve');
-    const showStrats  = isVisible('strategies');
-    const showJournal = isVisible('journal');
-    const showReels   = isVisible('reels');
-    const showHold    = isVisible('holdings');
 
-    const headerActions = isOwnProfile
-      ? `<button class="pf-actbtn primary" onclick="openEdit()"><i class="fa-solid fa-pen"></i> Edit profile</button>
-         <button class="pf-actbtn" onclick="signOut()" title="Sign out" style="color:#fca5a5;"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>`
-      : `<button class="pf-actbtn ${state.amFollowing ? 'following' : 'primary'}" id="followBtn" onclick="toggleFollow()">
-            ${state.amFollowing ? '<i class="fa-solid fa-check"></i> Following' : '<i class="fa-solid fa-user-plus"></i> Follow'}
-         </button>`;
+    // Hero box 1: Paper Trading P&L (with sparkline of last 14 points)
+    const pl     = m.totalReturnPct;
+    const plDir  = (pl != null && pl >= 0) ? 'pos' : (pl != null ? 'neg' : '');
+    const plVal  = pl == null ? '—' : (pl >= 0 ? '+' : '') + (pl * 100).toFixed(2) + '%';
+    const curve  = showCurve ? (m.equityCurve || []) : [];
+    const tail   = curve.slice(-14).map(p => p.value);
+    const sparkColor = (pl != null && pl >= 0) ? '#4ade80' : (pl != null ? '#f87171' : '#a8c1db');
+    const box1 = showMetrics ? `
+      <div class="stat-box ${plDir}">
+        <div class="sb-h"><span><i class="fa-solid fa-bolt"></i> Paper Trading</span></div>
+        <div class="sb-v">${plVal}</div>
+        ${sparklineSvg(tail, sparkColor)}
+        <div class="sb-sub">Total return · last 14 trades</div>
+      </div>` : `
+      <div class="stat-box"><div class="sb-h"><span><i class="fa-solid fa-bolt"></i> Paper Trading</span></div>
+        <div class="sb-v"><i class="fa-solid fa-lock" style="color:var(--muted);font-size:1.2rem;"></i></div>
+        <div class="sb-sub">Private</div></div>`;
 
-    // University chip is a Student-tier signal — hide it for working
-    // pros, alumni, fund accounts, etc. so the chip isn't misread as
-    // "still studying". Server already nulls `university` when the
-    // owner has hidden it, so this is purely a tier display rule.
-    const isStudent = (p.tier || '').toLowerCase().includes('student')
-                   || (p.type || '').toLowerCase() === 'student';
-    const uniChip = (p.university && isStudent)
-      ? `<span class="pf-uni"><i class="fa-solid fa-graduation-cap"></i> ${escapeHtml(p.university)}</span>` : '';
+    // Hero box 2: Win Rate with progress bar
+    const wr = m.winRate;
+    const wrPct = wr == null ? null : Math.max(0, Math.min(1, wr));
+    const box2 = showMetrics ? `
+      <div class="stat-box ${wr != null && wr >= 0.5 ? 'pos' : ''}">
+        <div class="sb-h"><span><i class="fa-solid fa-arrow-trend-up"></i> Win Rate</span></div>
+        <div class="sb-v">${wr == null ? '—' : (wr * 100).toFixed(0) + '%'}</div>
+        <div class="winbar"><div class="fill" style="width:${wrPct == null ? 0 : (wrPct * 100).toFixed(0)}%;"></div></div>
+        <div class="sb-sub">from ${m.tradesCount || 0} closed trades</div>
+      </div>` : `
+      <div class="stat-box"><div class="sb-h"><span><i class="fa-solid fa-arrow-trend-up"></i> Win Rate</span></div>
+        <div class="sb-v"><i class="fa-solid fa-lock" style="color:var(--muted);font-size:1.2rem;"></i></div>
+        <div class="sb-sub">Private</div></div>`;
 
-    // Stats tiles
-    const statsHtml = `<div class="stats-grid">
-      ${ showMetrics
-          ? statTile('All-time P&amp;L', fmtPct(m.totalReturnPct), classify(m.totalReturnPct))
-          : lockTile('All-time P&amp;L') }
-      ${ showMetrics
-          ? statTile('Win rate', m.winRate == null ? '—' : (m.winRate * 100).toFixed(1) + '%', m.winRate != null && m.winRate >= 0.5 ? 'pos' : '')
-          : lockTile('Win rate') }
-      ${ showMetrics
-          ? statTile('Sharpe', fmtNum(m.sharpe), classify(m.sharpe))
-          : lockTile('Sharpe') }
-      ${ showMetrics
-          ? statTile('Max DD', m.maxDrawdown == null ? '—' : (m.maxDrawdown * 100).toFixed(1) + '%', 'amb')
-          : lockTile('Max DD') }
-      ${ showMetrics
-          ? statTile('Profit factor', m.profitFactor == null ? '—' : (m.profitFactor === Infinity ? '∞' : m.profitFactor.toFixed(2)), classify(m.profitFactor === Infinity ? 1 : m.profitFactor - 1))
-          : lockTile('Profit factor') }
-      ${ (showMetrics || showCurve)
-          ? statTile('Trades', m.tradesCount != null ? String(m.tradesCount) : '0')
-          : lockTile('Trades') }
-    </div>`;
+    // Hero box 3: Arena Rank (computed from league for now — real
+    // campus rank arrives with the leaderboard backend)
+    const league = getLeague(m.totalReturnPct);
+    const box3 = `
+      <div class="stat-box gold">
+        <div class="sb-h"><span><i class="fa-solid fa-trophy"></i> Arena Rank</span></div>
+        <div class="sb-v">${league.name}</div>
+        <div class="sb-sub">${state.profile.university && isVisible('university') ? 'at ' + escapeHtml(state.profile.university) : 'League standing'}</div>
+      </div>`;
 
-    // Learning tile — public-safe counts (schools/modules/streak),
-    // not gated by visibility_mask. Matches the spec wording for the
-    // Schools task ("Profile shows a Learning stats tile").
-    const ls = state.learning || { schools_completed: 0, modules_completed: 0, streak: 0 };
-    const learningHtml = `<div class="pcard" style="margin-top:18px;">
-      <div class="pcard-head">
-        <div class="pcard-title"><i class="fa-solid fa-graduation-cap"></i> Learning</div>
-        <a href="schools.html" class="pcard-sub" style="color:var(--gold2);text-decoration:none;">Browse schools →</a>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;">
-        ${statTile('Schools completed', String(ls.schools_completed || 0))}
-        ${statTile('Modules completed', String(ls.modules_completed || 0))}
-        ${statTile('Streak', (ls.streak || 0) + (ls.streak === 1 ? ' day' : ' days'))}
-      </div>
-    </div>`;
+    // 5 secondary stats
+    const best = (() => {
+      if (!state.trades.length) return null;
+      return state.trades.reduce((mx, t) => Math.max(mx, TArenaMetrics.pnl(t)), -Infinity);
+    })();
+    const mini = showMetrics ? `<div class="stats5">
+      <div class="stat-mini"><div class="lbl">Sharpe</div><div class="val">${fmtNum(m.sharpe)}</div></div>
+      <div class="stat-mini"><div class="lbl">Max DD</div><div class="val">${m.maxDrawdown == null ? '—' : (m.maxDrawdown * 100).toFixed(1) + '%'}</div></div>
+      <div class="stat-mini ${best != null && best > 0 ? 'pos' : ''}">
+        <div class="lbl">Best Trade</div><div class="val">${best == null || best === -Infinity ? '—' : '$' + best.toFixed(0)}</div></div>
+      <div class="stat-mini"><div class="lbl">Total Trades</div><div class="val">${m.tradesCount || 0}</div></div>
+      <div class="stat-mini"><div class="lbl">Streak</div><div class="val">${(state.learning && state.learning.streak) || 0}d</div></div>
+    </div>` : '';
 
-    // Cash row (gated independently by visibility_mask.cash) — sits
-    // inside the equity card so it stays close to the equity number.
-    const showCash = isVisible('cash');
-    const cashHtml = (showCash && state.cashBalance != null)
-      ? `<div class="cash-row">
-          <div class="l"><i class="fa-solid fa-wallet"></i> Cash buffer</div>
-          <div class="v num">${fmtMoney(state.cashBalance)}</div>
-        </div>`
-      : `<div class="cash-row lock">
-          <div class="l"><i class="fa-solid fa-lock"></i> Cash buffer</div>
-          <div class="v">Private</div>
-        </div>`;
-
-    // Equity curve card
-    const curveHtml = showCurve
-      ? `<div class="pcard">
-          <div class="pcard-head">
-            <div>
-              <div class="pcard-title">Equity curve</div>
-              <div class="pcard-sub">Account value vs benchmark · starting from ${fmtMoney(STARTING_CAPITAL)}</div>
-            </div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <div class="bench-select">
-                ${['asx200','spx','btc'].map(b => `<button class="${state.benchmark === b ? 'active' : ''}" onclick="setBenchmark('${b}')">${b.toUpperCase()}</button>`).join('')}
-              </div>
-              <div class="range-tabs">
-                ${['1M','3M','6M','1Y','ALL'].map(r => `<button class="${state.range === r ? 'active' : ''}" onclick="setRange('${r}')">${r}</button>`).join('')}
-              </div>
-            </div>
-          </div>
-          <div style="position:relative;height:240px;"><canvas id="equityChart"></canvas></div>
-          ${cashHtml}
-        </div>`
-      : `<div class="pcard">
-          ${locked('equity_curve','Equity curve')}
-          ${cashHtml}
-        </div>`;
-
-    // Quant metrics card
-    const quantHtml = showMetrics
-      ? `<div class="pcard">
-          <div class="pcard-head">
-            <div class="pcard-title">Quant metrics</div>
-            <div class="pcard-sub">Computed from ${m.tradesCount || 0} closed trades</div>
-          </div>
-          <div class="quant-grid">
-            ${[
-              ['Win rate',       m.winRate == null ? '—' : (m.winRate * 100).toFixed(1) + '%'],
-              ['Avg win',        fmtMoney(m.avgWin)],
-              ['Avg loss',       fmtMoney(m.avgLoss)],
-              ['Avg R:R',        fmtNum(m.avgRR)],
-              ['Sharpe',         fmtNum(m.sharpe)],
-              ['Sortino',        fmtNum(m.sortino)],
-              ['Max drawdown',   m.maxDrawdown == null ? '—' : (m.maxDrawdown * 100).toFixed(1) + '%'],
-              ['Recovery factor',fmtNum(m.recoveryFactor)],
-              ['Profit factor',  m.profitFactor == null ? '—' : (m.profitFactor === Infinity ? '∞' : m.profitFactor.toFixed(2))],
-              ['Expectancy',     fmtMoney(m.expectancy)],
-              ['Avg holding',    fmtDays(m.avgHoldingDays)],
-              ['Total return',   fmtPct(m.totalReturnPct)],
-            ].map(([l, v]) => `<div class="quant-row"><div class="l">${l}</div><div class="v num">${v}</div></div>`).join('')}
-          </div>
-        </div>`
-      : `<div class="pcard">${locked('metrics','Quant metrics')}</div>`;
-
-    // Verified badges row — union of admin-curated badges on the
-    // profile row and the live, computed badge set returned by
-    // compute_badges_for(). Computed first so they appear immediately
-    // after a closed trade without waiting on a backfill job.
-    const computed = state.computedBadges || [];
-    const curated  = (p.badges && p.badges.length ? p.badges : []);
-    const allBadges = Array.from(new Set([...computed, ...curated]));
-    const badgesHtml = allBadges.length
-      ? `<div class="pcard">
-          <div class="pcard-head"><div class="pcard-title">Verified achievements</div></div>
-          <div class="badge-row">${allBadges.map(b => {
-            const def = BADGE_LABELS[b] || { i: 'fa-award', t: b };
-            return `<span class="badge"><i class="fa-solid ${def.i}"></i> ${def.t}</span>`;
-          }).join('')}</div>
-        </div>`
-      : '';
-
-    // Tabs
-    const tabsHtml = `
-      <div class="pf-tabs">
-        <button class="pf-tab ${state.activeTab==='strategies'?'active':''} ${showStrats?'':'lock-tab'}" onclick="switchTab('strategies')"><i class="fa-solid fa-chess-knight"></i> Playbook ${showStrats?'':'<i class="fa-solid fa-lock" style="font-size:9px;"></i>'}</button>
-        <button class="pf-tab ${state.activeTab==='reels'?'active':''} ${showReels?'':'lock-tab'}" onclick="switchTab('reels')"><i class="fa-solid fa-lightbulb"></i> Strategies ${showReels?'':'<i class="fa-solid fa-lock" style="font-size:9px;"></i>'}</button>
-        <button class="pf-tab ${state.activeTab==='journal'?'active':''} ${showJournal?'':'lock-tab'}" onclick="switchTab('journal')"><i class="fa-solid fa-book"></i> Journal ${showJournal?'':'<i class="fa-solid fa-lock" style="font-size:9px;"></i>'}</button>
-        <button class="pf-tab ${state.activeTab==='holdings'?'active':''} ${showHold?'':'lock-tab'}" onclick="switchTab('holdings')"><i class="fa-solid fa-grip"></i> Holdings ${showHold?'':'<i class="fa-solid fa-lock" style="font-size:9px;"></i>'}</button>
-      </div>
-      <div id="tabContent"></div>`;
-
-    document.getElementById('pfShell').innerHTML = `
-      <div class="pf-head">
-        ${avatarFor(p)}
-        <div class="pf-id">
-          <div class="name">${escapeHtml(p.display_name || p.username)}</div>
-          <div class="handle num">@${p.username}</div>
-          <div class="badges-row">
-            <span class="pf-tier"><i class="fa-solid fa-shield-halved"></i> ${p.tier || 'Member'}</span>
-            ${uniChip}
-          </div>
-          ${p.joined_at ? `<div class="pf-meta-line"><i class="fa-solid fa-calendar"></i>Member since ${new Date(p.joined_at).toLocaleDateString('en-AU', { month: 'long', year: 'numeric' })}</div>` : ''}
-          ${p.bio ? `<div style="color:var(--cream);font-size:13.5px;line-height:1.55;margin-top:10px;max-width:560px;">${escapeHtml(p.bio)}</div>` : ''}
-        </div>
-        <div class="pf-social">
-          <div class="pf-counts">
-            <div><strong class="num">${state.follows.followers}</strong> Followers</div>
-            <div><strong class="num">${state.follows.following}</strong> Following</div>
-          </div>
-          <div style="display:flex;gap:8px;">${headerActions}</div>
-        </div>
-      </div>
-
-      ${statsHtml}
-      ${learningHtml}
-      ${curveHtml}
-      ${quantHtml}
-      ${badgesHtml}
-      ${tabsHtml}
-    `;
-
-    renderTabContent();
-    if (showCurve) drawEquityChart();
+    return `<div class="stats3">${box1}${box2}${box3}</div>${mini}`;
   }
 
   // ============================================================
-  // Tabs
+  // RENDER — tabs
+  // ============================================================
+  function renderTabs() {
+    const tabs = [
+      { id:'overview',     l:'Overview',     i:'fa-house' },
+      { id:'history',      l:'Trade History',i:'fa-clock-rotate-left' },
+      { id:'stats',        l:'Stats',        i:'fa-chart-pie' },
+      { id:'achievements', l:'Achievements', i:'fa-award' },
+      { id:'following',    l:'Following',    i:'fa-user-group' },
+    ].filter(t => isOwnProfile || t.id !== 'following'); // hide Following for visitors per spec
+    return `<div class="pf-tabs">${tabs.map(t =>
+      `<button class="pf-tab ${state.activeTab === t.id ? 'active' : ''}" onclick="switchTab('${t.id}')">
+        <i class="fa-solid ${t.i}"></i> ${t.l}</button>`
+    ).join('')}</div><div id="tabContent"></div>`;
+  }
+
+  function tradeRow(t) {
+    const p = TArenaMetrics.pnl(t);
+    const cls = p > 0 ? 'text-green' : (p < 0 ? 'text-red' : '');
+    const sign = p > 0 ? '+' : '';
+    return `<div class="trow">
+      <span class="${t.side === 'buy' ? 'tag-buy' : 'tag-sell'}">${t.side === 'buy' ? 'BUY' : 'SELL'}</span>
+      <div class="tsym">${escapeHtml(t.symbol)}<small>${Number(t.qty).toLocaleString('en-US', { maximumFractionDigits: 4 })} @ $${fmtNum(t.entry_price)}</small></div>
+      <div class="tqty">→ $${fmtNum(t.exit_price)}</div>
+      <div class="tpnl ${cls}">${sign}${fmtMoney(p)}</div>
+      <div class="tdate">${fmtDate(t.closed_at)}</div>
+    </div>`;
+  }
+
+  // ----- OVERVIEW tab -----
+  function renderOverview() {
+    const showJournal = isVisible('journal');
+    const showHold    = isVisible('holdings');
+    const learn = state.learning || { modules_completed: 0, streak: 0 };
+    const m = state.summary || {};
+
+    const recentHtml = !showJournal
+      ? `<div class="locked-card"><i class="fa-solid fa-lock"></i><div>Trade history is private.</div></div>`
+      : !state.trades.length
+        ? `<div class="empty-state">
+             <i class="fa-solid fa-chart-line"></i>
+             <div class="title">No trades yet</div>
+             <div>Place your first paper trade to start your history.</div>
+             ${isOwnProfile ? `<button class="btn-gold" style="margin-top:18px;" onclick="window.location.href='trade.html'">Start Trading</button>` : ''}
+           </div>`
+        : state.trades.slice(0, 5).map(tradeRow).join('') +
+          `<div style="text-align:right;margin-top:12px;">
+            <a href="javascript:void(0)" class="pcard-link" onclick="switchTab('history')">View all trades →</a>
+          </div>`;
+
+    const holdingsHtml = !showHold
+      ? `<div class="locked-card"><i class="fa-solid fa-lock"></i><div>Holdings are private.</div></div>`
+      : !state.openHoldings.length
+        ? `<div class="empty-state"><i class="fa-solid fa-folder-open"></i><div>No open positions.</div></div>`
+        : `<div class="hgrid">${state.openHoldings.map(h => {
+            const mk = TArenaMarket.find(h.symbol);
+            const px = mk ? mk.price : Number(h.avg_cost) || 0;
+            const value = px * Number(h.net_qty);
+            const cost = Number(h.avg_cost) * Number(h.net_qty);
+            const pnl = value - cost;
+            const pnlPct = cost ? (pnl / cost) : 0;
+            const cls = pnl >= 0 ? 'text-green' : 'text-red';
+            const sign = pnl >= 0 ? '+' : '';
+            return `<div class="hcard">
+              <div class="sym">${escapeHtml(h.symbol)}</div>
+              <div class="qty">${Number(h.net_qty).toLocaleString('en-US', { maximumFractionDigits:4 })} @ $${fmtNum(h.avg_cost)}</div>
+              <div class="val num">${fmtMoney(value)}</div>
+              <div class="pnl ${cls} num">${sign}${fmtMoney(pnl)} (${(pnlPct * 100).toFixed(2)}%)</div>
+            </div>`;
+          }).join('')}</div>`;
+
+    const league = getLeague(m.totalReturnPct);
+    const right = `
+      <div class="sidecard">
+        <i class="fa-solid fa-fire fire"></i>
+        <div class="sc-h">Streak</div>
+        <div class="sc-big">${learn.streak || 0} <span style="font-size:1rem;color:var(--muted);">${(learn.streak || 0) === 1 ? 'day' : 'days'}</span></div>
+        <div class="sc-sub">Trade or learn daily to keep your streak alive.</div>
+        ${isOwnProfile ? `<button class="btn-gold" style="margin-top:12px;width:100%;" onclick="window.location.href='trade.html'">Trade Now →</button>` : ''}
+      </div>
+      <div class="sidecard">
+        <div class="sc-h"><i class="fa-solid fa-medal"></i> Current League</div>
+        <div class="league-badge ${league.cls}"><i class="fa-solid ${league.icon}"></i> ${league.name}</div>
+        <div class="sc-sub">${state.profile.university && isVisible('university') ? 'at ' + escapeHtml(state.profile.university) : 'League standing'}</div>
+      </div>
+      <div class="sidecard">
+        <div class="sc-h"><i class="fa-solid fa-graduation-cap"></i> School Progress</div>
+        <div class="sc-big">${learn.modules_completed || 0} <span style="font-size:1rem;color:var(--muted);">module${(learn.modules_completed || 0) === 1 ? '' : 's'}</span></div>
+        <div class="sc-sub">Complete modules to unlock paper-cash bonuses.</div>
+        <button class="btn-gold" style="margin-top:12px;width:100%;" onclick="window.location.href='schools.html'">Continue Learning →</button>
+      </div>`;
+
+    return `<div class="ov-grid">
+      <div>
+        <div class="pcard">
+          <div class="pcard-head">
+            <div class="pcard-title">Recent Trades</div>
+            ${state.trades.length ? `<a href="javascript:void(0)" class="pcard-link" onclick="switchTab('history')">View all →</a>` : ''}
+          </div>
+          ${recentHtml}
+        </div>
+        <div class="pcard">
+          <div class="pcard-head"><div class="pcard-title">Holdings</div></div>
+          ${holdingsHtml}
+        </div>
+      </div>
+      <div>${right}</div>
+    </div>`;
+  }
+
+  // ----- TRADE HISTORY tab -----
+  function filterHistory(rows) {
+    const f = state.historyFilter;
+    if (f === 'all') return rows;
+    if (f === 'buy')  return rows.filter(t => t.side === 'buy');
+    if (f === 'sell') return rows.filter(t => t.side === 'sell');
+    const now = Date.now();
+    if (f === 'week')  return rows.filter(t => t.closed_at && (now - new Date(t.closed_at).getTime()) <= 7  * 86400000);
+    if (f === 'month') return rows.filter(t => t.closed_at && (now - new Date(t.closed_at).getTime()) <= 31 * 86400000);
+    return rows;
+  }
+  function renderHistory() {
+    if (!isVisible('journal')) return `<div class="pcard"><div class="locked-card"><i class="fa-solid fa-lock"></i><div>Trade history is private.</div></div></div>`;
+    if (!state.trades.length) return `<div class="pcard"><div class="empty-state">
+      <i class="fa-solid fa-clock-rotate-left"></i>
+      <div class="title">No trades yet — make your first trade</div>
+      ${isOwnProfile ? `<button class="btn-gold" style="margin-top:18px;" onclick="window.location.href='trade.html'">Open Trade Desk</button>` : ''}
+    </div></div>`;
+
+    const rows = filterHistory(state.trades);
+    const totalPages = Math.max(1, Math.ceil(rows.length / state.HISTORY_PAGE_SIZE));
+    if (state.historyPage > totalPages) state.historyPage = totalPages;
+    const start = (state.historyPage - 1) * state.HISTORY_PAGE_SIZE;
+    const page = rows.slice(start, start + state.HISTORY_PAGE_SIZE);
+
+    const filters = [
+      ['all','All'], ['buy','Buy'], ['sell','Sell'], ['week','This Week'], ['month','This Month'],
+    ];
+    return `<div class="pcard">
+      <div class="th-filters">
+        ${filters.map(([k, l]) => `<button class="${state.historyFilter === k ? 'active' : ''}" onclick="setHistoryFilter('${k}')">${l}</button>`).join('')}
+      </div>
+      <table class="th-table"><thead><tr>
+        <th>Type</th><th>Symbol</th><th class="tnum">Qty</th><th class="tnum">Price</th>
+        <th class="tnum">Total</th><th class="tnum">P&amp;L</th><th>Date</th>
+      </tr></thead><tbody>
+        ${page.map(t => {
+          const p = TArenaMetrics.pnl(t);
+          const cls = p > 0 ? 'text-green' : (p < 0 ? 'text-red' : '');
+          const sign = p > 0 ? '+' : '';
+          const total = Number(t.exit_price) * Number(t.qty);
+          return `<tr>
+            <td><span class="${t.side === 'buy' ? 'tag-buy' : 'tag-sell'}">${t.side === 'buy' ? 'BUY' : 'SELL'}</span></td>
+            <td style="font-family:Cinzel,serif;font-weight:700;">${escapeHtml(t.symbol)}</td>
+            <td class="tnum">${Number(t.qty).toLocaleString('en-US', { maximumFractionDigits: 4 })}</td>
+            <td class="tnum">$${fmtNum(t.exit_price)}</td>
+            <td class="tnum">${fmtMoney(total)}</td>
+            <td class="tnum ${cls}" style="font-weight:700;">${sign}${fmtMoney(p)}</td>
+            <td style="color:var(--muted);">${fmtDate(t.closed_at)}</td>
+          </tr>`;
+        }).join('')}
+      </tbody></table>
+      <div class="th-pager">
+        <div>${rows.length ? `Showing ${start + 1}–${Math.min(start + state.HISTORY_PAGE_SIZE, rows.length)} of ${rows.length}` : 'No matching trades'}</div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="setHistoryPage(${state.historyPage - 1})" ${state.historyPage <= 1 ? 'disabled' : ''}>‹ Prev</button>
+          <button onclick="setHistoryPage(${state.historyPage + 1})" ${state.historyPage >= totalPages ? 'disabled' : ''}>Next ›</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // ----- STATS tab -----
+  function renderStatsTab() {
+    if (!isVisible('metrics') && !isVisible('equity_curve'))
+      return `<div class="pcard"><div class="locked-card"><i class="fa-solid fa-lock"></i><div>Quant metrics are private.</div></div></div>`;
+
+    const m = state.summary || {};
+    const totalVolume = state.trades.reduce((s, t) => s + Math.abs(Number(t.exit_price) * Number(t.qty)), 0);
+    const best  = state.trades.length ? Math.max(...state.trades.map(t => TArenaMetrics.pnl(t))) : null;
+    const worst = state.trades.length ? Math.min(...state.trades.map(t => TArenaMetrics.pnl(t))) : null;
+
+    const tradingStats = [
+      ['Total Trades',        m.tradesCount || 0,                          ''],
+      ['Win Rate',            m.winRate == null ? '—' : (m.winRate * 100).toFixed(1) + '%', m.winRate >= 0.5 ? 'pos' : ''],
+      ['Avg Win',             fmtMoney(m.avgWin),                         'pos'],
+      ['Avg Loss',            fmtMoney(m.avgLoss),                        'neg'],
+      ['Best Single Trade',   best == null ? '—' : '$' + best.toFixed(2), 'pos'],
+      ['Worst Single Trade',  worst == null ? '—' : '$' + worst.toFixed(2),'neg'],
+      ['Avg Hold Time',       fmtDays(m.avgHoldingDays),                  ''],
+      ['Total Volume Traded', fmtMoney(totalVolume),                      ''],
+    ];
+    const quantStats = [
+      ['Sharpe Ratio',     fmtNum(m.sharpe),                                                      classify(m.sharpe)],
+      ['Sortino Ratio',    fmtNum(m.sortino),                                                     classify(m.sortino)],
+      ['Max Drawdown',     m.maxDrawdown == null ? '—' : (m.maxDrawdown * 100).toFixed(1) + '%', 'neg'],
+      ['Recovery Factor',  fmtNum(m.recoveryFactor),                                              classify(m.recoveryFactor)],
+      ['Profit Factor',    m.profitFactor == null ? '—' : (m.profitFactor === Infinity ? '∞' : m.profitFactor.toFixed(2)), classify(m.profitFactor === Infinity ? 1 : (m.profitFactor || 1) - 1)],
+      ['Expectancy',       fmtMoney(m.expectancy),                                                classify(m.expectancy)],
+      ['Avg R:R',          fmtNum(m.avgRR),                                                       classify(m.avgRR)],
+      ['Total Return',     fmtPct(m.totalReturnPct),                                              classify(m.totalReturnPct)],
+    ];
+
+    const stMarkup = arr => arr.map(([l, v, c]) =>
+      `<div class="qrow ${c || ''}"><div class="ql">${l}</div><div class="qv">${v}</div></div>`).join('');
+
+    return `<div class="stats-2col">
+      <div class="pcard">
+        <div class="pcard-head"><div class="pcard-title">Trading Statistics</div></div>
+        <div class="quant-list">${stMarkup(tradingStats)}</div>
+      </div>
+      <div class="pcard">
+        <div class="pcard-head"><div class="pcard-title">Quant Metrics</div></div>
+        <div class="quant-list">${stMarkup(quantStats)}</div>
+      </div>
+    </div>
+    <div class="pcard" style="margin-top:18px;">
+      <div class="pcard-head">
+        <div>
+          <div class="pcard-title">Equity Curve</div>
+          <div class="pcard-sub">Account value · starting from ${fmtMoney(STARTING_CAPITAL)}</div>
+        </div>
+        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
+          <label class="bench-toggle">
+            <input type="checkbox" ${state.benchCompare ? 'checked' : ''} onchange="toggleBench(this.checked)"/>
+            Compare vs ASX 200
+          </label>
+          <div class="ec-tabs">
+            ${['1M','3M','6M','1Y','ALL'].map(r =>
+              `<button class="${state.range === r ? 'active' : ''}" onclick="setRange('${r}')">${r}</button>`).join('')}
+          </div>
+        </div>
+      </div>
+      <div style="position:relative;height:180px;"><canvas id="equityChart"></canvas></div>
+    </div>`;
+  }
+
+  // ----- ACHIEVEMENTS tab -----
+  function renderAchievements() {
+    const evals = evaluateAchievements();
+    const computed = new Set(state.computedBadges || []);
+    const section = (label, defs) => `<div class="ach-section">
+      <div class="ach-h">${label}</div>
+      <div class="ach-grid">${defs.map(d => {
+        const earned = (evals[d.id] && evals[d.id].earned) || computed.has(d.id);
+        return `<div class="ach ${earned ? 'earned' : 'locked'}" title="${earned ? 'Earned' : d.tip}">
+          <div class="a-circle"><i class="fa-solid ${d.icon}"></i></div>
+          <div class="a-name">${d.name}</div>
+          <div class="a-tip">${earned ? 'Unlocked' : d.tip}</div>
+        </div>`;
+      }).join('')}</div>
+    </div>`;
+    return `<div class="pcard">
+      ${section('Trading',   ACH_DEFS.trading)}
+      ${section('Learning',  ACH_DEFS.learning)}
+      ${section('Community', ACH_DEFS.community)}
+    </div>`;
+  }
+
+  // ----- FOLLOWING tab (own profile only) -----
+  function renderFollowing() {
+    // We don't yet have a get_following_for / suggested_traders RPC,
+    // so this tab shows a polished empty state plus a stub
+    // "Suggested" panel that links to the leaderboard backend when
+    // it ships. The follow/unfollow plumbing on the page header
+    // already works against the existing follow_user RPC.
+    return `<div class="pcard">
+      <div class="pcard-head"><div class="pcard-title">Following</div>
+        <div class="pcard-sub">${state.follows.following} traders</div></div>
+      <div class="empty-state">
+        <i class="fa-solid fa-user-group"></i>
+        <div class="title">Not following anyone yet</div>
+        <div>When you follow other traders, they show up here. Coming soon: follow suggestions from your campus.</div>
+      </div>
+    </div>
+    <div class="pcard">
+      <div class="pcard-head"><div class="pcard-title">Suggested traders</div>
+        <div class="pcard-sub">Top performers on your campus</div></div>
+      <div class="empty-state">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <div>Suggested traders activate with the leaderboard release.</div>
+      </div>
+    </div>`;
+  }
+
+  // ============================================================
+  // Tab dispatcher + chart
   // ============================================================
   function renderTabContent() {
     const c = document.getElementById('tabContent');
     if (!c) return;
     const t = state.activeTab;
-    if (t === 'strategies') c.innerHTML = renderStrategiesTab();
-    else if (t === 'reels') c.innerHTML = renderReelsTab();
-    else if (t === 'journal') c.innerHTML = renderJournalTab();
-    else if (t === 'holdings') c.innerHTML = renderHoldingsTab();
+    if      (t === 'overview')     c.innerHTML = renderOverview();
+    else if (t === 'history')      c.innerHTML = renderHistory();
+    else if (t === 'stats')        { c.innerHTML = renderStatsTab(); drawEquityChart(); }
+    else if (t === 'achievements') c.innerHTML = renderAchievements();
+    else if (t === 'following')    c.innerHTML = renderFollowing();
   }
 
-  function renderStrategiesTab() {
-    if (!isVisible('strategies')) return locked('strategies', 'Strategy library');
-    if (!state.strategies.length) {
-      return emptyState('fa-chess-knight',
-        isOwnProfile ? 'No published strategies yet.' : 'This trader has no published strategies.',
-        isOwnProfile ? { label: 'Open strategy editor', onclick: "alert('Strategy editor lands with the reels release.')" } : null);
-    }
-    return `<div class="strat-grid">${state.strategies.map(s => {
-      // The reels release adds strategy_id back-references to paper_trades.
-      // Until then, per-strategy stats fall back to "—" so we don't claim
-      // performance attributions we can't actually compute yet.
-      const sm = TArenaMetrics.summarise([], { startingCapital: STARTING_CAPITAL });
-      return `<div class="strat-card">
-        <div class="name">${escapeHtml(s.name || 'Untitled')}</div>
-        <div class="desc">${escapeHtml(s.description || 'No description.')}</div>
-        <div class="stats">
-          <div><strong class="num">${fmtPct(sm.totalReturnPct)}</strong>P&amp;L</div>
-          <div><strong class="num">${sm.winRate == null ? '—' : (sm.winRate * 100).toFixed(0) + '%'}</strong>Win rate</div>
-          <div><strong class="num">${sm.tradesCount}</strong>Trades</div>
-        </div>
-      </div>`;
-    }).join('')}</div>`;
-  }
-
-  function renderReelsTab() {
-    if (!isVisible('reels')) return locked('reels', 'Strategies');
-    return emptyState('fa-lightbulb', 'Strategies feed launches with the next release. Snap a chart on the Trade page to get ready.');
-  }
-
-  function renderJournalTab() {
-    if (!isVisible('journal')) return locked('journal', 'Trade journal');
-    if (!state.trades.length) {
-      return emptyState('fa-book',
-        isOwnProfile ? 'No closed trades yet.' : 'This trader has no closed trades to share.',
-        isOwnProfile ? { label: 'Place a trade', onclick: "window.location.href='trade.html'" } : null);
-    }
-    return `<div class="pcard" style="padding:0;">
-      <div class="journal-list">${state.trades.map(t => {
-        const p = TArenaMetrics.pnl(t);
-        const r = TArenaMetrics.rMultiple(t);
-        const pnlCls = p > 0 ? 'text-green' : (p < 0 ? 'text-red' : '');
-        const sign = p > 0 ? '+' : '';
-        return `<div class="jrow">
-          <div class="jthumb">${t.snapshot_url ? `<img src="${escapeAttr(t.snapshot_url)}" alt=""/>` : '<i class="fa-solid fa-chart-area"></i>'}</div>
-          <div class="jbody">
-            <strong>${escapeHtml(t.symbol)} <span style="color:var(--muted);font-size:12px;font-weight:400;">· ${t.side === 'buy' ? 'long' : 'short'} ${t.qty}</span></strong>
-            <small>${escapeHtml(t.notes || 'No notes')}</small>
-            <small>${formatRange(t.opened_at, t.closed_at)} · entry $${fmtNum(t.entry_price)} → exit $${fmtNum(t.exit_price)}</small>
-          </div>
-          <div class="jpnl ${pnlCls} num">${sign}${fmtMoney(p)}<small>${r != null ? r.toFixed(2) + 'R' : ''}</small></div>
-        </div>`;
-      }).join('')}</div>
-    </div>`;
-  }
-
-  function renderHoldingsTab() {
-    if (!isVisible('holdings')) return locked('holdings', 'Holdings');
-    if (!state.openHoldings.length) {
-      return emptyState('fa-folder-open',
-        isOwnProfile ? 'No open positions right now.' : 'This trader has no open positions.',
-        isOwnProfile ? { label: 'Open trade desk', onclick: "window.location.href='trade.html'" } : null);
-    }
-    return `<div class="holdings-grid">${state.openHoldings.map(h => {
-      const m = TArenaMarket.find(h.symbol);
-      const px = m ? m.price : Number(h.avg_cost) || 0;
-      const value = px * Number(h.net_qty);
-      const cost = Number(h.avg_cost) * Number(h.net_qty);
-      const pnl = value - cost;
-      const pnlPct = cost ? (pnl / cost) : 0;
-      const cls = pnl >= 0 ? 'text-green' : 'text-red';
-      const sign = pnl >= 0 ? '+' : '';
-      return `<div class="hcard">
-        <div class="sym">${escapeHtml(h.symbol)}</div>
-        <div class="qty">${Number(h.net_qty).toLocaleString('en-US', { maximumFractionDigits: 4 })} @ $${fmtNum(h.avg_cost)}</div>
-        <div class="val num">${fmtMoney(value)}</div>
-        <div class="pnl ${cls} num">${sign}${fmtMoney(pnl)} (${(pnlPct * 100).toFixed(2)}%)</div>
-      </div>`;
-    }).join('')}</div>`;
-  }
-
-  // ============================================================
-  // Equity chart (Chart.js)
-  // ============================================================
   function rangeStartTs() {
     const now = Date.now();
     switch (state.range) {
-      case '1M': return now - 31 * 86400000;
-      case '3M': return now - 92 * 86400000;
+      case '1M': return now - 31  * 86400000;
+      case '3M': return now - 92  * 86400000;
       case '6M': return now - 183 * 86400000;
       case '1Y': return now - 365 * 86400000;
       default:   return 0;
@@ -917,56 +1229,48 @@
     if (!labels.length) {
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#a8c1db';
-      ctx.font = '13px DM Sans';
-      ctx.textAlign = 'center';
+      ctx.fillStyle = '#a8c1db'; ctx.font = '13px DM Sans'; ctx.textAlign = 'center';
       ctx.fillText('No closed trades in this range yet.', canvas.width / 2, canvas.height / 2);
       return;
     }
 
+    const datasets = [{
+      label: 'Equity', data: equityVals,
+      borderColor: '#e8c060', backgroundColor: 'rgba(232,192,96,0.12)',
+      borderWidth: 2, fill: true, tension: 0.18, pointRadius: 0,
+    }];
+    if (state.benchCompare) {
+      datasets.push({
+        label: state.benchmark.toUpperCase(), data: benchVals,
+        borderColor: '#a8c1db', borderDash: [4, 4], borderWidth: 1.4,
+        fill: false, tension: 0.18, pointRadius: 0, spanGaps: true,
+      });
+    }
+
     state.equityChart = new Chart(canvas, {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [
-          {
-            label: 'Equity',
-            data: equityVals,
-            borderColor: '#e8c060',
-            backgroundColor: 'rgba(232,192,96,0.12)',
-            borderWidth: 2,
-            fill: true,
-            tension: 0.18,
-            pointRadius: 0,
-          },
-          {
-            label: state.benchmark.toUpperCase(),
-            data: benchVals,
-            borderColor: '#a8c1db',
-            borderDash: [4, 4],
-            borderWidth: 1.4,
-            fill: false,
-            tension: 0.18,
-            pointRadius: 0,
-            spanGaps: true,
-          },
-        ],
-      },
+      type: 'line', data: { labels, datasets },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: {
           legend: { labels: { color: '#a8c1db', font: { family: 'DM Sans', size: 11 } } },
-          tooltip: { mode: 'index', intersect: false },
+          tooltip:{ mode: 'index', intersect: false },
         },
         scales: {
           x: { ticks: { color: '#a8c1db', maxRotation: 0 }, grid: { color: 'rgba(168,193,219,0.05)' } },
-          y: {
-            ticks: { color: '#a8c1db', callback: v => '$' + Number(v).toLocaleString() },
-            grid: { color: 'rgba(168,193,219,0.05)' },
-          },
+          y: { ticks: { color: '#a8c1db', callback: v => '$' + Number(v).toLocaleString() },
+               grid:  { color: 'rgba(168,193,219,0.05)' } },
         },
       },
     });
+  }
+
+  // ============================================================
+  // Top-level render
+  // ============================================================
+  function render() {
+    document.getElementById('pfShell').innerHTML =
+      renderHeader() + renderHeroStats() + renderTabs();
+    renderTabContent();
   }
 
   // ============================================================
@@ -981,39 +1285,35 @@
     document.getElementById('editAvatarColor').value = u.avatar_color || '';
 
     const mask = u.visibility_mask || DEFAULT_MASK;
-    const rows = PRIV_FIELDS.map(f => {
+    document.getElementById('privRows').innerHTML = PRIV_FIELDS.map(f => {
       const on = mask[f.k] !== undefined ? !!mask[f.k] : DEFAULT_MASK[f.k];
       return `<div class="priv-row">
         <div class="pl">${f.l}<small>${f.d}</small></div>
         <div class="toggle ${on ? 'on' : ''}" data-k="${f.k}" onclick="this.classList.toggle('on')"></div>
       </div>`;
     }).join('');
-    document.getElementById('privRows').innerHTML = rows;
 
     document.getElementById('editModal').classList.add('show');
   }
   function closeEdit() { document.getElementById('editModal').classList.remove('show'); }
-
   async function saveEdit() {
     const newMask = {};
-    document.querySelectorAll('#privRows .toggle').forEach(el => {
-      newMask[el.dataset.k] = el.classList.contains('on');
-    });
+    document.querySelectorAll('#privRows .toggle').forEach(el => { newMask[el.dataset.k] = el.classList.contains('on'); });
     const updates = {
-      displayName: document.getElementById('editName').value.trim() || state.profile.username,
-      bio:         document.getElementById('editBio').value.trim() || '',
-      tier:        document.getElementById('editTier').value.trim() || 'Member',
-      avatarColor: document.getElementById('editAvatarColor').value.trim() || null,
+      displayName:  document.getElementById('editName').value.trim() || state.profile.username,
+      bio:          document.getElementById('editBio').value.trim() || '',
+      tier:         document.getElementById('editTier').value.trim() || 'Member',
+      avatarColor:  document.getElementById('editAvatarColor').value.trim() || null,
       visibilityMask: newMask,
     };
     const r = await TArenaAuth.saveProfile(updates);
     if (!r.ok) { alert('Could not save: ' + r.error); return; }
     closeEdit();
-    await bootData(); // re-render with new mask
+    await bootData();
   }
 
   // ============================================================
-  // Follow / unfollow
+  // Follow / share / sign out
   // ============================================================
   async function toggleFollow() {
     if (isOwnProfile) return;
@@ -1029,47 +1329,30 @@
     state.follows = await loadFollowStats(state.profile.id);
     render();
   }
-
-  // ============================================================
-  // Misc
-  // ============================================================
-  function escapeHtml(s) {
-    return String(s == null ? '' : s)
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  async function shareProfile() {
+    const url = location.origin + location.pathname + '?u=' + encodeURIComponent(state.profile.username);
+    if (navigator.share) {
+      try { await navigator.share({ title: 'TradeArena · @' + state.profile.username, url }); return; } catch (_) {}
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      alert('Profile link copied to clipboard.');
+    } catch (_) { prompt('Copy this profile URL:', url); }
   }
-  function escapeAttr(s) { return escapeHtml(s); }
-
-  function formatRange(a, b) {
-    const fmt = ts => ts ? new Date(ts).toLocaleDateString('en-AU', { month: 'short', day: 'numeric' }) : '—';
-    return `${fmt(a)} → ${fmt(b)}`;
-  }
-
   async function signOut() {
     if (!confirm('Sign out of TradeArena?')) return;
     await TArenaAuth.signOut();
     window.location.href = 'index.html';
   }
 
-  function setBenchmark(b) { state.benchmark = b; bootData(); }
-  function setRange(r) { state.range = r; render(); }
-  function switchTab(t) {
-    const lockMap = { strategies:'strategies', reels:'reels', journal:'journal', holdings:'holdings' };
-    if (lockMap[t] && !isVisible(lockMap[t]) && !isOwnProfile) {
-      // still allow switching — the locked card is rendered by renderXxxTab
-    }
-    state.activeTab = t;
-    document.querySelectorAll('.pf-tab').forEach(el => el.classList.remove('active'));
-    const btn = [...document.querySelectorAll('.pf-tab')].find(el => el.textContent.toLowerCase().includes(t));
-    if (btn) btn.classList.add('active');
-    renderTabContent();
-  }
+  function setRange(r) { state.range = r; renderTabContent(); }
+  function toggleBench(on) { state.benchCompare = !!on; renderTabContent(); }
+  function setHistoryFilter(f) { state.historyFilter = f; state.historyPage = 1; renderTabContent(); }
+  function setHistoryPage(p)   { state.historyPage = Math.max(1, p);                 renderTabContent(); }
+  function switchTab(t) { state.activeTab = t; render(); }
 
-  // Build a benchmark series — placeholder until Task #3's datafeed
-  // exposes a generic history fetcher for ASX200/SPX/BTC. We synthesise
-  // a deterministic curve from the chosen benchmark code so the line
-  // is stable across reloads. Real data swaps in here without touching
-  // the rest of the page.
+  // Synthetic benchmark series (no public history feed yet — replaced
+  // when TArenaDatafeed exposes ASX200/SPX/BTC history).
   function syntheticBenchmark(code, fromMs, toMs) {
     const out = [];
     const drift = code === 'btc' ? 0.0009 : (code === 'spx' ? 0.0004 : 0.00025);
@@ -1077,7 +1360,6 @@
     const stepMs = 86400000;
     let close = 1;
     for (let t = fromMs; t <= toMs; t += stepMs) {
-      // deterministic pseudo-random seeded by (code, day)
       const seed = (code.charCodeAt(0) * 31 + Math.floor(t / stepMs)) >>> 0;
       const r = ((Math.sin(seed) * 10000) % 1 + 1) % 1 - 0.5;
       close = close * (1 + drift + r * vol);
@@ -1093,11 +1375,13 @@
     state.profile = await loadProfile();
     if (!state.profile) {
       document.getElementById('pfShell').innerHTML =
-        emptyState('fa-user-slash', 'Trader not found.',
-          { label: 'Back to my profile', onclick: "window.location.href='profile.html'" });
+        `<div class="empty-state"><i class="fa-solid fa-user-slash"></i>
+          <div class="title">Trader not found</div>
+          <div>The handle @${escapeHtml(wantedHandle)} doesn't match any TradeArena profile.</div>
+          <button class="btn-gold" style="margin-top:18px;" onclick="window.location.href='profile.html'">Back to my profile</button>
+        </div>`;
       return;
     }
-
     const id = state.profile.id;
     const [follows, amFollowing, journalTrades, perfTrades, strategies, openHoldings, cashBalance, computedBadges, learningStats] = await Promise.all([
       loadFollowStats(id),
@@ -1108,27 +1392,22 @@
       loadHoldings(id),
       loadCashBalance(id),
       loadComputedBadges(id),
-      // learning_stats is public-safe (counts only, no PII) — no privacy mask
       sb.rpc('learning_stats', { p_owner: id }).then(r => r.error ? null : r.data),
     ]);
     state.follows        = follows;
     state.amFollowing    = amFollowing;
-    state.trades         = journalTrades;     // for Journal tab table (status='closed', full fields)
-    state.perfTrades     = perfTrades;        // for metrics + equity curve (stripped projection)
+    state.trades         = journalTrades;
+    state.perfTrades     = perfTrades;
     state.strategies     = strategies;
     state.openHoldings   = openHoldings;
-    state.cashBalance    = cashBalance;       // server-side, gated by visibility_mask.cash only
+    state.cashBalance    = cashBalance;
     state.computedBadges = computedBadges;
-    state.learning       = learningStats;     // {schools_completed, modules_completed, streak} or null
+    state.learning       = learningStats;
 
-    // Build benchmark series spanning the perf history (or last 90d).
     let from = Date.now() - 90 * 86400000, to = Date.now();
     if (perfTrades.length) {
       const closes = perfTrades.map(t => new Date(t.closed_at).getTime()).filter(isFinite);
-      if (closes.length) {
-        from = Math.min(...closes) - 86400000;
-        to   = Math.max(...closes, to);
-      }
+      if (closes.length) { from = Math.min(...closes) - 86400000; to = Math.max(...closes, to); }
     }
     const benchSeries = syntheticBenchmark(state.benchmark, from, to);
     state.summary = TArenaMetrics.summarise(perfTrades, { startingCapital: STARTING_CAPITAL, benchmark: benchSeries });
@@ -1137,17 +1416,21 @@
   }
 
   // Public hooks for inline onclick
-  window.onAvatarPicked = onAvatarPicked;
-  window.openEdit      = openEdit;
-  window.closeEdit     = closeEdit;
-  window.saveEdit      = saveEdit;
-  window.toggleFollow  = toggleFollow;
-  window.signOut       = signOut;
-  window.setBenchmark  = setBenchmark;
-  window.setRange      = setRange;
-  window.switchTab     = switchTab;
+  window.onAvatarPicked    = onAvatarPicked;
+  window.openEdit          = openEdit;
+  window.closeEdit         = closeEdit;
+  window.saveEdit          = saveEdit;
+  window.toggleFollow      = toggleFollow;
+  window.shareProfile      = shareProfile;
+  window.editStatus        = editStatus;
+  window.signOut           = signOut;
+  window.setRange          = setRange;
+  window.toggleBench       = toggleBench;
+  window.setHistoryFilter  = setHistoryFilter;
+  window.setHistoryPage    = setHistoryPage;
+  window.switchTab         = switchTab;
 
-  // Refresh every 60s (per task: real-time ticks not required on profile)
+  // Refresh every 60s — profile is not a real-time tape.
   bootData().then(() => setInterval(bootData, 60000));
 
   console.log('%c⚔️ TradeArena · Profile (' + (isOwnProfile ? 'own' : 'viewing @' + wantedHandle) + ')', 'color:#e8c060;font-weight:700;');
