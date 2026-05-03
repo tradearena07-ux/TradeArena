@@ -1140,11 +1140,9 @@
             </div>
             <p class="ta-foot-blurb">Strategy-first paper trading for Australian uni students. ASX, US &amp; crypto. Zero risk. Built in Sydney.</p>
             <div class="ta-foot-social">
-              <a href="#" aria-label="Twitter / X"><i class="fa-brands fa-x-twitter"></i></a>
-              <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
-              <a href="#" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
-              <a href="#" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>
-              <a href="mailto:hello@tradearena.com.au" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
+              <a href="https://x.com/tradearena07" target="_blank" rel="noopener" aria-label="Twitter / X"><i class="fa-brands fa-x-twitter"></i></a>
+              <a href="https://instagram.com/_tradearena_" target="_blank" rel="noopener" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+              <a href="mailto:tradearena07@gmail.com" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
             </div>
           </div>
           <div class="ta-foot-col">
