@@ -1,0 +1,66 @@
+In schools.html, add an ADMIN MODE that shows when the 
+logged-in user is tradearena07@gmail.com.
+
+ADMIN sees this on each module card INSTEAD of 
+"Start Learning":
+
+1. Replace "START LEARNING" button with two buttons:
+   - "✏️ Edit Module" (gold outlined button)
+   - "＋ Add Lesson" (gold filled button)
+
+2. Add a floating "ADMIN MODE" badge in top right 
+   of the page (gold background, navy text, 
+   position: fixed, top: 80px, right: 20px)
+
+3. Add a "+ New Module" button at the top of the 
+   module grid (only visible to admin)
+
+4. Each module card shows extra admin info:
+   - "Published ✓" or "Draft" status badge
+   - Number of lessons count
+   - Edit/Delete icons in top right of card
+
+5. When admin clicks "Add Lesson" on a module:
+   Show a modal/form with:
+   - Lesson Title (text input)
+   - Lesson Content (large textarea - supports 
+     basic markdown: **bold**, # heading, - bullets)
+   - YouTube Video URL (optional)
+   - Order number
+   - Save button → inserts to Supabase lessons table
+     with the correct school_id
+
+6. When admin clicks "Edit Module":
+   Show a modal with:
+   - Edit title, description, difficulty, reward
+   - Published toggle (true/false)
+   - Save button → updates Supabase schools table
+
+7. When admin clicks "+ New Module":
+   Show a modal with:
+   - Module title
+   - Description  
+   - Difficulty dropdown: Beginner/Intermediate/Advanced
+   - Reward capital amount
+   - Published toggle
+   - Save → inserts to Supabase schools table
+
+8. Add a DELETE button on each module (admin only)
+   - Shows confirmation dialog before deleting
+   - "Are you sure? This deletes all lessons too."
+   - On confirm → deletes from Supabase
+
+REGULAR USERS still see:
+- "Start Learning" button
+- Progress bar
+- No edit/delete/add buttons
+
+Check if current user email === 'tradearena07@gmail.com'
+to determine admin vs user view.
+
+Match exact navy/gold TradeArena theme for all modals.
+Modals should have:
+- Dark navy background
+- Gold border
+- Close button (X) in top right
+- Smooth fade-in animation

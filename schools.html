@@ -25,7 +25,7 @@
     .mod-card{
       background:var(--navy3);border:1px solid var(--bdl);border-radius:14px;padding:22px 24px;
       display:flex;flex-direction:column;gap:14px;text-decoration:none;color:inherit;
-      transition:border-color .15s, transform .15s;
+      transition:border-color .15s, transform .15s; position:relative;
     }
     .mod-card:hover{ border-color:var(--gold);transform:translateY(-2px); }
     .mod-card.complete{ border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.04); }
@@ -56,7 +56,7 @@
     .mod-cta{
       display:inline-flex;align-items:center;justify-content:center;gap:8px;
       padding:10px 16px;border-radius:10px;font-family:'Cinzel',serif;font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;
-      background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a1628;border:none;
+      background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a1628;border:none; cursor:pointer;
     }
     .mod-card.complete .mod-cta{ background:rgba(74,222,128,.18);color:#86efac;border:1px solid rgba(74,222,128,.4); }
     .mod-card.in-progress .mod-cta{ background:transparent;color:var(--gold2);border:1px solid var(--gold); }
@@ -64,11 +64,172 @@
     .empty-state{ text-align:center;padding:60px 24px;color:var(--muted);background:var(--navy3);border:1px dashed var(--bdl);border-radius:14px; }
     .empty-state i{ font-size:36px;color:var(--gold);opacity:.5;margin-bottom:14px;display:block; }
     .empty-state .h{ font-family:'Cinzel',serif;font-size:18px;color:var(--cream);margin-bottom:6px;letter-spacing:-.01em; }
+
+    /* ============ ADMIN MODE ============ */
+    .admin-badge{
+      position:fixed; top:80px; right:20px; z-index:900;
+      display:inline-flex; align-items:center; gap:8px;
+      padding:9px 16px; border-radius:9999px;
+      background:linear-gradient(135deg,var(--gold),var(--gold2));
+      color:#0a1628; font-family:'Cinzel',serif; font-weight:700;
+      font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+      box-shadow:0 8px 22px -6px rgba(201,160,48,.55);
+    }
+    .admin-badge i{ font-size:11px; }
+    .admin-toolbar{
+      display:flex; justify-content:space-between; align-items:center; gap:12px;
+      margin-bottom:18px; flex-wrap:wrap;
+    }
+    .admin-toolbar .lbl{
+      font-family:'Cinzel',serif; font-size:11px; letter-spacing:.14em;
+      text-transform:uppercase; color:var(--muted);
+    }
+    .btn-new{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:10px 18px; border-radius:10px; cursor:pointer;
+      background:linear-gradient(135deg,var(--gold),var(--gold2));
+      color:#0a1628; border:none;
+      font-family:'Cinzel',serif; font-weight:700; font-size:11px;
+      letter-spacing:.12em; text-transform:uppercase;
+      box-shadow:0 8px 20px -8px rgba(201,160,48,.55);
+      transition:transform .12s;
+    }
+    .btn-new:hover{ transform:translateY(-1px); }
+
+    .mod-card.admin{ cursor:default; }
+    .mod-card.admin:hover{ transform:none; border-color:rgba(201,160,48,.35); }
+    .mod-card .pub-pill{
+      font-family:'Cinzel',serif; font-size:10px; letter-spacing:.12em;
+      text-transform:uppercase; padding:3px 10px; border-radius:9999px;
+      border:1px solid var(--bdl); background:var(--navy);
+    }
+    .mod-card .pub-pill.live{ color:#86efac; border-color:rgba(74,222,128,.4); background:rgba(74,222,128,.06); }
+    .mod-card .pub-pill.draft{ color:#fcd34d; border-color:rgba(251,191,36,.4); background:rgba(251,191,36,.06); }
+    .mod-card .ico-row{ display:flex; gap:6px; }
+    .mod-card .ico-btn{
+      width:28px; height:28px; border-radius:7px;
+      background:rgba(255,255,255,.04); border:1px solid var(--bdl);
+      color:var(--muted); cursor:pointer;
+      display:inline-flex; align-items:center; justify-content:center;
+      font-size:11px; transition:color .12s, border-color .12s, background .12s;
+    }
+    .mod-card .ico-btn:hover{ color:var(--gold2); border-color:var(--gold); }
+    .mod-card .ico-btn.danger:hover{ color:#fca5a5; border-color:rgba(248,113,113,.5); background:rgba(248,113,113,.06); }
+    .admin-cta-row{ display:flex; gap:8px; }
+    .mod-cta.ghost{
+      flex:1; background:transparent; color:var(--gold2);
+      border:1px solid var(--gold);
+    }
+    .mod-cta.fill{ flex:1; }
+
+    /* ============ MODAL ============ */
+    .mod-bg{
+      position:fixed; inset:0; background:rgba(6,14,28,.78);
+      backdrop-filter:blur(6px); z-index:1000;
+      display:none; align-items:center; justify-content:center;
+      padding:24px;
+    }
+    .mod-bg.show{ display:flex; animation:modFade .18s ease; }
+    @keyframes modFade{ from{opacity:0;} to{opacity:1;} }
+    .mod-dlg{
+      background:linear-gradient(180deg,#0a1628,#091525);
+      border:1px solid rgba(201,160,48,.5); border-radius:16px;
+      width:100%; max-width:560px; max-height:90vh; overflow:auto;
+      box-shadow:0 30px 80px -20px rgba(0,0,0,.7);
+      animation:modPop .22s cubic-bezier(.2,.8,.3,1);
+    }
+    @keyframes modPop{ from{opacity:0; transform:translateY(8px) scale(.98);} to{opacity:1; transform:none;} }
+    .mod-dlg-head{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:18px 22px; border-bottom:1px solid var(--bdl);
+    }
+    .mod-dlg-head h3{
+      font-family:'Cinzel',serif; font-size:1.05rem; color:var(--gold2);
+      letter-spacing:-.01em;
+    }
+    .mod-x{
+      width:32px; height:32px; border-radius:8px; cursor:pointer;
+      background:rgba(255,255,255,.04); border:1px solid var(--bdl);
+      color:var(--cream); font-size:14px;
+      display:inline-flex; align-items:center; justify-content:center;
+      transition:color .12s, border-color .12s;
+    }
+    .mod-x:hover{ color:#fca5a5; border-color:rgba(248,113,113,.5); }
+    .mod-dlg-body{ padding:20px 22px; }
+    .mod-dlg-body label{
+      display:block; font-family:'Cinzel',serif; font-size:11px;
+      letter-spacing:.12em; text-transform:uppercase; color:var(--muted);
+      margin:14px 0 6px;
+    }
+    .mod-dlg-body label:first-child{ margin-top:0; }
+    .mod-dlg-body input, .mod-dlg-body textarea, .mod-dlg-body select{
+      width:100%; padding:10px 13px;
+      background:#091528; border:1px solid var(--bdl); border-radius:9px;
+      color:var(--cream); font-family:inherit; font-size:14px;
+      transition:border-color .12s;
+    }
+    .mod-dlg-body input:focus, .mod-dlg-body textarea:focus, .mod-dlg-body select:focus{
+      outline:none; border-color:var(--gold);
+    }
+    .mod-dlg-body textarea{ min-height:160px; resize:vertical; font-family:'DM Mono',ui-monospace,monospace; font-size:13.5px; line-height:1.55; }
+    .mod-row2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    @media (max-width:520px){ .mod-row2{ grid-template-columns:1fr; } }
+    .mod-toggle{
+      display:flex; align-items:center; gap:10px; margin-top:14px;
+      padding:11px 14px; background:#091528; border:1px solid var(--bdl);
+      border-radius:9px; cursor:pointer; user-select:none;
+    }
+    .mod-toggle input{ width:auto; accent-color:var(--gold); }
+    .mod-toggle .t{ color:var(--cream); font-size:13.5px; }
+    .mod-help{ color:var(--muted); font-size:11.5px; margin-top:6px; line-height:1.5; }
+    .mod-dlg-foot{
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+      padding:16px 22px; border-top:1px solid var(--bdl); flex-wrap:wrap;
+    }
+    .btn-save{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:11px 22px; border-radius:10px; cursor:pointer;
+      background:linear-gradient(135deg,var(--gold),var(--gold2));
+      color:#0a1628; border:none;
+      font-family:'Cinzel',serif; font-weight:700; font-size:11px;
+      letter-spacing:.12em; text-transform:uppercase;
+    }
+    .btn-save[disabled]{ opacity:.5; cursor:not-allowed; }
+    .btn-cancel{
+      padding:11px 18px; border-radius:10px; cursor:pointer;
+      background:transparent; color:var(--muted); border:1px solid var(--bdl);
+      font-family:'Cinzel',serif; font-weight:600; font-size:11px;
+      letter-spacing:.12em; text-transform:uppercase;
+    }
+    .btn-cancel:hover{ color:var(--cream); border-color:var(--gold); }
+
+    /* Confirm dialog */
+    .mod-confirm{ max-width:420px; }
+    .mod-confirm .body{ padding:24px 22px 8px; color:var(--cream); font-size:14px; line-height:1.6; }
+    .mod-confirm .body strong{ color:#fca5a5; }
+    .btn-danger{
+      padding:11px 22px; border-radius:10px; cursor:pointer; border:none;
+      background:linear-gradient(135deg,#dc2626,#b91c1c); color:#fee2e2;
+      font-family:'Cinzel',serif; font-weight:700; font-size:11px;
+      letter-spacing:.12em; text-transform:uppercase;
+    }
+
+    /* Toast */
+    .toast{
+      position:fixed; bottom:28px; left:50%; transform:translateX(-50%);
+      background:#0a1628; border:1px solid var(--gold); color:var(--cream);
+      padding:12px 20px; border-radius:10px; font-size:13.5px;
+      z-index:2000; box-shadow:0 12px 30px -8px rgba(0,0,0,.6);
+      opacity:0; transition:opacity .2s;
+    }
+    .toast.show{ opacity:1; }
+    .toast.err{ border-color:#fca5a5; color:#fee2e2; }
   </style>
 </head>
 <body>
 
 <div id="tarena-nav"></div>
+<div id="adminBadge"></div>
 
 <div class="sh-shell">
   <div class="sh-hero">
@@ -86,6 +247,12 @@
   </div>
 </div>
 
+<!-- ============ MODAL HOST ============ -->
+<div class="mod-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+  <div id="modalSlot"></div>
+</div>
+<div class="toast" id="toast"></div>
+
 <div id="tarena-footer"></div>
 
 <script src="assets/config.js"></script>
@@ -96,11 +263,14 @@
   TArenaUI.renderNav('schools');
   TArenaUI.renderFooter();
   const sb = window.TArenaDB;
+  const ADMIN_EMAIL = 'tradearena07@gmail.com';
+  let IS_ADMIN = false;
+  let CACHE = { schools: [], lessonsBy: {}, doneLessons: new Set(), doneSchools: new Set(), prog: null };
 
   function escHtml(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function escAttr(s){ return escHtml(s).replace(/"/g,'&quot;'); }
   function fmtMoney(n){ return '$' + (n||0).toLocaleString(); }
 
-  // Pick a Font Awesome icon based on module title keywords.
   function moduleIcon(title){
     const t = (title||'').toLowerCase();
     if (/chart|technical|candle|pattern/.test(t))      return 'fa-chart-line';
@@ -115,9 +285,29 @@
     return 'fa-graduation-cap';
   }
 
+  // ====== MODAL helpers ======
+  function openModal(html){
+    document.getElementById('modalSlot').innerHTML = html;
+    document.getElementById('modalBg').classList.add('show');
+  }
+  function closeModal(){
+    document.getElementById('modalBg').classList.remove('show');
+    document.getElementById('modalSlot').innerHTML = '';
+  }
+  window.closeModal = closeModal;
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  function toast(msg, kind){
+    const t = document.getElementById('toast');
+    t.className = 'toast show' + (kind === 'err' ? ' err' : '');
+    t.textContent = msg;
+    clearTimeout(window.__tt);
+    window.__tt = setTimeout(() => t.classList.remove('show'), 2400);
+  }
+
+  // ====== LOAD ======
   async function load(){
     const session = TArenaAuth.getSession();
-    // Schools/lessons rows are gated by RLS: only signed-in users see them.
     if (!session){
       document.getElementById('content').innerHTML = `
         <div class="empty-state">
@@ -129,75 +319,285 @@
       return;
     }
 
+    const email = (session.user && session.user.email || '').toLowerCase();
+    IS_ADMIN = email === ADMIN_EMAIL;
+
+    if (IS_ADMIN){
+      document.getElementById('adminBadge').innerHTML =
+        `<div class="admin-badge"><i class="fa-solid fa-shield-halved"></i> Admin Mode</div>`;
+    }
+
+    // Admin sees drafts too; users only see published.
+    let q = sb.from('schools').select('id,title,description,difficulty,reward_capital,order_index,published').order('order_index', { ascending: true });
+    if (!IS_ADMIN) q = q.eq('published', true);
+
     const [schoolsRes, lessonsRes, progRes] = await Promise.all([
-      sb.from('schools')
-        .select('id,title,description,difficulty,reward_capital,order_index')
-        .eq('published', true)
-        .order('order_index', { ascending: true }),
+      q,
       sb.from('lessons').select('id,school_id'),
       sb.rpc('get_my_progress'),
     ]);
 
     if (schoolsRes.error){
-      // Surface a friendly empty state instead of the raw SQL error.
       console.error('schools load failed', schoolsRes.error);
       document.getElementById('content').innerHTML =
         `<div class="empty-state"><i class="fa-solid fa-graduation-cap"></i><div class="h">Content coming soon</div><div>Check back shortly!</div></div>`;
       return;
     }
 
-    const schools = schoolsRes.data || [];
-    const lessonsBySchool = {};
+    CACHE.schools  = schoolsRes.data || [];
+    CACHE.lessonsBy = {};
     (lessonsRes.data || []).forEach(l => {
-      lessonsBySchool[l.school_id] = lessonsBySchool[l.school_id] || [];
-      lessonsBySchool[l.school_id].push(l.id);
+      (CACHE.lessonsBy[l.school_id] = CACHE.lessonsBy[l.school_id] || []).push(l.id);
     });
 
     const prog = (progRes.data && progRes.data[0]) || { lesson_ids: [], school_ids: [], total_bonus: 0 };
-    const doneLessons = new Set(prog.lesson_ids || []);
-    const doneSchools = new Set(prog.school_ids || []);
+    CACHE.prog = prog;
+    CACHE.doneLessons = new Set(prog.lesson_ids || []);
+    CACHE.doneSchools = new Set(prog.school_ids || []);
 
-    document.getElementById('hCount').textContent   = schools.length;
-    document.getElementById('hLessons').textContent = doneLessons.size;
+    document.getElementById('hCount').textContent   = CACHE.schools.length;
+    document.getElementById('hLessons').textContent = CACHE.doneLessons.size;
     document.getElementById('hBonus').textContent   = fmtMoney(prog.total_bonus);
 
-    if (!schools.length){
+    render();
+  }
+
+  function render(){
+    if (!CACHE.schools.length){
+      const adminAdd = IS_ADMIN ? `<button class="btn-new" onclick="openNewModule()" style="margin-top:18px;"><i class="fa-solid fa-plus"></i> New Module</button>` : '';
       document.getElementById('content').innerHTML =
-        `<div class="empty-state"><i class="fa-solid fa-graduation-cap"></i><div class="h">Content coming soon</div><div>Check back shortly!</div></div>`;
+        `<div class="empty-state"><i class="fa-solid fa-graduation-cap"></i><div class="h">Content coming soon</div><div>${IS_ADMIN ? 'No modules yet — create the first one.' : 'Check back shortly!'}</div>${adminAdd}</div>`;
       return;
     }
 
-    document.getElementById('content').innerHTML = `<div class="mod-grid">
-      ${schools.map(s => {
-        const lessons = lessonsBySchool[s.id] || [];
-        const total   = lessons.length;
-        const done    = lessons.filter(id => doneLessons.has(id)).length;
-        const pct     = total ? Math.round((done/total)*100) : 0;
-        const isDone  = doneSchools.has(s.id) || (total > 0 && done >= total);
-        const inProg  = !isDone && done > 0;
-        const diffKey = (s.difficulty||'Beginner').toLowerCase().slice(0,3);
-        const reward  = s.reward_capital || 500;
-        const minutes = total * 5;
-        const cta     = isDone ? 'Completed ✓' : (inProg ? 'Continue' : 'Start Learning');
-        return `
-        <a class="mod-card ${isDone?'complete':''} ${inProg?'in-progress':''}" href="module.html?id=${encodeURIComponent(s.id)}">
-          <div class="topr">
-            <div class="mod-icon"><i class="fa-solid ${moduleIcon(s.title)}"></i></div>
-            <span class="diff ${diffKey}">${escHtml(s.difficulty||'Beginner')}</span>
-          </div>
-          <h3>${escHtml(s.title)}</h3>
-          <p>${escHtml(s.description || '')}</p>
-          <div class="progress"><span style="width:${pct}%"></span></div>
-          <div class="meta">
-            <span class="item"><i class="fa-solid fa-book-open"></i> ${total} lesson${total===1?'':'s'}</span>
-            <span class="item"><i class="fa-regular fa-clock"></i> ~${minutes} min</span>
-            <span class="reward">+${fmtMoney(reward)}</span>
-          </div>
-          <button class="mod-cta" type="button">${cta}</button>
-        </a>`;
-      }).join('')}
+    const toolbar = IS_ADMIN ? `
+      <div class="admin-toolbar">
+        <div class="lbl">${CACHE.schools.length} module${CACHE.schools.length===1?'':'s'} · ${Object.values(CACHE.lessonsBy).reduce((a,b)=>a+b.length,0)} lessons</div>
+        <button class="btn-new" onclick="openNewModule()"><i class="fa-solid fa-plus"></i> New Module</button>
+      </div>` : '';
+
+    document.getElementById('content').innerHTML = toolbar + `<div class="mod-grid">
+      ${CACHE.schools.map(s => IS_ADMIN ? renderAdminCard(s) : renderUserCard(s)).join('')}
     </div>`;
   }
+
+  function renderUserCard(s){
+    const lessons = CACHE.lessonsBy[s.id] || [];
+    const total   = lessons.length;
+    const done    = lessons.filter(id => CACHE.doneLessons.has(id)).length;
+    const pct     = total ? Math.round((done/total)*100) : 0;
+    const isDone  = CACHE.doneSchools.has(s.id) || (total > 0 && done >= total);
+    const inProg  = !isDone && done > 0;
+    const diffKey = (s.difficulty||'Beginner').toLowerCase().slice(0,3);
+    const reward  = s.reward_capital || 500;
+    const minutes = total * 5;
+    const cta     = isDone ? 'Completed ✓' : (inProg ? 'Continue' : 'Start Learning');
+    return `
+      <a class="mod-card ${isDone?'complete':''} ${inProg?'in-progress':''}" href="module.html?id=${encodeURIComponent(s.id)}">
+        <div class="topr">
+          <div class="mod-icon"><i class="fa-solid ${moduleIcon(s.title)}"></i></div>
+          <span class="diff ${diffKey}">${escHtml(s.difficulty||'Beginner')}</span>
+        </div>
+        <h3>${escHtml(s.title)}</h3>
+        <p>${escHtml(s.description || '')}</p>
+        <div class="progress"><span style="width:${pct}%"></span></div>
+        <div class="meta">
+          <span class="item"><i class="fa-solid fa-book-open"></i> ${total} lesson${total===1?'':'s'}</span>
+          <span class="item"><i class="fa-regular fa-clock"></i> ~${minutes} min</span>
+          <span class="reward">+${fmtMoney(reward)}</span>
+        </div>
+        <button class="mod-cta" type="button">${cta}</button>
+      </a>`;
+  }
+
+  function renderAdminCard(s){
+    const total   = (CACHE.lessonsBy[s.id] || []).length;
+    const diffKey = (s.difficulty||'Beginner').toLowerCase().slice(0,3);
+    const reward  = s.reward_capital || 500;
+    const sid     = escAttr(s.id);
+    return `
+      <div class="mod-card admin">
+        <div class="topr">
+          <div class="mod-icon"><i class="fa-solid ${moduleIcon(s.title)}"></i></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+            <span class="diff ${diffKey}">${escHtml(s.difficulty||'Beginner')}</span>
+            <div class="ico-row">
+              <button class="ico-btn" title="Open module page" onclick="window.location.href='module.html?id=${sid}'"><i class="fa-solid fa-eye"></i></button>
+              <button class="ico-btn danger" title="Delete module" onclick="confirmDelete('${sid}', ${JSON.stringify(s.title).replace(/"/g,'&quot;')})"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          </div>
+        </div>
+        <h3>${escHtml(s.title)}</h3>
+        <p>${escHtml(s.description || '')}</p>
+        <div class="meta">
+          <span class="item"><i class="fa-solid fa-book-open"></i> ${total} lesson${total===1?'':'s'}</span>
+          <span class="pub-pill ${s.published?'live':'draft'}">${s.published?'Published ✓':'Draft'}</span>
+          <span class="reward">+${fmtMoney(reward)}</span>
+        </div>
+        <div class="admin-cta-row">
+          <button class="mod-cta ghost" onclick="openEditModule('${sid}')"><i class="fa-solid fa-pen"></i> Edit Module</button>
+          <button class="mod-cta fill" onclick="openAddLesson('${sid}')"><i class="fa-solid fa-plus"></i> Add Lesson</button>
+        </div>
+      </div>`;
+  }
+
+  // ====== ADMIN: New Module modal ======
+  window.openNewModule = function(){
+    openModal(moduleFormHtml(null));
+    wireModuleForm(null);
+  };
+  // ====== ADMIN: Edit Module modal ======
+  window.openEditModule = function(id){
+    const s = CACHE.schools.find(x => x.id === id);
+    if (!s) return;
+    openModal(moduleFormHtml(s));
+    wireModuleForm(s);
+  };
+
+  function moduleFormHtml(s){
+    const isNew = !s;
+    return `
+      <div class="mod-dlg">
+        <div class="mod-dlg-head">
+          <h3>${isNew ? 'New Module' : 'Edit Module'}</h3>
+          <button class="mod-x" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="mod-dlg-body">
+          <label>Module title</label>
+          <input id="mfTitle" type="text" maxlength="120" value="${escAttr(s?.title || '')}" placeholder="e.g. Reading candlestick patterns"/>
+          <label>Description</label>
+          <textarea id="mfDesc" maxlength="500" style="min-height:90px;font-family:inherit;font-size:14px;" placeholder="A short pitch for what students will learn.">${escHtml(s?.description || '')}</textarea>
+          <div class="mod-row2">
+            <div>
+              <label>Difficulty</label>
+              <select id="mfDiff">
+                <option value="Beginner"     ${(!s || s.difficulty==='Beginner')?'selected':''}>Beginner</option>
+                <option value="Intermediate" ${s?.difficulty==='Intermediate'?'selected':''}>Intermediate</option>
+                <option value="Advanced"     ${s?.difficulty==='Advanced'?'selected':''}>Advanced</option>
+              </select>
+            </div>
+            <div>
+              <label>Reward capital ($)</label>
+              <input id="mfReward" type="number" min="0" step="100" value="${s?.reward_capital ?? 500}"/>
+            </div>
+          </div>
+          <label>Order index</label>
+          <input id="mfOrder" type="number" min="0" value="${s?.order_index ?? (CACHE.schools.length + 1)}"/>
+          <label class="mod-toggle" for="mfPub">
+            <input id="mfPub" type="checkbox" ${(!s || s.published) ? 'checked' : ''}/>
+            <span class="t">Published <span style="color:var(--muted);">(visible to students)</span></span>
+          </label>
+        </div>
+        <div class="mod-dlg-foot">
+          <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+          <button class="btn-save" id="mfSave"><i class="fa-solid fa-floppy-disk"></i> ${isNew ? 'Create Module' : 'Save Changes'}</button>
+        </div>
+      </div>`;
+  }
+  function wireModuleForm(s){
+    document.getElementById('mfSave').addEventListener('click', async function(){
+      const btn = this;
+      const payload = {
+        title:          document.getElementById('mfTitle').value.trim(),
+        description:    document.getElementById('mfDesc').value.trim(),
+        difficulty:     document.getElementById('mfDiff').value,
+        reward_capital: parseInt(document.getElementById('mfReward').value, 10) || 0,
+        order_index:    parseInt(document.getElementById('mfOrder').value, 10) || 0,
+        published:      document.getElementById('mfPub').checked,
+      };
+      if (!payload.title){ toast('Title is required.', 'err'); return; }
+      btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
+      const r = s
+        ? await sb.from('schools').update(payload).eq('id', s.id).select().single()
+        : await sb.from('schools').insert(payload).select().single();
+      if (r.error){ toast(r.error.message || 'Save failed', 'err'); btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save'; return; }
+      toast(s ? 'Module updated.' : 'Module created.');
+      closeModal();
+      await load();
+    });
+  }
+
+  // ====== ADMIN: Add Lesson modal ======
+  window.openAddLesson = function(schoolId){
+    const s = CACHE.schools.find(x => x.id === schoolId);
+    if (!s) return;
+    const nextOrder = (CACHE.lessonsBy[schoolId] || []).length + 1;
+    openModal(`
+      <div class="mod-dlg">
+        <div class="mod-dlg-head">
+          <h3>Add Lesson · <span style="color:var(--cream);font-weight:400;">${escHtml(s.title)}</span></h3>
+          <button class="mod-x" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="mod-dlg-body">
+          <label>Lesson title</label>
+          <input id="lfTitle" type="text" maxlength="160" placeholder="e.g. What is a candlestick?"/>
+          <label>Lesson content (markdown-ish)</label>
+          <textarea id="lfContent" placeholder="# Heading&#10;&#10;Body paragraph here.&#10;&#10;**Bold text** for emphasis.&#10;&#10;- Bullet point one&#10;- Bullet point two"></textarea>
+          <div class="mod-help">Supports basic markdown: <strong>**bold**</strong>, # heading, - bullets. Paragraphs separated by a blank line.</div>
+          <div class="mod-row2">
+            <div>
+              <label>YouTube video URL <span style="color:var(--muted);text-transform:none;letter-spacing:0;font-family:inherit;font-size:10px;">(optional)</span></label>
+              <input id="lfVideo" type="url" placeholder="https://youtube.com/..."/>
+            </div>
+            <div>
+              <label>Order number</label>
+              <input id="lfOrder" type="number" min="0" value="${nextOrder}"/>
+            </div>
+          </div>
+        </div>
+        <div class="mod-dlg-foot">
+          <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+          <button class="btn-save" id="lfSave"><i class="fa-solid fa-floppy-disk"></i> Save Lesson</button>
+        </div>
+      </div>`);
+    document.getElementById('lfSave').addEventListener('click', async function(){
+      const btn = this;
+      const payload = {
+        school_id:   schoolId,
+        title:       document.getElementById('lfTitle').value.trim(),
+        content:     document.getElementById('lfContent').value,
+        video_url:   document.getElementById('lfVideo').value.trim() || null,
+        order_index: parseInt(document.getElementById('lfOrder').value, 10) || 0,
+      };
+      if (!payload.title){ toast('Lesson title is required.', 'err'); return; }
+      btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
+      const r = await sb.from('lessons').insert(payload).select().single();
+      if (r.error){ toast(r.error.message || 'Save failed', 'err'); btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Lesson'; return; }
+      toast('Lesson added.');
+      closeModal();
+      await load();
+    });
+  };
+
+  // ====== ADMIN: Delete confirmation ======
+  window.confirmDelete = function(id, title){
+    openModal(`
+      <div class="mod-dlg mod-confirm">
+        <div class="mod-dlg-head">
+          <h3 style="color:#fca5a5;"><i class="fa-solid fa-triangle-exclamation"></i> Delete module?</h3>
+          <button class="mod-x" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="body">
+          Are you sure you want to delete <strong>${escHtml(title)}</strong>?<br/>
+          <span style="color:var(--muted);font-size:13px;">This deletes all lessons inside it too. <strong>This action cannot be undone.</strong></span>
+        </div>
+        <div class="mod-dlg-foot">
+          <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+          <button class="btn-danger" id="cdGo"><i class="fa-solid fa-trash"></i> Delete forever</button>
+        </div>
+      </div>`);
+    document.getElementById('cdGo').addEventListener('click', async function(){
+      const btn = this;
+      btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Deleting…';
+      // Delete child lessons first (in case ON DELETE CASCADE isn't set).
+      await sb.from('lessons').delete().eq('school_id', id);
+      const r = await sb.from('schools').delete().eq('id', id);
+      if (r.error){ toast(r.error.message || 'Delete failed', 'err'); btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-trash"></i> Delete forever'; return; }
+      toast('Module deleted.');
+      closeModal();
+      await load();
+    });
+  };
 
   load();
 </script>
