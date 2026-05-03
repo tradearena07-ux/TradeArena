@@ -486,8 +486,14 @@
     const tintBg   = p.avatar_color
       ? `linear-gradient(135deg, ${p.avatar_color}, ${p.avatar_color})`
       : goldGrad;
+    // NOTE: single quotes inside url(...) are required — the outer
+    // style attribute is double-quoted, so a nested double quote would
+    // terminate the attribute and the avatar would render as a blank
+    // bordered circle. Also strip any single quote from the URL just
+    // in case the cache-buster ever changes shape.
+    const safeUrl = String(p.avatar_url).replace(/'/g, '%27');
     const bg = p.avatar_url
-      ? `url("${escapeAttr(p.avatar_url)}") center/cover, ${tintBg}`
+      ? `url('${safeUrl}') center/cover no-repeat, ${tintBg}`
       : tintBg;
     const editable = isOwnProfile ? 'editable' : '';
     const overlay  = isOwnProfile
