@@ -36,6 +36,18 @@
     .field-row.err{border-color:var(--red);}
     .field-row i.lead{color:var(--muted);font-size:14px;margin-right:10px;}
     .field-row input{flex:1;background:transparent;border:none;outline:none;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:14px;padding:14px 0;}
+    /* Chrome / Safari autofill paints a white background and dark text
+       that ignores `background:transparent` — the long-shadow trick
+       repaints the field with our navy bg and cream text. */
+    .field-row input:-webkit-autofill,
+    .field-row input:-webkit-autofill:hover,
+    .field-row input:-webkit-autofill:focus,
+    .field-row input:-webkit-autofill:active{
+      -webkit-text-fill-color: var(--cream) !important;
+      -webkit-box-shadow: 0 0 0 1000px var(--navy2) inset !important;
+      caret-color: var(--cream);
+      transition: background-color 9999s ease-in-out 0s;
+    }
     .field-row .toggle-pw{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:6px;}
     .field-row .toggle-pw:hover{color:var(--gold2);}
     .field-stack{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
