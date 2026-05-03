@@ -1,0 +1,164 @@
+CRITICAL BUG FIX: Live prices showing $0.0000 in trade.html
+
+The Yahoo Finance API calls are failing due to CORS restrictions 
+in the browser. Fix this permanently using multiple fallback methods.
+
+Replace the entire price fetching system with this approach:
+
+METHOD 1 — Use allorigins CORS proxy for Yahoo Finance:
+
+async function fetchPrice(symbol, isASX = false) {
+  const ticker = isASX ? symbol + '.AX' : symbol;
+  const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(
+    `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1d`
+  )}`;
+  
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    const quote = data.chart.result[0].meta;
+    return {
+      price: quote.regularMarketPrice,
+      change: quote.regularMarketChangePercent,
+      high: quote.regularMarketDayHigh,
+      low: quote.regularMarketDayLow,
+      volume: quote.regularMarketVolume,
+      prevClose: quote.chartPreviousClose
+    };
+  } catch(e) {
+    return null;
+  }
+}
+
+METHOD 2 — If allorigins fails, try corsproxy.io:
+
+async function fetchPriceFallback(symbol, isASX = false) {
+  const ticker = isASX ? symbol + '.AX' : symbol;
+  const url = `https://corsproxy.io/?${encodeURIComponent(
+    `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1d`
+  )}`;
+  
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    const quote = data.chart.result[0].meta;
+    return {
+      price: quote.regularMarketPrice,
+      change: quote.regularMarketChangePercent,
+      high: quote.regularMarketDayHigh,
+      low: quote.regularMarketDayLow,
+      volume: quote.regularMarketVolume
+    };
+  } catch(e) {
+    return null;
+  }
+}
+
+METHOD 3 — Crypto fallback via CoinGecko (already working):
+
+async function fetchCrypto() {
+  const url = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=aud&include_24hr_change=true&include_24hr_vol=true&include_high_24h=true&include_low_24h=true';
+  const res = await fetch(url);
+  const data = await res.json();
+  return {
+    BTC: { price: data.bitcoin.aud, change: data.bitcoin.aud_24h_change },
+    ETH: { price: data.ethereum.aud, change: data.ethereum.aud_24h_change },
+    SOL: { price: data.solana.aud, change: data.solana.aud_24h_change }
+  };
+}
+
+MASTER FETCH FUNCTION:
+async function fetchAllPrices() {
+  // Show loading state
+  document.querySelectorAll('.watchlist-price').forEach(el => {
+    el.style.opacity = '0.4';
+  });
+
+  const ASX_SYMBOLS = ['BHP', 'CBA', 'MQG', 'WDS'];
+  const US_SYMBOLS = ['AAPL', 'TSLA', 'NVDA', 'MSFT', 'AMZN'];
+
+  // Fetch all simultaneously
+  const [cryptoData, ...stockResults] = await Promise.all([
+    fetchCrypto(),
+    ...ASX_SYMBOLS.map(s => 
+      fetchPrice(s, true).then(r => r || fetchPriceFallback(s, true))
+    ),
+    ...US_SYMBOLS.map(s => 
+      fetchPrice(s, false).then(r => r || fetchPriceFallback(s, false))
+    )
+  ]);
+
+  // Update ASSETS object with live prices
+  ASX_SYMBOLS.forEach((sym, i) => {
+    if (stockResults[i] && stockResults[i].price > 0) {
+      ASSETS[sym].price = stockResults[i].price;
+      ASSETS[sym].change = stockResults[i].change;
+      ASSETS[sym].high = stockResults[i].high;
+      ASSETS[sym].low = stockResults[i].low;
+      ASSETS[sym].volume = stockResults[i].volume;
+    }
+  });
+
+  US_SYMBOLS.forEach((sym, i) => {
+    const idx = i + ASX_SYMBOLS.length;
+    if (stockResults[idx] && stockResults[idx].price > 0) {
+      ASSETS[sym].price = stockResults[idx].price;
+      ASSETS[sym].change = stockResults[idx].change;
+      ASSETS[sym].high = stockResults[idx].high;
+      ASSETS[sym].low = stockResults[idx].low;
+    }
+  });
+
+  if (cryptoData) {
+    if (cryptoData.BTC) ASSETS['BTC'].price = cryptoData.BTC.price;
+    if (cryptoData.ETH) ASSETS['ETH'].price = cryptoData.ETH.price;
+    if (cryptoData.SOL) ASSETS['SOL'].price = cryptoData.SOL.price;
+  }
+
+  // Update UI
+  updateWatchlistPrices();
+  updateTickerBar();
+  updateChartCurrentPrice();
+  updateTradeSummary();
+
+  // Show live indicator
+  document.querySelector('.live-indicator').textContent = 
+    '● Live · refresh 15s';
+  document.querySelector('.live-indicator').style.color = '#4ade80';
+
+  // Restore opacity
+  document.querySelectorAll('.watchlist-price').forEach(el => {
+    el.style.opacity = '1';
+  });
+}
+
+// Run on page load
+fetchAllPrices();
+
+// Refresh every 15 seconds
+setInterval(fetchAllPrices, 15000);
+
+Also update the ASSETS object to include change, high, low, volume:
+const ASSETS = {
+  BHP:  { name: 'BHP Group',     price: 0, change: 0, high: 0, low: 0, volume: 0, exchange: 'ASX' },
+  CBA:  { name: 'Commonwealth Bank', price: 0, change: 0, high: 0, low: 0, volume: 0, exchange: 'ASX' },
+  MQG:  { name: 'Macquarie Group', price: 0, change: 0, high: 0, low: 0, volume: 0, exchange: 'ASX' },
+  WDS:  { name: 'Woodside Energy', price: 0, change: 0, high: 0, low: 0, volume: 0, exchange: 'ASX' },
+  AAPL: { name: 'Apple Inc.',    price: 0, change: 0, high: 0, low: 0, volume: 0, exchange: 'US' },
+  TSLA: { name: 'Tesla Inc.',    price: 0, change: 0, high: 0, low: 0, volume: 0, exchange: 'US' },
+  NVDA: { name: 'NVIDIA',        price: 0, change: 0, high: 0, low: 0, volume: 0, exchange: 'US' },
+  MSFT: { name: 'Microsoft',     price: 0, change: 0, high: 0, low: 0, volume: 0, exchange: 'US' },
+  AMZN: { name: 'Amazon',        price: 0, change: 0, high: 0, low: 0, volume: 0, exchange: 'US' },
+  BTC:  { name: 'Bitcoin',       price: 0, change: 0, high: 0, low: 0, volume: 0, exchange: 'CRYPTO' },
+  ETH:  { name: 'Ethereum',      price: 0, change: 0, high: 0, low: 0, volume: 0, exchange: 'CRYPTO' },
+  SOL:  { name: 'Solana',        price: 0, change: 0, high: 0, low: 0, volume: 0, exchange: 'CRYPTO' },
+};
+
+IMPORTANT: 
+- Show loading skeleton (animated grey bars) while 
+  prices are being fetched
+- If price is still 0 after fetch, show "--" not "$0.0000"
+- Display Day High, Day Low, Volume in the asset header
+  from the fetched data
+- Update the chart header price in real time
+- Never show $0.0000 — if data unavailable show "--"

@@ -191,6 +191,7 @@
     .wl-row .p{font-size:12.5px;font-weight:700;color:var(--cream);font-feature-settings:'tnum';text-align:right;}
     .wl-row .c{font-size:10.5px;font-weight:700;margin-top:1px;text-align:right;font-feature-settings:'tnum';}
     .wl-skel{height:38px;background:linear-gradient(90deg,var(--navy3) 0%,rgba(201,160,48,.05) 50%,var(--navy3) 100%);background-size:200% 100%;animation:skel 1.4s linear infinite;border-radius:8px;}
+    .wl-row .wl-skel{display:inline-block;height:11px;width:54px;border-radius:4px;vertical-align:middle;}
     @keyframes skel{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
 
     /* Center: symbol header + chart */
@@ -639,7 +640,9 @@ const state = {
 
 // ============ HELPERS ============
 function fmtMoney(n, dp) {
-  if (n == null || !isFinite(n)) return '$—';
+  // Treat 0 / null / NaN as "no data" so a failed fetch never leaks
+  // "$0.0000" into the UI. Real prices are always > 0.
+  if (n == null || !isFinite(n) || n === 0) return '$—';
   const d = dp != null ? dp : (Math.abs(n) < 10 ? 4 : 2);
   return '$' + Number(n).toLocaleString('en-AU', { minimumFractionDigits: d, maximumFractionDigits: d });
 }
@@ -876,21 +879,42 @@ async function fetchPrices(symbols) {
 // CORS headers so direct browser calls fail; corsproxy.io's free tier
 // rewrites the response with `access-control-allow-origin: *`. Single call
 // per symbol returns price + change% + day OHLCV + 52w high/low in `meta`.
-const YAHOO_BASE = 'https://corsproxy.io/?https://query1.finance.yahoo.com/v8/finance/chart/';
-// 10s per-symbol cache so two fetchPrices() calls inside one tick (e.g.
-// init → first poll overlap) don't hit corsproxy.io twice. Shorter than
-// the 15s poll so each tick gets a fresh upstream snapshot.
+// Yahoo's /v8/finance/chart endpoint has no CORS headers, so we proxy
+// through one of three free CORS rewriters. We race them in order — if the
+// primary times out or returns garbage we fall back transparently. Each
+// proxy gets a 6s budget; the whole call gives up after the last one.
+const YAHOO_PATH   = 'query1.finance.yahoo.com/v8/finance/chart/';
+const YAHOO_PROXIES = [
+  u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+  u => `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(u)}`,
+];
 const _yfCache = {}; // symbol → { ts, payload }
 const _YF_TTL  = 10 * 1000;
+
+async function _fetchYahooJson(path) {
+  const upstream = `https://${YAHOO_PATH}${path}`;
+  let lastErr;
+  for (const wrap of YAHOO_PROXIES) {
+    try {
+      const ctl = new AbortController();
+      const tm  = setTimeout(() => ctl.abort(), 6000);
+      const r   = await fetch(wrap(upstream), { signal: ctl.signal });
+      clearTimeout(tm);
+      if (!r.ok) { lastErr = new Error('HTTP ' + r.status); continue; }
+      const j = await r.json();
+      if (j && j.chart && j.chart.result && j.chart.result[0]) return j;
+      lastErr = new Error('bad shape');
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr || new Error('all proxies failed');
+}
 
 async function fetchYahooQuote(symbol) {
   const cached = _yfCache[symbol];
   if (cached && (Date.now() - cached.ts) < _YF_TTL) return cached.payload;
-  const url = `${YAHOO_BASE}${encodeURIComponent(symbol)}?interval=1d&range=1d`;
-  const r = await fetch(url);
-  if (!r.ok) throw new Error('HTTP ' + r.status);
-  const j = await r.json();
-  const m = j && j.chart && j.chart.result && j.chart.result[0] && j.chart.result[0].meta;
+  const j = await _fetchYahooJson(`${encodeURIComponent(symbol)}?interval=1d&range=1d`);
+  const m = j.chart.result[0].meta;
   if (!m) throw new Error('no meta');
   const price = Number(m.regularMarketPrice) || 0;
   const prev  = Number(m.chartPreviousClose) || Number(m.previousClose) || 0;
@@ -911,14 +935,11 @@ async function fetchYahooQuote(symbol) {
   return payload;
 }
 
-// Daily OHLCV bars for the candlestick chart. Same CORS-bypassed Yahoo
-// endpoint with range=1y so the chart has a full year of history.
+// Daily OHLCV bars for the candlestick chart. Uses the same multi-proxy
+// fetcher so bar requests survive a corsproxy.io outage.
 async function fetchYahooBars(symbol, range, interval) {
-  const url = `${YAHOO_BASE}${encodeURIComponent(symbol)}?interval=${interval || '1d'}&range=${range || '1y'}`;
-  const r = await fetch(url);
-  if (!r.ok) throw new Error('HTTP ' + r.status);
-  const j = await r.json();
-  const result = j && j.chart && j.chart.result && j.chart.result[0];
+  const j = await _fetchYahooJson(`${encodeURIComponent(symbol)}?interval=${interval || '1d'}&range=${range || '1y'}`);
+  const result = j.chart.result[0];
   if (!result) throw new Error('no result');
   const ts  = result.timestamp || [];
   const q   = (result.indicators && result.indicators.quote && result.indicators.quote[0]) || {};
@@ -1130,16 +1151,17 @@ function renderSymbolHeader() {
   document.getElementById('symFull').textContent = def.name;
   document.getElementById('symBadge').textContent = def.exchange;
   document.getElementById('symPx').textContent  = fmtMoney(px.price);
+  const haveCh = px.change != null && isFinite(px.change) && px.price > 0;
   const up = (px.change || 0) >= 0;
   const ch = document.getElementById('symCh');
-  ch.textContent = (up ? '▲ ' : '▼ ') + fmtPct(px.change) + '  today';
-  ch.className   = 'c ' + (up ? 'text-green' : 'text-red');
-  // Day high/low/52w/vol — use Alpaca-supplied fields if present, else heuristic
-  const hi = px._hi || (px.price ? px.price * 1.012 : null);
-  const lo = px._lo || (px.price ? px.price * 0.988 : null);
-  document.getElementById('symHi').textContent  = hi ? fmtMoney(hi) : '—';
-  document.getElementById('symLo').textContent  = lo ? fmtMoney(lo) : '—';
-  document.getElementById('sym52h').textContent = px.price ? fmtMoney(px.price * 1.18) : '—';
+  ch.textContent = haveCh ? ((up ? '▲ ' : '▼ ') + fmtPct(px.change) + '  today') : '—';
+  ch.className   = 'c ' + (haveCh ? (up ? 'text-green' : 'text-red') : 'text-muted');
+  // Day high/low/52w/vol come straight from Yahoo via fetchYahooQuote.
+  // No more synthetic ±1.2%/+18% guesses — show '—' if the upstream
+  // payload didn't include the field.
+  document.getElementById('symHi').textContent  = px._hi  ? fmtMoney(px._hi)  : '—';
+  document.getElementById('symLo').textContent  = px._lo  ? fmtMoney(px._lo)  : '—';
+  document.getElementById('sym52h').textContent = px._h52 ? fmtMoney(px._h52) : '—';
   document.getElementById('symVol').textContent = fmtVol(px._vol);
   document.getElementById('ordSym').textContent = sym;
   updateTotal();
@@ -1149,18 +1171,24 @@ function renderSymbolHeader() {
 function renderWatchlist() {
   const wl = watchlist();
   const html = wl.map(s => {
-    const def = CATALOG[s] || { name: s };
-    const px  = PRICES[s];
-    const up  = px && (px.change || 0) >= 0;
+    const def    = CATALOG[s] || { name: s };
+    const px     = PRICES[s];
+    const havePx = px && px.price > 0;
+    const up     = havePx && (px.change || 0) >= 0;
     const active = s === state.symbol ? 'on' : '';
+    // Skeleton bar shown until the first valid price lands.
+    const priceCell = havePx
+      ? fmtMoney(px.price)
+      : '<span class="wl-skel" aria-label="loading"></span>';
+    const chgCell   = havePx ? fmtPct(px.change) : '';
     return `<div class="wl-row ${active}" data-sym="${s}" onclick="selectSymbol('${s}')">
       <div>
         <div class="l">${esc(s.replace('.AX',''))}</div>
         <div class="n">${esc(def.name)}</div>
       </div>
       <div>
-        <div class="p">${px ? fmtMoney(px.price) : '<span class="text-muted">—</span>'}</div>
-        <div class="c ${up ? 'text-green' : 'text-red'}">${px ? fmtPct(px.change) : ''}</div>
+        <div class="p">${priceCell}</div>
+        <div class="c ${havePx ? (up ? 'text-green' : 'text-red') : 'text-muted'}">${chgCell}</div>
       </div>
     </div>`;
   }).join('');
