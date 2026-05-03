@@ -524,10 +524,31 @@
       // (foldername[1] = auth.uid()) allows the upload.
       const ext  = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
       const path = `${session.user.id}/avatar.${ext}`;
-      const { error: upErr } = await sb.storage
-        .from('avatars').upload(path, file, { cacheControl: '3600', upsert: true, contentType: file.type });
-      if (upErr) throw upErr;
-      const { data: pub } = sb.storage.from('avatars').getPublicUrl(path);
+      // Bucket id in Supabase is case-sensitive. Migration 0007 creates
+      // `avatars` (lowercase, canonical). Some users created the bucket
+      // by hand from the dashboard with a capital `Avatars` — try both
+      // so the UI stops failing while they sort out the rename.
+      const BUCKET_CANDIDATES = ['avatars', 'Avatars'];
+      let bucket = null, lastErr = null, pub = null;
+      for (const b of BUCKET_CANDIDATES) {
+        const { error: upErr } = await sb.storage
+          .from(b).upload(path, file, { cacheControl: '3600', upsert: true, contentType: file.type });
+        if (!upErr) {
+          bucket = b;
+          pub = sb.storage.from(b).getPublicUrl(path).data;
+          break;
+        }
+        lastErr = upErr;
+        // "Bucket not found" → fall through to next candidate. Anything
+        // else (RLS, mime, size) is a real error — abort.
+        if (!/bucket not found|not_found|404/i.test(upErr.message || '')) break;
+      }
+      if (!bucket) {
+        const msg = (lastErr && /bucket not found|not_found|404/i.test(lastErr.message || ''))
+          ? 'Storage bucket "avatars" not set up yet. Run supabase/migrations/0007_avatar_url.sql in the Supabase SQL editor (it creates the bucket + RLS policies).'
+          : (lastErr && lastErr.message) || 'upload failed';
+        throw new Error(msg);
+      }
       // Bust browser cache so the freshly-uploaded image shows immediately
       const busted = pub.publicUrl + '?t=' + Date.now();
       const r = await TArenaAuth.saveProfile({ avatarUrl: busted });
