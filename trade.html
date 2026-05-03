@@ -456,6 +456,13 @@
         <button class="tf"     data-tf="1W">1W</button>
         <button class="tf"     data-tf="1M">1M</button>
         <span class="tf-spacer"></span>
+        <a id="termBtn" href="chart.html" target="_blank" rel="noopener"
+           style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(201,160,48,.12);
+                  border:1px solid rgba(201,160,48,.32);border-radius:7px;color:var(--gold2);font-size:11.5px;
+                  font-weight:700;letter-spacing:.06em;text-decoration:none;text-transform:uppercase;margin-right:10px;"
+           title="Open full Terminal in a new tab">
+          <i class="fa-solid fa-up-right-from-square"></i> Terminal
+        </a>
         <span class="tf-info"><span class="live"></span>Live · refresh 15s</span>
       </div>
       <div class="chart-host" id="chartHost">
@@ -1164,8 +1171,28 @@ function renderSymbolHeader() {
   document.getElementById('sym52h').textContent = px._h52 ? fmtMoney(px._h52) : '—';
   document.getElementById('symVol').textContent = fmtVol(px._vol);
   document.getElementById('ordSym').textContent = sym;
+  // Keep the Terminal link in sync with the active symbol so a click
+  // opens chart.html?symbol=<currentSymbol> in a new tab.
+  const term = document.getElementById('termBtn');
+  if (term) term.href = 'chart.html?symbol=' + encodeURIComponent(state.symbol);
   updateTotal();
 }
+
+// Accept ?symbol=... and ?side=... handed back from chart.html so the
+// Buy/Sell buttons there land users on a pre-filled order ticket here.
+// setSide() is called on the next tick so the Buy/Sell tab UI re-renders
+// after the DOM is wired up — calling it inline runs before the buttons
+// have their click handlers attached.
+(function applyUrlParams(){
+  const u = new URLSearchParams(location.search);
+  const sym = (u.get('symbol') || '').toUpperCase();
+  const side = (u.get('side') || '').toLowerCase();
+  if (sym && CATALOG[sym]) state.symbol = sym;
+  if (side === 'buy' || side === 'sell') {
+    state.side = side;
+    setTimeout(() => { try { setSide(side); } catch(_) {} }, 0);
+  }
+})();
 
 // ============ WATCHLIST ============
 function renderWatchlist() {
