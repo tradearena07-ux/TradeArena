@@ -3,123 +3,721 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TradeArena — Paper trading for Australian students</title>
+  <title>TradeArena — Australia's first campus trading arena</title>
+  <meta name="description" content="Paper trade real ASX, US stocks & crypto. Compete against every Australian uni. Free for students with a .edu.au email."/>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=Cinzel+Decorative:wght@700&amp;family=DM+Sans:wght@300;400;500&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;700&amp;display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
   <link rel="stylesheet" href="assets/styles.css"/>
   <style>
-    .hero{background:linear-gradient(180deg,#060e1c,#0a1830);padding:100px 5% 90px;display:flex;align-items:center;gap:6%;flex-wrap:wrap;}
-    .hero-left{flex:1;min-width:320px;}
-    .hero-left h1{font-family:'Cinzel',serif;font-size:4rem;font-weight:700;line-height:1.05;letter-spacing:-2px;margin:18px 0 22px;}
-    .hero-left h1 em{color:var(--gold2);font-style:normal;}
-    .hero-left p{font-size:1.15rem;line-height:1.55;color:var(--muted);max-width:520px;margin-bottom:36px;}
-    .stats-row{margin-top:36px;display:flex;gap:32px;font-size:14px;color:var(--muted);flex-wrap:wrap;}
-    .stats-row strong{color:var(--cream);}
-    .hero-right{flex:1;min-width:320px;position:relative;}
-    .ticker-pill{background:var(--navy2);border:1px solid var(--border);padding:10px 26px;border-radius:9999px;display:flex;gap:30px;font-family:'Cinzel',serif;font-size:14px;margin-bottom:18px;overflow:hidden;}
-    .feature-card{background:var(--navy3);border:1px solid var(--border);border-radius:24px;padding:36px 28px;transition:transform .25s,border-color .25s;}
-    .feature-card:hover{transform:translateY(-6px);border-color:var(--gold);}
-    .feature-card i{font-size:38px;color:var(--gold2);margin-bottom:18px;}
-    .feature-card h3{font-family:'Cinzel',serif;font-size:1.4rem;margin-bottom:10px;letter-spacing:.02em;}
-    .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;max-width:1200px;margin:0 auto;}
-    @media(max-width:900px){.hero-left h1{font-size:2.6rem;}}
+    /* =========================================================
+       LANDING PAGE — Zerodha trust + WebVeda boldness
+       Uses the global :root tokens from assets/styles.css.
+       ========================================================= */
+    body{overflow-x:hidden;}
+    .container{max-width:1200px;margin:0 auto;padding:0 5%;}
+    .h-cinzel{font-family:'Cinzel',serif;letter-spacing:.01em;}
+    .muted{color:var(--muted);}
+
+    /* ----- Sticky marketing nav -----
+       Sits 30px below the top so the global ticker strip (.ta-ticker)
+       can stick above it without overlap. */
+    .ln{position:sticky;top:30px;z-index:60;display:flex;align-items:center;justify-content:space-between;
+        padding:18px 5%;transition:background .2s,border-color .2s,backdrop-filter .2s,padding .2s;
+        border-bottom:1px solid transparent;}
+    .ln.scrolled{background:rgba(6,14,28,.85);-webkit-backdrop-filter:saturate(160%) blur(14px);
+        backdrop-filter:saturate(160%) blur(14px);border-bottom-color:rgba(201,160,48,.18);padding:12px 5%;}
+    .ln-logo{display:flex;align-items:center;gap:10px;font-family:'DM Sans',sans-serif;font-size:1.25rem;
+        font-weight:700;color:var(--gold2);}
+    .ln-logo span{color:var(--cream);}
+    .ln-links{display:flex;gap:6px;font-size:13.5px;font-weight:600;color:var(--muted);}
+    .ln-links a{padding:8px 14px;border-radius:9999px;transition:.15s;}
+    .ln-links a:hover{color:var(--cream);background:rgba(255,255,255,.04);}
+    .ln-cta{display:flex;align-items:center;gap:10px;}
+    .btn-ghost{background:transparent;border:1px solid var(--bdl);color:var(--cream);padding:9px 18px;
+        border-radius:9999px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;}
+    .btn-ghost:hover{border-color:var(--gold);color:var(--gold2);}
+    .btn-fill{background:linear-gradient(180deg,#e8c060,#c9a030);color:var(--navy);padding:9px 22px;
+        border-radius:9999px;font-size:13px;font-weight:700;cursor:pointer;border:none;
+        box-shadow:0 6px 18px -6px rgba(232,192,96,.55);transition:transform .15s, box-shadow .15s;}
+    .btn-fill:hover{transform:translateY(-1px);box-shadow:0 10px 24px -8px rgba(232,192,96,.7);}
+    .ln-burger{display:none;background:none;border:none;color:var(--cream);font-size:22px;cursor:pointer;}
+    @media(max-width:860px){
+      .ln-links,.ln-cta .btn-ghost{display:none;}
+      .ln-burger{display:block;}
+    }
+
+    /* Mobile menu drawer */
+    .mm{position:fixed;inset:0;background:rgba(6,14,28,.96);z-index:200;display:none;
+        flex-direction:column;padding:80px 8% 40px;gap:18px;}
+    .mm.open{display:flex;}
+    .mm a{font-size:22px;color:var(--cream);font-family:'Cinzel',serif;padding:12px 0;
+        border-bottom:1px solid var(--bdl);}
+    .mm-close{position:absolute;top:22px;right:24px;background:none;border:none;color:var(--gold2);
+        font-size:28px;cursor:pointer;}
+
+    /* ----- HERO ----- */
+    .hero{position:relative;padding:60px 5% 90px;min-height:calc(100vh - 80px);display:flex;align-items:center;
+        background:radial-gradient(900px 500px at 50% -10%,rgba(201,160,48,.16),transparent 60%),
+                  linear-gradient(180deg,#060e1c 0%,#091528 100%);overflow:hidden;}
+    .hero::before{content:'';position:absolute;inset:0;
+        background-image:repeating-linear-gradient(135deg,rgba(201,160,48,.025) 0 1px,transparent 1px 90px);
+        pointer-events:none;}
+    .hero-grid{position:relative;z-index:1;display:grid;grid-template-columns:1.1fr 1fr;gap:60px;
+        align-items:center;max-width:1280px;margin:0 auto;width:100%;}
+    .h-pill{display:inline-flex;align-items:center;gap:8px;background:rgba(248,113,113,.1);
+        border:1px solid rgba(248,113,113,.3);color:var(--cream);font-size:11.5px;font-weight:700;
+        padding:6px 12px;border-radius:9999px;letter-spacing:.06em;text-transform:uppercase;
+        animation:fadeUp .6s .05s both;}
+    .h-pill .live-dot{width:7px;height:7px;border-radius:50%;background:#f87171;
+        box-shadow:0 0 8px rgba(248,113,113,.7);animation:pulse 2s infinite;}
+    @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+    .h-headline{font-family:'Cinzel',serif;font-size:clamp(2.6rem,6vw,4.8rem);font-weight:700;
+        line-height:1.02;letter-spacing:-2px;margin:18px 0 22px;color:var(--cream);
+        animation:fadeUp .7s .15s both;}
+    .h-headline em{color:var(--gold2);font-style:normal;}
+    .h-sub{font-size:clamp(1rem,1.4vw,1.18rem);line-height:1.6;color:var(--muted);max-width:560px;
+        margin-bottom:32px;animation:fadeUp .7s .25s both;}
+    .h-ctas{display:flex;gap:14px;flex-wrap:wrap;animation:fadeUp .7s .35s both;}
+    .btn-lg{padding:15px 28px;font-size:14.5px;border-radius:9999px;font-weight:700;cursor:pointer;
+        display:inline-flex;align-items:center;gap:10px;transition:.15s;}
+    .btn-lg.gold{background:linear-gradient(180deg,#e8c060,#c9a030);color:var(--navy);border:none;
+        box-shadow:0 8px 26px -8px rgba(232,192,96,.6);position:relative;overflow:hidden;}
+    .btn-lg.gold::after{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;
+        background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);
+        animation:shimmer 3.5s infinite;}
+    @keyframes shimmer{to{left:200%;}}
+    .btn-lg.gold:hover{transform:translateY(-2px);box-shadow:0 14px 36px -10px rgba(232,192,96,.75);}
+    .btn-lg.ghost{background:transparent;border:1px solid var(--bdl);color:var(--cream);}
+    .btn-lg.ghost:hover{border-color:var(--gold);color:var(--gold2);}
+    .h-trust{margin-top:34px;display:flex;flex-wrap:wrap;gap:18px 26px;font-size:12.5px;color:var(--muted);
+        animation:fadeUp .7s .45s both;}
+    .h-trust span{display:inline-flex;align-items:center;gap:7px;}
+    .h-trust i{color:var(--green);font-size:11px;}
+
+    /* Hero mockup */
+    .h-mock{position:relative;animation:fadeUp .9s .35s both;}
+    .h-mock::before{content:'';position:absolute;inset:-40px;background:radial-gradient(closest-side,rgba(201,160,48,.18),transparent 70%);
+        z-index:-1;}
+    .mockup{background:linear-gradient(180deg,#091528,#0a1830);border:1px solid rgba(201,160,48,.25);
+        border-radius:18px;padding:18px;box-shadow:0 30px 80px -20px rgba(0,0,0,.6);}
+    .mk-head{display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;
+        border-bottom:1px solid var(--bdl);}
+    .mk-sym{font-weight:700;color:var(--cream);font-size:14px;}
+    .mk-sym .small{color:var(--muted);font-weight:500;font-size:11px;margin-left:6px;}
+    .mk-px{font-family:'DM Sans',sans-serif;font-weight:700;color:var(--green);font-variant-numeric:tabular-nums;}
+    .mk-px .pct{font-size:11px;font-weight:600;margin-left:6px;}
+    .mk-chart{height:200px;background:#060e1c;border-radius:12px;margin:14px 0;position:relative;overflow:hidden;}
+    .mk-chart svg{position:absolute;inset:0;width:100%;height:100%;}
+    .mk-wl{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px;}
+    .mk-wl-it{background:rgba(255,255,255,.03);border:1px solid var(--bdl);border-radius:10px;padding:8px 10px;
+        font-size:11px;}
+    .mk-wl-it .s{font-weight:700;color:var(--cream);}
+    .mk-wl-it .p{color:var(--muted);font-variant-numeric:tabular-nums;display:block;}
+    .mk-wl-it .c{font-weight:600;font-size:10.5px;}
+    .float-card{position:absolute;background:rgba(9,21,40,.92);-webkit-backdrop-filter:blur(8px);
+        backdrop-filter:blur(8px);border:1px solid var(--border);border-radius:12px;padding:10px 14px;
+        font-size:12px;display:flex;align-items:center;gap:10px;
+        box-shadow:0 14px 38px -12px rgba(0,0,0,.6);animation:floatY 4s ease-in-out infinite;}
+    .float-card i{color:var(--gold2);font-size:16px;}
+    .float-card strong{color:var(--cream);}
+    .fc-1{top:10%;left:-30px;animation-delay:0s;}
+    .fc-2{top:46%;right:-40px;animation-delay:.7s;}
+    .fc-3{bottom:8%;left:-10px;animation-delay:1.4s;}
+    @keyframes floatY{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:none;}}
+    @media(max-width:980px){
+      .hero-grid{grid-template-columns:1fr;}
+      .h-mock{margin-top:10px;}
+      .float-card{display:none;}
+    }
+
+    /* ----- Trust numbers ----- */
+    .trust{padding:60px 5%;background:var(--navy2);border-top:1px solid var(--bdl);
+        border-bottom:1px solid var(--bdl);}
+    .trust-grid{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);
+        gap:0;text-align:center;}
+    .trust-it{padding:16px 18px;border-right:1px solid var(--bdl);}
+    .trust-it:last-child{border-right:none;}
+    .trust-n{font-family:'Cinzel',serif;font-size:clamp(1.8rem,3.4vw,2.6rem);font-weight:700;color:var(--gold2);
+        font-variant-numeric:tabular-nums;}
+    .trust-l{color:var(--muted);font-size:12.5px;margin-top:6px;letter-spacing:.04em;text-transform:uppercase;
+        font-weight:600;}
+    @media(max-width:780px){.trust-grid{grid-template-columns:repeat(2,1fr);gap:24px;}
+      .trust-it{border-right:none;}}
+
+    /* ----- Section scaffold ----- */
+    section.sec{padding:90px 5%;}
+    .sec-head{text-align:center;max-width:760px;margin:0 auto 50px;}
+    .sec-head h2{font-family:'Cinzel',serif;font-size:clamp(1.8rem,3.4vw,2.6rem);font-weight:700;
+        line-height:1.2;color:var(--cream);margin-bottom:14px;}
+    .sec-head p{color:var(--muted);font-size:1.05rem;line-height:1.55;}
+
+    /* ----- Filter tabs ----- */
+    .filters{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:36px;}
+    .f-tab{background:transparent;border:1px solid var(--bdl);color:var(--muted);padding:8px 18px;
+        border-radius:9999px;font-size:12.5px;font-weight:600;cursor:pointer;transition:.15s;}
+    .f-tab:hover{color:var(--cream);border-color:var(--gold);}
+    .f-tab.on{background:rgba(201,160,48,.18);color:var(--gold2);border-color:rgba(201,160,48,.55);}
+
+    /* ----- Feature cards ----- */
+    .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;max-width:1180px;margin:0 auto;}
+    @media(max-width:920px){.feat-grid{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:620px){.feat-grid{grid-template-columns:1fr;}}
+    .feat{background:var(--navy3);border:1px solid var(--bdl);border-radius:18px;padding:30px 26px;
+        transition:transform .25s,border-color .25s,box-shadow .25s;position:relative;opacity:0;
+        transform:translateY(20px);}
+    .feat.in{opacity:1;transform:none;transition:opacity .6s, transform .6s;}
+    .feat:hover{transform:translateY(-6px);border-color:rgba(201,160,48,.55);
+        box-shadow:0 20px 40px -20px rgba(201,160,48,.25);}
+    .feat-icon{width:50px;height:50px;border-radius:14px;background:rgba(201,160,48,.12);
+        border:1px solid rgba(201,160,48,.3);display:inline-flex;align-items:center;justify-content:center;
+        color:var(--gold2);font-size:20px;margin-bottom:18px;}
+    .feat h3{font-family:'Cinzel',serif;font-size:1.25rem;font-weight:700;color:var(--cream);margin-bottom:10px;}
+    .feat p{color:var(--muted);font-size:13.5px;line-height:1.55;}
+    .feat-badge{position:absolute;top:18px;right:18px;font-size:9.5px;font-weight:700;letter-spacing:.08em;
+        padding:3px 8px;border-radius:9999px;text-transform:uppercase;}
+    .b-free{background:rgba(74,222,128,.15);color:var(--green);border:1px solid rgba(74,222,128,.3);}
+    .b-live{background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.3);}
+    .b-soon{background:rgba(168,193,219,.12);color:var(--muted);border:1px solid var(--bdl);}
+
+    /* ----- Steps ----- */
+    .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1100px;margin:0 auto;
+        position:relative;}
+    .steps::before{content:'';position:absolute;top:38px;left:14%;right:14%;height:1px;
+        background:linear-gradient(90deg,transparent,rgba(201,160,48,.4),transparent);}
+    @media(max-width:780px){.steps{grid-template-columns:1fr;}.steps::before{display:none;}}
+    .step{text-align:center;background:var(--navy2);border:1px solid var(--bdl);border-radius:18px;
+        padding:30px 24px;position:relative;}
+    .step-n{font-family:'Cinzel',serif;font-size:3rem;font-weight:700;color:var(--gold2);line-height:1;
+        margin-bottom:16px;}
+    .step h3{font-family:'Cinzel',serif;font-size:1.15rem;color:var(--cream);margin-bottom:10px;}
+    .step p{color:var(--muted);font-size:13.5px;line-height:1.6;}
+    .step i{color:var(--gold2);font-size:18px;margin-top:14px;}
+
+    /* ----- Leaderboard ----- */
+    .lb-wrap{max-width:980px;margin:0 auto;background:var(--navy2);border:1px solid var(--bdl);
+        border-radius:18px;overflow:hidden;}
+    .lb-table{width:100%;border-collapse:collapse;font-size:14px;}
+    .lb-table th{text-align:left;padding:18px 22px;font-size:11px;color:var(--muted);text-transform:uppercase;
+        letter-spacing:.08em;font-weight:700;border-bottom:1px solid var(--bdl);background:var(--navy3);}
+    .lb-table td{padding:18px 22px;border-bottom:1px solid var(--bdl);transition:background .15s;}
+    .lb-table tr:last-child td{border-bottom:none;}
+    .lb-table tbody tr:hover td{background:rgba(201,160,48,.05);}
+    .lb-table .rank{font-family:'Cinzel',serif;color:var(--gold2);font-weight:700;font-size:15px;}
+    .lb-table .uni{font-weight:600;color:var(--cream);}
+    .lb-table .ret{font-variant-numeric:tabular-nums;font-weight:700;color:var(--green);}
+    .lb-table .avg{font-variant-numeric:tabular-nums;color:var(--muted);}
+    .lb-status{font-size:10.5px;font-weight:700;letter-spacing:.06em;padding:3px 9px;border-radius:9999px;
+        text-transform:uppercase;display:inline-block;}
+    .lb-cta{text-align:center;margin-top:30px;}
+    @media(max-width:680px){.lb-table .col-avg{display:none;}.lb-table th,.lb-table td{padding:14px 12px;}}
+
+    /* ----- Testimonials ----- */
+    .test-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;max-width:1180px;margin:0 auto;}
+    @media(max-width:920px){.test-grid{grid-template-columns:1fr;}}
+    .test{background:var(--navy2);border:1px solid var(--bdl);border-left:3px solid var(--gold);
+        border-radius:14px;padding:26px;}
+    .test-stars{color:var(--gold2);font-size:13px;letter-spacing:2px;margin-bottom:14px;}
+    .test-q{font-size:14.5px;line-height:1.6;color:var(--cream);margin-bottom:18px;font-style:italic;}
+    .test-who{display:flex;align-items:center;gap:12px;}
+    .test-av{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#c9a030,#e8c060);
+        color:var(--navy);font-weight:700;display:inline-flex;align-items:center;justify-content:center;
+        font-family:'Cinzel',serif;font-size:14px;}
+    .test-meta{font-size:12.5px;color:var(--muted);}
+    .test-meta strong{display:block;color:var(--cream);font-weight:600;font-size:13px;}
+
+    /* ----- Modules (school preview) ----- */
+    .mods-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;max-width:1180px;margin:0 auto;}
+    @media(max-width:920px){.mods-grid{grid-template-columns:1fr;}}
+    .mod{background:var(--navy2);border:1px solid var(--bdl);border-radius:18px;overflow:hidden;
+        transition:transform .25s,border-color .25s;}
+    .mod:hover{transform:translateY(-4px);border-color:rgba(201,160,48,.55);}
+    .mod-img{height:140px;background:linear-gradient(135deg,#0d1e3a,#091528);display:flex;align-items:center;
+        justify-content:center;font-size:46px;color:var(--gold2);position:relative;}
+    .mod-img::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 30%,
+        rgba(201,160,48,.2),transparent 60%);}
+    .mod-body{padding:22px;}
+    .mod-diff{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+        padding:3px 9px;border-radius:9999px;margin-bottom:10px;}
+    .mod-diff.beg{background:rgba(74,222,128,.15);color:var(--green);}
+    .mod-diff.int{background:rgba(232,192,96,.15);color:var(--gold2);}
+    .mod-diff.adv{background:rgba(248,113,113,.15);color:var(--red);}
+    .mod h3{font-family:'Cinzel',serif;font-size:1.15rem;color:var(--cream);margin-bottom:8px;}
+    .mod p{color:var(--muted);font-size:13px;line-height:1.55;margin-bottom:12px;}
+    .mod-meta{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);
+        padding-top:14px;border-top:1px solid var(--bdl);}
+    .mod-meta .reward{color:var(--gold2);font-weight:700;}
+    .mod-link{display:inline-block;margin-top:12px;color:var(--gold2);font-weight:600;font-size:13px;}
+
+    /* ----- Bottom CTA ----- */
+    .cta-band{padding:90px 5%;text-align:center;background:radial-gradient(800px 400px at 50% 50%,
+        rgba(201,160,48,.18),transparent 70%),var(--navy2);}
+    .cta-band h2{font-family:'Cinzel',serif;font-size:clamp(1.8rem,3.6vw,2.8rem);color:var(--cream);
+        margin-bottom:14px;line-height:1.2;}
+    .cta-band p{color:var(--muted);font-size:1.05rem;margin-bottom:30px;max-width:640px;margin-left:auto;
+        margin-right:auto;line-height:1.55;}
+    .cta-form{max-width:520px;margin:0 auto;display:flex;gap:8px;background:var(--navy3);padding:6px;
+        border-radius:9999px;border:1px solid var(--border);}
+    .cta-form input{flex:1;background:transparent;border:none;color:var(--cream);padding:0 18px;
+        font-size:14px;outline:none;}
+    .cta-form input::placeholder{color:var(--muted);}
+    .cta-perks{margin-top:30px;display:flex;justify-content:center;gap:30px;flex-wrap:wrap;color:var(--muted);
+        font-size:13px;}
+    .cta-perks strong{color:var(--gold2);font-family:'Cinzel',serif;font-weight:700;font-size:15px;
+        display:block;}
+    .cta-fine{margin-top:24px;font-size:11.5px;color:var(--muted);}
+
+    /* ----- Footer ----- */
+    footer{background:var(--navy);border-top:1px solid var(--bdl);padding:60px 5% 30px;}
+    .ft-grid{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:40px;
+        margin-bottom:50px;}
+    @media(max-width:780px){.ft-grid{grid-template-columns:1fr 1fr;gap:34px;}}
+    .ft-h{font-size:11.5px;color:var(--gold2);font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+        margin-bottom:14px;}
+    .ft-col p{color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:18px;}
+    .ft-col a{display:block;color:var(--muted);font-size:13.5px;padding:5px 0;transition:color .15s;}
+    .ft-col a:hover{color:var(--gold2);}
+    .ft-social{display:flex;gap:10px;margin-top:14px;}
+    .ft-social a{width:36px;height:36px;border-radius:50%;background:var(--navy3);border:1px solid var(--bdl);
+        display:inline-flex;align-items:center;justify-content:center;padding:0;color:var(--cream);
+        transition:.15s;}
+    .ft-social a:hover{border-color:var(--gold);color:var(--gold2);background:rgba(201,160,48,.08);}
+    .ft-bar{max-width:1200px;margin:0 auto;border-top:1px solid var(--bdl);padding-top:24px;
+        display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--muted);}
+    .ft-bar-r a{color:var(--muted);margin-left:18px;}
+    .ft-disc{max-width:1200px;margin:24px auto 0;font-size:11px;color:var(--muted);line-height:1.55;
+        opacity:.75;}
   </style>
 </head>
 <body>
 
-<div id="tarena-nav"></div>
-
-<!-- HERO -->
-<div class="hero">
-  <div class="hero-left">
-    <div class="badge"><span class="live-dot"></span> ASX + CRYPTO LIVE · <span id="market-clock">11:16 PM AEST</span></div>
-    <h1>Sharpen your<br><em>trading edge.</em></h1>
-    <p>Paper trade real ASX stocks, US shares &amp; crypto.<br>Zero risk. Real-time prices. Campus leagues. Built for serious traders.</p>
-    <button id="arenaBtn" class="btn-gold lg" onclick="enterArena()">
-      <span id="arenaBtnLabel">Start trading</span>
-      <i class="fa-solid fa-arrow-right"></i>
-    </button>
-    <div class="stats-row">
-      <div><strong class="text-green">4,872</strong> traders online</div>
-      <div><strong>$2.4M</strong> paper volume today</div>
-      <div>Next campus league: <strong class="text-gold">USYD vs UNSW</strong> in 47h</div>
-    </div>
-  </div>
-
-  <div class="hero-right">
-    <div class="ticker-pill" id="live-ticker"></div>
-    <div class="card" style="max-width:440px;margin:0 auto;">
-      <div style="display:flex;justify-content:space-between;margin-bottom:20px;">
-        <div><strong>BHP.AX</strong> <span class="text-muted" style="font-size:12px;">BHP Group · ASX</span></div>
-        <div class="text-green mono" id="hero-price">$43.82 <span style="font-size:12px;">+2.02%</span></div>
-      </div>
-      <div style="height:220px;background:linear-gradient(180deg,#0a1830,#091528);border-radius:16px;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;letter-spacing:6px;color:var(--gold2);font-size:32px;border:1px solid var(--bdl);position:relative;overflow:hidden;">
-        <svg viewBox="0 0 400 200" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;">
-          <polyline fill="none" stroke="#c9a030" stroke-width="2" stroke-linejoin="round" points="0,140 30,130 60,135 90,120 120,125 150,110 180,115 210,90 240,95 270,75 300,80 330,60 360,65 400,50"/>
-          <polyline fill="none" stroke="#4ade80" stroke-width="1" opacity=".4" stroke-dasharray="3,3" points="0,150 400,80"/>
-        </svg>
-        <span style="position:relative;z-index:1;text-shadow:0 4px 24px rgba(0,0,0,.6);">LIVE CHART</span>
-      </div>
-      <div style="margin-top:20px;font-size:13px;display:flex;justify-content:space-between;color:var(--muted);">
-        <div>Your paper P&amp;L today: <span class="text-green">+$1,284</span></div>
-        <div class="badge-gold badge" style="font-size:11px;padding:3px 10px;">Paper Mode</div>
-      </div>
-    </div>
+<!-- ============================================================
+     SECTION 3 — Live market ticker
+     Empty rails are filled by TArenaUI.repaintTicker() once
+     market.js + app.js have loaded. Refreshes every 4s.
+============================================================ -->
+<div class="ta-ticker" id="taTicker" aria-label="Live market ticker">
+  <div class="ta-ticker-track">
+    <div class="ta-ticker-row"></div>
+    <div class="ta-ticker-row" aria-hidden="true"></div>
   </div>
 </div>
 
-<!-- FEATURES -->
-<section>
-  <div class="section-title">Built for Australian traders</div>
-  <div class="features-grid">
-    <div class="feature-card">
-      <i class="fa-solid fa-clapperboard"></i>
-      <h3>Strategy Reels</h3>
-      <p class="text-muted" style="line-height:1.6;">Snap a chart, pin the indicators, share your thesis. Auto paper-trade opens on publish — and one tap mirrors any setup into your account.</p>
-      <a href="reels.html" style="display:inline-block;margin-top:14px;color:var(--gold2);font-weight:600;font-size:13px;text-decoration:none;">Open the feed →</a>
+<!-- ============================================================
+     SECTION 1 — Marketing nav
+============================================================ -->
+<nav class="ln" id="lnNav">
+  <a href="index.html" class="ln-logo">
+    <svg width="28" height="32" viewBox="0 0 40 46" aria-hidden="true">
+      <path d="M20 2L36 9V22C36 31 29 39 20 43C11 39 4 31 4 22V9L20 2Z" fill="#091528" stroke="#c9a030" stroke-width="1.5"/>
+      <path d="M20 8L30 12.5V21C30 26.5 25.5 31.5 20 34C14.5 31.5 10 26.5 10 21V12.5L20 8Z" fill="none" stroke="#e8c060" stroke-width="0.75" opacity=".6"/>
+      <polyline points="12,24 17,19 20,22 28,13" fill="none" stroke="#c9a030" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    Trade<span>Arena</span>
+  </a>
+  <div class="ln-links">
+    <a href="#features">Products</a>
+    <a href="#pricing">Pricing</a>
+    <a href="schools.html">Schools</a>
+    <a href="#community">Community</a>
+    <a href="#blog">Blog</a>
+  </div>
+  <div class="ln-cta">
+    <button class="btn-ghost" onclick="goAuth('signin')">Sign In</button>
+    <button class="btn-fill" onclick="goAuth('signup')">Start Free</button>
+    <button class="ln-burger" id="burgerBtn" aria-label="Menu"><i class="fa-solid fa-bars"></i></button>
+  </div>
+</nav>
+
+<div class="mm" id="mobileMenu">
+  <button class="mm-close" id="mmClose" aria-label="Close menu"><i class="fa-solid fa-xmark"></i></button>
+  <a href="#features">Products</a>
+  <a href="#pricing">Pricing</a>
+  <a href="schools.html">Schools</a>
+  <a href="#community">Community</a>
+  <a href="#blog">Blog</a>
+  <button class="btn-fill" style="margin-top:14px;align-self:flex-start;" onclick="goAuth('signup')">Start Free →</button>
+</div>
+
+<!-- ============================================================
+     SECTION 2 — Hero
+============================================================ -->
+<section class="hero">
+  <div class="hero-grid">
+    <div>
+      <div class="h-pill"><span class="live-dot"></span> Sydney Beta · 347 students on waitlist</div>
+      <h1 class="h-headline">Trade. Battle.<br><em>Dominate.</em></h1>
+      <p class="h-sub">
+        Australia's first campus trading arena. Paper trade real stocks,
+        crypto &amp; forex. Compete against every uni in the country.
+      </p>
+      <div class="h-ctas">
+        <button class="btn-lg gold" onclick="goAuth('signup')">Start Trading Free <i class="fa-solid fa-arrow-right"></i></button>
+        <button class="btn-lg ghost" onclick="document.getElementById('howit').scrollIntoView({behavior:'smooth'})">
+          <i class="fa-solid fa-play"></i> Watch How It Works
+        </button>
+      </div>
+      <div class="h-trust">
+        <span><i class="fa-solid fa-check"></i> $0 brokerage</span>
+        <span><i class="fa-solid fa-check"></i> $1 min trade</span>
+        <span><i class="fa-solid fa-check"></i> ASIC regulated partners</span>
+        <span><i class="fa-solid fa-check"></i> .edu.au only</span>
+      </div>
     </div>
-    <div class="feature-card">
-      <i class="fa-solid fa-trophy"></i>
-      <h3>Campus Leagues</h3>
-      <p class="text-muted" style="line-height:1.6;">Real-time rankings. USYD vs UNSW vs UQ every week. Win bragging rights and real prizes.</p>
-    </div>
-    <div class="feature-card">
-      <i class="fa-solid fa-chart-line"></i>
-      <h3>Pro TradingView Charts</h3>
-      <p class="text-muted" style="line-height:1.6;">Real ASX, US &amp; crypto data. Zero fees. Fractional shares from $1. Full portfolio analytics.</p>
-    </div>
-    <div class="feature-card">
-      <i class="fa-solid fa-shield-halved"></i>
-      <h3>Zero Risk, Real Skills</h3>
-      <p class="text-muted" style="line-height:1.6;">$50,000 paper cash to start. Trade like a pro without burning real money. Practice → graduate.</p>
+
+    <!-- Hero mockup of trade.html dashboard -->
+    <div class="h-mock">
+      <div class="float-card fc-1"><i class="fa-solid fa-arrow-trend-up"></i> <span><strong>BHP</strong> +2.27% today</span></div>
+      <div class="float-card fc-2"><i class="fa-solid fa-wallet"></i> <span>Your portfolio <strong style="color:var(--green);">+$124</strong></span></div>
+      <div class="float-card fc-3"><i class="fa-solid fa-trophy"></i> <span>Rank <strong>#3</strong> at UNSW</span></div>
+      <div class="mockup">
+        <div class="mk-head">
+          <div class="mk-sym">BHP.AX <span class="small">BHP Group · ASX</span></div>
+          <div class="mk-px" id="hMockPx">$54.94 <span class="pct">+2.27%</span></div>
+        </div>
+        <div class="mk-chart">
+          <svg viewBox="0 0 400 200" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="gArea" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#e8c060" stop-opacity=".35"/>
+                <stop offset="100%" stop-color="#e8c060" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,150 L30,140 L60,145 L90,125 L120,130 L150,115 L180,118 L210,95 L240,98 L270,75 L300,82 L330,60 L360,68 L400,50 L400,200 L0,200 Z" fill="url(#gArea)"/>
+            <polyline fill="none" stroke="#e8c060" stroke-width="2" stroke-linejoin="round"
+              points="0,150 30,140 60,145 90,125 120,130 150,115 180,118 210,95 240,98 270,75 300,82 330,60 360,68 400,50"/>
+          </svg>
+        </div>
+        <div class="mk-wl">
+          <div class="mk-wl-it"><span class="s">CBA</span><span class="p">$112.45</span><span class="c" style="color:var(--green);">+1.2%</span></div>
+          <div class="mk-wl-it"><span class="s">AAPL</span><span class="p">$280.14</span><span class="c" style="color:var(--green);">+0.8%</span></div>
+          <div class="mk-wl-it"><span class="s">BTC</span><span class="p">$64,320</span><span class="c" style="color:var(--red);">-0.4%</span></div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- LEADERBOARD -->
-<section style="background:var(--navy2);">
-  <div class="section-title">This week's top traders</div>
-  <div class="card-flat" style="max-width:900px;margin:0 auto;padding:36px;">
-    <table class="tarena">
+<!-- ============================================================
+     SECTION 4 — Trust numbers (counters)
+     (Section 3 — live ticker — is the global ticker injected by
+     TArenaUI.repaintTicker() above the marketing nav.)
+============================================================ -->
+<div class="trust">
+  <div class="trust-grid">
+    <div class="trust-it"><div class="trust-n" data-count="347" data-suffix="+">0</div><div class="trust-l">Students on waitlist</div></div>
+    <div class="trust-it"><div class="trust-n" data-prefix="$" data-count="1">$0</div><div class="trust-l">Minimum trade</div></div>
+    <div class="trust-it"><div class="trust-n" data-count="4">0</div><div class="trust-l">Universities in battle</div></div>
+    <div class="trust-it"><div class="trust-n" data-prefix="$" data-count="100">$0</div><div class="trust-l">Weekly prize pool</div></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SECTION 5 — Features
+============================================================ -->
+<section class="sec" id="features">
+  <div class="sec-head">
+    <h2>Everything you need to trade smart</h2>
+    <p>Six features built for Australian uni students. From your first paper trade to launching real money — we've got the rails.</p>
+  </div>
+  <div class="filters" id="featFilters">
+    <button class="f-tab on" data-cat="all">All</button>
+    <button class="f-tab" data-cat="trading">Trading</button>
+    <button class="f-tab" data-cat="learning">Learning</button>
+    <button class="f-tab" data-cat="competition">Competition</button>
+    <button class="f-tab" data-cat="community">Community</button>
+  </div>
+  <div class="feat-grid" id="featGrid">
+    <div class="feat" data-cat="trading">
+      <span class="feat-badge b-free">Free</span>
+      <div class="feat-icon"><i class="fa-solid fa-chart-line"></i></div>
+      <h3>Live Paper Trading</h3>
+      <p>Trade real ASX, US stocks &amp; crypto with $25,000 virtual cash.</p>
+    </div>
+    <div class="feat" data-cat="competition">
+      <span class="feat-badge b-live">Live</span>
+      <div class="feat-icon"><i class="fa-solid fa-trophy"></i></div>
+      <h3>Campus Battle Leagues</h3>
+      <p>USyd vs UNSW. Weekly $100 prize for the top trader on every campus.</p>
+    </div>
+    <div class="feat" data-cat="learning">
+      <span class="feat-badge b-free">Free</span>
+      <div class="feat-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+      <h3>School of Trading</h3>
+      <p>Six modules from the basics to advanced technical analysis.</p>
+    </div>
+    <div class="feat" data-cat="trading">
+      <span class="feat-badge b-live">Live</span>
+      <div class="feat-icon"><i class="fa-solid fa-tower-broadcast"></i></div>
+      <h3>Live Market Prices</h3>
+      <p>Real-time ASX, S&amp;P 500, crypto &amp; forex data via direct exchange feeds.</p>
+    </div>
+    <div class="feat" data-cat="community">
+      <span class="feat-badge b-soon">Coming Soon</span>
+      <div class="feat-icon"><i class="fa-solid fa-users"></i></div>
+      <h3>Social Portfolios</h3>
+      <p>Follow top traders. See exactly what USyd's best are buying right now.</p>
+    </div>
+    <div class="feat" data-cat="trading">
+      <span class="feat-badge b-soon">Coming Soon</span>
+      <div class="feat-icon"><i class="fa-solid fa-coins"></i></div>
+      <h3>Real Money Trading</h3>
+      <p>When you're ready — launch with $1 via our ASIC-regulated brokers.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 6 — How it works
+============================================================ -->
+<section class="sec" id="howit" style="background:var(--navy2);">
+  <div class="sec-head">
+    <h2>From zero to invested in 3 steps</h2>
+    <p>No paperwork. No deposit. Just your student email and a sense of humour.</p>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-n">01</div>
+      <h3>Sign up</h3>
+      <p>Verify with your <strong>.edu.au</strong> email. Instant access — no waiting list, no broker forms.</p>
+      <i class="fa-solid fa-envelope-circle-check"></i>
+    </div>
+    <div class="step">
+      <div class="step-n">02</div>
+      <h3>Get $25,000 paper cash</h3>
+      <p>Land in the Markets tab and start trading immediately. Real prices, zero risk.</p>
+      <i class="fa-solid fa-sack-dollar"></i>
+    </div>
+    <div class="step">
+      <div class="step-n">03</div>
+      <h3>Climb the leaderboard</h3>
+      <p>Outperform your campus, win <strong>real cash</strong> prizes weekly.</p>
+      <i class="fa-solid fa-medal"></i>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 7 — Leaderboard preview
+============================================================ -->
+<section class="sec">
+  <div class="sec-head">
+    <h2>Live Campus Rankings</h2>
+    <p>Updated in real-time. Where does your uni stand?</p>
+  </div>
+  <div class="lb-wrap">
+    <table class="lb-table">
       <thead>
         <tr>
-          <th>Rank</th><th>Trader</th><th>University</th><th class="text-right">P&amp;L This Week</th>
+          <th>Rank</th>
+          <th>University</th>
+          <th>Return</th>
+          <th class="col-avg">Avg Portfolio</th>
+          <th>Status</th>
         </tr>
       </thead>
       <tbody>
-        <tr><td><span class="text-gold mono">#1</span></td><td>@alexchen07</td><td>UNSW</td><td class="text-right text-green mono">+$14,820</td></tr>
-        <tr><td><span class="text-gold mono">#2</span></td><td>@sydneytrader22</td><td>USYD</td><td class="text-right text-green mono">+$9,410</td></tr>
-        <tr><td><span class="text-gold mono">#3</span></td><td>@cryptoqueen_mq</td><td>Macquarie</td><td class="text-right text-green mono">+$7,650</td></tr>
-        <tr><td><span class="mono text-muted">#4</span></td><td>@uts_bull</td><td>UTS</td><td class="text-right text-green mono">+$5,320</td></tr>
-        <tr><td><span class="mono text-muted">#5</span></td><td>@grok_grad</td><td>ANU</td><td class="text-right text-green mono">+$4,980</td></tr>
+        <tr>
+          <td><span class="rank">#1</span></td>
+          <td class="uni">UNSW</td>
+          <td class="ret">+18.4%</td>
+          <td class="avg col-avg">$28,640</td>
+          <td><span class="lb-status" style="background:rgba(248,113,113,.18);color:var(--red);">Live</span></td>
+        </tr>
+        <tr>
+          <td><span class="rank">#2</span></td>
+          <td class="uni">University of Sydney</td>
+          <td class="ret">+15.2%</td>
+          <td class="avg col-avg">$27,830</td>
+          <td><span class="lb-status" style="background:rgba(248,113,113,.18);color:var(--red);">Live</span></td>
+        </tr>
+        <tr>
+          <td><span class="rank">#3</span></td>
+          <td class="uni">UTS</td>
+          <td class="ret">+12.7%</td>
+          <td class="avg col-avg">$26,450</td>
+          <td><span class="lb-status" style="background:rgba(232,192,96,.18);color:var(--gold2);">Beta</span></td>
+        </tr>
+        <tr>
+          <td><span class="rank">#4</span></td>
+          <td class="uni">Macquarie</td>
+          <td class="ret">+9.8%</td>
+          <td class="avg col-avg">$25,720</td>
+          <td><span class="lb-status" style="background:rgba(232,192,96,.18);color:var(--gold2);">Beta</span></td>
+        </tr>
+        <tr>
+          <td><span class="rank">#5</span></td>
+          <td class="uni">Monash</td>
+          <td class="ret">—</td>
+          <td class="avg col-avg">—</td>
+          <td><span class="lb-status" style="background:rgba(168,193,219,.12);color:var(--muted);">Soon</span></td>
+        </tr>
       </tbody>
     </table>
   </div>
+  <div class="lb-cta">
+    <button class="btn-lg gold" onclick="goAuth('signup')">Join the Arena <i class="fa-solid fa-arrow-right"></i></button>
+  </div>
 </section>
 
-<div id="tarena-footer"></div>
+<!-- ============================================================
+     SECTION 8 — Testimonials
+============================================================ -->
+<section class="sec" id="community" style="background:var(--navy2);">
+  <div class="sec-head">
+    <h2>What students are saying</h2>
+    <p>Beta testers across four Sydney universities, in their own words.</p>
+  </div>
+  <div class="test-grid">
+    <div class="test">
+      <div class="test-stars">★★★★★</div>
+      <p class="test-q">"Finally a trading app built for students, not Wall Street suits."</p>
+      <div class="test-who">
+        <div class="test-av">AP</div>
+        <div class="test-meta"><strong>Alex P.</strong>University of Sydney · Finance</div>
+      </div>
+    </div>
+    <div class="test">
+      <div class="test-stars">★★★★★</div>
+      <p class="test-q">"Made $340 in virtual gains my first week. The charts are actually professional."</p>
+      <div class="test-who">
+        <div class="test-av">SK</div>
+        <div class="test-meta"><strong>Sarah K.</strong>UNSW · Commerce</div>
+      </div>
+    </div>
+    <div class="test">
+      <div class="test-stars">★★★★★</div>
+      <p class="test-q">"The campus leaderboard is addictive. Our whole cohort is competing now."</p>
+      <div class="test-who">
+        <div class="test-av">ML</div>
+        <div class="test-meta"><strong>Mike L.</strong>UTS · Economics</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 9 — School preview
+============================================================ -->
+<section class="sec">
+  <div class="sec-head">
+    <h2>Learn to trade. Earn paper capital.</h2>
+    <p>Complete modules, unlock bonus cash, climb the leaderboard.</p>
+  </div>
+  <div class="mods-grid">
+    <div class="mod">
+      <div class="mod-img"><i class="fa-solid fa-book-open"></i></div>
+      <div class="mod-body">
+        <span class="mod-diff beg">Beginner</span>
+        <h3>Markets 101</h3>
+        <p>Order types, bid/ask spreads, ticker symbols, ASX basics. Start here.</p>
+        <div class="mod-meta"><span>0 / 8 lessons</span><span class="reward">+$500 paper</span></div>
+        <a class="mod-link" href="schools.html">Start Learning →</a>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="mod-img"><i class="fa-solid fa-chart-line"></i></div>
+      <div class="mod-body">
+        <span class="mod-diff int">Intermediate</span>
+        <h3>Technical Analysis</h3>
+        <p>Candlesticks, support &amp; resistance, EMAs and RSI in plain English.</p>
+        <div class="mod-meta"><span>0 / 12 lessons</span><span class="reward">+$1,000 paper</span></div>
+        <a class="mod-link" href="schools.html">Start Learning →</a>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="mod-img"><i class="fa-solid fa-shield-halved"></i></div>
+      <div class="mod-body">
+        <span class="mod-diff adv">Advanced</span>
+        <h3>Risk &amp; Position Sizing</h3>
+        <p>Kelly criterion, R-multiples, when to cut a loser. The unsexy stuff that keeps you alive.</p>
+        <div class="mod-meta"><span>0 / 10 lessons</span><span class="reward">+$2,000 paper</span></div>
+        <a class="mod-link" href="schools.html">Start Learning →</a>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:34px;">
+    <a href="schools.html" style="color:var(--gold2);font-weight:700;font-size:14px;">Browse all modules →</a>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 10 — Bottom CTA
+============================================================ -->
+<section class="cta-band" id="pricing">
+  <h2>The first 500 warriors trade free. Forever.</h2>
+  <p>Plus $10 bonus credit when live trading launches. No credit card. No catch. Just your student email.</p>
+  <form class="cta-form" id="ctaForm" onsubmit="enterArenaWithEmail(event)">
+    <label for="ctaEmail" class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">Student email address</label>
+    <input type="email" id="ctaEmail" placeholder="your@student.edu.au" required>
+    <button type="submit" class="btn-fill" style="padding:13px 22px;">Enter the Arena <i class="fa-solid fa-arrow-right"></i></button>
+  </form>
+  <div class="cta-perks">
+    <div><strong>$0</strong>Brokerage</div>
+    <div><strong>$10</strong>Signup Bonus</div>
+    <div><strong>$1</strong>Min Trade</div>
+  </div>
+  <div class="cta-fine">Paper trading available now · Live trading coming soon · ASIC regulated partners</div>
+</section>
+
+<!-- ============================================================
+     SECTION 11 — Footer
+============================================================ -->
+<footer id="blog">
+  <div class="ft-grid">
+    <div class="ft-col">
+      <a href="index.html" class="ln-logo" style="margin-bottom:14px;">
+        <svg width="26" height="30" viewBox="0 0 40 46" aria-hidden="true">
+          <path d="M20 2L36 9V22C36 31 29 39 20 43C11 39 4 31 4 22V9L20 2Z" fill="#091528" stroke="#c9a030" stroke-width="1.5"/>
+          <polyline points="12,24 17,19 20,22 28,13" fill="none" stroke="#c9a030" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        Trade<span>Arena</span>
+      </a>
+      <p>Strategy-first paper trading for Australian uni students. ASX, US &amp; crypto. Zero risk. Built in Sydney.</p>
+      <div class="ft-social">
+        <a href="#" aria-label="Twitter / X"><i class="fa-brands fa-x-twitter"></i></a>
+        <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+        <a href="#" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>
+        <a href="#" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+        <a href="mailto:hello@tradearena.app" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
+      </div>
+    </div>
+    <div class="ft-col">
+      <div class="ft-h">Product</div>
+      <a href="trade.html">Markets</a>
+      <a href="schools.html">Learn</a>
+      <a href="schools.html">School</a>
+      <a href="portfolio.html">Portfolio</a>
+      <a href="#">Leaderboard</a>
+    </div>
+    <div class="ft-col">
+      <div class="ft-h">Company</div>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a href="careers.html">Careers</a>
+      <a href="press.html">Press</a>
+      <a href="#">Blog</a>
+    </div>
+    <div class="ft-col">
+      <div class="ft-h">Legal</div>
+      <a href="terms.html">Terms of Use</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="risk.html">Risk Disclaimer</a>
+      <a href="cookies.html">Cookie Policy</a>
+    </div>
+  </div>
+  <div class="ft-bar">
+    <div>© 2026 TradeArena Pty Ltd · Made with care in Sydney, Australia</div>
+    <div class="ft-bar-r"><a href="#">Status</a><a href="#">Changelog</a><a href="#">Security</a></div>
+  </div>
+  <div class="ft-disc">
+    TradeArena is an educational paper-trading platform. All trades are simulated — no real money is at risk.
+    Nothing on this site constitutes financial product advice. Market data is provided by third-party sources
+    and may be delayed. TradeArena Pty Ltd is not an AFSL holder.
+  </div>
+</footer>
 
 <script src="assets/config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -127,50 +725,129 @@
 <script src="assets/app.js"></script>
 <script src="assets/market.js"></script>
 <script>
-  TArenaUI.renderNav('home');
-  TArenaUI.renderFooter();
+  /* ----- Scroll-aware nav ----- */
+  const lnNav = document.getElementById('lnNav');
+  window.addEventListener('scroll', () => {
+    lnNav.classList.toggle('scrolled', window.scrollY > 8);
+  });
 
-  function refreshHero() {
-    const session = TArenaAuth.getSession();
-    const lbl = document.getElementById('arenaBtnLabel');
-    if (lbl) lbl.textContent = session ? 'Open Your Profile' : 'Enter The Arena';
-  }
-  refreshHero();
-  TArenaAuth.onAuthChange(refreshHero);
+  /* ----- Mobile menu ----- */
+  const burger = document.getElementById('burgerBtn');
+  const mm     = document.getElementById('mobileMenu');
+  const mmCls  = document.getElementById('mmClose');
+  burger.addEventListener('click', () => mm.classList.add('open'));
+  mmCls .addEventListener('click', () => mm.classList.remove('open'));
+  mm.querySelectorAll('a').forEach(a => a.addEventListener('click', () => mm.classList.remove('open')));
 
-  function enterArena() {
-    if (TArenaAuth.getSession()) window.location.href = 'profile.html';
-    else window.location.href = 'auth.html';
+  /* ----- Smooth scroll for in-page anchors ----- */
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const id = a.getAttribute('href').slice(1);
+      const el = id && document.getElementById(id);
+      if (!el) return;
+      e.preventDefault();
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  /* ----- Auth routing -----
+     Logged-in users go straight to the trading app; new visitors hit
+     the auth page in the requested mode (sign-in vs sign-up). */
+  function goAuth(mode){
+    if (window.TArenaAuth?.getSession()) { window.location.href = 'trade.html'; return; }
+    window.location.href = mode === 'signin' ? 'auth.html?mode=signin' : 'auth.html?mode=signup';
+  }
+  function enterArenaWithEmail(ev){
+    ev.preventDefault();
+    const email = document.getElementById('ctaEmail').value.trim();
+    if (!email) return;
+    if (window.TArenaAuth?.getSession()) { window.location.href = 'trade.html'; return; }
+    // Stash the email so the auth page can pre-fill the sign-up form.
+    try { sessionStorage.setItem('ta_pending_email', email); } catch(_){}
+    window.location.href = 'auth.html?mode=signup&email=' + encodeURIComponent(email);
   }
 
-  // Live ticker
-  const tickerEl = document.getElementById('live-ticker');
-  function renderTicker() {
-    const items = TArenaMarket.byMarket('all').slice(0, 5);
-    tickerEl.innerHTML = items.map(t => `
-      <span style="display:inline-flex;gap:8px;align-items:center;">
-        <strong>${t.symbol}</strong>
-        <span>${t.price < 100 ? t.price.toFixed(2) : t.price.toLocaleString()}</span>
-        <span style="color:${t.change > 0 ? 'var(--green)' : 'var(--red)'};">${t.change > 0 ? '↑' : '↓'} ${Math.abs(t.change).toFixed(2)}%</span>
-      </span>`).join('');
+  /* ----- Counter animation on scroll -----
+     Each .trust-n carries data-count (target), data-prefix and
+     data-suffix. Numbers animate over 1.4s once the trust band
+     enters view. */
+  function animateCount(el){
+    const target = +el.dataset.count;
+    const prefix = el.dataset.prefix || '';
+    const suffix = el.dataset.suffix || '';
+    const dur = 1400, t0 = performance.now();
+    function step(now){
+      const k = Math.min(1, (now - t0) / dur);
+      // ease-out cubic for a satisfying landing
+      const eased = 1 - Math.pow(1 - k, 3);
+      const v = Math.round(target * eased);
+      el.textContent = prefix + v.toLocaleString() + suffix;
+      if (k < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
   }
-  function updateHeroPrice() {
-    const bhp = TArenaMarket.find('BHP.AX');
+  const countObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        animateCount(e.target);
+        countObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: .4 });
+  document.querySelectorAll('.trust-n').forEach(el => countObs.observe(el));
+
+  /* ----- Feature stagger fade-in ----- */
+  const featObs = new IntersectionObserver(entries => {
+    entries.forEach((e,i) => {
+      if (e.isIntersecting) {
+        // Cards stagger in with a small delay multiplied by their position.
+        setTimeout(() => e.target.classList.add('in'),
+          [...document.querySelectorAll('.feat')].indexOf(e.target) * 80);
+        featObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: .15 });
+  document.querySelectorAll('.feat').forEach(el => featObs.observe(el));
+
+  /* ----- Feature category filter ----- */
+  document.querySelectorAll('#featFilters .f-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#featFilters .f-tab').forEach(b => b.classList.remove('on'));
+      btn.classList.add('on');
+      const cat = btn.dataset.cat;
+      document.querySelectorAll('#featGrid .feat').forEach(card => {
+        const show = cat === 'all' || card.dataset.cat === cat;
+        card.style.display = show ? '' : 'none';
+      });
+    });
+  });
+
+  /* ----- Hero mockup price ticker -----
+     Pulls BHP.AX from the simulated TArenaMarket feed so the mockup
+     price lines up with the rest of the site. Refreshes every 6s. */
+  function refreshMockPrice(){
+    if (!window.TArenaMarket) return;
+    const bhp = window.TArenaMarket.find('BHP.AX');
     if (!bhp) return;
-    const el = document.getElementById('hero-price');
-    el.innerHTML = `$${bhp.price.toFixed(2)} <span style="font-size:12px;">${bhp.change > 0 ? '+' : ''}${bhp.change.toFixed(2)}%</span>`;
-    el.className = 'mono ' + (bhp.change > 0 ? 'text-green' : 'text-red');
+    const el = document.getElementById('hMockPx');
+    const up = bhp.change >= 0;
+    el.style.color = up ? 'var(--green)' : 'var(--red)';
+    el.innerHTML = '$' + bhp.price.toFixed(2) +
+      ' <span class="pct">' + (up ? '+' : '') + bhp.change.toFixed(2) + '%</span>';
   }
-  function updateClock() {
-    const opts = { timeZone: 'Australia/Sydney', hour: 'numeric', minute: '2-digit', hour12: true };
-    document.getElementById('market-clock').textContent = new Date().toLocaleTimeString('en-AU', opts) + ' AEST';
-  }
+  refreshMockPrice();
+  setInterval(() => { window.TArenaMarket && window.TArenaMarket.tick(); refreshMockPrice(); }, 6000);
 
-  renderTicker(); updateHeroPrice(); updateClock();
-  setInterval(() => { TArenaMarket.tick(); renderTicker(); updateHeroPrice(); }, 4000);
-  setInterval(updateClock, 30000);
+  /* ----- Global ticker strip -----
+     Section 3 of the spec. The #taTicker rails are pre-rendered in
+     markup (so they stick above the nav from first paint); we just
+     fill them with the latest TArenaMarket prices and refresh on
+     every market tick. */
+  function paintTicker(){ window.TArenaUI?.repaintTicker && window.TArenaUI.repaintTicker(); }
+  paintTicker();
+  setInterval(() => { window.TArenaMarket?.tick(); paintTicker(); }, 4000);
 
-  console.log('%cTradeArena · Welcome back.', 'color:#e8c060;font-size:14px;font-weight:700;');
+  console.log('%cTradeArena · Welcome.', 'color:#e8c060;font-size:14px;font-weight:700;');
 </script>
 </body>
 </html>

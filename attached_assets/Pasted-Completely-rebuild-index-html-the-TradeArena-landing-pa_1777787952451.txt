@@ -1,0 +1,268 @@
+Completely rebuild index.html — the TradeArena landing page.
+
+INSPIRATION:
+- Zerodha: Clean, minimal, trust-first, professional fintech
+- WebVeda: Bold hero, course/feature cards grid, 
+  social proof numbers, category filters
+- Combined in TradeArena's navy/gold theme
+
+STRICT RULES:
+- Keep exact CSS variables (navy, gold, cream, muted)
+- Keep Cinzel + DM Sans fonts
+- Keep TradeArena logo and branding
+- This is the PUBLIC landing page — no auth required
+- After sign up → goes to trade.html (the app)
+
+══════════════════════════════════════
+SECTION 1 — NAVIGATION (Zerodha style)
+══════════════════════════════════════
+Minimal, clean, sticky header:
+- Left: TradeArena logo (shield + text)
+- Center: Products | Pricing | Schools | Community | Blog
+- Right: "Sign In" (ghost button) + "Start Free" (gold filled button)
+- On scroll: subtle navy background + gold border appears
+- Mobile: hamburger menu
+
+══════════════════════════════════════
+SECTION 2 — HERO (WebVeda bold style)
+══════════════════════════════════════
+Full viewport height hero:
+
+Small badge above heading:
+[🔴 LIVE] Sydney Beta · 347 students on waitlist
+
+Main heading (huge, Cinzel font):
+"Trade. Battle.
+ Dominate."
+
+Subheading (DM Sans, muted):
+"Australia's first campus trading arena. 
+Paper trade real stocks, crypto & forex.
+Compete against every uni in the country."
+
+Two CTAs side by side:
+[Start Trading Free →] (gold filled, large)
+[Watch How It Works ▷] (ghost, with play icon)
+
+Trust bar below CTAs (like Zerodha):
+✓ $0 brokerage   ✓ $1 min trade   
+✓ ASIC regulated partners   ✓ .edu.au only
+
+Right side of hero:
+- Animated mockup of the trade.html dashboard
+- Show the candlestick chart + watchlist
+- Subtle glow effect behind it
+- Floating cards showing:
+  → "BHP +2.27% today"
+  → "Your portfolio +$124"
+  → "Rank #3 at UNSW"
+
+Background:
+- Deep navy #060e1c
+- Subtle diagonal lines (keep from current)
+- Gold radial glow from top center
+
+══════════════════════════════════════
+SECTION 3 — LIVE TICKER (keep existing)
+══════════════════════════════════════
+Scrolling ticker bar with live prices
+BTC | ETH | AAPL | BHP.AX | TSLA | SOL
+
+══════════════════════════════════════
+SECTION 4 — TRUST NUMBERS (Zerodha style)
+══════════════════════════════════════
+4 stats in a row, clean and minimal:
+- 347+ Students on waitlist
+- $1 Minimum trade
+- 4 Universities in battle  
+- $100 Weekly prize pool
+
+Animated counter on scroll (already exists, keep it)
+Thin gold dividers between stats
+
+══════════════════════════════════════
+SECTION 5 — WHAT YOU GET (WebVeda courses style)
+══════════════════════════════════════
+Heading: "Everything you need to trade smart"
+
+Filter tabs (like WebVeda category filters):
+[All] [Trading] [Learning] [Competition] [Community]
+
+6 Feature cards in 3x2 grid (like WebVeda course cards):
+Each card has:
+- Gold icon
+- Feature name (Cinzel, bold)
+- 1 line description
+- Small badge ("Free" or "Live" or "Coming Soon")
+
+Cards:
+1. Live Paper Trading
+   Trade real ASX, US stocks & crypto with $25,000 virtual cash
+   Badge: [FREE]
+
+2. Campus Battle Leagues  
+   USyd vs UNSW. Weekly $100 prize for top trader
+   Badge: [LIVE]
+
+3. School of Trading
+   6 modules from basics to advanced technical analysis
+   Badge: [FREE]
+
+4. Live Market Prices
+   Real-time ASX, S&P500, crypto & forex via live feeds
+   Badge: [LIVE]
+
+5. Social Portfolios
+   Follow top traders. See what USyd's best are buying
+   Badge: [COMING SOON]
+
+6. Real Money Trading
+   When you're ready — launch with $1 via ASIC brokers
+   Badge: [COMING SOON]
+
+Card hover: gold border appears, slight lift effect
+
+══════════════════════════════════════
+SECTION 6 — HOW IT WORKS (Zerodha simple steps)
+══════════════════════════════════════
+Heading: "From zero to invested in 3 steps"
+
+3 horizontal steps (not vertical):
+Step 1: Sign up with your .edu.au email → Instant verification
+Step 2: Get $25,000 virtual cash → Start paper trading immediately  
+Step 3: Climb the leaderboard → Win real cash prizes weekly
+
+Each step: large number (gold), title, description, icon
+
+══════════════════════════════════════
+SECTION 7 — LEADERBOARD PREVIEW
+══════════════════════════════════════
+Heading: "Live Campus Rankings"
+Subheading: "Updated in real-time. Where does your uni stand?"
+
+Show the leaderboard table (keep from existing index.html):
+Rank | University | Return | Avg Portfolio | Status
+Keep the Live/Beta/Soon badges
+
+Gold "Join the Arena" CTA button below table
+
+══════════════════════════════════════
+SECTION 8 — SOCIAL PROOF (WebVeda style)
+══════════════════════════════════════
+Heading: "What students are saying"
+
+3 testimonial cards (placeholder — real ones come later):
+Card 1:
+"Finally a trading app built for students, not Wall Street suits."
+— Alex P., University of Sydney · Finance Student
+
+Card 2:  
+"Made $340 in virtual gains my first week. The charts are 
+actually professional."
+— Sarah K., UNSW · Commerce Student
+
+Card 3:
+"The campus leaderboard is addictive. Our whole cohort 
+is competing now."
+— Mike L., UTS · Economics Student
+
+Each card: navy2 background, gold left border, 
+avatar initials circle, star rating (5 stars)
+
+══════════════════════════════════════
+SECTION 9 — SCHOOL PREVIEW (WebVeda courses grid)
+══════════════════════════════════════
+Heading: "Learn to trade. Earn paper capital."
+Subheading: "Complete modules, unlock bonus cash, 
+climb the leaderboard"
+
+Show 3 module preview cards (WebVeda style):
+- Module image/icon (large)
+- Difficulty badge
+- Module title
+- Short description
+- "0 lessons" counter
+- Reward: "+$500 paper capital"
+- "Start Learning →" link
+
+"Browse all modules →" link below
+
+══════════════════════════════════════
+SECTION 10 — CTA SECTION (Zerodha bottom CTA)
+══════════════════════════════════════
+Full width section, centered:
+Heading: "The first 500 warriors trade free. Forever."
+Subheading: "Plus $10 bonus credit when live trading launches.
+No credit card. No catch. Just your student email."
+
+Email signup form (keep existing):
+[your@student.edu.au          ] [Enter the Arena →]
+
+Note below: 
+"Paper trading available now · Live trading coming soon 
+· ASIC regulated partners"
+
+3 perks below form:
+$0 Brokerage | $10 Signup Bonus | $1 Min Trade
+
+══════════════════════════════════════
+SECTION 11 — FOOTER (Zerodha style)
+══════════════════════════════════════
+4 column footer:
+
+Column 1: Logo + tagline + social icons
+"Strategy-first paper trading for Australian uni students.
+ASX, US & crypto. Zero risk. Built in Sydney."
+Icons: Twitter/X | Instagram | Discord | LinkedIn | Email
+
+Column 2: PRODUCT
+Markets | Learn | School | Portfolio | Leaderboard
+
+Column 3: COMPANY
+About | Contact | Careers | Press | Blog
+
+Column 4: LEGAL
+Terms of Use | Privacy Policy | Risk Disclaimer | Cookie Policy
+
+Bottom bar:
+"© 2026 TradeArena Pty Ltd · Made with care in Sydney, Australia"
+Right side: Status | Changelog | Security
+
+Legal disclaimer (small, like Zerodha):
+"TradeArena is an educational paper-trading platform. 
+All trades are simulated — no real money is at risk. 
+Nothing on this site constitutes financial product advice. 
+Market data is provided by third-party sources and may 
+be delayed. TradeArena Pty Ltd is not an AFSL holder."
+
+══════════════════════════════════════
+ANIMATIONS & INTERACTIONS:
+══════════════════════════════════════
+- Hero heading: fade up on load
+- Stats: count up animation on scroll
+- Feature cards: stagger fade in on scroll
+- Testimonials: slide in from sides
+- Leaderboard rows: highlight on hover
+- CTA button: gold shimmer animation
+- Smooth scroll for all anchor links
+- Mobile: all sections stack vertically
+
+══════════════════════════════════════
+MOBILE RESPONSIVE:
+══════════════════════════════════════
+- Hero: single column, mockup below text
+- Feature cards: 1 column on mobile, 2 on tablet
+- Leaderboard: hide avg portfolio column on mobile
+- Footer: 2 columns on mobile
+- Nav: hamburger menu slides in from right
+
+Keep all existing JavaScript functionality:
+- Email form → redirects to auth.html
+- Counter animations
+- Scroll animations
+- Smooth scroll
+
+The result should look like if Zerodha and WebVeda 
+had a baby but it went to a dark navy fintech gym 
+and came out wearing gold — professional, bold, 
+trustworthy, and built for Gen Z Australian students.
