@@ -21,11 +21,26 @@
       padding-bottom:28px;border-bottom:1px solid var(--bdl);
     }
     .pf-avatar{
-      width:104px;height:104px;border-radius:50%;
+      width:120px;height:120px;border-radius:50%;
       display:flex;align-items:center;justify-content:center;
-      color:#fff;font-family:'Cinzel',serif;font-weight:700;font-size:2.4rem;letter-spacing:.03em;
-      border:3px solid rgba(201,160,48,.45);text-shadow:0 2px 6px rgba(0,0,0,.4);
+      color:var(--navy);font-family:'Cinzel',serif;font-weight:700;font-size:2.4rem;letter-spacing:.03em;
+      border:3px solid rgba(201,160,48,.45);text-shadow:0 2px 6px rgba(0,0,0,.18);
+      position:relative;overflow:hidden;background-size:cover;background-position:center;
     }
+    .pf-avatar.editable{cursor:pointer;}
+    .pf-avatar.editable .cam-overlay{
+      position:absolute;inset:0;border-radius:50%;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+      color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;
+      background:rgba(6,14,28,.66);opacity:0;transition:opacity .15s;pointer-events:none;
+    }
+    .pf-avatar.editable:hover .cam-overlay{opacity:1;}
+    .pf-avatar.editable .cam-overlay i{font-size:18px;color:var(--gold2);}
+    .pf-avatar.uploading .cam-overlay{opacity:1;}
+    .pf-avatar.uploading .cam-overlay i{animation:spin 1s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .pf-meta-line{color:var(--muted);font-size:12px;margin-top:6px;}
+    .pf-meta-line i{color:var(--gold);margin-right:4px;}
     .pf-id .name { font-family:'Cinzel',serif;font-size:1.75rem;font-weight:700;color:var(--cream);letter-spacing:.02em; }
     .pf-id .handle { color:var(--muted);font-size:14px;margin-top:2px; }
     .pf-id .badges-row { margin-top:10px;display:flex;gap:8px;flex-wrap:wrap; }
@@ -202,6 +217,8 @@
 
 <div id="tarena-nav"></div>
 
+<input type="file" id="avatarInput" accept="image/png,image/jpeg,image/webp" style="display:none;" onchange="onAvatarPicked(event)"/>
+
 <div class="pf-shell" id="pfShell">
   <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i><div>Loading scorecard…</div></div>
 </div>
@@ -346,7 +363,7 @@
     // creating one from session metadata so the user never sees
     // "Trader not found" on their own page.
     if (isOwnProfile && session.user.id) {
-      const sel = 'id,username,display_name,tier,type,university,bio,avatar_color,badges,visibility_mask,created_at';
+      const sel = 'id,username,display_name,tier,type,university,bio,avatar_color,avatar_url,badges,visibility_mask,created_at';
       let { data: row, error: e2 } = await sb
         .from('profiles').select(sel).eq('id', session.user.id).maybeSingle();
       if (e2) { console.error('[profile] own-profile fallback error', e2); return null; }
@@ -462,10 +479,68 @@
   function avatarFor(p) {
     const fakeUser = { username: p.username, email: p.username + '@trade.local' };
     const a = TArenaUI.getAvatar(fakeUser);
-    const bg = p.avatar_color
+    // Brand-default = gold gradient (#c9a030 → #e8c060). The owner can
+    // override with a custom hex tint via Edit Profile, or — best of all
+    // — upload a photo, which renders as the actual background image.
+    const goldGrad = 'linear-gradient(135deg,#c9a030,#e8c060)';
+    const tintBg   = p.avatar_color
       ? `linear-gradient(135deg, ${p.avatar_color}, ${p.avatar_color})`
-      : a.gradient;
-    return `<div class="pf-avatar" style="background:${bg};">${a.initials}</div>`;
+      : goldGrad;
+    const bg = p.avatar_url
+      ? `url("${escapeAttr(p.avatar_url)}") center/cover, ${tintBg}`
+      : tintBg;
+    const editable = isOwnProfile ? 'editable' : '';
+    const overlay  = isOwnProfile
+      ? `<div class="cam-overlay"><i class="fa-solid fa-camera"></i><span>Change photo</span></div>`
+      : '';
+    // When a photo is set we hide the initials so they don't bleed
+    // through translucent uploads.
+    const initials = p.avatar_url ? '' : a.initials;
+    return `<div class="pf-avatar ${editable}" id="pfAvatar" style="background:${bg};"
+      ${isOwnProfile ? `onclick="document.getElementById('avatarInput').click()"` : ''}>
+      ${initials}${overlay}
+    </div>`;
+  }
+
+  // ============================================================
+  // Avatar upload — Supabase Storage `avatars` bucket
+  // ============================================================
+  async function onAvatarPicked(e) {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = ''; // allow re-picking the same file
+    if (!file) return;
+    if (!/^image\//.test(file.type)) {
+      alert('Please choose an image file (PNG, JPG, WEBP).');
+      return;
+    }
+    if (file.size > 4 * 1024 * 1024) {
+      alert('Avatar must be 4 MB or smaller.');
+      return;
+    }
+    const av = document.getElementById('pfAvatar');
+    if (av) av.classList.add('uploading');
+    try {
+      // Path is `<uid>/avatar.<ext>` so the storage RLS policy
+      // (foldername[1] = auth.uid()) allows the upload.
+      const ext  = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+      const path = `${session.user.id}/avatar.${ext}`;
+      const { error: upErr } = await sb.storage
+        .from('avatars').upload(path, file, { cacheControl: '3600', upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data: pub } = sb.storage.from('avatars').getPublicUrl(path);
+      // Bust browser cache so the freshly-uploaded image shows immediately
+      const busted = pub.publicUrl + '?t=' + Date.now();
+      const r = await TArenaAuth.saveProfile({ avatarUrl: busted });
+      if (!r.ok) throw new Error(r.error || 'save failed');
+      state.profile.avatar_url = busted;
+      render();
+    } catch (err) {
+      console.error('[profile] avatar upload failed', err);
+      alert('Upload failed: ' + (err.message || err));
+    } finally {
+      const av2 = document.getElementById('pfAvatar');
+      if (av2) av2.classList.remove('uploading');
+    }
   }
 
   function statTile(lbl, val, cls) {
@@ -670,6 +745,7 @@
             <span class="pf-tier"><i class="fa-solid fa-shield-halved"></i> ${p.tier || 'Member'}</span>
             ${uniChip}
           </div>
+          ${p.joined_at ? `<div class="pf-meta-line"><i class="fa-solid fa-calendar"></i>Member since ${new Date(p.joined_at).toLocaleDateString('en-AU', { month: 'long', year: 'numeric' })}</div>` : ''}
           ${p.bio ? `<div style="color:var(--cream);font-size:13.5px;line-height:1.55;margin-top:10px;max-width:560px;">${escapeHtml(p.bio)}</div>` : ''}
         </div>
         <div class="pf-social">
@@ -1034,6 +1110,7 @@
   }
 
   // Public hooks for inline onclick
+  window.onAvatarPicked = onAvatarPicked;
   window.openEdit      = openEdit;
   window.closeEdit     = closeEdit;
   window.saveEdit      = saveEdit;

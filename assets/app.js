@@ -122,6 +122,7 @@
       bio:          profile.bio || '',
       tier:         profile.tier || (type === 'student' ? 'Student' : 'Member'),
       avatarColor:  profile.avatar_color || null,
+      avatarUrl:    profile.avatar_url || null,
       isAdmin:      !!profile.is_admin,
       visibilityMask: profile.visibility_mask || {},
       joinedAt:     authUser.created_at ? new Date(authUser.created_at).getTime() : Date.now(),
@@ -437,6 +438,7 @@
     if (updates.bio != null)            allowed.bio             = updates.bio;
     if (updates.tier != null)           allowed.tier            = updates.tier;
     if (updates.avatarColor != null)    allowed.avatar_color    = updates.avatarColor;
+    if (updates.avatarUrl != null)      allowed.avatar_url      = updates.avatarUrl || null;
     if (updates.visibilityMask != null) allowed.visibility_mask = updates.visibilityMask;
     if (!Object.keys(allowed).length) return { ok: true };
     const { error } = await sb.from('profiles').update(allowed).eq('id', _sessionCache.id);

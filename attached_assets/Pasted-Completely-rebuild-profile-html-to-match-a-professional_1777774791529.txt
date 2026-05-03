@@ -1,0 +1,135 @@
+Completely rebuild profile.html to match a professional 
+trader profile. Reference: Groww user profile page style 
+but in TradeArena navy/gold theme.
+
+CRITICAL FIXES:
+
+1. PROFILE PICTURE — Must be uploadable
+- Show circular avatar (120px)
+- Click on avatar → opens file picker
+- Upload image to Supabase Storage bucket called "avatars"
+- Save public URL to Supabase profiles table
+- If no photo uploaded → show gold gradient circle with initials
+- Add camera icon overlay on hover: "Change Photo"
+
+Create Supabase profiles table if not exists:
+create table if not exists profiles (
+  id uuid references auth.users(id) primary key,
+  username text,
+  full_name text,
+  university text,
+  avatar_url text,
+  bio text,
+  updated_at timestamptz default now()
+);
+alter table profiles enable row level security;
+create policy "Users can view all profiles" 
+  on profiles for select using (true);
+create policy "Users can update own profile" 
+  on profiles for update using (auth.uid() = id);
+create policy "Users can insert own profile" 
+  on profiles for insert with check (auth.uid() = id);
+
+2. PROFILE HEADER — Clean and compact like Groww
+Left side:
+- Circular avatar (120px) with upload on click
+- Below avatar: Full name (editable)
+- @username handle (editable)
+- University badge (from registrations table)
+- Member since date
+- Short bio (1 line, editable, click to edit)
+
+Right side:
+- Followers count | Following count
+- "Edit Profile" button → opens inline edit form
+- Share Profile button (copies link)
+
+Edit Profile form (appears inline, not modal):
+- Full name input
+- Username input
+- Bio input
+- University input
+- Save button
+
+3. STATS ROW — Compact, 6 cards in one row
+Show these in small cards like Groww:
+- All-Time P&L
+- Win Rate
+- Total Trades
+- Best Trade
+- Streak
+- Rank
+
+4. TABS — Clean tab navigation
+Personal | Trading | Learning | Settings
+
+PERSONAL TAB (default):
+- Basic details section like Groww:
+  → Display name
+  → Email (masked: omk***@gmail.com)
+  → University
+  → Member since
+  → Edit buttons inline per field
+
+TRADING TAB:
+- Equity curve chart — COMPACT, max 200px height
+  → Toggle: 1M | 3M | 6M | 1Y | ALL
+  → Compare vs ASX200 toggle (off by default)
+  → Show as a small sparkline, not full screen
+- Quant Metrics in a clean 2-column grid:
+  → Win Rate, Avg Win, Avg Loss, Avg R:R
+  → Sharpe, Sortino, Max Drawdown, Recovery
+  → All in small compact cards, NOT big boxes
+- Holdings table (compact)
+- Trade History (last 10 trades)
+
+LEARNING TAB:
+- Schools completed
+- Lessons completed  
+- Current streak
+- Achievements/badges
+
+SETTINGS TAB (like Groww's sidebar):
+Left sidebar with options:
+- Basic Details (name, bio, university)
+- Notification Preferences (email on trade confirm etc)
+- Privacy Settings (public/private profile toggle)
+- Connected Accounts
+- Danger Zone (Delete account)
+
+Each setting section loads on the right side inline.
+
+5. OVERALL DESIGN RULES:
+- Much more compact than current version
+- Equity curve should be a SMALL chart, not dominate the page
+- Pink/purple avatar gradient → change to gold gradient (#c9a030 to #e8c060)
+- All sections have subtle gold border: rgba(201,160,48,0.15)
+- Font: Cinzel for headings, DM Sans for body
+- Background: #060e1c (navy)
+- Cards background: #091528 (navy2)
+- No wasted whitespace
+- Mobile responsive
+
+6. SUPABASE STORAGE for avatar upload:
+const { data, error } = await supabase.storage
+  .from('avatars')
+  .upload(`${userId}/avatar.jpg`, file, {
+    cacheControl: '3600',
+    upsert: true
+  });
+
+const { data: urlData } = supabase.storage
+  .from('avatars')
+  .getPublicUrl(`${userId}/avatar.jpg`);
+
+await supabase.from('profiles')
+  .upsert({ id: userId, avatar_url: urlData.publicUrl });
+
+7. Also create the avatars storage bucket in Supabase:
+- Go to Supabase Storage
+- Create bucket named "avatars"  
+- Make it PUBLIC
+- Allow uploads from authenticated users
+
+Match exact navy/gold TradeArena theme throughout.
+Keep all existing Supabase auth connections.

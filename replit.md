@@ -17,6 +17,7 @@ TradeArena is built as a pure static HTML/CSS/JS application with no build step,
 - **Typography**: Uses DM Sans exclusively for a clean, modern look.
 - **Numeric Display**: Tabular alignment for numbers using `font-feature-settings:'tnum'`.
 - **Modals**: Standardized modal components for actions like editing profiles.
+- **Profile avatar**: Click the 120px circular avatar on `profile.html` to upload a photo (PNG/JPG/WEBP, ≤4 MB) into the Supabase Storage `avatars` bucket at path `<uid>/avatar.<ext>`. URL is persisted on `profiles.avatar_url`. With no upload, the avatar shows initials over the brand gold gradient (`#c9a030 → #e8c060`); a custom hex tint via Edit Profile overrides the gradient. **Setup**: run `supabase/migrations/0007_avatar_url.sql` in the Supabase SQL editor — it adds the column, refreshes `get_profile_card` + `public_profiles`, creates the public `avatars` bucket, and installs per-user-folder RLS policies on `storage.objects`.
 
 ### Technical Implementations
 - **Stack**: Pure static HTML/CSS/JS, served by Python `http.server` in development.
