@@ -100,6 +100,7 @@
     .mt-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
     .mt-sym{font-size:13px;font-weight:700;color:var(--cream);}
     .mt-name{font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;}
+    .mt-chart{margin:2px 0 8px;display:flex;align-items:flex-end;height:26px;}
     .mt-bot{display:flex;justify-content:space-between;align-items:baseline;}
     .mt-price{font-size:13.5px;font-weight:700;color:var(--cream);font-feature-settings:'tnum';}
     .mt-vol{margin-top:8px;padding-top:8px;border-top:1px solid var(--bdl);font-size:10.5px;color:var(--muted);font-weight:600;letter-spacing:.04em;font-feature-settings:'tnum';}
@@ -121,11 +122,16 @@
 
     /* Forex rows + 2-col table */
     .fx-list{display:flex;flex-direction:column;gap:6px;}
-    .fx-row{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:16px;padding:10px 14px;background:var(--navy3);border:1px solid var(--bdl);border-radius:9px;cursor:pointer;transition:all .14s;}
+    .fx-row{display:grid;grid-template-columns:90px 1fr auto;align-items:center;gap:16px;padding:10px 14px;background:var(--navy3);border:1px solid var(--bdl);border-radius:9px;cursor:pointer;transition:all .14s;}
     .fx-row:hover{border-color:var(--gold);}
     .fx-pair{font-size:13px;font-weight:700;color:var(--cream);letter-spacing:.03em;}
     .fx-rate{font-size:14px;font-weight:700;color:var(--cream);font-feature-settings:'tnum';}
+    .fx-ba{display:flex;gap:18px;justify-content:flex-end;font-feature-settings:'tnum';}
+    .fx-side{display:flex;flex-direction:column;align-items:flex-end;gap:1px;}
+    .fx-lbl{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700;}
+    .fx-val{font-size:13px;font-weight:700;color:var(--cream);}
     .fx-chg{font-size:11.5px;font-weight:700;min-width:60px;text-align:right;font-feature-settings:'tnum';}
+    @media(max-width:560px){.fx-row{grid-template-columns:70px 1fr auto;gap:8px;}.fx-ba{gap:10px;}}
     .fx-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
     @media(max-width:760px){.fx-grid{grid-template-columns:1fr;}}
 
@@ -555,6 +561,16 @@ const CATALOG = {
   'RIO.AX': { name: 'Rio Tinto',                 market: 'asx',    exchange: 'ASX' },
   'FMG.AX': { name: 'Fortescue Metals',          market: 'asx',    exchange: 'ASX' },
   'CSL.AX': { name: 'CSL Limited',               market: 'asx',    exchange: 'ASX' },
+  'WES.AX': { name: 'Wesfarmers',                market: 'asx',    exchange: 'ASX' },
+  'TLS.AX': { name: 'Telstra Group',             market: 'asx',    exchange: 'ASX' },
+  'WOW.AX': { name: 'Woolworths Group',          market: 'asx',    exchange: 'ASX' },
+  'COL.AX': { name: 'Coles Group',               market: 'asx',    exchange: 'ASX' },
+  'TCL.AX': { name: 'Transurban Group',          market: 'asx',    exchange: 'ASX' },
+  'QBE.AX': { name: 'QBE Insurance',             market: 'asx',    exchange: 'ASX' },
+  'STO.AX': { name: 'Santos Limited',            market: 'asx',    exchange: 'ASX' },
+  'NEM.AX': { name: 'Newmont Corp',              market: 'asx',    exchange: 'ASX' },
+  'GMG.AX': { name: 'Goodman Group',             market: 'asx',    exchange: 'ASX' },
+  'ALL.AX': { name: 'Aristocrat Leisure',        market: 'asx',    exchange: 'ASX' },
   // US (Alpaca direct, fallback to data-proxy)
   'AAPL':   { name: 'Apple Inc.',          market: 'us',     exchange: 'NASDAQ' },
   'MSFT':   { name: 'Microsoft Corp.',     market: 'us',     exchange: 'NASDAQ' },
@@ -564,17 +580,26 @@ const CATALOG = {
   'TSLA':   { name: 'Tesla Inc.',          market: 'us',     exchange: 'NASDAQ' },
   'META':   { name: 'Meta Platforms',      market: 'us',     exchange: 'NASDAQ' },
   'NFLX':   { name: 'Netflix Inc.',        market: 'us',     exchange: 'NASDAQ' },
+  'AMD':    { name: 'Advanced Micro Devices', market: 'us',  exchange: 'NASDAQ' },
+  'INTC':   { name: 'Intel Corp.',         market: 'us',     exchange: 'NASDAQ' },
+  'BRK-B':  { name: 'Berkshire Hathaway',  market: 'us',     exchange: 'NYSE'   },
+  'JPM':    { name: 'JPMorgan Chase',      market: 'us',     exchange: 'NYSE'   },
+  'V':      { name: 'Visa Inc.',           market: 'us',     exchange: 'NYSE'   },
+  'DIS':    { name: 'Walt Disney Co.',     market: 'us',     exchange: 'NYSE'   },
+  'KO':     { name: 'Coca-Cola Co.',       market: 'us',     exchange: 'NYSE'   },
   // Crypto (CoinGecko direct)
   'BTC':    { name: 'Bitcoin',             market: 'crypto', exchange: 'Crypto', cgId: 'bitcoin' },
   'ETH':    { name: 'Ethereum',            market: 'crypto', exchange: 'Crypto', cgId: 'ethereum' },
   'SOL':    { name: 'Solana',              market: 'crypto', exchange: 'Crypto', cgId: 'solana' },
   'BNB':    { name: 'BNB',                 market: 'crypto', exchange: 'Crypto', cgId: 'binancecoin' },
   'XRP':    { name: 'XRP',                 market: 'crypto', exchange: 'Crypto', cgId: 'ripple' },
+  'ADA':    { name: 'Cardano',             market: 'crypto', exchange: 'Crypto', cgId: 'cardano' },
   // Forex (Frankfurter direct)
   'AUDUSD': { name: 'AUD / USD',           market: 'forex',  exchange: 'FX', fxBase: 'AUD', fxQuote: 'USD' },
   'EURUSD': { name: 'EUR / USD',           market: 'forex',  exchange: 'FX', fxBase: 'EUR', fxQuote: 'USD' },
   'GBPUSD': { name: 'GBP / USD',           market: 'forex',  exchange: 'FX', fxBase: 'GBP', fxQuote: 'USD' },
   'USDJPY': { name: 'USD / JPY',           market: 'forex',  exchange: 'FX', fxBase: 'USD', fxQuote: 'JPY' },
+  'USDCNY': { name: 'USD / CNY',           market: 'forex',  exchange: 'FX', fxBase: 'USD', fxQuote: 'CNY' },
 };
 
 // Default watchlist per spec
@@ -1528,7 +1553,7 @@ function sparklineSvg(prices, up) {
 // Click any row/card → load chart above + scroll to it.
 // Forex datafeed only knows AUD/EUR/GBP/JPY ↔ USD, so we restrict
 // auto-registered FX pairs to that set.
-const FX_SUPPORTED = new Set(['AUD','EUR','GBP','JPY','USD']);
+const FX_SUPPORTED = new Set(['AUD','EUR','GBP','JPY','USD','CNY']);
 function selectSymbolFromMarkets(sym) {
   if (!CATALOG[sym]) {
     // Auto-register top-20 crypto coins clicked from the table.
@@ -1624,18 +1649,13 @@ function renderMoversSection() {
 }
 
 function renderMostTradedSection() {
-  // Curated list of high-liquidity instruments across markets.
-  const popular = ['BHP.AX','CBA.AX','MQG.AX','AAPL','NVDA','TSLA','BTC','ETH'];
+  // ASX-only — top 10 most-liquid local names (per spec).
+  const popular = ['BHP.AX','CBA.AX','NAB.AX','WBC.AX','ANZ.AX','MQG.AX','RIO.AX','FMG.AX','CSL.AX','WDS.AX'];
   const cards = popular.map(s => {
     const def = CATALOG[s]; if (!def) return '';
     const px = PRICES[s];
     const up = (px?.changePct || 0) >= 0;
-    // Volume source: stocks → PRICES[s]._vol (Alpaca/Yahoo); crypto → cryptoTop[].total_volume
-    let vol = px?._vol || 0;
-    if (!vol && def.market === 'crypto') {
-      const c = cryptoTop.find(x => x.symbol.toUpperCase() === s);
-      if (c && c.total_volume) vol = c.total_volume;
-    }
+    const vol = px?._vol || 0;
     return `<div class="mt-card" onclick="selectSymbolFromMarkets('${s}')">
       <div class="mt-top">
         <span class="sym-icn ${def.market}" style="width:32px;height:32px;font-size:11px;border-radius:9px;">${esc(s.replace('.AX','').slice(0,3))}</span>
@@ -1644,6 +1664,7 @@ function renderMostTradedSection() {
           <div class="mt-name">${esc(def.name)}</div>
         </div>
       </div>
+      <div class="mt-chart">${miniBars(s, px?.changePct || 0, up)}</div>
       <div class="mt-bot">
         <div class="mt-price">${px && px.price ? fmtMoney(px.price) : '<span class="text-muted">—</span>'}</div>
         <div class="mt-chg ${up?'text-green':'text-red'}">${px && px.price ? fmtPct(px.changePct) : '—'}</div>
@@ -1652,13 +1673,41 @@ function renderMostTradedSection() {
     </div>`;
   }).filter(Boolean).join('');
   return `<div class="mb-section">
-    <div class="mb-section-h"><div class="mb-title">Most Traded</div></div>
+    <div class="mb-section-h"><div class="mb-title">Most Traded ASX</div></div>
     <div class="mt-row">${cards}</div>
   </div>`;
 }
 
+// Decorative mini bar chart for the Most-Traded ASX cards. Without an
+// intraday history feed for stocks, we synthesise 7 bars whose heights
+// are deterministic per symbol (so they don't jitter on every render)
+// and are weighted by the day's % change.
+function miniBars(seed, pct, up) {
+  const w = 88, h = 26, n = 7, gap = 2;
+  const bw = (w - gap*(n-1)) / n;
+  let hash = 0; for (let i=0;i<seed.length;i++) hash = ((hash<<5)-hash + seed.charCodeAt(i))|0;
+  const rand = (i) => {
+    const x = Math.sin((Math.abs(hash) + i*131) * 0.1379) * 10000;
+    return Math.abs(x - Math.floor(x));
+  };
+  const mag = Math.min(1, Math.abs(pct)/3 + 0.25);
+  const color = up ? '#34d399' : '#f87171';
+  const dim   = up ? 'rgba(52,211,153,.28)' : 'rgba(248,113,113,.28)';
+  let out = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">`;
+  for (let i = 0; i < n; i++) {
+    const r  = 0.35 + 0.65 * rand(i);
+    const bh = Math.max(3, h * r * mag);
+    const x  = i * (bw + gap);
+    const y  = h - bh;
+    const fill = (i === n-1) ? color : dim;
+    out += `<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${bw.toFixed(2)}" height="${bh.toFixed(2)}" rx="1" fill="${fill}"/>`;
+  }
+  out += `</svg>`;
+  return out;
+}
+
 function renderCryptoSection() {
-  const wanted = ['BTC','ETH','SOL','BNB','XRP'];
+  const wanted = ['BTC','ETH','SOL','BNB','XRP','ADA'];
   const rows = wanted.map(sym => {
     const c = cryptoTop.find(x => x.symbol.toUpperCase() === sym);
     if (!c) {
@@ -1695,15 +1744,24 @@ function renderForexSection() {
   if (!forexCur) {
     return `<div class="mb-section"><div class="mb-section-h"><div class="mb-title">Forex Rates</div></div><div class="tbl-empty">Loading forex…</div></div>`;
   }
-  const pairs = [['AUD','USD'],['EUR','USD'],['GBP','USD'],['USD','JPY']];
+  const pairs = [['AUD','USD'],['EUR','USD'],['GBP','USD'],['USD','JPY'],['USD','CNY']];
+  // Frankfurter only publishes a single mid-rate per pair, so we synthesise
+  // a tight ~2-pip retail spread either side of mid for the bid/ask display.
   const rows = pairs.map(([b,q]) => {
-    const sym = b + q;
+    const sym  = b + q;
     const rate = fxRate(b, q);
     const chg  = fxChangePct(b, q);
     const up   = chg >= 0;
+    const dp   = (q === 'JPY') ? 2 : 4;
+    const spreadPct = (q === 'JPY' || q === 'CNY') ? 0.0003 : 0.0002;
+    const bid = rate ? rate * (1 - spreadPct) : 0;
+    const ask = rate ? rate * (1 + spreadPct) : 0;
     return `<div class="fx-row" onclick="selectSymbolFromMarkets('${sym}')">
       <div class="fx-pair">${b}/${q}</div>
-      <div class="fx-rate">${rate ? rate.toFixed(q==='JPY'?2:4) : '—'}</div>
+      <div class="fx-ba">
+        <span class="fx-side"><span class="fx-lbl">Bid</span><span class="fx-val">${bid ? bid.toFixed(dp) : '—'}</span></span>
+        <span class="fx-side"><span class="fx-lbl">Ask</span><span class="fx-val">${ask ? ask.toFixed(dp) : '—'}</span></span>
+      </div>
       <div class="fx-chg ${up?'text-green':'text-red'}">${fmtPct(chg)}</div>
     </div>`;
   }).join('');
@@ -1749,21 +1807,22 @@ function renderStockTable(market) {
         <th data-sort="s">Symbol${ind('s')}</th>
         <th>Company</th>
         <th class="num" data-sort="price">Price${ind('price')}</th>
-        <th class="num" data-sort="chg">Change${ind('chg')}</th>
+        <th class="num" data-sort="chg">Day Change${ind('chg')}</th>
         <th class="num" data-sort="vol">Volume${ind('vol')}</th>
-        <th class="num" data-sort="h52">52w High${ind('h52')}</th>
-        <th class="num" data-sort="l52">52w Low${ind('l52')}</th>
+        <th class="num" data-sort="h52">52W Range${ind('h52')}</th>
       </tr></thead>
       <tbody>${items.map(it => {
         const up = it.chg >= 0;
+        const range = (it.l52 && it.h52)
+          ? `<span class="text-muted" style="font-weight:500;">${fmtMoney(it.l52)}</span> &mdash; ${fmtMoney(it.h52)}`
+          : '—';
         return `<tr data-sym="${it.s}" data-name="${esc(it.def.name).toLowerCase()}" onclick="selectSymbolFromMarkets('${it.s}')" style="cursor:pointer;">
           <td><strong>${esc(it.s.replace('.AX',''))}</strong></td>
           <td class="text-muted" style="font-weight:500;">${esc(it.def.name)}</td>
           <td class="num">${it.price ? fmtMoney(it.price) : '<span class="text-muted">—</span>'}${stalePill(PRICES[it.s])}</td>
           <td class="num ${up?'text-green':'text-red'}">${it.price ? fmtPct(it.chg) : '—'}</td>
           <td class="num text-muted">${it.vol ? fmtVol(it.vol) : '—'}</td>
-          <td class="num">${it.h52 ? fmtMoney(it.h52) : '—'}</td>
-          <td class="num">${it.l52 ? fmtMoney(it.l52) : '—'}</td>
+          <td class="num" style="white-space:nowrap;">${range}</td>
         </tr>`;
       }).join('')}</tbody>
     </table>
