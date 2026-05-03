@@ -1,0 +1,53 @@
+I can help with that, but I only have the screenshot, not the actual app code or deployment files. From the image, this looks like a trading dashboard where the market data panel is not yet connected to a live data source, so you likely need prompts for an AI coder to wire up API integration, state updates, and error handling.[1]
+
+## Prompts to generate the fix
+
+Use these prompts one by one with your coding AI.
+
+### 1) Connect live market data
+Build the market data integration for my trading dashboard. The UI already shows watchlist, charts, price, day high, day low, 52-week high, volume, and order ticket. Connect it to a real-time market data API so the selected symbol updates the chart and the quote panel live. Use a clean architecture with separate files for API service, symbol selection state, and chart rendering. Include loading, error, retry, and fallback states.
+
+### 2) Add ASX quote support
+My app needs live ASX prices for symbols like BHP, CBA, MQG, and WDS. Create the code needed to fetch Australian market quotes, normalize the response into a common format, and display bid, ask, last price, day change, percent change, volume, and timestamps. If the chosen API does not support ASX directly, suggest the best alternative and adapt the code accordingly.
+
+### 3) Make the chart live
+The chart currently looks static. Replace it with a live-updating candlestick chart that changes based on the selected market and timeframe buttons like 1m, 5m, 15m, 1h, 4h, 1D, 1W, and 1M. Use the same live data source as the quote panel, and keep the selected timeframe synced with the chart and current price display.
+
+### 4) Fix order ticket pricing
+The order panel should calculate estimated price, shares, brokerage, and total using the live market price instead of a hardcoded number. Update the “Buy at Market” button so it uses the latest quote, recalculates instantly when amount changes, and validates edge cases like zero balance, invalid symbol, and unavailable market data.
+
+### 5) Add refresh and polling
+Implement live refresh for the selected stock every 10 to 15 seconds, with automatic cleanup when the user switches symbols or leaves the page. Use polling or websockets depending on the API. Show the last updated time near the price and handle stale data gracefully.
+
+### 6) Handle watchlist sync
+Connect the watchlist so each symbol card shows live price and percent change. Clicking a watchlist item should update the main chart, quote panel, and order form. Preserve the selected symbol in local storage so the user returns to the same market on reload.
+
+### 7) Build API service layer
+Create a reusable market-data service module for my app. It should support getQuote(symbol), getHistoricalData(symbol, range), and subscribeToLiveUpdates(symbol). Add environment variable support for API keys, rate limiting protection, response caching, and clean TypeScript types if possible.
+
+### 8) Debug why live markets are not connecting
+Inspect my current codebase and find why live market data is not connecting. Check for missing API keys, incorrect endpoints, CORS issues, bad symbol mapping, broken environment variables, and frontend state bugs. Then give me the exact code changes needed to make it work.
+
+## Best prompt to start with
+
+Use this first if you want the most useful result:
+
+Build a live market data integration for my trading dashboard. The app already has a watchlist, selected symbol panel, price chart, and order ticket. Connect it to a real market data API so all prices, percentage changes, volumes, and chart candles update dynamically when I click a symbol like BHP or CBA. The implementation should include:
+- API service layer.
+- Symbol mapping for ASX and US stocks.
+- Live polling or websocket updates.
+- Error handling and loading states.
+- Order ticket calculations using live price.
+- Clean code structure with reusable components.
+- A fix for why the current “live markets” connection is failing.
+
+## What to paste next
+If you want the fastest fix, paste this into your coding AI:
+
+I’m building a trading dashboard and the live market connection is broken. Please inspect my frontend and backend flow, identify why market data is not connecting, and produce the exact code changes needed. The app must support live quotes, live chart updates, watchlist syncing, and order ticket calculations. Focus on ASX symbols first, especially BHP, CBA, MQG, and WDS. Include environment variables, API endpoint setup, error handling, and state management.
+
+## Important detail
+The screenshot alone does not show your code, API provider, or deployment setup, so I can only give prompts, not the exact technical fix. If you share the project files or code, I can turn this into a precise implementation plan and write the actual code changes.
+
+Sources
+[1] Screenshot-2026-05-03-at-3.12.14-PM.jpeg https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/images/146737502/0d779900-3f18-431d-b6f1-7637fbdfe9fa/Screenshot-2026-05-03-at-3.12.14-PM.jpeg
