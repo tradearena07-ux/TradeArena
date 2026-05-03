@@ -1,0 +1,207 @@
+Fix the navigation bar across all pages in TradeArena.
+Current problem: All nav items show at once = congested.
+
+SOLUTION: Context-aware navigation like Groww.
+Each page shows ONLY its own relevant tabs.
+The main nav items switch based on which section is active.
+
+═══════════════════════════════════════
+NAVIGATION STRUCTURE:
+═══════════════════════════════════════
+
+ALWAYS VISIBLE (every page):
+- Left: TradeArena logo
+- Right: Search bar | Bell icon | Avatar (TR circle)
+
+THE MIDDLE CHANGES based on current page:
+
+──────────────────────────────────────
+When on trade.html (MARKETS):
+──────────────────────────────────────
+[📈 Markets ●] [All Markets] [ASX] [US Stocks] [Crypto] [Forex]
+
+Markets is highlighted/active pill.
+The secondary tabs (All Markets, ASX etc) are 
+the sub-navigation for Markets only.
+NO Watchlist, Portfolio, Learn, Profile visible here.
+
+──────────────────────────────────────
+When on watchlist section:
+──────────────────────────────────────
+[⭐ Watchlist ●] [My Watchlist] [+ Add Stock]
+
+──────────────────────────────────────
+When on portfolio.html (PORTFOLIO):
+──────────────────────────────────────
+[💼 Portfolio ●] [Overview] [Holdings] [Orders] [History]
+
+──────────────────────────────────────
+When on schools.html (LEARN):
+──────────────────────────────────────
+[🎓 Learn ●] [Schools] [Reels] [Progress]
+
+──────────────────────────────────────
+When on profile.html (PROFILE):
+──────────────────────────────────────
+[👤 Profile ●] [Overview] [Trades] [Stats] [Achievements]
+
+═══════════════════════════════════════
+HOW TO SWITCH BETWEEN SECTIONS:
+═══════════════════════════════════════
+
+Add a BOTTOM DOCK or SECTION SWITCHER:
+On desktop: Small section switcher pills 
+ABOVE the main nav (very slim, 28px height):
+
+[Markets] [Watchlist] [Portfolio] [Learn] [Profile]
+
+These are tiny, muted text, no icons.
+Clicking one navigates to that section's page
+AND changes the main nav tabs below.
+
+On mobile: Bottom tab bar (like an app):
+Fixed at bottom of screen:
+[📈] [⭐] [💼] [🎓] [👤]
+Markets | Watchlist | Portfolio | Learn | Profile
+
+═══════════════════════════════════════
+EXACT NAV DESIGN (Groww style):
+═══════════════════════════════════════
+
+Height: 52px (slim like Groww, not tall)
+Background: rgba(9,21,40,0.97) 
+Border bottom: 1px solid rgba(201,160,48,0.12)
+Backdrop filter: blur(20px)
+
+Left section:
+- TradeArena shield logo (24px)
+- "TradeArena" text in Cinzel gold
+- Gap
+- Active section name as a PILL:
+  background: rgba(201,160,48,0.12)
+  border: 1px solid rgba(201,160,48,0.3)
+  color: gold
+  padding: 5px 14px
+  border-radius: 20px
+  font: Cinzel 10px uppercase
+
+Center section:
+- Context tabs for current section
+- Each tab: Cinzel 10px uppercase, muted color
+- Active tab: gold color + gold underline (2px)
+- Tabs are spaced evenly, not too far apart
+
+Right section:
+- Search bar (rounded, compact):
+  width: 200px
+  placeholder: "Search BHP, AAPL, BTC..."
+  ⌘K shortcut hint
+  On focus: expands to 300px smoothly
+- Bell icon (24px, muted)
+  Red dot if notifications exist
+- Avatar circle (32px):
+  Gold gradient background
+  White initials, Cinzel bold
+  On click: dropdown menu
+
+═══════════════════════════════════════
+SECTION SWITCHER (top micro-nav):
+═══════════════════════════════════════
+
+Add a very slim bar ABOVE the main nav:
+Height: 28px
+Background: #060e1c (slightly darker)
+Border bottom: 1px solid rgba(201,160,48,0.06)
+
+Content: centered, small pills:
+[Markets] [Watchlist] [Portfolio] [Learn] [Profile]
+
+Each pill:
+- Default: font-size 9px, color muted, no background
+- Active/current page: 
+  color: gold
+  font-weight: 600
+  small gold dot below (like a bullet point indicator)
+- Hover: color cream
+
+This way user always knows:
+1. Which SECTION they're in (top micro bar)
+2. Which PAGE within that section (main nav tabs)
+
+═══════════════════════════════════════
+IMPLEMENT ON ALL PAGES:
+═══════════════════════════════════════
+
+trade.html:
+- Active section: "Markets"
+- Nav tabs: All Markets | ASX | US Stocks | Crypto | Forex
+- These tabs filter the market view
+
+portfolio.html:
+- Active section: "Portfolio"  
+- Nav tabs: Overview | Holdings | Orders | History
+
+schools.html:
+- Active section: "Learn"
+- Nav tabs: Schools | Reels | My Progress
+
+profile.html:
+- Active section: "Profile"
+- Nav tabs: Overview | Trade History | Stats | Achievements
+
+═══════════════════════════════════════
+MOBILE (bottom tab bar like app):
+═══════════════════════════════════════
+
+Fixed bottom bar, height 56px:
+Background: #091528
+Border top: 1px solid rgba(201,160,48,0.15)
+
+5 tabs evenly spaced:
+📈 Markets
+⭐ Watchlist  
+💼 Portfolio
+🎓 Learn
+👤 Profile
+
+Each tab:
+- Icon (20px) + label (8px Cinzel below)
+- Default: muted color
+- Active: gold color + gold dot above icon
+- On tap: navigates to section + shows section sub-tabs
+
+On mobile, the desktop top micro-nav is HIDDEN.
+On desktop, the mobile bottom bar is HIDDEN.
+
+═══════════════════════════════════════
+SEARCH FUNCTIONALITY:
+═══════════════════════════════════════
+
+When user types in search bar:
+- Show dropdown below search
+- Search across: ASX stocks, US stocks, Crypto, Forex
+- Results grouped by type:
+  
+  STOCKS
+  🟡 BHP  BHP Group  $54.94  +2.27%
+  🔵 CBA  Commonwealth Bank  $173.04  -0.36%
+  
+  CRYPTO  
+  🟠 BTC  Bitcoin  $78,234  +0.13%
+  
+- Clicking a result → loads that asset in trade.html chart
+- Keyboard navigation (arrow keys + enter)
+- ESC to close
+- ⌘K shortcut to open search from anywhere
+
+═══════════════════════════════════════
+DESIGN RULES:
+═══════════════════════════════════════
+- Nav height: 52px (slim, not 72px)
+- Logo: smaller, 22px height
+- All fonts: Cinzel uppercase, 9-10px for nav items
+- Active tab indicator: 2px gold underline (not background)
+- Transition: 0.2s ease on all hover/active states
+- No bold heavy buttons in nav
+- Minimal, clean, every element has a purpose
+- Match Groww's restraint — if it doesn't need to be there, remove it

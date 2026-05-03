@@ -71,8 +71,13 @@
     localStorage.setItem('tarena_orders', JSON.stringify(orders.slice(0, 50)));
   }
 
+  // .all() is consumed by the shared nav search dropdown (assets/app.js
+  // wireNavSearch). Returns a fresh array slice so callers can't mutate
+  // the underlying catalogue.
+  function all() { return data.slice(); }
+
   global.TArenaMarket = {
-    data, find, byMarket, tick,
+    data, all, find, byMarket, tick,
     holdings, holdingValue, totalValue, totalPnl, totalCost,
     getWatchlist, setWatchlist, getOrders, placeOrder,
   };

@@ -306,83 +306,11 @@
 </head>
 <body>
 
-<!-- ============ Custom topbar ============ -->
-<header class="tn">
-  <a href="index.html" class="tn-logo">
-    <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
-      <path d="M16 3 L28 9 V20 C28 24 22 28 16 30 C10 28 4 24 4 20 V9 Z" stroke="#e8c060" stroke-width="2" fill="none"/>
-      <path d="M9 19 L13 15 L17 18 L23 11" stroke="#e8c060" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    <span class="lg">Trade<b>Arena</b></span>
-  </a>
-  <nav class="tn-tabs">
-    <a class="tn-tab on"  href="trade.html"><i class="fa-solid fa-chart-line"></i>Markets</a>
-    <a class="tn-tab"     href="#watchlist" id="navWl"><i class="fa-regular fa-star"></i>Watchlist</a>
-    <a class="tn-tab"     href="portfolio.html"><i class="fa-solid fa-briefcase"></i>Portfolio</a>
-    <a class="tn-tab"     href="reels.html"><i class="fa-solid fa-graduation-cap"></i>Learn</a>
-    <a class="tn-tab"     href="profile.html"><i class="fa-regular fa-user"></i>Profile</a>
-  </nav>
-  <div class="tn-search">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <input type="text" id="searchBox" placeholder="Search BHP, AAPL, BTC..." autocomplete="off"/>
-    <span class="ta-kbd" id="searchKbd">⌘K</span>
-    <div class="results" id="searchResults"></div>
-  </div>
-  <div class="tn-filters" id="mktTabs" role="tablist" aria-label="Markets">
-    <button class="tn-filt on" data-m="all">All Markets</button>
-    <button class="tn-filt"    data-m="asx">ASX</button>
-    <button class="tn-filt"    data-m="us">US Stocks</button>
-    <button class="tn-filt"    data-m="crypto">Crypto</button>
-    <button class="tn-filt"    data-m="forex">Forex</button>
-  </div>
-  <!-- Bell + user pill: rendered by JS below using TArenaUI.avatarHtml so
-       trade.html uses the same .ta-bell / .ta-pill / .ta-menu component
-       as every other page (renderNav in assets/app.js). -->
-  <div id="userPillSlot" style="display:flex;align-items:center;gap:10px;">
-    <button id="pwaInstallBtn" type="button" onclick="installPwa()"
-      style="display:none;align-items:center;gap:7px;padding:7px 13px;border-radius:8px;
-             border:1px solid rgba(201,160,48,.45);background:rgba(201,160,48,.08);
-             color:var(--gold2);font-family:'DM Sans',sans-serif;font-size:12.5px;
-             font-weight:600;cursor:pointer;transition:all .15s;"
-      onmouseover="this.style.background='rgba(201,160,48,.18)'"
-      onmouseout="this.style.background='rgba(201,160,48,.08)'"
-      title="Install TradeArena as an app">
-      <i class="fa-solid fa-arrow-down-to-bracket"></i> Install App
-    </button>
-  </div>
-</header>
-<script>
-  // --------- PWA install prompt -------------------------------------
-  // Capture the browser-fired beforeinstallprompt event, reveal the
-  // "Install App" pill, and replay the prompt on click. Hides itself
-  // permanently once the app is installed (or already running as a
-  // standalone PWA).
-  (function () {
-    let deferredPrompt = null;
-    const btn = document.getElementById('pwaInstallBtn');
-    if (!btn) return;
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-                      || window.navigator.standalone === true;
-    if (isStandalone) return;
-
-    window.addEventListener('beforeinstallprompt', function (e) {
-      e.preventDefault();
-      deferredPrompt = e;
-      btn.style.display = 'inline-flex';
-    });
-    window.addEventListener('appinstalled', function () {
-      btn.style.display = 'none';
-      deferredPrompt = null;
-    });
-    window.installPwa = async function () {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      try { await deferredPrompt.userChoice; } catch (_) {}
-      deferredPrompt = null;
-      btn.style.display = 'none';
-    };
-  })();
-</script>
+<!-- Shared 3-tier nav (top section switcher + slim 52px main nav with
+     logo / Markets section pill / market filter tabs / search /
+     bell / avatar + mobile bottom tab bar). Markup is emitted by
+     TArenaUI.renderNav('trade') below the page-controller block. -->
+<div id="tarena-nav"></div>
 
 <!-- ============ Announcement banner (top published announcement) ============ -->
 <div id="annBanner" style="display:none;padding:10px 24px;border-bottom:1px solid var(--bdl);font-size:13.5px;align-items:center;gap:12px;">
@@ -589,6 +517,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="assets/supabase.js"></script>
 <script src="assets/app.js"></script>
+<script src="assets/market.js"></script>
 <script src="assets/datafeed.js"></script>
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <script>
@@ -602,6 +531,12 @@
 // ------ Auth gate (redirects to auth.html if no session) ------
 const session = TArenaAuth.requireAuth();
 if (!session) throw new Error('redirect');
+// Shared nav (with the Markets section pill + market filter tabs)
+// must mount BEFORE the rest of trade.html's wiring runs, so the
+// existing references to #searchBox and #mktTabs resolve. The
+// renderNav call also wires bell, avatar, install button and the
+// global ⌘K shortcut for free.
+TArenaUI.renderNav('trade');
 TArenaUI.renderFooter();
 
 // ------ Static catalogue of supported assets ------
@@ -737,11 +672,9 @@ function icnLabel(sym) {
 }
 
 // ============ BELL + USER PILL (top right) ============
-// Renders the same .ta-bell + .ta-pill-mini + .ta-menu component that
-// renderNav() emits on every other page. trade.html doesn't call
-// renderNav (it has its own Groww-style topbar) so the wiring is
-// duplicated locally; the markup + classes are identical.
-(function userPill() {
+// Now provided by the shared TArenaUI.renderNav('trade') call above.
+// Local fallback kept disabled so we don't re-bind the same handlers.
+if (false) (function userPill() {
   const u = session.user;
   document.getElementById('userPillSlot').innerHTML = `
     <div class="ta-bell-wrap">
@@ -807,35 +740,7 @@ function icnLabel(sym) {
   });
 })();
 
-// ⌘K / Ctrl+K focuses the search box. Pressing while focused blurs it.
-// Hides the kbd hint while typing so it doesn't overlap the query.
-(function wireSearchShortcut() {
-  const box = document.getElementById('searchBox');
-  if (!box) return;
-  // Detect mac vs PC and relabel the hint accordingly.
-  const isMac = /Mac|iP(hone|ad|od)/i.test(navigator.platform || navigator.userAgent || '');
-  const kbd = document.getElementById('searchKbd');
-  if (kbd && !isMac) kbd.textContent = 'Ctrl K';
-  window.addEventListener('keydown', (e) => {
-    const mod = isMac ? e.metaKey : e.ctrlKey;
-    if (mod && e.key.toLowerCase() === 'k') {
-      // Allow the shortcut even when typing in OUR own search box (so
-      // Cmd+K toggles focus off it). For any other editable element,
-      // bail out so we don't hijack the user's normal browser/editor
-      // shortcuts (e.g. text editing in modals, contenteditable areas).
-      const ae = document.activeElement;
-      const editable = ae && (
-        ae === box ||
-        ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.tagName === 'SELECT' ||
-        ae.isContentEditable
-      );
-      if (editable && ae !== box) return;
-      e.preventDefault();
-      if (ae === box) box.blur(); else box.focus();
-    }
-    if (e.key === 'Escape' && document.activeElement === box) box.blur();
-  });
-})();
+// ⌘K / Ctrl+K focus is now wired globally by renderNav (wireNavSearch).
 
 // ============ LIVE DATA — multi-source fetch ============
 // Returns Promise< { symbol: {price, change} } > for the requested syms.
@@ -1292,45 +1197,9 @@ document.getElementById('mktTabs').addEventListener('click', e => {
   setMarketsTab(t);
 });
 
-const searchBox = document.getElementById('searchBox');
-const searchResults = document.getElementById('searchResults');
-let searchTimer = null;
-searchBox.addEventListener('input', () => {
-  const q = searchBox.value.trim().toLowerCase();
-  clearTimeout(searchTimer);
-  if (!q) { searchResults.classList.remove('open'); return; }
-  searchTimer = setTimeout(() => {
-    const rows = Object.entries(CATALOG)
-      .filter(([s, d]) => s.toLowerCase().includes(q) || d.name.toLowerCase().includes(q))
-      .filter(([_, d]) => state.mkt === 'all' || d.market === state.mkt)
-      .slice(0, 8);
-    if (!rows.length) {
-      searchResults.innerHTML = '<div class="res"><div class="l">No matches</div></div>';
-    } else {
-      searchResults.innerHTML = rows.map(([s, d]) => `
-        <div class="res" data-sym="${esc(s)}">
-          <div><div class="l">${esc(s.replace('.AX',''))}</div><div class="n">${esc(d.name)} · ${esc(d.exchange)}</div></div>
-        </div>`).join('');
-      searchResults.querySelectorAll('.res[data-sym]').forEach(el =>
-        el.addEventListener('click', () => {
-          selectSymbol(el.dataset.sym);
-          searchBox.value = '';
-          searchResults.classList.remove('open');
-        })
-      );
-    }
-    searchResults.classList.add('open');
-  }, 180);
-});
-document.addEventListener('click', e => {
-  if (!searchBox.contains(e.target) && !searchResults.contains(e.target)) searchResults.classList.remove('open');
-});
-
-// "Watchlist" tab → scroll left sidebar into view (it already lives on this page)
-document.getElementById('navWl').addEventListener('click', e => {
-  e.preventDefault();
-  document.getElementById('watchlist').scrollIntoView({ behavior: 'smooth', block: 'start' });
-});
+// Live search dropdown is now wired globally by renderNav (wireNavSearch).
+// On trade.html it routes clicks to selectSymbol() (exposed on window).
+// The Watchlist section pill (top section switcher) handles navigation.
 
 // ============ ORDER PANEL ============
 function setSide(s) {

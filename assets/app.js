@@ -594,33 +594,126 @@
     wrap.querySelectorAll('.ta-ticker-row').forEach(r => { r.innerHTML = items; });
   }
 
-  function renderNav(activePage) {
-    global.__tarena_nav_active = activePage;
-    const links = [
-      { id: 'trade',     href: 'trade.html',     label: 'Markets',   icon: 'fa-chart-line' },
-      { id: 'reels',     href: 'reels.html',     label: 'Learn',     icon: 'fa-clapperboard' },
-      { id: 'schools',   href: 'schools.html',   label: 'School',    icon: 'fa-graduation-cap' },
-      { id: 'portfolio', href: 'portfolio.html', label: 'Portfolio', icon: 'fa-briefcase' },
-      { id: 'profile',   href: 'profile.html',   label: 'Profile',   icon: 'fa-user' },
-    ];
-    const session = getSession();
-    const linksHtml = links.map(l =>
-      `<a href="${l.href}" class="ta-nav-link ${activePage === l.id ? 'active' : ''}"><i class="fa-solid ${l.icon}"></i><span>${l.label}</span></a>`
-    ).join('');
-    // Mobile drawer reuses the same link set, plus account actions inline.
-    const drawerLinksHtml = links.map(l =>
-      `<a href="${l.href}" class="ta-drawer-link ${activePage === l.id ? 'active' : ''}"><i class="fa-solid ${l.icon}"></i><span>${l.label}</span></a>`
-    ).join('');
+  // ============================================================
+  // Section config for context-aware Groww-style navigation.
+  // Each section owns its own context tabs that render in the
+  // middle of the main nav. Pages map to a section via PAGE_TO_SECTION
+  // (or pass `opts.section` explicitly to renderNav).
+  // ============================================================
+  const SECTIONS = {
+    markets: {
+      label: 'Markets', icon: 'fa-chart-line', href: 'trade.html',
+      tabs: [
+        { label: 'All Markets', d: 'all' }, { label: 'ASX', d: 'asx' },
+        { label: 'US Stocks', d: 'us' },     { label: 'Crypto', d: 'crypto' },
+        { label: 'Forex', d: 'forex' },
+      ],
+      // The clickable container gets id="mktTabs" + each tab data-m=""
+      // so trade.html's existing market-filter wiring works unchanged.
+      tabsId: 'mktTabs', dataAttr: 'm',
+    },
+    watchlist: {
+      label: 'Watchlist', icon: 'fa-star', href: 'trade.html#watchlist',
+      tabs: [
+        { label: 'My Watchlist', d: 'mine' },
+        { label: '+ Add Stock',  d: 'add'  },
+      ],
+      dataAttr: 'wl',
+    },
+    portfolio: {
+      label: 'Portfolio', icon: 'fa-briefcase', href: 'portfolio.html',
+      tabs: [
+        { label: 'Overview', d: 'overview' }, { label: 'Holdings', d: 'holdings' },
+        { label: 'Orders',   d: 'orders'   }, { label: 'History',  d: 'history'  },
+      ],
+      dataAttr: 'tab',
+    },
+    learn: {
+      label: 'Learn', icon: 'fa-graduation-cap', href: 'schools.html',
+      tabs: [
+        { label: 'Schools',     href: 'schools.html'           },
+        { label: 'Reels',       href: 'reels.html'             },
+        { label: 'My Progress', href: 'schools.html#progress'  },
+      ],
+    },
+    profile: {
+      label: 'Profile', icon: 'fa-user', href: 'profile.html',
+      tabs: [
+        { label: 'Overview',     d: 'overview'     },
+        { label: 'Trade History', d: 'trades'      },
+        { label: 'Stats',        d: 'stats'        },
+        { label: 'Achievements', d: 'achievements' },
+      ],
+      dataAttr: 'tab',
+    },
+  };
+  const PAGE_TO_SECTION = {
+    trade: 'markets', portfolio: 'portfolio',
+    schools: 'learn', reels: 'learn',
+    profile: 'profile', account: 'profile',
+  };
+  const SECTION_ORDER = ['markets', 'watchlist', 'portfolio', 'learn', 'profile'];
 
+  function renderNav(activePage, opts) {
+    opts = opts || {};
+    global.__tarena_nav_active = activePage;
+    const sectionKey = opts.section || PAGE_TO_SECTION[activePage] || null;
+    const section = sectionKey ? SECTIONS[sectionKey] : null;
+    const session = getSession();
+
+    // ---- Top micro section switcher (28px slim bar) ----
+    // Lets the user jump between Markets / Watchlist / Portfolio /
+    // Learn / Profile from any page. Visible on desktop only — mobile
+    // gets the bottom tab bar instead.
+    const sectionSwitcherHtml = SECTION_ORDER.map(k => {
+      const s = SECTIONS[k];
+      const active = k === sectionKey;
+      return `<a href="${s.href}" class="ta-secbar-pill ${active ? 'active' : ''}" data-section="${k}">${s.label}</a>`;
+    }).join('');
+
+    // ---- Active section pill (sits next to the logo) ----
+    const sectionPillHtml = section
+      ? `<span class="ta-section-pill"><i class="fa-solid ${section.icon}"></i> ${section.label}</span>`
+      : '';
+
+    // ---- Context tabs (per-section middle of main nav) ----
+    let contextTabsHtml = '';
+    if (section && section.tabs && section.tabs.length) {
+      const attr = section.dataAttr;
+      const tabsId = section.tabsId ? ` id="${section.tabsId}"` : '';
+      contextTabsHtml = `<div class="ta-ctx-tabs"${tabsId} role="tablist">` +
+        section.tabs.map((t, i) => {
+          if (t.href) {
+            // External href tab (e.g. Schools / Reels in Learn section).
+            const isActive = (t.href.split('#')[0].split('.html')[0] + '.html') === (activePage + '.html');
+            return `<a class="ta-ctx-tab ${isActive ? 'on' : ''}" href="${t.href}">${t.label}</a>`;
+          }
+          // Data-driven tab — fires a `tarena:nav-tab` CustomEvent on
+          // click so each page can wire up its own internal switching.
+          // The first tab is active by default.
+          const onClass = i === 0 ? ' on' : '';
+          return `<button type="button" class="ta-ctx-tab${onClass}" data-${attr}="${t.d}">${t.label}</button>`;
+        }).join('') +
+      '</div>';
+    }
+
+    // ---- Search box + grouped results dropdown ----
+    // Same IDs as trade.html's previous custom search so the page-level
+    // wiring (selectSymbol etc.) keeps working with zero changes.
+    const searchHtml = `
+      <div class="ta-search" id="taSearchWrap">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="searchBox" placeholder="Search BHP, AAPL, BTC..." autocomplete="off"
+               aria-label="Search markets"/>
+        <span class="ta-kbd" id="searchKbd">⌘K</span>
+        <div class="ta-search-results" id="searchResults" role="listbox"></div>
+      </div>`;
+
+    // ---- Bell + avatar / Sign in ----
     let accountHtml;
     let drawerAccountHtml;
     if (session) {
       const u = session.user;
-      // User pill (Groww-style) — JUST the gold circular avatar. No
-      // username text, no chevron. The whole circle is the click
-      // target; the same .ta-menu dropdown opens with My Profile /
-      // Portfolio / Trade / Sign Out. Sits next to a notification bell
-      // (.ta-bell) so the layout matches the reference screenshot.
       accountHtml = `
         <div class="ta-bell-wrap">
           <button class="ta-bell" id="taBell" aria-label="Notifications">
@@ -640,7 +733,7 @@
         </div>
         <div class="ta-account-wrap">
           <button class="ta-pill ta-pill-mini" id="userPill" aria-label="Open account menu">
-            ${avatarHtml(u, 34, { gold: true })}
+            ${avatarHtml(u, 32, { gold: true })}
           </button>
           <div class="ta-menu" id="userMenu">
             <a href="profile.html" class="ta-menu-row">
@@ -651,10 +744,10 @@
               </div>
             </a>
             <div class="ta-menu-sep"></div>
-            <a href="profile.html" class="ta-menu-link"><i class="fa-solid fa-user"></i> My Profile</a>
+            <a href="profile.html"   class="ta-menu-link"><i class="fa-solid fa-user"></i> My Profile</a>
             <a href="portfolio.html" class="ta-menu-link"><i class="fa-solid fa-briefcase"></i> Portfolio</a>
-            <a href="trade.html" class="ta-menu-link"><i class="fa-solid fa-chart-line"></i> Trade</a>
-            <a href="account.html" class="ta-menu-link"><i class="fa-solid fa-gear"></i> Settings</a>
+            <a href="trade.html"     class="ta-menu-link"><i class="fa-solid fa-chart-line"></i> Trade</a>
+            <a href="account.html"   class="ta-menu-link"><i class="fa-solid fa-gear"></i> Settings</a>
             <div class="ta-menu-sep"></div>
             <button class="ta-menu-link ta-menu-logout" id="logoutBtn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out</button>
           </div>
@@ -673,17 +766,49 @@
       drawerAccountHtml = `<a href="auth.html" class="ta-drawer-link ta-drawer-cta"><i class="fa-solid fa-arrow-right-to-bracket"></i><span>Sign in</span></a>`;
     }
 
+    // ---- Install App button (lives in the nav on every page) ----
+    const installBtnHtml = `
+      <button id="pwaInstallBtn" type="button" class="ta-install-btn" style="display:none;"
+              aria-label="Install TradeArena as an app">
+        <i class="fa-solid fa-arrow-down-to-bracket"></i><span>Install App</span>
+      </button>`;
+
+    // ---- Drawer link list (mobile fallback for non-section pages) ----
+    const drawerLinksHtml = SECTION_ORDER.map(k => {
+      const s = SECTIONS[k];
+      const active = k === sectionKey;
+      return `<a href="${s.href}" class="ta-drawer-link ${active ? 'active' : ''}"><i class="fa-solid ${s.icon}"></i><span>${s.label}</span></a>`;
+    }).join('');
+
+    // ---- Mobile bottom tab bar (5 sections, app-style) ----
+    const bottomBarHtml = `
+      <nav class="ta-bottombar" id="taBottomBar" aria-label="Sections">
+        ${SECTION_ORDER.map(k => {
+          const s = SECTIONS[k];
+          const active = k === sectionKey;
+          return `<a href="${s.href}" class="ta-bb-tab ${active ? 'on' : ''}" data-section="${k}">
+            <i class="fa-solid ${s.icon}"></i><span>${s.label}</span>
+          </a>`;
+        }).join('')}
+      </nav>`;
+
     const tickerHtml = buildTickerStrip();
-    // Toggle a body class so CSS can drop the 30px sticky offset when the
-    // ticker isn't rendered — prevents a floating gap above the nav.
     if (document.body) document.body.classList.toggle('ta-has-ticker', !!tickerHtml);
 
     const html = `
       ${tickerHtml}
+      <div class="ta-secbar" id="taSecBar" role="navigation" aria-label="Sections">
+        <div class="ta-secbar-inner">${sectionSwitcherHtml}</div>
+      </div>
       <nav class="tarena-nav" id="tarenaNav">
-        <a href="index.html" class="logo">${logoSvg()} Trade<span>Arena</span></a>
-        <div class="nav-links">${linksHtml}</div>
-        <div class="nav-account">
+        <div class="ta-nav-left">
+          <a href="index.html" class="ta-nav-logo">${logoSvg()} <span>Trade<b>Arena</b></span></a>
+          ${sectionPillHtml}
+        </div>
+        <div class="ta-nav-center">${contextTabsHtml}</div>
+        <div class="ta-nav-right">
+          ${searchHtml}
+          ${installBtnHtml}
           ${accountHtml}
           <button class="ta-hamburger" id="taHamburger" aria-label="Open menu" aria-expanded="false">
             <span></span><span></span><span></span>
@@ -699,11 +824,42 @@
         <nav class="ta-drawer-nav">${drawerLinksHtml}</nav>
         <div class="ta-drawer-sep"></div>
         ${drawerAccountHtml}
-      </aside>`;
+      </aside>
+      ${bottomBarHtml}`;
 
     const mount = document.getElementById('tarena-nav');
     if (!mount) return;
     mount.innerHTML = html;
+
+    // ---- Context tab clicks: switch active state + dispatch event ----
+    // Pages can listen to `tarena:nav-tab` (detail: { section, value }) and
+    // update their internal UI. The first tab is active by default; click
+    // toggles the active class within the tabs container.
+    const ctxTabs = mount.querySelector('.ta-ctx-tabs');
+    if (ctxTabs && section) {
+      ctxTabs.addEventListener('click', (e) => {
+        const btn = e.target.closest('button.ta-ctx-tab');
+        if (!btn || !ctxTabs.contains(btn)) return;
+        ctxTabs.querySelectorAll('.ta-ctx-tab').forEach(b => b.classList.remove('on'));
+        btn.classList.add('on');
+        const value = btn.dataset[section.dataAttr] || btn.textContent.trim();
+        document.dispatchEvent(new CustomEvent('tarena:nav-tab', {
+          detail: { section: sectionKey, value },
+        }));
+      });
+    }
+
+    // ---- Search box: live grouped dropdown across markets ----------
+    // On a non-trade page, clicking a result navigates to
+    // `trade.html?symbol=XXX`. trade.html overrides this binding with
+    // its own selectSymbol() flow so the same input stays familiar.
+    wireNavSearch(activePage);
+
+    // ---- PWA Install button ----------------------------------------
+    // Captures `beforeinstallprompt`, reveals the gold pill, then replays
+    // the prompt on click. Hides itself permanently on `appinstalled`
+    // or when already running standalone.
+    wireInstallButton();
 
     // Account dropdown + notification bell. Bell + pill share an
     // outside-click closer that closes whichever isn't being interacted
@@ -781,6 +937,190 @@
 
     // Kick off a one-shot live refresh (crypto only) — no need to await.
     refreshTickerLive();
+  }
+
+  // ============================================================
+  // Live nav search — grouped dropdown across the simulated market
+  // catalogue. Re-wired on every renderNav so it works after page
+  // navigations / SPA-style swaps. Falls back gracefully if
+  // TArenaMarket isn't loaded yet.
+  // ============================================================
+  function wireNavSearch(activePage) {
+    const box  = document.getElementById('searchBox');
+    const out  = document.getElementById('searchResults');
+    const wrap = document.getElementById('taSearchWrap');
+    if (!box || !out || !wrap) return;
+
+    // Lazy-load market.js on pages that don't already include it, so
+    // the shared search dropdown has a catalogue to query everywhere.
+    // Idempotent: subsequent calls reuse the in-flight promise.
+    if (!global.TArenaMarket && !global.__tarena_market_loading) {
+      global.__tarena_market_loading = new Promise((resolve) => {
+        const s = document.createElement('script');
+        s.src = 'assets/market.js';
+        s.async = true;
+        s.onload = () => resolve(true);
+        s.onerror = () => resolve(false);
+        document.head.appendChild(s);
+      });
+    }
+
+    // Group icons + colours for the result rows. Stocks get a gold dot,
+    // crypto orange, forex blue — matches the section colour cues.
+    const TYPE_META = {
+      asx:    { label: 'STOCKS', colour: '#e8c060' },
+      us:     { label: 'STOCKS', colour: '#60a5fa' },
+      crypto: { label: 'CRYPTO', colour: '#f59e0b' },
+      forex:  { label: 'FOREX',  colour: '#a78bfa' },
+    };
+
+    function close() { out.classList.remove('open'); }
+    function open()  { out.classList.add('open');    }
+
+    function render(q) {
+      const M = global.TArenaMarket;
+      if (!M) {
+        out.innerHTML = '<div class="ta-sr-empty">Loading markets…</div>';
+        open();
+        // If market.js is being lazy-loaded, retry once it resolves.
+        if (global.__tarena_market_loading) {
+          global.__tarena_market_loading.then(() => { if (box.value.trim()) render(box.value.trim().toLowerCase()); });
+        }
+        return;
+      }
+      // TArenaMarket exposes either .all() or an internal catalogue;
+      // prefer .all() if available, otherwise fall back to common syms.
+      const list = (typeof M.all === 'function') ? M.all() : (M.symbols || []);
+      const matches = list
+        .filter(it => {
+          const sym = (it.symbol || '').toLowerCase();
+          const name = (it.name || '').toLowerCase();
+          return sym.includes(q) || name.includes(q);
+        })
+        .slice(0, 12);
+
+      if (!matches.length) {
+        out.innerHTML = '<div class="ta-sr-empty">No matches for &ldquo;' + escapeHtml(q) + '&rdquo;</div>';
+        return open();
+      }
+
+      // Group rows by market type for the section headings.
+      const groups = {};
+      matches.forEach(it => {
+        const k = it.market || 'asx';
+        (groups[k] = groups[k] || []).push(it);
+      });
+
+      out.innerHTML = Object.keys(groups).map(k => {
+        const meta = TYPE_META[k] || { label: k.toUpperCase(), colour: '#e8c060' };
+        const rows = groups[k].map(it => {
+          const up = (it.change || 0) >= 0;
+          const pxStr = '$' + Number(it.price || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          const pctStr = (up ? '+' : '') + Number(it.change || 0).toFixed(2) + '%';
+          return `<button type="button" class="ta-sr-row" data-sym="${escapeHtml(it.symbol)}">
+              <span class="ta-sr-dot" style="background:${meta.colour};"></span>
+              <span class="ta-sr-sym">${escapeHtml((it.symbol || '').replace('.AX',''))}</span>
+              <span class="ta-sr-name">${escapeHtml(it.name || '')}</span>
+              <span class="ta-sr-px">${pxStr}</span>
+              <span class="ta-sr-pct ${up ? 'up' : 'dn'}">${pctStr}</span>
+            </button>`;
+        }).join('');
+        return `<div class="ta-sr-group"><div class="ta-sr-head">${meta.label}</div>${rows}</div>`;
+      }).join('');
+
+      // Each row navigates to the trade page with the symbol in the URL.
+      // trade.html intercepts this on load (selectSymbol via ?symbol=).
+      out.querySelectorAll('.ta-sr-row').forEach(r => {
+        r.addEventListener('click', () => {
+          const sym = r.dataset.sym;
+          if (activePage === 'trade' && typeof global.selectSymbol === 'function') {
+            global.selectSymbol(sym);
+            box.value = '';
+            close();
+          } else {
+            window.location.href = 'trade.html?symbol=' + encodeURIComponent(sym);
+          }
+        });
+      });
+      open();
+    }
+
+    let timer = null;
+    box.addEventListener('input', () => {
+      clearTimeout(timer);
+      const q = box.value.trim().toLowerCase();
+      if (!q) { close(); return; }
+      timer = setTimeout(() => render(q), 140);
+    });
+    box.addEventListener('focus', () => { if (box.value.trim()) open(); });
+    document.addEventListener('click', (e) => {
+      if (!wrap.contains(e.target)) close();
+    });
+
+    // Global ⌘K / Ctrl+K shortcut focuses the search input from anywhere.
+    window.removeEventListener('keydown', global.__tarena_nav_search_key || (() => {}));
+    const onKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        box.focus();
+        box.select();
+      }
+      if (e.key === 'Escape' && document.activeElement === box) {
+        box.value = '';
+        close();
+        box.blur();
+      }
+    };
+    global.__tarena_nav_search_key = onKey;
+    window.addEventListener('keydown', onKey);
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  // ============================================================
+  // PWA install button wiring — shared across every page that has
+  // the renderNav-emitted #pwaInstallBtn. Listens for the browser's
+  // beforeinstallprompt event, reveals the button, then replays the
+  // captured prompt on click. Idempotent: re-running on each page
+  // reuses the cached deferredPrompt if the browser fired it earlier.
+  // ============================================================
+  function wireInstallButton() {
+    const btn = document.getElementById('pwaInstallBtn');
+    if (!btn) return;
+    const standalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches
+                    || window.navigator.standalone === true;
+    if (standalone) { btn.style.display = 'none'; return; }
+
+    // The browser only fires beforeinstallprompt once. Cache it on
+    // the global so a re-render (or a later page) can still use it.
+    if (!global.__tarena_install_listener) {
+      global.__tarena_install_listener = true;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        global.__tarena_deferred_install = e;
+        const cur = document.getElementById('pwaInstallBtn');
+        if (cur) cur.style.display = 'inline-flex';
+      });
+      window.addEventListener('appinstalled', () => {
+        global.__tarena_deferred_install = null;
+        const cur = document.getElementById('pwaInstallBtn');
+        if (cur) cur.style.display = 'none';
+      });
+    }
+    if (global.__tarena_deferred_install) btn.style.display = 'inline-flex';
+
+    btn.onclick = async () => {
+      const dp = global.__tarena_deferred_install;
+      if (!dp) return;
+      dp.prompt();
+      try { await dp.userChoice; } catch (_) {}
+      global.__tarena_deferred_install = null;
+      btn.style.display = 'none';
+    };
   }
 
   function renderFooter() {
