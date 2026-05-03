@@ -131,6 +131,10 @@
     .tf-btn.on{background:rgba(201,160,48,.18);color:var(--gold2);}
     .tf-sep{width:1px;height:18px;background:var(--bdl);margin:0 8px;}
     .ind-wrap{position:relative;}
+    .ind-tg{background:transparent;border:1px solid var(--bdl);color:var(--muted);font-family:inherit;font-size:10.5px;
+      font-weight:700;letter-spacing:.05em;padding:5px 10px;border-radius:6px;cursor:pointer;transition:.15s;margin-left:4px;}
+    .ind-tg:hover{color:var(--cream);border-color:var(--gold);}
+    .ind-tg.on{background:rgba(201,160,48,.22);border-color:rgba(201,160,48,.55);color:var(--gold2);}
     .ind-btn{background:var(--navy3);border:1px solid var(--bdl);color:var(--cream);font-family:inherit;font-size:11px;
              padding:5px 12px;border-radius:6px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:6px;}
     .ind-btn:hover{border-color:var(--gold);}
@@ -312,20 +316,12 @@
       <button class="tf-btn"     data-tf="1W">1W</button>
       <button class="tf-btn"     data-tf="1M">1M</button>
       <span class="tf-sep"></span>
-      <div class="ind-wrap">
-        <button class="ind-btn" id="indBtn">
-          <i class="fa-solid fa-wave-square"></i> Indicators <i class="fa-solid fa-chevron-up" style="font-size:9px;"></i>
-        </button>
-        <div class="ind-menu" id="indMenu">
-          <div class="ind-row"      data-ind="ema20"><div class="sw"></div><span>EMA 20</span></div>
-          <div class="ind-row"      data-ind="ema50"><div class="sw"></div><span>EMA 50</span></div>
-          <div class="ind-row"      data-ind="ema200"><div class="sw"></div><span>EMA 200</span></div>
-          <div class="ind-row"      data-ind="bb"><div class="sw"></div><span>Bollinger 20, 2</span></div>
-          <div class="ind-row"      data-ind="rsi"><div class="sw"></div><span>RSI 14</span></div>
-          <div class="ind-row"      data-ind="macd"><div class="sw"></div><span>MACD 12, 26, 9</span></div>
-          <div class="ind-row"      data-ind="vol"><div class="sw"></div><span>Volume</span></div>
-        </div>
-      </div>
+      <button class="ind-tg"     data-ind="ma"   title="MA 20/50/200 (yellow/blue/red)">MA</button>
+      <button class="ind-tg"     data-ind="ema"  title="EMA 9 (white)">EMA</button>
+      <button class="ind-tg"     data-ind="bb"   title="Bollinger Bands 20, 2">BB</button>
+      <button class="ind-tg"     data-ind="rsi"  title="RSI 14">RSI</button>
+      <button class="ind-tg"     data-ind="macd" title="MACD 12, 26, 9">MACD</button>
+      <button class="ind-tg on"  data-ind="vol"  title="Volume">VOL</button>
     </div>
   </main>
 
@@ -411,7 +407,7 @@ const state = {
   symbol: CATALOG[initSym] ? initSym : 'BHP.AX',
   tf: '1D',
   style: 'candles',
-  indicators: { ema20:false, ema50:false, ema200:false, bb:false, rsi:false, macd:false, vol:true },
+  indicators: { ma:false, ema:false, bb:false, rsi:false, macd:false, vol:true },
   rrTab: 'chain',
   bars: [],
   last: null,
@@ -472,7 +468,7 @@ const CHART_THEME = {
 let mainChart, mainSeries, mainSeriesKind = 'candles', volSeries, axesLinked = false;
 let rsiChart, rsiSeries, rsiHi, rsiLo;
 let macdChart, macdLine, macdSig, macdHist;
-const overlaySeries = {}; // ema20, ema50, ema200, bbU, bbM, bbL
+const overlaySeries = {}; // ma20, ma50, ma200, ema9, bbU, bbM, bbL
 
 function ensureMainChart(){
   if (mainChart) return;
@@ -643,19 +639,35 @@ function applyOverlays(){
     const d = new Date(b.t);
     return daily ? d.toISOString().slice(0,10) : Math.floor(b.t/1000);
   });
-  const setLine = (id, color, vals) => {
-    const s = mainChart.addLineSeries({ color, lineWidth:1, priceLineVisible:false, lastValueVisible:false });
+  // Helper: add a line overlay with optional dashed style. lineStyle 0 =
+  // solid, 2 = dashed in Lightweight Charts.
+  const setLine = (id, color, vals, opts = {}) => {
+    const s = mainChart.addLineSeries({
+      color,
+      lineWidth: opts.width || 1,
+      lineStyle: opts.dashed ? 2 : 0,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
     const data = vals.map((v,i) => v == null ? null : { time: times[i], value: v }).filter(Boolean);
     s.setData(data); overlaySeries[id] = s;
   };
-  if (state.indicators.ema20)  setLine('ema20',  '#e8c060', ema(closes, 20));
-  if (state.indicators.ema50)  setLine('ema50',  '#a8c1db', ema(closes, 50));
-  if (state.indicators.ema200) setLine('ema200', '#60a5fa', ema(closes, 200));
-  if (state.indicators.bb){
+  // MA group — SMA 20 (gold), SMA 50 (blue), SMA 200 (red).
+  if (state.indicators.ma) {
+    setLine('ma20',  '#e8c060', sma(closes, 20),  { width:2 });
+    setLine('ma50',  '#60a5fa', sma(closes, 50),  { width:2 });
+    setLine('ma200', '#f87171', sma(closes, 200), { width:2 });
+  }
+  // EMA 9 — thin white line for fast trend.
+  if (state.indicators.ema) {
+    setLine('ema9', '#ffffff', ema(closes, 9), { width:1 });
+  }
+  // Bollinger Bands — dashed gold envelope around a grey middle line.
+  if (state.indicators.bb) {
     const bb = bollinger(closes, 20, 2);
-    setLine('bbU','rgba(96,165,250,0.45)', bb.upper);
-    setLine('bbM','rgba(96,165,250,0.7)',  bb.mid);
-    setLine('bbL','rgba(96,165,250,0.45)', bb.lower);
+    setLine('bbU', '#c9a030', bb.upper, { dashed:true });
+    setLine('bbM', 'rgba(168,193,219,0.5)', bb.mid);
+    setLine('bbL', '#c9a030', bb.lower, { dashed:true });
   }
   // RSI pane
   if (state.indicators.rsi){
@@ -726,11 +738,19 @@ async function loadBars(){
   } else {
     mainSeries.setData(rows.map(r => ({time:r.time, value:r.close})));
   }
-  if (state.indicators.vol && volSeries) {
-    volSeries.setData(rows.map(r => ({time:r.time, value:r.value || 0,
-      color: r.close >= r.open ? 'rgba(74,222,128,0.35)' : 'rgba(248,113,113,0.35)'})));
-  } else if (volSeries) {
-    volSeries.setData([]);
+  // Volume — always populated; toggle just hides the series via setData([]).
+  if (volSeries) {
+    if (state.indicators.vol) {
+      volSeries.setData(rows.map(r => ({
+        time: r.time,
+        value: r.value || 0,
+        // Up bars green, down bars red — matches the candle palette so the
+        // volume pane reads at a glance.
+        color: r.close >= r.open ? 'rgba(74,222,128,0.55)' : 'rgba(248,113,113,0.55)',
+      })));
+    } else {
+      volSeries.setData([]);
+    }
   }
   applyOverlays();
   linkAxes();
@@ -1031,18 +1051,34 @@ document.querySelectorAll('.cc-tool').forEach(btn => btn.addEventListener('click
   loadBars();
 }));
 
-// ----- Indicators dropdown -----
-const indBtn = document.getElementById('indBtn'), indMenu = document.getElementById('indMenu');
-indBtn.addEventListener('click', e => { e.stopPropagation(); indMenu.classList.toggle('open'); });
-document.addEventListener('click', () => indMenu.classList.remove('open'));
-indMenu.addEventListener('click', e => e.stopPropagation());
-document.querySelectorAll('.ind-row').forEach(row => {
-  const k = row.dataset.ind;
-  if (state.indicators[k]) row.classList.add('on');
-  row.addEventListener('click', () => {
+// ----- Indicator toggle buttons (toolbar) -----
+// One button per indicator group. Active state is gold-filled, inactive
+// is outline only. VOL just retoggles the volume histogram visibility
+// without rebuilding the chart (cheaper than loadBars).
+document.querySelectorAll('.ind-tg').forEach(btn => {
+  const k = btn.dataset.ind;
+  btn.classList.toggle('on', !!state.indicators[k]);
+  btn.addEventListener('click', () => {
     state.indicators[k] = !state.indicators[k];
-    row.classList.toggle('on', state.indicators[k]);
-    if (k === 'vol') loadBars(); else applyOverlays();
+    btn.classList.toggle('on', state.indicators[k]);
+    if (k === 'vol') {
+      // Re-render volume from cached rows without refetching.
+      if (volSeries && state.bars.length) {
+        if (state.indicators.vol) {
+          const daily = ['1D','1W','1M'].includes(state.tf);
+          const rows = toLwcRows(state.bars, daily);
+          volSeries.setData(rows.map(r => ({
+            time: r.time,
+            value: r.value || 0,
+            color: r.close >= r.open ? 'rgba(74,222,128,0.55)' : 'rgba(248,113,113,0.55)',
+          })));
+        } else {
+          volSeries.setData([]);
+        }
+      }
+    } else {
+      applyOverlays();
+    }
   });
 });
 
