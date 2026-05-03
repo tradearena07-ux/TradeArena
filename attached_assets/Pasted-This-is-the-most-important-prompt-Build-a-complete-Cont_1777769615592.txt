@@ -1,0 +1,119 @@
+This is the most important prompt. Build a complete Content 
+Management System inside admin.html so admins can publish 
+content that users see.
+
+ADMIN EMAIL: tradearena07@gmail.com
+Only this email can access admin features.
+
+ADD THESE TABS TO admin.html:
+
+TAB 1 — "Schools & Lessons" (Content CMS)
+This is how admins publish school content:
+
+MODULE MANAGER:
+- List of all modules from Supabase schools table
+- Each module shows: title, lessons count, published/draft status
+- "Add New Module" button opens a form:
+  → Module title
+  → Description  
+  → Difficulty: Beginner/Intermediate/Advanced
+  → Reward amount (paper capital to award on completion)
+  → Order/position number
+  → Published toggle (draft until ready)
+  → Save button → inserts to Supabase schools table
+
+LESSON MANAGER (inside each module):
+- Click a module → see its lessons
+- "Add New Lesson" button opens a form:
+  → Lesson title
+  → Content (rich text area — support bold, headers, bullet points)
+  → Optional: embed YouTube video URL
+  → Optional: add quiz question + 4 answer options + correct answer
+  → Order/position number
+  → Save button → inserts to Supabase lessons table
+
+- Edit/Delete buttons on each lesson
+- Drag to reorder lessons
+
+TAB 2 — "Announcements"
+- Write announcement that appears as banner on trade.html
+- Title + message + type (info/warning/success)
+- Publish toggle
+- Saved to Supabase announcements table
+- Users see this as a gold banner at top of trade.html
+
+TAB 3 — "User Management" (already exists, keep it)
+- Registrations table
+- University breakdown
+- Already working — just keep this
+
+TAB 4 — "Leaderboard Management"
+- See full leaderboard
+- Ability to award bonus paper capital to a user
+- Input: user email + amount + reason
+- Updates their portfolio cash_balance in Supabase
+- Logged in an admin_actions table
+
+SUPABASE TABLES NEEDED:
+Run these in Supabase SQL editor:
+
+-- Schools/Modules table
+create table if not exists schools (
+  id uuid default gen_random_uuid() primary key,
+  title text not null,
+  description text,
+  difficulty text default 'Beginner',
+  reward_capital integer default 500,
+  order_index integer default 0,
+  published boolean default false,
+  created_at timestamptz default now()
+);
+
+-- Lessons table  
+create table if not exists lessons (
+  id uuid default gen_random_uuid() primary key,
+  school_id uuid references schools(id) on delete cascade,
+  title text not null,
+  content text,
+  video_url text,
+  quiz jsonb,
+  order_index integer default 0,
+  created_at timestamptz default now()
+);
+
+-- User progress table
+create table if not exists user_progress (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users(id),
+  lesson_id uuid references lessons(id),
+  completed boolean default false,
+  completed_at timestamptz,
+  unique(user_id, lesson_id)
+);
+
+-- Announcements table
+create table if not exists announcements (
+  id uuid default gen_random_uuid() primary key,
+  title text,
+  message text not null,
+  type text default 'info',
+  published boolean default false,
+  created_at timestamptz default now()
+);
+
+-- Admin actions log
+create table if not exists admin_actions (
+  id uuid default gen_random_uuid() primary key,
+  admin_email text,
+  action text,
+  target_email text,
+  amount numeric,
+  reason text,
+  created_at timestamptz default now()
+);
+
+Enable RLS on all tables.
+Allow authenticated users to READ schools, lessons, user_progress.
+Allow only admin email to INSERT/UPDATE/DELETE everything.
+
+Match exact navy/gold TradeArena theme.
