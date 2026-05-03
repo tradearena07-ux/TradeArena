@@ -43,7 +43,7 @@ else
 fi
 
 echo "Deploying data-proxy…"
-$SUPA functions deploy data-proxy
+$SUPA functions deploy data-proxy --no-verify-jwt
 
 echo
 echo "Smoke-testing /v1/data-proxy…"
