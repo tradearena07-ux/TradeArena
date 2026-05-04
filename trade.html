@@ -893,25 +893,30 @@ async function fetchPrices(symbols) {
     );
   }
 
-  // ASX + US stocks via Yahoo Finance (CORS-bypassed through corsproxy.io).
-  // Yahoo's /v8/finance/chart endpoint returns price + change% + day high/low
-  // + volume + 52w high/low in `meta` — single call per symbol gets every
-  // field the UI needs. Per-symbol promises so a slow ticker doesn't block
-  // the rest of the table.
+  // ASX + US stocks via /api/market (Vercel serverless — no CORS issues).
+  // Bulk request for all stocks in one shot via the server-side proxy.
   const stocksToFetch = [...(groups.us || []), ...(groups.asx || [])];
-  stocksToFetch.forEach(s => {
+  if (stocksToFetch.length) {
     tasks.push(
-      fetchYahooQuote(s).then(q => {
-        if (q && q.price > 0) {
-          out[s] = {
-            price: q.price, change: q.changePct, changePct: q.changePct,
-            _hi: q.dayHigh, _lo: q.dayLow, _vol: q.volume,
-            _h52: q.h52, _l52: q.l52,
-          };
-        }
-      }).catch(e => console.warn('Yahoo failed for', s, e.message))
+      fetch('/api/market?type=bulk&symbol=' + encodeURIComponent(stocksToFetch.join(',')))
+        .then(r => r.json())
+        .then(j => {
+          if (j.success && j.data) {
+            j.data.forEach(q => {
+              if (!q || !q.price) return;
+              const key = q.symbol.replace('.AX', '');
+              const k = stocksToFetch.includes(key) ? key : (stocksToFetch.includes(q.symbol) ? q.symbol : null);
+              if (k) out[k] = {
+                price: q.price, change: q.change, changePct: q.change,
+                _hi: q.high, _lo: q.low, _vol: q.volume,
+                _h52: q.fiftyTwoWeekHigh || 0, _l52: q.fiftyTwoWeekLow || 0,
+              };
+            });
+          }
+        })
+        .catch(e => console.warn('[fetchPrices] /api/market bulk failed', e.message))
     );
-  });
+  }
 
   await Promise.all(tasks);
 
@@ -923,87 +928,15 @@ async function fetchPrices(symbols) {
   return out;
 }
 
-// Yahoo Finance via corsproxy.io. Yahoo's /v8/finance/chart endpoint has no
-// CORS headers so direct browser calls fail; corsproxy.io's free tier
-// rewrites the response with `access-control-allow-origin: *`. Single call
-// per symbol returns price + change% + day OHLCV + 52w high/low in `meta`.
-// Yahoo's /v8/finance/chart endpoint has no CORS headers, so we proxy
-// through one of three free CORS rewriters. We race them in order — if the
-// primary times out or returns garbage we fall back transparently. Each
-// proxy gets a 6s budget; the whole call gives up after the last one.
-const YAHOO_PATH   = 'query1.finance.yahoo.com/v8/finance/chart/';
-const YAHOO_PROXIES = [
-  u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
-  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-  u => `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(u)}`,
-];
-const _yfCache = {}; // symbol → { ts, payload }
-const _YF_TTL  = 10 * 1000;
-
-async function _fetchYahooJson(path) {
-  const upstream = `https://${YAHOO_PATH}${path}`;
-  let lastErr;
-  for (const wrap of YAHOO_PROXIES) {
-    try {
-      const ctl = new AbortController();
-      const tm  = setTimeout(() => ctl.abort(), 6000);
-      const r   = await fetch(wrap(upstream), { signal: ctl.signal });
-      clearTimeout(tm);
-      if (!r.ok) { lastErr = new Error('HTTP ' + r.status); continue; }
-      const j = await r.json();
-      if (j && j.chart && j.chart.result && j.chart.result[0]) return j;
-      lastErr = new Error('bad shape');
-    } catch (e) { lastErr = e; }
-  }
-  throw lastErr || new Error('all proxies failed');
-}
-
-async function fetchYahooQuote(symbol) {
-  const cached = _yfCache[symbol];
-  if (cached && (Date.now() - cached.ts) < _YF_TTL) return cached.payload;
-  const j = await _fetchYahooJson(`${encodeURIComponent(symbol)}?interval=1d&range=1d`);
-  const m = j.chart.result[0].meta;
-  if (!m) throw new Error('no meta');
-  const price = Number(m.regularMarketPrice) || 0;
-  const prev  = Number(m.chartPreviousClose) || Number(m.previousClose) || 0;
-  // Yahoo doesn't always include regularMarketChangePercent — derive from
-  // price vs previous close as a deterministic fallback.
-  const yfChg = m.regularMarketChangePercent;
-  const changePct = (typeof yfChg === 'number') ? yfChg
-    : (price && prev) ? ((price - prev) / prev) * 100 : 0;
-  const payload = {
-    price, changePct,
-    dayHigh: Number(m.regularMarketDayHigh) || 0,
-    dayLow:  Number(m.regularMarketDayLow)  || 0,
-    volume:  Number(m.regularMarketVolume)  || 0,
-    h52:     Number(m.fiftyTwoWeekHigh)     || 0,
-    l52:     Number(m.fiftyTwoWeekLow)      || 0,
-  };
-  _yfCache[symbol] = { ts: Date.now(), payload };
-  return payload;
-}
-
-// Daily OHLCV bars for the candlestick chart. Uses the same multi-proxy
-// fetcher so bar requests survive a corsproxy.io outage.
+// ── fetchYahooBars: routes through /api/market (Vercel serverless) ──
+// No CORS proxies. Server-side Yahoo fetch. Called by refreshChart.
 async function fetchYahooBars(symbol, range, interval) {
-  const j = await _fetchYahooJson(`${encodeURIComponent(symbol)}?interval=${interval || '1d'}&range=${range || '1y'}`);
-  const result = j.chart.result[0];
-  if (!result) throw new Error('no result');
-  const ts  = result.timestamp || [];
-  const q   = (result.indicators && result.indicators.quote && result.indicators.quote[0]) || {};
-  const O = q.open || [], H = q.high || [], L = q.low || [], C = q.close || [], V = q.volume || [];
-  const bars = [];
-  for (let i = 0; i < ts.length; i++) {
-    const o = O[i], h = H[i], l = L[i], c = C[i];
-    if (o == null || h == null || l == null || c == null) continue;
-    bars.push({ time: ts[i], open: +o, high: +h, low: +l, close: +c, volume: +(V[i] || 0) });
-  }
-  return bars;
+  const r = await fetch(`/api/market?type=history&symbol=${encodeURIComponent(symbol)}&interval=${interval || '1d'}&range=${range || '1y'}`);
+  const j = await r.json();
+  if (!j.success || !j.data || !j.data.length) throw new Error('no bars from /api/market for ' + symbol);
+  return j.data; // [{time, open, high, low, close, volume}, ...]
 }
-
-// Legacy shim — older call sites still reference fetchExtendedSnapshots.
-// Now a no-op since fetchYahooQuote already returns every extended field
-// in one round trip and writes them into `out` via fetchPrices.
+// Legacy shim
 async function fetchExtendedSnapshots(symbols, out) { return; }
 
 // ============ CHART (Lightweight Charts, synthetic OHLCV) ============

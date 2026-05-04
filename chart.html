@@ -1232,48 +1232,27 @@ document.getElementById('btnSell').addEventListener('click', () => location.href
 // The Supabase data-proxy edge function works for normal tickers, but
 // index symbols (^AXJO / ^GSPC / ^IXIC) and the occasional rate-limited
 // stock fetch return nothing. This block hits Yahoo Finance directly
-// through three rotating public CORS proxies so the index strip, the
-// symbol header and the chart all degrade gracefully when the edge
-// function is unavailable. Crypto continues to use Binance via the
-// existing TArenaDatafeed (more reliable than Yahoo for live ticks).
-// =====================================================================
-const YAHOO_PROXIES = [
-  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-  u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
-  u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
-];
-// Yahoo treats ^AXJO/^GSPC/^IXIC as URL-safe when % -encoded — let the
-// browser handle that via encodeURIComponent in the proxy wrappers.
-async function yahooFetchJson(yahooUrl){
-  for (const wrap of YAHOO_PROXIES){
-    try {
-      const ctl = new AbortController();
-      const timer = setTimeout(() => ctl.abort(), 5000);
-      const res = await fetch(wrap(yahooUrl), { signal: ctl.signal });
-      clearTimeout(timer);
-      if (!res.ok) continue;
-      return await res.json();
-    } catch(_){ /* try next proxy */ }
-  }
-  return null;
-}
+// ── getLivePrice: routes through /api/market (Vercel serverless) ──
+// No CORS proxies. Server-side Yahoo fetch.
 async function getLivePrice(symbol){
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`;
-  const data = await yahooFetchJson(url);
-  const meta = data?.chart?.result?.[0]?.meta;
-  if (!meta || !(meta.regularMarketPrice > 0)) return null;
-  return {
-    price:     meta.regularMarketPrice,
-    changePct: meta.regularMarketChangePercent,
-    change:    (meta.regularMarketPrice - (meta.chartPreviousClose ?? meta.previousClose ?? meta.regularMarketPrice)),
-    open:      meta.regularMarketOpen,
-    high:      meta.regularMarketDayHigh,
-    low:       meta.regularMarketDayLow,
-    prevClose: meta.chartPreviousClose ?? meta.previousClose,
-    volume:    meta.regularMarketVolume,
-  };
+  try {
+    const r = await fetch(`/api/market?type=stock&symbol=${encodeURIComponent(symbol)}`);
+    const j = await r.json();
+    if (!j.success || !j.data) return null;
+    const d = j.data;
+    return {
+      price:     d.price,
+      changePct: d.change,
+      change:    d.changeAbs || (d.price - (d.prevClose || d.price)),
+      open:      d.open,
+      high:      d.high,
+      low:       d.low,
+      prevClose: d.prevClose,
+      volume:    d.volume,
+    };
+  } catch(e) { return null; }
 }
-// Map our internal timeframe codes → Yahoo (interval, range) pairs.
+// Map our internal timeframe codes → (interval, range) pairs.
 const TF_YAHOO = {
   '1m':['1m','1d'], '5m':['5m','5d'], '15m':['15m','5d'],
   '1h':['1h','1mo'], '4h':['1h','3mo'],
@@ -1281,28 +1260,21 @@ const TF_YAHOO = {
 };
 async function getChartData(symbol, tf){
   const [interval, range] = TF_YAHOO[tf] || TF_YAHOO['1D'];
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${interval}&range=${range}`;
-  const data = await yahooFetchJson(url);
-  const r = data?.chart?.result?.[0];
-  if (!r) return [];
-  const ts = r.timestamp || [];
-  const o = r.indicators?.quote?.[0] || {};
-  const out = [];
-  for (let i=0;i<ts.length;i++){
-    const c = o.close?.[i];
-    if (!isFinite(c) || c == null) continue;
-    out.push({
-      t: ts[i]*1000,
-      o: o.open?.[i]  ?? c,
-      h: o.high?.[i]  ?? c,
-      l: o.low?.[i]   ?? c,
-      c,
-      v: o.volume?.[i] ?? 0,
-    });
-  }
-  return out;
+  try {
+    const r = await fetch(`/api/market?type=history&symbol=${encodeURIComponent(symbol)}&interval=${interval}&range=${range}`);
+    const j = await r.json();
+    if (!j.success || !j.data || !j.data.length) return [];
+    // Convert from {time,open,high,low,close,volume} to chart.html's {t,o,h,l,c,v} format
+    return j.data.map(b => ({
+      t: b.time * 1000,
+      o: b.open,
+      h: b.high,
+      l: b.low,
+      c: b.close,
+      v: b.volume || 0,
+    }));
+  } catch(e) { return []; }
 }
-
 // =====================================================================
 //  INDEX STRIP — small live tape across the top
 // =====================================================================
@@ -1317,19 +1289,21 @@ async function paintIndexStrip(){
         <span class="ix-c" id="ixc_${s.replace(/[^A-Z0-9]/g,'')}">—</span>
       </div>`).join('');
   }
-  // Two-track strategy: try the edge-function batch first (fast, single
-  // request) and fill any blanks via Yahoo direct so index symbols always
-  // show a price even when the proxy is missing.
+  // All symbols fetched via /api/market (Vercel serverless — no CORS).
+  // Crypto goes through CoinGecko server-side; indices/equities via Yahoo.
   let q = {};
-  try {
-    if (window.TArenaDatafeed?.fetchQuotes) q = await window.TArenaDatafeed.fetchQuotes(INDEX_STRIP) || {};
-  } catch(_){}
+  // Try MarketData cache first (already populated by startLivePrices)
+  if (window.marketData) {
+    const { stocks, crypto, indices } = window.marketData;
+    INDEX_STRIP.forEach(s => {
+      const d = stocks?.[s] || stocks?.[s + '.AX'] || crypto?.[s] || indices?.[s];
+      if (d && d.price > 0) q[s] = { price: d.price, changePct: d.change || 0, change: d.changeAbs || 0 };
+    });
+  }
   await Promise.all(INDEX_STRIP.map(async (s) => {
     let v = q[s];
     if (!v || !(v.price > 0)) {
-      // Crypto uses Binance via TArenaDatafeed; only use Yahoo for
-      // index symbols and equities.
-      if (s !== 'BTC' && s !== 'ETH') v = await getLivePrice(s);
+      v = await getLivePrice(s);
     }
     if (tk !== indexStripToken) return; // a newer run is in flight
     const idP = 'ix_' + s.replace(/[^A-Z0-9]/g,'');

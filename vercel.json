@@ -1,0 +1,25 @@
+{
+  "functions": {
+    "api/market.js": {
+      "maxDuration": 15,
+      "memory": 256
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin",  "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" },
+        { "key": "Cache-Control",                "value": "s-maxage=10, stale-while-revalidate=5" }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/market",
+      "destination": "/api/market.js"
+    }
+  ]
+}
