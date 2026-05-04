@@ -8,7 +8,7 @@
  * Bump CACHE_VERSION whenever any precached file changes — the
  * activate handler will purge older caches automatically.
  */
-const CACHE_VERSION = 'tradearena-v2';
+const CACHE_VERSION = 'tradearena-v3';
 const PRECACHE = [
   '/',
   '/index.html',
@@ -45,6 +45,7 @@ const PRECACHE = [
   '/assets/datafeed.js',
   '/assets/reels.js',
   '/assets/chart-bootstrap.js',
+  '/assets/js/market-data.js',
 ];
 
 // ----- Install: precache the shell ---------------------------------

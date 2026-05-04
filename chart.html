@@ -360,6 +360,7 @@
 <script src="assets/supabase.js"></script>
 <script src="assets/app.js"></script>
 <script src="assets/datafeed.js"></script>
+<script src="assets/js/market-data.js"></script>
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <script>
 /* =================================================================
@@ -1285,6 +1286,97 @@ async function refreshLivePrice(){
 }
 // Same guard for the index strip so a slow run can't clobber a newer one.
 let indexStripToken = 0;
+
+// =====================================================================
+//  CENTRALIZED MARKET DATA INTEGRATION
+// =====================================================================
+// Start the centralized MarketData engine to supplement the existing
+// Yahoo/TArenaDatafeed pipeline. The marketDataUpdated event fires every
+// 15s with fresh prices for all tracked symbols.
+if (window.MarketData) {
+  window.MarketData.startMarketRefresh();
+}
+window.addEventListener('marketDataUpdated', function(e) {
+  var md = e.detail;
+  if (!md) return;
+  // Update index strip from centralized data
+  if (md.indices) {
+    var indexMap = { 'ASX200': '^AXJO', 'SP500': '^GSPC', 'NASDAQ': '^IXIC', 'DOW': '^DJI' };
+    Object.keys(md.indices).forEach(function(key) {
+      var idx = md.indices[key];
+      if (!idx || !idx.price) return;
+      var yahooSym = indexMap[key];
+      if (!yahooSym) return;
+      var idP = 'ix_' + yahooSym.replace(/[^A-Z0-9]/g, '');
+      var idC = 'ixc_' + yahooSym.replace(/[^A-Z0-9]/g, '');
+      var elP = document.getElementById(idP);
+      var elC = document.getElementById(idC);
+      if (elP) elP.textContent = fmtNum(idx.price);
+      if (elC) {
+        var pct = idx.change || 0;
+        elC.textContent = fmtPct(pct);
+        elC.className = 'ix-c ' + (pct >= 0 ? 'up' : 'dn');
+      }
+    });
+  }
+  // Update crypto in index strip from centralized data
+  if (md.crypto) {
+    ['BTC', 'ETH'].forEach(function(sym) {
+      var c = md.crypto[sym];
+      if (!c || !c.price) return;
+      var idP = 'ix_' + sym;
+      var idC = 'ixc_' + sym;
+      var elP = document.getElementById(idP);
+      var elC = document.getElementById(idC);
+      if (elP) elP.textContent = fmtNum(c.price);
+      if (elC) {
+        var pct = c.change || 0;
+        elC.textContent = fmtPct(pct);
+        elC.className = 'ix-c ' + (pct >= 0 ? 'up' : 'dn');
+      }
+    });
+  }
+  // Update stocks in index strip from centralized data
+  if (md.stocks) {
+    ['AAPL', 'TSLA'].forEach(function(sym) {
+      var s = md.stocks[sym];
+      if (!s || !s.price) return;
+      var idP = 'ix_' + sym;
+      var idC = 'ixc_' + sym;
+      var elP = document.getElementById(idP);
+      var elC = document.getElementById(idC);
+      if (elP) elP.textContent = fmtNum(s.price);
+      if (elC) {
+        var pct = s.change || 0;
+        elC.textContent = fmtPct(pct);
+        elC.className = 'ix-c ' + (pct >= 0 ? 'up' : 'dn');
+      }
+    });
+  }
+  // Refresh the active symbol header if we have centralized data for it
+  var activeSym = state.symbol;
+  if (activeSym) {
+    var symClean = activeSym.replace('.AX', '');
+    var isASX = activeSym.endsWith('.AX');
+    var stockData = md.stocks && md.stocks[symClean];
+    var cryptoData = md.crypto && md.crypto[activeSym];
+    if (stockData && stockData.price) {
+      state.last = stockData.price;
+      paintLivePrice({
+        price: stockData.price,
+        change: stockData.changeAbs || 0,
+        changePct: stockData.change || 0,
+      });
+    } else if (cryptoData && cryptoData.price) {
+      state.last = cryptoData.price;
+      paintLivePrice({
+        price: cryptoData.price,
+        change: cryptoData.changeAbs || 0,
+        changePct: cryptoData.change || 0,
+      });
+    }
+  }
+});
 
 // =====================================================================
 //  BOOT

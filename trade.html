@@ -519,6 +519,7 @@
 <script src="assets/app.js"></script>
 <script src="assets/market.js"></script>
 <script src="assets/datafeed.js"></script>
+<script src="assets/js/market-data.js"></script>
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <script>
 /* =================================================================
@@ -1960,7 +1961,59 @@ function syncTickerStrip() {
     m.change = px.changePct || 0;
   });
   if (window.TArenaUI && window.TArenaUI.repaintTicker) window.TArenaUI.repaintTicker();
+  // Also update via centralized MarketData ticker
+  if (window.MarketData && window.marketData) {
+    window.MarketData.updateTickerBar(window.marketData);
+  }
 }
+
+// ============ CENTRALIZED MARKET DATA INTEGRATION ============
+// Start the centralized engine alongside the existing per-symbol fetcher.
+// The marketDataUpdated event supplements PRICES with data from MarketData
+// for any symbols that might have been missed or for faster initial paint.
+if (window.MarketData) {
+  window.MarketData.startMarketRefresh();
+}
+window.addEventListener('marketDataUpdated', function(e) {
+  var md = e.detail;
+  if (!md) return;
+  // Merge centralized stock data into PRICES store
+  if (md.stocks) {
+    Object.keys(md.stocks).forEach(function(sym) {
+      var stock = md.stocks[sym];
+      if (!stock || !stock.price) return;
+      var ticker = stock.exchange === 'ASX' ? sym + '.AX' : sym;
+      if (CATALOG[ticker] && (!PRICES[ticker] || !PRICES[ticker].price)) {
+        PRICES[ticker] = {
+          price: stock.price,
+          change: stock.change || 0,
+          changePct: stock.change || 0,
+          _hi: stock.high,
+          _lo: stock.low,
+          _vol: stock.volume,
+          _h52: stock.h52,
+          _l52: stock.l52,
+          ts: Date.now(),
+        };
+      }
+    });
+  }
+  // Merge centralized crypto data into PRICES store
+  if (md.crypto) {
+    Object.keys(md.crypto).forEach(function(sym) {
+      var crypto = md.crypto[sym];
+      if (!crypto || !crypto.price) return;
+      if (CATALOG[sym] && (!PRICES[sym] || !PRICES[sym].price)) {
+        PRICES[sym] = {
+          price: crypto.price,
+          change: crypto.change || 0,
+          changePct: crypto.change || 0,
+          ts: Date.now(),
+        };
+      }
+    });
+  }
+})
 
 // Nudge the latest candle's close to the freshest price so the chart
 // reflects the price update without re-fetching 200 bars every 15s.

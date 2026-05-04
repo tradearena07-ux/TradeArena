@@ -747,6 +747,7 @@
 <script src="assets/supabase.js"></script>
 <script src="assets/app.js"></script>
 <script src="assets/market.js"></script>
+<script src="assets/js/market-data.js"></script>
 <script>
   /* ----- Scroll-aware nav ----- */
   const lnNav = document.getElementById('lnNav');
@@ -846,19 +847,75 @@
   });
 
   /* ----- Hero mockup price ticker -----
-     Pulls BHP.AX from the simulated TArenaMarket feed so the mockup
-     price lines up with the rest of the site. Refreshes every 6s. */
+     Now powered by MarketData centralized engine. Falls back to
+     TArenaMarket if MarketData hasn't loaded yet. */
   function refreshMockPrice(){
+    const md = window.marketData;
+    const el = document.getElementById('hMockPx');
+    if (!el) return;
+    // Try centralized MarketData first
+    if (md && md.stocks && md.stocks.BHP && md.stocks.BHP.price) {
+      const bhp = md.stocks.BHP;
+      const up = bhp.change >= 0;
+      el.style.color = up ? 'var(--green)' : 'var(--red)';
+      el.innerHTML = '$' + bhp.price.toFixed(2) +
+        ' <span class="pct">' + (up ? '+' : '') + bhp.change.toFixed(2) + '%</span>';
+      return;
+    }
+    // Fallback to TArenaMarket
     if (!window.TArenaMarket) return;
     const bhp = window.TArenaMarket.find('BHP.AX');
     if (!bhp) return;
-    const el = document.getElementById('hMockPx');
     const up = bhp.change >= 0;
     el.style.color = up ? 'var(--green)' : 'var(--red)';
     el.innerHTML = '$' + bhp.price.toFixed(2) +
       ' <span class="pct">' + (up ? '+' : '') + bhp.change.toFixed(2) + '%</span>';
   }
+
+  /* ----- Hero watchlist mini-cards -----
+     Update the three mini cards (CBA, AAPL, BTC) with live data. */
+  function refreshMockWatchlist(){
+    const md = window.marketData;
+    if (!md) return;
+    const cards = document.querySelectorAll('.mk-wl-it');
+    const items = [
+      { sym: 'CBA', data: md.stocks && md.stocks.CBA },
+      { sym: 'AAPL', data: md.stocks && md.stocks.AAPL },
+      { sym: 'BTC',  data: md.crypto && md.crypto.BTC },
+    ];
+    items.forEach(function(item, i){
+      if (!cards[i] || !item.data || !item.data.price) return;
+      const pEl = cards[i].querySelector('.p');
+      const cEl = cards[i].querySelector('.c');
+      if (pEl) {
+        pEl.textContent = item.data.price >= 1000
+          ? '$' + Math.round(item.data.price).toLocaleString('en-AU')
+          : '$' + item.data.price.toFixed(2);
+      }
+      if (cEl) {
+        const up = item.data.change >= 0;
+        cEl.style.color = up ? 'var(--green)' : 'var(--red)';
+        cEl.textContent = (up ? '+' : '') + item.data.change.toFixed(1) + '%';
+      }
+    });
+  }
+
+  // Start the centralized market data engine
+  if (window.MarketData) {
+    window.MarketData.startMarketRefresh();
+  }
+
+  // Listen for centralized market data updates
+  window.addEventListener('marketDataUpdated', function(e){
+    refreshMockPrice();
+    refreshMockWatchlist();
+    // Update ticker bar with live data
+    if (window.MarketData) window.MarketData.updateTickerBar(e.detail);
+  });
+
+  // Initial paint (fallback to legacy)
   refreshMockPrice();
+  // Keep legacy tick for immediate visual feedback while MarketData loads
   setInterval(() => { window.TArenaMarket && window.TArenaMarket.tick(); refreshMockPrice(); }, 6000);
 
   /* =================================================================
@@ -1086,13 +1143,11 @@
   })();
 
   /* ----- Global ticker strip -----
-     Section 3 of the spec. The #taTicker rails are pre-rendered in
-     markup (so they stick above the nav from first paint); we just
-     fill them with the latest TArenaMarket prices and refresh on
-     every market tick. */
+     Now powered by MarketData centralized engine. The ticker is
+     updated via the marketDataUpdated event above. Legacy repaint
+     kept as fallback for initial paint before MarketData loads. */
   function paintTicker(){ window.TArenaUI?.repaintTicker && window.TArenaUI.repaintTicker(); }
   paintTicker();
-  setInterval(() => { window.TArenaMarket?.tick(); paintTicker(); }, 4000);
 
   console.log('%cTradeArena · Welcome.', 'color:#e8c060;font-size:14px;font-weight:700;');
 </script>
