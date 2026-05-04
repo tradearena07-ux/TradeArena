@@ -454,8 +454,8 @@
       </div>
       <div class="sym-r">
         <div class="sym-px">
-          <div class="p" id="symPx">$0.00</div>
-          <div class="c text-muted" id="symCh">+0.00%  today</div>
+          <div class="p" id="symPx"><span class="skeleton sk-xl"></span></div>
+          <div class="c text-muted" id="symCh"><span class="skeleton sk-chg"></span></div>
         </div>
         <div class="sym-stats">
           <div><div class="lbl">Day high</div><div class="val" id="symHi">—</div></div>
@@ -484,7 +484,7 @@
            title="Open full Terminal in a new tab">
           <i class="fa-solid fa-up-right-from-square"></i> Terminal
         </a>
-        <span class="tf-info"><span class="live"></span>Live · refresh 15s</span>
+        <span class="tf-info"><span data-px-status class="px-status loading"><span class="dot"></span>Loading...</span></span>
       </div>
       <div class="chart-host" id="chartHost">
         <div class="chart-skel">Loading chart…</div>
@@ -605,6 +605,7 @@
 <script src="assets/market.js"></script>
 <script src="assets/datafeed.js"></script>
 <script src="assets/js/market-data.js"></script>
+<script src="assets/js/price-cache.js"></script>
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <script>
 /* =================================================================
@@ -925,6 +926,11 @@ async function fetchPrices(symbols) {
     PRICES[s] = Object.assign({}, PRICES[s] || {}, out[s], { ts: Date.now() });
     if (CATALOG[s]?.market === 'forex' && !PRICES[s]._anchor) PRICES[s]._anchor = out[s].price;
   });
+  // Save to localStorage cache and mark as live
+  if (window.PriceCache && Object.keys(out).length > 0) {
+    PriceCache.save(PRICES);
+    PriceCache.setLiveStatus();
+  }
   return out;
 }
 
@@ -2186,10 +2192,30 @@ function startMarketsPolling() {
 
 // ============ BOOT ============
 (async function init() {
+  // 0. Inject skeleton CSS and restore cached prices instantly
+  if (window.PriceCache) {
+    PriceCache.injectCSS();
+    PriceCache.setLoadingStatus();
+    const cached = PriceCache.load();
+    if (cached) {
+      // Restore cached prices into PRICES store immediately
+      Object.assign(PRICES, cached.prices);
+      // Show amber "Prices from Xm ago" indicator
+      PriceCache.setRecentStatus(cached.age);
+    }
+  }
   // 1. Mount chart shell (synchronous after the CDN script tag has loaded)
   mountChart();
   // 2. Load holdings + trades from Supabase
   await loadHoldings();
+  // 2b. If we have cached prices, render immediately so users see data
+  //     before the network fetch completes
+  if (window.PriceCache && PriceCache.load()) {
+    renderWatchlist();
+    renderSymbolHeader();
+    renderStatsBar();
+    renderLower();
+  }
   // 3. First price fetch — every catalogued symbol so the Markets browser,
   //    Most Traded row, watchlist and ticker strip all come up populated on
   //    first paint instead of "$0.0000". Yahoo + CoinGecko + Frankfurter

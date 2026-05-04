@@ -407,7 +407,7 @@
       <div class="mockup">
         <div class="mk-head">
           <div class="mk-sym">BHP.AX <span class="small">BHP Group · ASX</span></div>
-          <div class="mk-px" id="hMockPx">$54.94 <span class="pct">+2.27%</span></div>
+          <div class="mk-px" id="hMockPx"><span class="skeleton sk-lg" style="height:18px;"></span></div>
         </div>
         <div class="mk-chart">
           <canvas id="hMockChart" aria-hidden="true"></canvas>
@@ -416,9 +416,9 @@
           <div class="mk-tag"><span><b>30</b> 1m candles</span><span><b>MA(8)</b></span></div>
         </div>
         <div class="mk-wl">
-          <div class="mk-wl-it"><span class="s">CBA</span><span class="p">$112.45</span><span class="c" style="color:var(--green);">+1.2%</span></div>
-          <div class="mk-wl-it"><span class="s">AAPL</span><span class="p">$280.14</span><span class="c" style="color:var(--green);">+0.8%</span></div>
-          <div class="mk-wl-it"><span class="s">BTC</span><span class="p">$64,320</span><span class="c" style="color:var(--red);">-0.4%</span></div>
+          <div class="mk-wl-it"><span class="s">CBA</span><span class="p"><span class="skeleton sk-sm"></span></span><span class="c"><span class="skeleton sk-sm" style="width:32px;height:10px;"></span></span></div>
+          <div class="mk-wl-it"><span class="s">AAPL</span><span class="p"><span class="skeleton sk-sm"></span></span><span class="c"><span class="skeleton sk-sm" style="width:32px;height:10px;"></span></span></div>
+          <div class="mk-wl-it"><span class="s">BTC</span><span class="p"><span class="skeleton sk-sm"></span></span><span class="c"><span class="skeleton sk-sm" style="width:32px;height:10px;"></span></span></div>
         </div>
       </div>
     </div>
@@ -748,6 +748,7 @@
 <script src="assets/app.js"></script>
 <script src="assets/market.js"></script>
 <script src="assets/js/market-data.js"></script>
+<script src="assets/js/price-cache.js"></script>
 <script>
   /* ----- Scroll-aware nav ----- */
   const lnNav = document.getElementById('lnNav');
@@ -846,6 +847,47 @@
     });
   });
 
+  /* ----- Skeleton CSS injection -----
+     Inject skeleton CSS immediately so shimmer bars render before
+     MarketData loads. Also restore cached prices from localStorage. */
+  if (window.PriceCache) {
+    PriceCache.injectCSS();
+    // Restore cached prices immediately for instant display
+    const cached = PriceCache.load();
+    if (cached && cached.prices) {
+      // Pre-fill hero BHP price from cache
+      const bhpKey = cached.prices['BHP'] || cached.prices['BHP.AX'];
+      if (bhpKey && bhpKey.price) {
+        const el = document.getElementById('hMockPx');
+        if (el) {
+          const up = bhpKey.change >= 0;
+          el.style.color = up ? 'var(--green)' : 'var(--red)';
+          el.innerHTML = '$' + bhpKey.price.toFixed(2) +
+            ' <span class="pct">' + (up ? '+' : '') + (bhpKey.change||0).toFixed(2) + '%</span>';
+        }
+      }
+      // Pre-fill watchlist cards from cache
+      const cards = document.querySelectorAll('.mk-wl-it');
+      const items = [
+        { sym: 'CBA',  data: cached.prices['CBA'] },
+        { sym: 'AAPL', data: cached.prices['AAPL'] },
+        { sym: 'BTC',  data: cached.prices['BTC'] },
+      ];
+      items.forEach(function(item, i){
+        if (!cards[i] || !item.data || !item.data.price) return;
+        const pEl = cards[i].querySelector('.p');
+        const cEl = cards[i].querySelector('.c');
+        if (pEl) pEl.textContent = item.data.price >= 1000
+          ? '$' + Math.round(item.data.price).toLocaleString('en-AU')
+          : '$' + item.data.price.toFixed(2);
+        if (cEl) {
+          const up = (item.data.change || 0) >= 0;
+          cEl.style.color = up ? 'var(--green)' : 'var(--red)';
+          cEl.textContent = (up ? '+' : '') + (item.data.change||0).toFixed(1) + '%';
+        }
+      });
+    }
+  }
   /* ----- Hero mockup price ticker -----
      Now powered by MarketData centralized engine. Falls back to
      TArenaMarket if MarketData hasn't loaded yet. */
@@ -900,6 +942,15 @@
     });
   }
 
+  // Save prices to localStorage after each update
+  function savePriceCache(){
+    if (!window.PriceCache || !window.marketData) return;
+    const md = window.marketData;
+    const snapshot = {};
+    if (md.stocks) Object.assign(snapshot, md.stocks);
+    if (md.crypto) Object.assign(snapshot, md.crypto);
+    PriceCache.save(snapshot);
+  }
   // Start the centralized market data engine
   if (window.MarketData) {
     window.MarketData.startMarketRefresh();
@@ -909,6 +960,7 @@
   window.addEventListener('marketDataUpdated', function(e){
     refreshMockPrice();
     refreshMockWatchlist();
+    savePriceCache();
     // Update ticker bar with live data
     if (window.MarketData) window.MarketData.updateTickerBar(e.detail);
   });

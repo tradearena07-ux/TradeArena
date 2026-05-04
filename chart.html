@@ -266,8 +266,9 @@
     </div>
   </div>
   <div class="sh-quote">
-    <div class="sh-px" id="shPx">$—</div>
-    <div class="sh-ch" id="shCh">—</div>
+    <div class="sh-px" id="shPx"><span class="skeleton sk-xl"></span></div>
+    <div class="sh-ch" id="shCh"><span class="skeleton sk-chg"></span></div>
+    <div style="margin-top:5px;"><span data-px-status class="px-status loading"><span class="dot"></span>Loading...</span></div>
   </div>
   <div class="sh-ohlc">
     <div><span class="lbl">Open</span><span class="val" id="shO">—</span></div>
@@ -361,6 +362,7 @@
 <script src="assets/app.js"></script>
 <script src="assets/datafeed.js"></script>
 <script src="assets/js/market-data.js"></script>
+<script src="assets/js/price-cache.js"></script>
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <script>
 /* =================================================================
@@ -883,6 +885,8 @@ function updateHeaderFromBars(bars){
   document.getElementById('shHy').textContent = fmtMoney(Math.max(...closes));
   document.getElementById('shLy').textContent = fmtMoney(Math.min(...closes));
   paintRightRail();
+  // Mark as live once bars are loaded
+  if (window.PriceCache) PriceCache.setLiveStatus();
 }
 function paintLivePrice(q){
   document.getElementById('shPx').textContent = fmtMoney(q.price);
@@ -1340,6 +1344,13 @@ async function refreshLivePrice(){
   if (!v) return;
   state.last = v.price;
   paintLivePrice({ price: v.price, change: v.change, changePct: v.changePct });
+  // Save to localStorage and mark as live
+  if (window.PriceCache) {
+    const cacheEntry = {};
+    cacheEntry[state.symbol] = { price: v.price, change: v.changePct || v.change || 0, changePct: v.changePct || v.change || 0 };
+    PriceCache.save(cacheEntry);
+    PriceCache.setLiveStatus();
+  }
 }
 // Same guard for the index strip so a slow run can't clobber a newer one.
 let indexStripToken = 0;
@@ -1438,6 +1449,11 @@ window.addEventListener('marketDataUpdated', function(e) {
 // =====================================================================
 //  BOOT
 // =====================================================================
+// Inject skeleton CSS and show loading status
+if (window.PriceCache) {
+  PriceCache.injectCSS();
+  PriceCache.setLoadingStatus();
+}
 paintSymbolHeader();
 loadBars();
 paintIndexStrip();
