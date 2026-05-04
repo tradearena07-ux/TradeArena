@@ -710,21 +710,35 @@ async function loadBars(){
   const now = Math.floor(Date.now()/1000);
   const fromSec = now - tfWindowSec(state.tf);
   let bars = [];
+  // Source 1: TArenaDatafeed edge function (Binance for crypto, data-proxy for stocks)
   try {
     const raw = await window.TArenaDatafeed.fetchBars(state.symbol, tfRes, fromSec, now);
     bars = (raw || []).filter(b => isFinite(b.c) && b.c > 0).slice(-1000);
   } catch (e) {
     console.warn('[chart] fetchBars failed, trying Yahoo direct', e);
   }
-  // If the edge function returned nothing usable, fall back to Yahoo
-  // direct via the public CORS proxies before giving up to synthetic
-  // data — this is what keeps the chart populated for index symbols
-  // and during data-proxy outages.
+  // Source 2: Yahoo direct via public CORS proxies (chart.html inline)
   if (!bars.length && state.symbol) {
     try {
       const y = await getChartData(state.symbol, state.tf);
       bars = (y || []).filter(b => isFinite(b.c) && b.c > 0).slice(-1000);
     } catch(e){ console.warn('[chart] Yahoo getChartData failed', e); }
+  }
+  // Source 3: MarketData centralized engine (separate proxy chain)
+  if (!bars.length && state.symbol && window.MarketData) {
+    try {
+      const isASX = state.symbol.endsWith('.AX');
+      const cleanSym = isASX ? state.symbol.replace('.AX', '') : state.symbol;
+      const mdBars = await window.MarketData.fetchChartHistory(cleanSym, isASX, state.tf);
+      bars = (mdBars || []).filter(b => isFinite(b.c || b.close) && (b.c || b.close) > 0).map(b => ({
+        t: b.t || b.time * 1000,
+        o: b.o || b.open,
+        h: b.h || b.high,
+        l: b.l || b.low,
+        c: b.c || b.close,
+        v: b.v || b.volume || 0,
+      })).slice(-1000);
+    } catch(e){ console.warn('[chart] MarketData.fetchChartHistory failed', e); }
   }
   if (!bars.length) bars = synthBars(state.tf, fromSec, now);
   // Single token check covers BOTH the success and error paths so a
@@ -773,7 +787,8 @@ async function loadBars(){
   document.getElementById('loadMain').classList.remove('on');
   // Update header with last bar's OHLC
   if (bars.length) updateHeaderFromBars(bars);
-  // Subscribe live ticks
+  // Subscribe live ticks — TArenaDatafeed for crypto (Binance WS), plus
+  // MarketData centralized engine as a supplementary 15s poll for all symbols.
   if (state.unsubLive) { try { state.unsubLive(); } catch(_) {} state.unsubLive = null; }
   if (window.TArenaDatafeed?.subscribeQuote) {
     state.unsubLive = window.TArenaDatafeed.subscribeQuote(state.symbol, q => {
@@ -781,6 +796,24 @@ async function loadBars(){
       state.last = q.price;
       paintLivePrice(q);
     });
+  }
+  // MarketData centralized engine: listen for marketDataUpdated events
+  // to keep the header price fresh even when TArenaDatafeed is offline.
+  if (window.MarketData && !window._chartMdListener) {
+    window._chartMdListener = function(e) {
+      const md = e.detail;
+      if (!md || !state.symbol) return;
+      const sym = state.symbol.replace('.AX', '');
+      const isASX = state.symbol.endsWith('.AX');
+      let px = null;
+      if (md.stocks && md.stocks[sym]) px = md.stocks[sym].price;
+      if (!px && md.crypto && md.crypto[state.symbol]) px = md.crypto[state.symbol].price;
+      if (px && isFinite(px) && px > 0) {
+        state.last = px;
+        paintLivePrice({ price: px });
+      }
+    };
+    window.addEventListener('marketDataUpdated', window._chartMdListener);
   }
 }
 
@@ -1121,13 +1154,29 @@ document.querySelectorAll('.ind-tg').forEach(btn => {
   });
 });
 
-// ----- Drawing tools rail (visual only — Lightweight Charts has no draw API) -----
+// ----- Drawing tools rail -----
+// Drawing tools (trend line, horizontal line, rectangle, Fibonacci, text,
+// eraser, undo) require the licensed TradingView Advanced Charts library
+// installed at /charting_library/. With Lightweight Charts (the free
+// fallback), only the cursor tool is functional. We show a visible toast
+// to the user instead of a silent console.info.
+let _drawToastTimer = null;
 document.querySelectorAll('.dr-btn').forEach(btn => btn.addEventListener('click', () => {
   document.querySelectorAll('.dr-btn').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
   if (btn.dataset.tool !== 'cursor') {
-    // Drawing tools require the licensed Advanced Charts library — show a hint.
-    console.info('[chart] drawing tools need /charting_library/ — see chart-bootstrap.js');
+    // Show a user-visible toast
+    if (_drawToastTimer) clearTimeout(_drawToastTimer);
+    let toast = document.getElementById('drawToast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'drawToast';
+      toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(15,37,71,0.95);border:1px solid rgba(232,192,96,0.4);color:#e8c060;font:600 12px "DM Sans",sans-serif;padding:12px 20px;border-radius:10px;z-index:9999;box-shadow:0 12px 36px rgba(0,0,0,.5);max-width:420px;text-align:center;transition:opacity .3s;';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = 'Drawing tools require the TradingView Advanced Charts library. Use the indicator buttons (MA, EMA, BB, RSI, MACD, VOL) below the chart for technical analysis.';
+    toast.style.opacity = '1';
+    _drawToastTimer = setTimeout(() => { toast.style.opacity = '0'; }, 4000);
   }
 }));
 
