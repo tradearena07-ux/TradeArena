@@ -301,7 +301,50 @@
       .tn-tabs{order:5;width:100%;justify-content:center;}
       .sb{padding:12px 14px;}
       .lower{margin:0 14px 14px;}
+      .chart-host{height:280px;}
+      .sym-card{gap:10px;}
+      .sym-px .p{font-size:1.4rem;}
     }
+
+    /* Mobile order panel — bottom sheet */
+    .mob-trade-fab{
+      display:none;
+      position:fixed;bottom:72px;right:16px;z-index:120;
+      background:linear-gradient(135deg,#065f46,#10b981);
+      color:#fff;border:none;border-radius:50px;
+      padding:13px 22px;font-size:13px;font-weight:800;
+      letter-spacing:.06em;cursor:pointer;font-family:inherit;
+      box-shadow:0 8px 24px rgba(16,185,129,.45);
+      display:flex;align-items:center;gap:8px;
+      text-transform:uppercase;
+    }
+    @media(max-width:760px){.mob-trade-fab{display:flex;}}
+    .mob-sheet-scrim{
+      display:none;position:fixed;inset:0;z-index:130;
+      background:rgba(0,0,0,.55);backdrop-filter:blur(2px);
+    }
+    .mob-sheet-scrim.open{display:block;}
+    .mob-sheet{
+      position:fixed;bottom:0;left:0;right:0;z-index:140;
+      background:var(--navy2);border-top:1px solid var(--bdl);
+      border-radius:18px 18px 0 0;
+      padding:0 0 env(safe-area-inset-bottom,16px);
+      transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);
+      max-height:92vh;overflow-y:auto;
+    }
+    .mob-sheet.open{transform:translateY(0);}
+    .mob-sheet-handle{
+      width:36px;height:4px;border-radius:2px;
+      background:var(--bdl);margin:12px auto 0;
+    }
+    .mob-sheet-head{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:14px 18px 10px;
+      border-bottom:1px solid var(--bdl);
+    }
+    .mob-sheet-head .title{font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:var(--cream);}
+    .mob-sheet-head .close-btn{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px;}
+    .mob-sheet-body{padding:16px 18px 24px;}
   </style>
 </head>
 <body>
@@ -475,9 +518,35 @@
         <div class="ofl"><span>Limit price</span></div>
         <input type="number" class="oin" id="ordLimit" step="0.01" oninput="updateTotal()"/>
       </div>
+      <!-- Advanced order options toggle -->
+      <div style="margin:8px 0 4px;">
+        <button onclick="toggleAdvanced()" id="advToggle" style="background:none;border:none;color:var(--gold2);font-size:12px;font-weight:600;cursor:pointer;padding:0;display:flex;align-items:center;gap:5px;">
+          <i class="fa-solid fa-sliders" style="font-size:10px;"></i> Advanced options <i class="fa-solid fa-chevron-down" id="advChevron" style="font-size:9px;transition:transform .2s;"></i>
+        </button>
+      </div>
+      <div id="advancedFields" style="display:none;">
+        <div class="of" style="margin-top:8px;">
+          <div class="ofl"><span>Stop Loss</span><span id="slHint" style="color:#f87171;"></span></div>
+          <input type="number" class="oin" id="ordStopLoss" step="0.01" placeholder="Optional" oninput="updateTotal()"/>
+        </div>
+        <div class="of">
+          <div class="ofl"><span>Take Profit</span><span id="tpHint" style="color:#4ade80;"></span></div>
+          <input type="number" class="oin" id="ordTakeProfit" step="0.01" placeholder="Optional" oninput="updateTotal()"/>
+        </div>
+        <div class="of">
+          <div class="ofl"><span>Price Alert</span><span style="font-size:11px;color:var(--muted);">Notify me when</span></div>
+          <div style="display:flex;gap:6px;margin-bottom:6px;">
+            <button class="ty-btn on" id="alAbove" onclick="setAlertDir('above')" style="flex:1;font-size:11px;">Above</button>
+            <button class="ty-btn"    id="alBelow" onclick="setAlertDir('below')" style="flex:1;font-size:11px;">Below</button>
+          </div>
+          <input type="number" class="oin" id="ordAlertPrice" step="0.01" placeholder="Alert price (optional)"/>
+        </div>
+      </div>
       <div class="osum">
         <div class="r"><span>Est. price</span><span id="sumPx">$0.00</span></div>
         <div class="r"><span>Shares</span><span id="sumQty">0</span></div>
+        <div class="r" id="slRow" style="display:none;"><span>Stop Loss</span><span id="sumSL" class="text-red">—</span></div>
+        <div class="r" id="tpRow" style="display:none;"><span>Take Profit</span><span id="sumTP" class="text-green">—</span></div>
         <div class="r"><span>Brokerage</span><span class="text-green">$0.00</span></div>
         <div class="r tot"><span>Total</span><span id="sumTotal">$0.00</span></div>
       </div>
@@ -506,6 +575,22 @@
     <div class="tbl-empty">Loading…</div>
   </div>
 </section>
+
+<!-- Mobile floating Trade button + bottom sheet -->
+<button class="mob-trade-fab" id="mobTradeFab" onclick="openMobSheet()">
+  <i class="fa-solid fa-chart-line"></i> Trade
+</button>
+<div class="mob-sheet-scrim" id="mobSheetScrim" onclick="closeMobSheet()"></div>
+<div class="mob-sheet" id="mobSheet">
+  <div class="mob-sheet-handle"></div>
+  <div class="mob-sheet-head">
+    <span class="title">Place Order <span id="mobOrdSym" style="color:var(--gold2);font-size:12px;"></span></span>
+    <button class="close-btn" onclick="closeMobSheet()"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="mob-sheet-body" id="mobSheetBody">
+    <!-- Dynamically cloned from desktop order panel -->
+  </div>
+</div>
 
 <div id="tarena-footer"></div>
 
@@ -1237,6 +1322,10 @@ function selectSymbol(s) {
   refreshChart();
   // Lazy-fetch this symbol if we don't have a price yet
   if (!PRICES[s]) fetchPrices([s]).then(() => { renderWatchlist(); renderSymbolHeader(); refreshChart(); });
+  // Reset mobile sheet so it re-clones with updated symbol
+  const mobBody = document.getElementById('mobSheetBody');
+  if (mobBody) delete mobBody.dataset.filled;
+  if (typeof updateMobFab === 'function') updateMobFab();
 }
 window.selectSymbol = selectSymbol;
 
@@ -1262,6 +1351,7 @@ function setSide(s) {
   btn.classList.toggle('buy',  s === 'buy');
   btn.classList.toggle('sell', s === 'sell');
   updateTotal();
+  if (typeof updateMobFab === 'function') updateMobFab();
 }
 function setType(t) {
   state.type = t;
@@ -1275,7 +1365,23 @@ function setType(t) {
   updateTotal();
 }
 function setQuick(amt) { document.getElementById('ordAmt').value = amt; updateTotal(); }
+
+let advancedOpen = false;
+function toggleAdvanced() {
+  advancedOpen = !advancedOpen;
+  document.getElementById('advancedFields').style.display = advancedOpen ? 'block' : 'none';
+  document.getElementById('advChevron').style.transform = advancedOpen ? 'rotate(180deg)' : '';
+}
+
+let alertDirection = 'above';
+function setAlertDir(d) {
+  alertDirection = d;
+  document.getElementById('alAbove').classList.toggle('on', d === 'above');
+  document.getElementById('alBelow').classList.toggle('on', d === 'below');
+}
+
 window.setSide = setSide; window.setType = setType; window.setQuick = setQuick;
+window.toggleAdvanced = toggleAdvanced; window.setAlertDir = setAlertDir;
 
 function updateTotal() {
   const def = CATALOG[state.symbol];
@@ -1291,6 +1397,27 @@ function updateTotal() {
   document.getElementById('sumQty').textContent   = qty.toLocaleString('en-AU', { maximumFractionDigits: dpQty });
   document.getElementById('sumTotal').textContent = fmtMoney(amt, 2);
   document.getElementById('cashLine').textContent = fmtMoney(state.cash, 2);
+  // Stop-loss / take-profit summary rows
+  const sl = parseFloat(document.getElementById('ordStopLoss').value);
+  const tp = parseFloat(document.getElementById('ordTakeProfit').value);
+  if (isFinite(sl) && sl > 0 && qty > 0) {
+    const slLoss = (sl - px) * qty * (state.side === 'sell' ? -1 : 1);
+    document.getElementById('slRow').style.display = '';
+    document.getElementById('sumSL').textContent = fmtMoney(sl) + ' (' + (slLoss >= 0 ? '+' : '') + fmtMoney(slLoss, 2).replace('$','$') + ')';
+    document.getElementById('slHint').textContent = fmtMoney(sl);
+  } else {
+    document.getElementById('slRow').style.display = 'none';
+    document.getElementById('slHint').textContent = '';
+  }
+  if (isFinite(tp) && tp > 0 && qty > 0) {
+    const tpGain = (tp - px) * qty * (state.side === 'sell' ? -1 : 1);
+    document.getElementById('tpRow').style.display = '';
+    document.getElementById('sumTP').textContent = fmtMoney(tp) + ' (+' + fmtMoney(Math.abs(tpGain), 2).replace('$','$') + ')';
+    document.getElementById('tpHint').textContent = fmtMoney(tp);
+  } else {
+    document.getElementById('tpRow').style.display = 'none';
+    document.getElementById('tpHint').textContent = '';
+  }
   const submitBtn = document.getElementById('submitBtn');
   submitBtn.textContent = `${state.side === 'buy' ? 'Buy' : 'Sell'} ${sym} ${state.type === 'market' ? 'at market' : 'at limit'}`;
   // Validation: buy needs cash; sell needs shares
@@ -1334,7 +1461,10 @@ async function placeOrder() {
     submitBtn.disabled = false; submitBtn.style.opacity = '1';
     return toast('Not signed in', 'Please sign in to trade', true);
   }
-  const { error } = await TArenaDB.from('paper_trades').insert({
+  const sl = parseFloat(document.getElementById('ordStopLoss').value) || null;
+  const tp = parseFloat(document.getElementById('ordTakeProfit').value) || null;
+  const alertPx = parseFloat(document.getElementById('ordAlertPrice').value) || null;
+  const insertRow = {
     owner_id:    user.id,
     symbol:      state.symbol,
     market:      marketCol,
@@ -1342,15 +1472,33 @@ async function placeOrder() {
     qty:         +qty.toFixed(8),
     entry_price: +px.toFixed(4),
     status:      'open',
-  });
+  };
+  if (sl && sl > 0)  insertRow.stop_loss = +sl.toFixed(4);
+  if (tp && tp > 0)  insertRow.target    = +tp.toFixed(4);
+  const { error } = await TArenaDB.from('paper_trades').insert(insertRow);
   submitBtn.disabled = false; submitBtn.style.opacity = '1';
   if (error) {
     console.warn('paper_trades insert failed', error);
     return toast('Order failed', error.message, true);
   }
+  // Create price alert if requested
+  if (alertPx && alertPx > 0) {
+    try {
+      await TArenaDB.rpc('create_price_alert', {
+        p_symbol:    state.symbol,
+        p_condition: alertDirection,
+        p_target:    +alertPx.toFixed(4),
+        p_note:      `Alert set with ${state.side} order at ${fmtMoney(px)}`,
+      });
+    } catch(e) { console.warn('alert create failed', e); }
+  }
+  // Clear advanced fields after order
+  document.getElementById('ordStopLoss').value   = '';
+  document.getElementById('ordTakeProfit').value  = '';
+  document.getElementById('ordAlertPrice').value  = '';
   toast(
     `${state.side === 'buy' ? 'Bought' : 'Sold'} ${state.symbol.replace('.AX','')}`,
-    `${qty.toFixed(qty < 1 ? 4 : 2)} @ ${fmtMoney(px)}`
+    `${qty.toFixed(qty < 1 ? 4 : 2)} @ ${fmtMoney(px)}${sl ? ' · SL: ' + fmtMoney(sl) : ''}${tp ? ' · TP: ' + fmtMoney(tp) : ''}`
   );
   await loadHoldings();
   renderStatsBar();
@@ -2134,6 +2282,68 @@ function startMarketsPolling() {
   pollHandle = setInterval(tick, 15000);
   console.log('%cTradeArena · Markets ready', 'color:#e8c060;font-weight:700;');
 })();
+</script>
+
+<script>
+// ============================================================
+// MOBILE BOTTOM SHEET — order panel for screens ≤760px
+// ============================================================
+window.openMobSheet = function() {
+  const sheet = document.getElementById('mobSheet');
+  const scrim = document.getElementById('mobSheetScrim');
+  const body  = document.getElementById('mobSheetBody');
+  const mobSym = document.getElementById('mobOrdSym');
+  // Sync symbol label
+  if (mobSym) mobSym.textContent = (window.state && state.symbol) ? state.symbol.replace('.AX','') : '';
+  // Clone the desktop order panel inner content (without the card wrapper)
+  const src = document.querySelector('.t-orderpanel .t-card');
+  if (src && body && !body.dataset.filled) {
+    body.innerHTML = src.innerHTML;
+    body.dataset.filled = '1';
+    // Re-wire all onclick handlers since cloned elements lose them
+    body.querySelectorAll('[onclick]').forEach(el => {
+      const fn = el.getAttribute('onclick');
+      el.removeAttribute('onclick');
+      el.addEventListener('click', () => { try { eval(fn); } catch(e){} }); // eslint-disable-line
+    });
+    body.querySelectorAll('[oninput]').forEach(el => {
+      const fn = el.getAttribute('oninput');
+      el.removeAttribute('oninput');
+      el.addEventListener('input', () => { try { eval(fn); } catch(e){} }); // eslint-disable-line
+    });
+    // Remove the duplicate header inside cloned panel
+    const h = body.querySelector('.t-h');
+    if (h) h.remove();
+  }
+  if (sheet) sheet.classList.add('open');
+  if (scrim) scrim.classList.add('open');
+  document.body.style.overflow = 'hidden';
+};
+window.closeMobSheet = function() {
+  const sheet = document.getElementById('mobSheet');
+  const scrim = document.getElementById('mobSheetScrim');
+  if (sheet) sheet.classList.remove('open');
+  if (scrim) scrim.classList.remove('open');
+  document.body.style.overflow = '';
+};
+// Close on Escape key
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeMobSheet();
+});
+// Update mobile FAB label based on current side
+function updateMobFab() {
+  const fab = document.getElementById('mobTradeFab');
+  if (!fab) return;
+  const side = (window.state && state.side) || 'buy';
+  const sym  = (window.state && state.symbol) ? ' ' + state.symbol.replace('.AX','') : '';
+  fab.innerHTML = `<i class="fa-solid fa-${side === 'buy' ? 'arrow-trend-up' : 'arrow-trend-down'}"></i> ${side === 'buy' ? 'Buy' : 'Sell'}${sym}`;
+  fab.style.background = side === 'buy'
+    ? 'linear-gradient(135deg,#065f46,#10b981)'
+    : 'linear-gradient(135deg,#7f1d1d,#dc2626)';
+  fab.style.boxShadow = side === 'buy'
+    ? '0 8px 24px rgba(16,185,129,.45)'
+    : '0 8px 24px rgba(220,38,38,.45)';
+}
 </script>
 
 <script>

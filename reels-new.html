@@ -629,6 +629,7 @@
 <script src="assets/market.js"></script>
 <script src="assets/datafeed.js"></script>
 <script src="assets/reels.js"></script>
+<script src="assets/js/market-data.js"></script>
 <script>
 (function () {
   TArenaUI.renderNav('reels');
@@ -757,10 +758,33 @@
   }
   function autoPriceFromMarket() {
     const m = (window.TArenaMarket?.data || []).find(d => d.symbol === state.symbol);
-    if (!m) return;
-    if (!state.entry)  { state.entry  = m.price;       document.getElementById('entryInput').value  = m.price; }
-    if (!state.stop)   { state.stop   = +(m.price * (state.direction === 'short' ? 1.04 : 0.96)).toFixed(2); document.getElementById('stopInput').value   = state.stop; }
-    if (!state.target) { state.target = +(m.price * (state.direction === 'short' ? 0.94 : 1.06)).toFixed(2); document.getElementById('targetInput').value = state.target; }
+    let price = m?.price || 0;
+    // Also check MarketData cache
+    if (!price && window.MarketData) {
+      const md = window.MarketData.getData();
+      const sym = state.symbol.replace('.AX','');
+      const stock = md.stocks && (md.stocks[sym] || md.stocks[state.symbol]);
+      const crypto = md.crypto && md.crypto[sym];
+      price = (stock || crypto)?.price || 0;
+    }
+    if (!price) {
+      // Async fallback: fetch live quote and fill once available
+      if (window.MarketData) {
+        window.MarketData.fetchLiveQuote(state.symbol).then(q => {
+          if (q && q.price > 0) {
+            const p = q.price;
+            if (!state.entry)  { state.entry  = p; document.getElementById('entryInput').value  = p; }
+            if (!state.stop)   { state.stop   = +(p * (state.direction === 'short' ? 1.04 : 0.96)).toFixed(2); document.getElementById('stopInput').value   = state.stop; }
+            if (!state.target) { state.target = +(p * (state.direction === 'short' ? 0.94 : 1.06)).toFixed(2); document.getElementById('targetInput').value = state.target; }
+            refreshPreview();
+          }
+        }).catch(() => {});
+      }
+      return;
+    }
+    if (!state.entry)  { state.entry  = price; document.getElementById('entryInput').value  = price; }
+    if (!state.stop)   { state.stop   = +(price * (state.direction === 'short' ? 1.04 : 0.96)).toFixed(2); document.getElementById('stopInput').value   = state.stop; }
+    if (!state.target) { state.target = +(price * (state.direction === 'short' ? 0.94 : 1.06)).toFixed(2); document.getElementById('targetInput').value = state.target; }
   }
 
   symInput.addEventListener('input', () => { cursorIdx = -1; renderDrop(searchSymbols(symInput.value)); });

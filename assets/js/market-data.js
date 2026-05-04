@@ -35,8 +35,17 @@
   const REFRESH_INTERVAL = 15000; // 15 seconds
   const PROXY_TIMEOUT    = 6000;  // 6 seconds per proxy attempt
 
-  // ============ YAHOO FINANCE CORS PROXIES ============
+  // ============ DATA SOURCES ============
+  // Primary: Supabase Edge Function (data-proxy) — server-side, cached, reliable
+  // Fallback: Public CORS proxies — used only if Edge Function is unavailable
   const YAHOO_BASE = 'https://query1.finance.yahoo.com/v8/finance/chart/';
+  const SUPABASE_URL = (window.TARENA_CONFIG && window.TARENA_CONFIG.supabaseUrl)
+    ? window.TARENA_CONFIG.supabaseUrl
+    : 'https://chncykagtzotdtflkhim.supabase.co';
+  const SUPABASE_KEY = (window.TARENA_CONFIG && window.TARENA_CONFIG.supabaseKey)
+    ? window.TARENA_CONFIG.supabaseKey
+    : '';
+  const DATA_PROXY_URL = SUPABASE_URL + '/functions/v1/data-proxy';
   const PROXIES = [
     function (u) { return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u); },
     function (u) { return 'https://corsproxy.io/?' + encodeURIComponent(u); },
@@ -59,8 +68,125 @@
   var _yfCache = {}; // symbol → { ts, data }
   var _YF_TTL  = 8000; // 8s cache
 
-  // ============ YAHOO FINANCE FETCHER (multi-proxy) ============
-  function _fetchYahooJson(yahooUrl) {
+  // ============ EDGE FUNCTION FETCHER (primary) ============
+  // Routes through the Supabase data-proxy edge function which handles
+  // server-side Yahoo fetching with caching in price_bars table.
+  function _fetchViaEdgeFunction(symbol, interval, range) {
+    var controller, timeout;
+    try {
+      controller = new AbortController();
+      timeout = setTimeout(function () { controller.abort(); }, PROXY_TIMEOUT);
+    } catch (_) { controller = null; timeout = null; }
+    var opts = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+      },
+      body: JSON.stringify({ action: 'bars', symbol: symbol, interval: interval, range: range }),
+    };
+    if (controller) opts.signal = controller.signal;
+    return fetch(DATA_PROXY_URL, opts).then(function (res) {
+      if (timeout) clearTimeout(timeout);
+      if (!res.ok) throw new Error('edge-fn HTTP ' + res.status);
+      return res.json();
+    }).then(function (data) {
+      if (timeout) clearTimeout(timeout);
+      // Edge function returns { s: 'ok', bars: [...] } with OHLCV bars
+      // OR it may return raw Yahoo JSON shape — handle both
+      if (data && data.s === 'ok' && Array.isArray(data.bars)) {
+        // Convert edge function bar format to Yahoo chart shape
+        var bars = data.bars;
+        var timestamps = bars.map(function (b) { return b.t || b.time; });
+        var opens   = bars.map(function (b) { return b.o || b.open; });
+        var highs   = bars.map(function (b) { return b.h || b.high; });
+        var lows    = bars.map(function (b) { return b.l || b.low; });
+        var closes  = bars.map(function (b) { return b.c || b.close; });
+        var volumes = bars.map(function (b) { return b.v || b.volume || 0; });
+        var lastClose = closes[closes.length - 1] || 0;
+        return {
+          chart: { result: [{
+            meta: {
+              regularMarketPrice: lastClose,
+              chartPreviousClose: closes[closes.length - 2] || lastClose,
+              regularMarketDayHigh: Math.max.apply(null, highs.slice(-1)),
+              regularMarketDayLow:  Math.min.apply(null, lows.slice(-1)),
+              regularMarketOpen:    opens[opens.length - 1] || lastClose,
+              regularMarketVolume:  volumes[volumes.length - 1] || 0,
+            },
+            timestamp: timestamps,
+            indicators: { quote: [{ open: opens, high: highs, low: lows, close: closes, volume: volumes }] },
+          }] },
+        };
+      }
+      // If edge function returned raw Yahoo shape, pass through
+      if (data && data.chart && data.chart.result && data.chart.result[0]) {
+        return data;
+      }
+      throw new Error('edge-fn unexpected shape');
+    }).catch(function (e) {
+      if (timeout) clearTimeout(timeout);
+      throw e;
+    });
+  }
+
+  // ============ EDGE FUNCTION QUOTE FETCHER ============
+  function _fetchQuoteViaEdgeFunction(symbol) {
+    var controller, timeout;
+    try {
+      controller = new AbortController();
+      timeout = setTimeout(function () { controller.abort(); }, PROXY_TIMEOUT);
+    } catch (_) { controller = null; timeout = null; }
+    var opts = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+      },
+      body: JSON.stringify({ action: 'quote', symbol: symbol }),
+    };
+    if (controller) opts.signal = controller.signal;
+    return fetch(DATA_PROXY_URL, opts).then(function (res) {
+      if (timeout) clearTimeout(timeout);
+      if (!res.ok) throw new Error('edge-fn quote HTTP ' + res.status);
+      return res.json();
+    }).then(function (data) {
+      if (timeout) clearTimeout(timeout);
+      if (data && data.s === 'ok' && data.p > 0) {
+        // Edge function quote shape: { s: 'ok', p: price, dp: changePct, ... }
+        var price = data.p;
+        var prev  = data.pc || price;
+        return {
+          chart: { result: [{
+            meta: {
+              regularMarketPrice:         price,
+              chartPreviousClose:         prev,
+              regularMarketChangePercent: data.dp || ((price - prev) / prev * 100),
+              regularMarketDayHigh:       data.h  || price,
+              regularMarketDayLow:        data.l  || price,
+              regularMarketOpen:          data.o  || price,
+              regularMarketVolume:        data.v  || 0,
+              fiftyTwoWeekHigh:           data.h52 || null,
+              fiftyTwoWeekLow:            data.l52 || null,
+            },
+            timestamp: [Math.floor(Date.now() / 1000)],
+            indicators: { quote: [{ open: [price], high: [price], low: [price], close: [price], volume: [0] }] },
+          }] },
+        };
+      }
+      // Pass through raw Yahoo shape if returned
+      if (data && data.chart && data.chart.result && data.chart.result[0]) return data;
+      throw new Error('edge-fn quote unexpected shape');
+    }).catch(function (e) {
+      if (timeout) clearTimeout(timeout);
+      throw e;
+    });
+  }
+
+  // ============ YAHOO FINANCE FETCHER (CORS proxy fallback) ============
+  function _fetchYahooJsonViaProxy(yahooUrl) {
     var lastErr;
     var i = 0;
     function tryNext() {
@@ -75,7 +201,6 @@
         controller = new AbortController();
         timeout = setTimeout(function () { controller.abort(); }, PROXY_TIMEOUT);
       } catch (_) {
-        // AbortController not available — skip timeout
         controller = null;
         timeout = null;
       }
@@ -99,6 +224,25 @@
     return tryNext();
   }
 
+  // ============ UNIFIED YAHOO FETCHER (edge-fn first, proxy fallback) ============
+  function _fetchYahooJson(yahooUrl, symbol, interval, range) {
+    // Try edge function first (server-side, cached, no CORS issues)
+    if (symbol && interval && range) {
+      return _fetchViaEdgeFunction(symbol, interval, range).catch(function (e) {
+        console.warn('[MarketData] Edge function failed, falling back to CORS proxy:', e.message);
+        return _fetchYahooJsonViaProxy(yahooUrl);
+      });
+    }
+    // For quote-only requests, try edge function quote endpoint first
+    if (symbol) {
+      return _fetchQuoteViaEdgeFunction(symbol).catch(function (e) {
+        console.warn('[MarketData] Edge function quote failed, falling back to CORS proxy:', e.message);
+        return _fetchYahooJsonViaProxy(yahooUrl);
+      });
+    }
+    return _fetchYahooJsonViaProxy(yahooUrl);
+  }
+
   // ============ FETCH SINGLE STOCK/INDEX PRICE ============
   function fetchPrice(symbol, isASX) {
     var ticker = isASX ? symbol + '.AX' : symbol;
@@ -109,7 +253,7 @@
     }
 
     var yahooUrl = YAHOO_BASE + encodeURIComponent(ticker) + '?interval=1d&range=1d';
-    return _fetchYahooJson(yahooUrl).then(function (data) {
+    return _fetchYahooJson(yahooUrl, ticker, '1d', '1d').then(function (data) {
       var meta = data.chart.result[0].meta;
       if (!meta || !(meta.regularMarketPrice > 0)) return null;
       var price    = meta.regularMarketPrice;
@@ -318,7 +462,7 @@
     var yahooUrl = YAHOO_BASE + encodeURIComponent(ticker) +
       '?interval=' + tf.interval + '&range=' + tf.range;
 
-    return _fetchYahooJson(yahooUrl).then(function (data) {
+    return _fetchYahooJson(yahooUrl, ticker, tf.interval, tf.range).then(function (data) {
       var result = data.chart.result[0];
       if (!result) return [];
       var timestamps = result.timestamp || [];

@@ -98,6 +98,55 @@
     .mover-line .px .b{font-size:11.5px;font-weight:600;}
 
     .empty-row{padding:40px;text-align:center;color:var(--muted);}
+
+    /* ----- Close position modal ----- */
+    .modal-overlay{position:fixed;inset:0;background:rgba(6,14,28,.85);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;}
+    .modal-overlay.hidden{display:none;}
+    .modal-box{background:var(--navy2);border:1px solid var(--border);border-radius:20px;padding:28px;max-width:420px;width:100%;}
+    .modal-box h3{font-family:'DM Sans',sans-serif;font-size:18px;font-weight:700;color:var(--cream);margin:0 0 6px;}
+    .modal-box .sub{font-size:13px;color:var(--muted);margin-bottom:22px;}
+    .modal-field{margin-bottom:16px;}
+    .modal-field label{display:block;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
+    .modal-field input{width:100%;background:var(--navy3);border:1px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;box-sizing:border-box;}
+    .modal-field input:focus{outline:none;border-color:var(--gold);}
+    .modal-pnl{background:var(--navy3);border:1px solid var(--bdl);border-radius:12px;padding:14px 16px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;}
+    .modal-pnl .lbl{font-size:12px;color:var(--muted);}
+    .modal-pnl .val{font-family:'DM Sans',sans-serif;font-size:18px;font-weight:700;}
+    .modal-actions{display:flex;gap:10px;}
+    .modal-actions button{flex:1;padding:13px;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;border:none;transition:all .15s;}
+    .btn-cancel{background:var(--navy3);color:var(--muted);border:1px solid var(--border)!important;}
+    .btn-cancel:hover{color:var(--cream);}
+    .btn-close-pos{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;}
+    .btn-close-pos:hover{opacity:.88;}
+
+    /* ----- Trade history tab ----- */
+    .pf-tabs{display:flex;gap:6px;margin-bottom:18px;}
+    .pf-tab{padding:8px 20px;background:var(--navy3);border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;border-radius:9999px;cursor:pointer;transition:all .15s;}
+    .pf-tab:hover{color:var(--cream);}
+    .pf-tab.on{background:rgba(201,160,48,.12);border-color:var(--gold);color:var(--gold2);}
+    .history-card{background:var(--navy2);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-top:18px;}
+    .history-head{padding:16px 22px;border-bottom:1px solid var(--bdl);display:flex;justify-content:space-between;align-items:center;}
+    .history-head h3{font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;color:var(--cream);}
+    .hist-row{display:grid;grid-template-columns:42px 1fr auto auto;gap:14px;align-items:center;padding:14px 22px;border-bottom:1px solid var(--bdl);}
+    .hist-row:last-child{border-bottom:none;}
+    .hist-row .icn{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-weight:700;font-size:10px;color:#fff;}
+    .hist-row .icn.asx{background:linear-gradient(135deg,#065f46,#10b981);}
+    .hist-row .icn.us{background:linear-gradient(135deg,#1e40af,#3b82f6);}
+    .hist-row .icn.crypto{background:linear-gradient(135deg,#92400e,#f59e0b);}
+    .hist-row .meta .sym{font-size:13px;font-weight:700;color:var(--cream);}
+    .hist-row .meta .dt{font-size:11px;color:var(--muted);margin-top:2px;}
+    .hist-row .prices{text-align:right;font-size:12px;color:var(--muted);font-feature-settings:'tnum';}
+    .hist-row .prices b{display:block;color:var(--cream);font-size:13px;font-weight:600;margin-bottom:2px;}
+    .hist-row .rpnl{text-align:right;font-feature-settings:'tnum';}
+    .hist-row .rpnl .v{font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;}
+    .hist-row .rpnl .p{font-size:11.5px;font-weight:600;margin-top:2px;}
+
+    /* ----- Close button on holdings row ----- */
+    .h-row{display:grid;grid-template-columns:42px 1fr auto auto auto;gap:14px;align-items:center;padding:16px 22px;border-bottom:1px solid var(--bdl);transition:background .15s;}
+    .h-row:hover{background:rgba(201,160,48,.04);}
+    .h-row:last-child{border-bottom:none;}
+    .btn-close-row{padding:7px 14px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171;font-size:12px;font-weight:600;border-radius:8px;cursor:pointer;white-space:nowrap;transition:all .15s;}
+    .btn-close-row:hover{background:rgba(239,68,68,.2);border-color:#ef4444;}
   </style>
 </head>
 <body>
@@ -150,7 +199,14 @@
     <div class="alloc-legend" id="allocLegend"></div>
   </div>
 
+  <!-- ============== PAGE TABS ============== -->
+  <div class="pf-tabs" id="pfTabs">
+    <button class="pf-tab on" data-t="holdings">Holdings</button>
+    <button class="pf-tab" data-t="history">Trade History</button>
+  </div>
+
   <!-- ============== HOLDINGS LIST ============== -->
+  <div id="holdingsSection">
   <div class="holdings-card">
     <div class="holdings-head">
       <h3>Your Holdings</h3>
@@ -162,6 +218,38 @@
       </div>
     </div>
     <div id="holdingsList"></div>
+  </div>
+  </div>
+
+  <!-- ============== TRADE HISTORY ============== -->
+  <div id="historySection" style="display:none;">
+    <div class="history-card">
+      <div class="history-head">
+        <h3>Closed Trades</h3>
+        <span id="histCount" style="font-size:12px;color:var(--muted);"></span>
+      </div>
+      <div id="historyList"></div>
+    </div>
+  </div>
+
+  <!-- ============== CLOSE POSITION MODAL ============== -->
+  <div class="modal-overlay hidden" id="closeModal">
+    <div class="modal-box">
+      <h3 id="closeModalTitle">Close Position</h3>
+      <div class="sub" id="closeModalSub">Sell all shares at the current market price.</div>
+      <div class="modal-field">
+        <label>Exit Price (AUD)</label>
+        <input type="number" id="closeExitPrice" step="0.01" min="0.01"/>
+      </div>
+      <div class="modal-pnl">
+        <div class="lbl">Estimated P&amp;L</div>
+        <div class="val" id="closePnlPreview">—</div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="hideCloseModal()">Cancel</button>
+        <button class="btn-close-pos" id="closeConfirmBtn" onclick="confirmClose()">Close Position</button>
+      </div>
+    </div>
   </div>
 
   <!-- ============== TOP MOVERS ============== -->
@@ -247,6 +335,14 @@
       console.warn('get_my_holdings failed:', error.message);
       return [];
     }
+    // Also fetch the open trade IDs so we can close individual positions
+    const { data: trades } = await TArenaDB
+      .from('paper_trades')
+      .select('id,symbol,side')
+      .eq('status','open')
+      .order('opened_at',{ascending:false});
+    const tradeMap = {};
+    (trades||[]).forEach(t => { if (!tradeMap[t.symbol]) tradeMap[t.symbol] = t; });
     return (data || [])
       .filter(r => Number(r.net_qty) > 0)
       .map(r => ({
@@ -255,6 +351,8 @@
         avgCost: Number(r.avg_cost) || 0,
         type:    classifyType(r.symbol),
         name:    nameFor(r.symbol),
+        tradeId: tradeMap[r.symbol]?.id || '',
+        side:    tradeMap[r.symbol]?.side || 'buy',
       }));
   }
 
@@ -347,20 +445,23 @@
     document.getElementById('holdingsList').innerHTML = list.map(h => {
       const initials = h.symbol.replace('.AX', '').slice(0, 3);
       const up = h.pnl >= 0;
-      return `<div class="h-row" onclick="window.location.href='trade.html'">
-        <div class="icn ${h.type}">${initials}</div>
-        <div class="meta">
-          <div class="sym">${h.symbol.replace('.AX','')}</div>
-          <div class="name">${h.name} · ${h.type.toUpperCase()}</div>
+      const escSym = h.symbol.replace('.AX','').replace(/[<>&"']/g,'');
+      const escName = h.name.replace(/[<>&"']/g, s => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[s]));
+      return `<div class="h-row">
+        <div class="icn ${h.type}" onclick="window.location.href='trade.html'" style="cursor:pointer;">${initials}</div>
+        <div class="meta" onclick="window.location.href='trade.html'" style="cursor:pointer;">
+          <div class="sym">${escSym}</div>
+          <div class="name">${escName} · ${h.type.toUpperCase()}</div>
         </div>
-        <div class="qty">
+        <div class="qty" onclick="window.location.href='trade.html'" style="cursor:pointer;">
           <b>${TArenaUI.fmtMoney(h.value, {decimals:0})}</b>
           ${h.qty.toLocaleString('en-US',{maximumFractionDigits:4})} × ${TArenaUI.fmtMoney(h.current, {decimals:2})}
         </div>
-        <div class="pnl">
+        <div class="pnl" onclick="window.location.href='trade.html'" style="cursor:pointer;">
           <div class="v ${up ? 'text-green' : 'text-red'}">${TArenaUI.fmtMoney(h.pnl, {sign:true, decimals:2})}</div>
           <div class="p ${up ? 'text-green' : 'text-red'}">${TArenaUI.fmtPct(h.pnlPct)} <span class="text-muted" style="font-weight:400;">· today ${TArenaUI.fmtPct(h.todayPct)}</span></div>
         </div>
+        <button class="btn-close-row" data-trade-id="${(h.tradeId||'').replace(/[^a-zA-Z0-9\-]/g,'')}" data-symbol="${h.symbol.replace(/[^A-Z0-9\.]/g,'')}" data-qty="${h.qty}" data-avg-cost="${h.avgCost}" data-side="${h.side||'buy'}" data-type="${h.type}" data-current="${h.current||h.avgCost}" onclick="openCloseModalFromBtn(this)">Close</button>
       </div>`;
     }).join('');
   }
@@ -468,6 +569,187 @@
       },
     });
   }
+
+  // ============================================================
+  // CLOSE POSITION MODAL
+  // ============================================================
+  // openCloseModalFromBtn reads data attributes (XSS-safe)
+  window.openCloseModalFromBtn = function(btn) {
+    const h = {
+      tradeId:  btn.dataset.tradeId  || '',
+      symbol:   btn.dataset.symbol   || '',
+      qty:      parseFloat(btn.dataset.qty)     || 0,
+      avgCost:  parseFloat(btn.dataset.avgCost) || 0,
+      side:     btn.dataset.side     || 'buy',
+      type:     btn.dataset.type     || 'asx',
+      current:  parseFloat(btn.dataset.current) || 0,
+    };
+    showCloseModal(h);
+  };
+  // Legacy alias kept for backward compat
+  window.openCloseModal = window.openCloseModalFromBtn;
+
+  let closeModalState = null; // { tradeId, symbol, qty, avgCost, side, type }
+
+  function showCloseModal(h) {
+    closeModalState = h;
+    const sym = h.symbol.replace('.AX','');
+    document.getElementById('closeModalTitle').textContent = 'Close ' + sym + ' Position';
+    document.getElementById('closeModalSub').textContent =
+      h.qty.toLocaleString('en-US',{maximumFractionDigits:4}) + ' shares · avg cost ' + TArenaUI.fmtMoney(h.avgCost,{decimals:2});
+    const exitInput = document.getElementById('closeExitPrice');
+    exitInput.value = h.current ? h.current.toFixed(2) : h.avgCost.toFixed(2);
+    updatePnlPreview();
+    document.getElementById('closeModal').classList.remove('hidden');
+    exitInput.focus();
+  }
+
+  function hideCloseModal() {
+    document.getElementById('closeModal').classList.add('hidden');
+    closeModalState = null;
+  }
+
+  function updatePnlPreview() {
+    if (!closeModalState) return;
+    const exit = parseFloat(document.getElementById('closeExitPrice').value);
+    if (!isFinite(exit) || exit <= 0) { document.getElementById('closePnlPreview').textContent = '—'; return; }
+    const { qty, avgCost, side } = closeModalState;
+    const pnl = side === 'sell'
+      ? (avgCost - exit) * qty
+      : (exit - avgCost) * qty;
+    const pct = avgCost > 0 ? (pnl / (avgCost * qty)) * 100 : 0;
+    const el = document.getElementById('closePnlPreview');
+    el.textContent = TArenaUI.fmtMoney(pnl,{sign:true,decimals:2}) + ' (' + TArenaUI.fmtPct(pct) + ')';
+    el.className = 'val ' + (pnl >= 0 ? 'text-green' : 'text-red');
+  }
+
+  document.getElementById('closeExitPrice').addEventListener('input', updatePnlPreview);
+  document.getElementById('closeModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('closeModal')) hideCloseModal();
+  });
+
+  async function confirmClose() {
+    if (!closeModalState) return;
+    const exit = parseFloat(document.getElementById('closeExitPrice').value);
+    if (!isFinite(exit) || exit <= 0) {
+      showToast('⚠️ Please enter a valid exit price.', 'red');
+      return;
+    }
+    const btn = document.getElementById('closeConfirmBtn');
+    btn.disabled = true;
+    btn.textContent = 'Closing…';
+    try {
+      const { data, error } = await TArenaDB.rpc('close_trade', {
+        p_trade_id:   closeModalState.tradeId,
+        p_exit_price: exit,
+      });
+      if (error || !data?.ok) {
+        showToast('❌ Close failed: ' + (data?.error || error?.message || 'Unknown error'), 'red');
+        btn.disabled = false;
+        btn.textContent = 'Close Position';
+        return;
+      }
+      const pnl = data.pnl;
+      const sym = closeModalState.symbol.replace('.AX','');
+      hideCloseModal();
+      showToast(
+        (pnl >= 0 ? '✅ ' : '❌ ') + sym + ' closed · ' + TArenaUI.fmtMoney(pnl,{sign:true,decimals:2}),
+        pnl >= 0 ? 'green' : 'red'
+      );
+      await loadAndRender();
+    } catch(e) {
+      showToast('❌ Close failed: ' + e.message, 'red');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Close Position';
+    }
+  }
+
+  // ============================================================
+  // TOAST
+  // ============================================================
+  function showToast(msg, color) {
+    let t = document.getElementById('pfToast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'pfToast';
+      t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--navy2);border:1px solid var(--border);border-radius:12px;padding:12px 20px;font-size:14px;font-weight:600;z-index:2000;transition:opacity .3s;max-width:90vw;text-align:center;';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.style.color = color === 'green' ? '#4ade80' : color === 'red' ? '#f87171' : 'var(--cream)';
+    t.style.opacity = '1';
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => { t.style.opacity = '0'; }, 3500);
+  }
+
+  // ============================================================
+  // TRADE HISTORY
+  // ============================================================
+  async function loadTradeHistory() {
+    const { data, error } = await TArenaDB
+      .from('paper_trades')
+      .select('id,symbol,market,side,qty,entry_price,exit_price,opened_at,closed_at,status')
+      .eq('status','closed')
+      .order('closed_at',{ascending:false})
+      .limit(100);
+    if (error) { console.warn('history load failed', error.message); return []; }
+    return data || [];
+  }
+
+  function renderHistory(trades) {
+    const el = document.getElementById('historyList');
+    document.getElementById('histCount').textContent = trades.length + ' trades';
+    if (!trades.length) {
+      el.innerHTML = '<div class="empty-row">No closed trades yet. Close a position to see it here.</div>';
+      return;
+    }
+    el.innerHTML = trades.map(t => {
+      const sym = t.symbol.replace('.AX','');
+      const type = t.symbol.endsWith('.AX') ? 'asx' : (t.market === 'crypto' ? 'crypto' : 'us');
+      const initials = sym.slice(0,3);
+      const pnl = t.side === 'sell'
+        ? (t.entry_price - t.exit_price) * t.qty
+        : (t.exit_price - t.entry_price) * t.qty;
+      const pct = t.entry_price > 0 ? (pnl / (t.entry_price * t.qty)) * 100 : 0;
+      const up = pnl >= 0;
+      const dt = t.closed_at ? new Date(t.closed_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}) : '—';
+      const escSym = sym.replace(/[<>&"']/g,'');
+      return `<div class="hist-row">
+        <div class="icn ${type}">${initials}</div>
+        <div class="meta">
+          <div class="sym">${escSym} <span style="font-size:11px;font-weight:500;color:var(--muted);">${t.side.toUpperCase()}</span></div>
+          <div class="dt">${dt}</div>
+        </div>
+        <div class="prices">
+          <b>${TArenaUI.fmtMoney(t.exit_price,{decimals:2})}</b>
+          Entry ${TArenaUI.fmtMoney(t.entry_price,{decimals:2})} · ${Number(t.qty).toLocaleString('en-US',{maximumFractionDigits:4})} shares
+        </div>
+        <div class="rpnl">
+          <div class="v ${up?'text-green':'text-red'}">${TArenaUI.fmtMoney(pnl,{sign:true,decimals:2})}</div>
+          <div class="p ${up?'text-green':'text-red'}">${TArenaUI.fmtPct(pct)}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ============================================================
+  // PAGE TABS
+  // ============================================================
+  let activeTab = 'holdings';
+  document.getElementById('pfTabs').addEventListener('click', async e => {
+    const t = e.target.dataset.t;
+    if (!t || t === activeTab) return;
+    activeTab = t;
+    document.querySelectorAll('.pf-tab').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+    document.getElementById('holdingsSection').style.display = t === 'holdings' ? '' : 'none';
+    document.getElementById('historySection').style.display  = t === 'history'  ? '' : 'none';
+    if (t === 'history') {
+      document.getElementById('historyList').innerHTML = '<div class="empty-row">Loading…</div>';
+      const trades = await loadTradeHistory();
+      renderHistory(trades);
+    }
+  });
 
   // Wire up tabs
   document.getElementById('trTabs').addEventListener('click', e => {

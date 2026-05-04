@@ -721,13 +721,15 @@
             <span class="ta-bell-dot" aria-hidden="true"></span>
           </button>
           <div class="ta-menu ta-menu-bell" id="taBellMenu">
-            <div style="padding:6px 12px 12px;border-bottom:1px solid var(--bdl);margin-bottom:8px;">
+            <div style="padding:6px 12px 12px;border-bottom:1px solid var(--bdl);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
               <div style="font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:var(--cream);">Notifications</div>
-              <div class="text-muted" style="font-size:11.5px;margin-top:2px;">You're all caught up.</div>
+              <a href="account.html#notifications" style="font-size:11px;color:var(--gold2);font-weight:600;">Manage alerts</a>
             </div>
-            <div style="padding:14px 12px;text-align:center;color:var(--muted);font-size:12.5px;">
-              <i class="fa-regular fa-bell-slash" style="font-size:22px;color:var(--gold2);opacity:.6;display:block;margin-bottom:8px;"></i>
-              No new notifications yet.
+            <div class="bell-body" style="max-height:320px;overflow-y:auto;">
+              <div style="padding:14px 12px;text-align:center;color:var(--muted);font-size:12.5px;">
+                <i class="fa-regular fa-bell-slash" style="font-size:22px;color:var(--gold2);opacity:.6;display:block;margin-bottom:8px;"></i>
+                No new notifications yet.
+              </div>
             </div>
           </div>
         </div>
@@ -881,8 +883,15 @@
         e.stopPropagation();
         if (menu) menu.classList.remove('open');
         bellMenu.classList.toggle('open');
+        // Load real notifications when bell is opened
+        if (bellMenu.classList.contains('open')) {
+          loadNotifications(bellMenu);
+        }
       });
     }
+
+    // Load notification count badge on nav render
+    loadNotificationBadge(bell);
     document.addEventListener('click', e => {
       if (menu && pill && !menu.contains(e.target) && !pill.contains(e.target)) menu.classList.remove('open');
       if (bellMenu && bell && !bellMenu.contains(e.target) && !bell.contains(e.target)) bellMenu.classList.remove('open');
@@ -937,6 +946,99 @@
 
     // Kick off a one-shot live refresh (crypto only) — no need to await.
     refreshTickerLive();
+  }
+
+  // ============================================================
+  // NOTIFICATIONS — real price alerts from Supabase
+  // ============================================================
+  async function loadNotificationBadge(bellEl) {
+    if (!bellEl) return;
+    try {
+      const db = global.TArenaDB;
+      if (!db) return;
+      const { data: { session } } = await db.auth.getSession();
+      if (!session) return;
+      const { data, error } = await db
+        .from('price_alerts')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'triggered')
+        .eq('seen', false);
+      const count = data?.length || 0;
+      const dot = bellEl.querySelector('.ta-bell-dot');
+      if (dot) {
+        dot.style.display = count > 0 ? 'block' : 'none';
+        dot.textContent = count > 9 ? '9+' : (count > 0 ? String(count) : '');
+      }
+    } catch (e) {
+      // Silently ignore — notifications are non-critical
+    }
+  }
+
+  async function loadNotifications(bellMenu) {
+    const db = global.TArenaDB;
+    if (!db) return;
+    try {
+      const { data: { session } } = await db.auth.getSession();
+      if (!session) return;
+      // Show loading state
+      const bodyEl = bellMenu.querySelector('.bell-body');
+      if (bodyEl) bodyEl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading…</div>';
+      // Fetch recent alerts (triggered or active)
+      const { data: alerts, error } = await db
+        .from('price_alerts')
+        .select('id,symbol,condition,target_price,triggered_at,status,seen,note')
+        .in('status', ['triggered', 'active'])
+        .order('triggered_at', { ascending: false, nullsFirst: false })
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      const rows = (alerts || []);
+      // Mark triggered unseen alerts as seen
+      const unseenIds = rows.filter(a => a.status === 'triggered' && !a.seen).map(a => a.id);
+      if (unseenIds.length) {
+        db.from('price_alerts').update({ seen: true }).in('id', unseenIds).then(() => {
+          // Clear badge
+          const bell = document.getElementById('taBell');
+          const dot = bell && bell.querySelector('.ta-bell-dot');
+          if (dot) dot.style.display = 'none';
+        });
+      }
+      // Render
+      if (bodyEl) {
+        if (!rows.length) {
+          bodyEl.innerHTML = `<div style="padding:14px 12px;text-align:center;color:var(--muted);font-size:12.5px;">
+            <i class="fa-regular fa-bell-slash" style="font-size:22px;color:var(--gold2);opacity:.6;display:block;margin-bottom:8px;"></i>
+            No alerts yet. Set a price alert from the trade page.
+          </div>`;
+        } else {
+          bodyEl.innerHTML = rows.map(a => {
+            const sym = (a.symbol || '').replace('.AX', '');
+            const isTriggered = a.status === 'triggered';
+            const isUnseen = isTriggered && !a.seen;
+            const dt = a.triggered_at
+              ? new Date(a.triggered_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+              : 'Pending';
+            const icon = isTriggered
+              ? (a.condition === 'above' ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down')
+              : 'fa-bell';
+            const iconColor = isTriggered
+              ? (a.condition === 'above' ? '#4ade80' : '#f87171')
+              : 'var(--gold2)';
+            return `<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--bdl);${isUnseen ? 'background:rgba(201,160,48,.05);' : ''}">
+              <i class="fa-solid ${icon}" style="color:${iconColor};font-size:14px;margin-top:2px;flex-shrink:0;"></i>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:13px;font-weight:600;color:var(--cream);">${sym} ${a.condition === 'above' ? 'above' : 'below'} $${Number(a.target_price).toFixed(2)}</div>
+                ${a.note ? `<div style="font-size:11.5px;color:var(--muted);margin-top:1px;">${a.note}</div>` : ''}
+                <div style="font-size:11px;color:var(--muted);margin-top:3px;">${dt}</div>
+              </div>
+              <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;white-space:nowrap;background:${isTriggered ? 'rgba(74,222,128,.15)' : 'rgba(201,160,48,.12)'};color:${isTriggered ? '#4ade80' : 'var(--gold2)'}">${isTriggered ? 'TRIGGERED' : 'ACTIVE'}</span>
+            </div>`;
+          }).join('');
+        }
+      }
+    } catch (e) {
+      console.warn('[Notifications] load failed:', e.message);
+    }
   }
 
   // ============================================================
