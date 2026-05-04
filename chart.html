@@ -709,36 +709,51 @@ async function loadBars(){
   const tfRes = tfToResolution(state.tf);
   const now = Math.floor(Date.now()/1000);
   const fromSec = now - tfWindowSec(state.tf);
+  // ---- PARALLEL bar fetch: race all sources simultaneously ----
+  // Whichever source returns valid bars first wins. This eliminates the
+  // sequential timeout chain that made the chart feel slow.
+  const normChartBars = (raw) => (raw || []).filter(b => isFinite(b.c || b.close) && (b.c || b.close) > 0).map(b => ({
+    t: b.t || (b.time ? b.time * 1000 : 0),
+    o: b.o ?? b.open ?? 0,
+    h: b.h ?? b.high ?? 0,
+    l: b.l ?? b.low ?? 0,
+    c: b.c ?? b.close ?? 0,
+    v: b.v ?? b.volume ?? 0,
+  })).slice(-1000);
+
+  const barRaces = [];
+  // Source 1: TArenaDatafeed edge function
+  barRaces.push(
+    window.TArenaDatafeed.fetchBars(state.symbol, tfRes, fromSec, now)
+      .then(raw => normChartBars(raw))
+      .catch(() => [])
+  );
+  // Source 2: Yahoo direct via CORS proxies
+  if (state.symbol) {
+    barRaces.push(
+      getChartData(state.symbol, state.tf)
+        .then(raw => normChartBars(raw))
+        .catch(() => [])
+    );
+  }
+  // Source 3: MarketData centralized engine
+  if (state.symbol && window.MarketData) {
+    const isASX = state.symbol.endsWith('.AX');
+    const cleanSym = isASX ? state.symbol.replace('.AX', '') : state.symbol;
+    barRaces.push(
+      window.MarketData.fetchChartHistory(cleanSym, isASX, state.tf)
+        .then(raw => normChartBars(raw))
+        .catch(() => [])
+    );
+  }
   let bars = [];
-  // Source 1: TArenaDatafeed edge function (Binance for crypto, data-proxy for stocks)
   try {
-    const raw = await window.TArenaDatafeed.fetchBars(state.symbol, tfRes, fromSec, now);
-    bars = (raw || []).filter(b => isFinite(b.c) && b.c > 0).slice(-1000);
-  } catch (e) {
-    console.warn('[chart] fetchBars failed, trying Yahoo direct', e);
-  }
-  // Source 2: Yahoo direct via public CORS proxies (chart.html inline)
-  if (!bars.length && state.symbol) {
-    try {
-      const y = await getChartData(state.symbol, state.tf);
-      bars = (y || []).filter(b => isFinite(b.c) && b.c > 0).slice(-1000);
-    } catch(e){ console.warn('[chart] Yahoo getChartData failed', e); }
-  }
-  // Source 3: MarketData centralized engine (separate proxy chain)
-  if (!bars.length && state.symbol && window.MarketData) {
-    try {
-      const isASX = state.symbol.endsWith('.AX');
-      const cleanSym = isASX ? state.symbol.replace('.AX', '') : state.symbol;
-      const mdBars = await window.MarketData.fetchChartHistory(cleanSym, isASX, state.tf);
-      bars = (mdBars || []).filter(b => isFinite(b.c || b.close) && (b.c || b.close) > 0).map(b => ({
-        t: b.t || b.time * 1000,
-        o: b.o || b.open,
-        h: b.h || b.high,
-        l: b.l || b.low,
-        c: b.c || b.close,
-        v: b.v || b.volume || 0,
-      })).slice(-1000);
-    } catch(e){ console.warn('[chart] MarketData.fetchChartHistory failed', e); }
+    bars = await Promise.any(
+      barRaces.map(p => p.then(b => b.length ? b : Promise.reject('empty')))
+    );
+  } catch (_) {
+    // All sources returned empty
+    bars = [];
   }
   if (!bars.length) bars = synthBars(state.tf, fromSec, now);
   // Single token check covers BOTH the success and error paths so a

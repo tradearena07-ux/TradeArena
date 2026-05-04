@@ -1026,104 +1026,96 @@ async function refreshChart() {
   const tf       = state.tf;
   const interval = tfToInterval(tf);              // seconds per candle
   const reqId    = ++chartReqId;
-  // Reset chart-tip handle so a `nudgeChartTip` racing with this load
-  // can't poke the previous symbol's candle into the new series.
   lastCandle = null;
 
-  // Resolve the best available anchor price for synthetic placeholder.
-  // Try PRICES store first, then MarketData centralized cache, then
-  // fall back to a live quote fetch so the chart is never stuck at $100.
+  // Resolve anchor price synchronously from caches (no await = instant).
   let px = (PRICES[state.symbol] && PRICES[state.symbol].price) || 0;
   if (!px && window.marketData) {
     const sym = state.symbol.replace('.AX', '');
-    const isASX = state.symbol.endsWith('.AX');
     const md = window.marketData;
     if (md.stocks && md.stocks[sym]) px = md.stocks[sym].price || 0;
     if (!px && md.crypto && md.crypto[state.symbol]) px = md.crypto[state.symbol].price || 0;
   }
-  if (!px && window.MarketData) {
-    try {
-      const q = await window.MarketData.fetchLiveQuote(state.symbol);
-      if (q && q.price > 0) {
-        px = q.price;
-        // Also seed PRICES so subsequent renders have a value
-        PRICES[state.symbol] = Object.assign({}, PRICES[state.symbol] || {}, {
-          price: q.price, change: q.changePct || 0, changePct: q.changePct || 0, ts: Date.now()
-        });
-      }
-    } catch (_) {}
-  }
   if (!px) px = 100;
 
-  // Show synthetic placeholder immediately so the chart is never empty
-  // while the real bars load (especially on slow ASX/US proxy hops).
+  // Show synthetic placeholder immediately (synchronous — no network wait).
   const synth = genCandles(px, tf);
   candleSeries.setData(synth);
   chart.timeScale().fitContent();
-  // Seed lastCandle from the synthetic tail so chart-tip nudges work
-  // even before real bars arrive (or for forex which never gets them).
   lastCandle = synth[synth.length - 1] || null;
-  // Forex has no bars provider — synthetic is the final answer.
   if (def.market === 'forex') return;
 
-  // Crypto: keep the existing Binance-direct path (CORS-allowed, intraday
-  // resolutions). Stocks: pull candles from Yahoo via corsproxy — single
-  // source of truth for both ASX and US. Falls back to MarketData
-  // centralized engine if the inline Yahoo fetch fails.
+  // ---- PARALLEL bar fetch: race all sources simultaneously ----
+  // Whichever source returns valid bars first wins. This eliminates the
+  // 6s+6s+6s sequential timeout chain that made the chart feel slow.
   try {
-    let bars;
+    const barPromises = [];
+    const normBars = (raw) => (raw || []).map(b => ({
+      time: b.time || Math.floor((b.t || 0) / 1000),
+      open: +(b.open ?? b.o ?? 0), high: +(b.high ?? b.h ?? 0),
+      low: +(b.low ?? b.l ?? 0), close: +(b.close ?? b.c ?? 0),
+    })).filter(b => b.close > 0);
+
     if (def.market === 'crypto') {
-      const toSec   = Math.floor(Date.now() / 1000);
+      // Source A: TArenaDatafeed (Binance)
+      const toSec = Math.floor(Date.now() / 1000);
       const fromSec = toSec - 200 * interval;
-      try {
-        const raw = await TArenaDatafeed.fetchBars(state.symbol, tfToResolution(tf), fromSec, toSec);
-        bars = (raw || []).map(b => ({ time: Math.floor(b.t / 1000), open: +b.o, high: +b.h, low: +b.l, close: +b.c }));
-      } catch (e) {
-        console.warn('TArenaDatafeed.fetchBars failed for crypto', state.symbol, e.message);
-        bars = [];
-      }
-      // Fallback: use MarketData.fetchChartHistory for crypto
-      if ((!bars || !bars.length) && window.MarketData) {
-        try {
-          const mdBars = await window.MarketData.fetchChartHistory(state.symbol, false, tf);
-          bars = (mdBars || []).map(b => ({ time: b.time, open: b.open || b.o, high: b.high || b.h, low: b.low || b.l, close: b.close || b.c }));
-        } catch (_) {}
+      barPromises.push(
+        TArenaDatafeed.fetchBars(state.symbol, tfToResolution(tf), fromSec, toSec)
+          .then(raw => normBars(raw))
+          .catch(() => [])
+      );
+      // Source B: MarketData centralized (Yahoo via different proxies)
+      if (window.MarketData) {
+        barPromises.push(
+          window.MarketData.fetchChartHistory(state.symbol, false, tf)
+            .then(raw => normBars(raw))
+            .catch(() => [])
+        );
       }
     } else {
-      // Map TradeArena tf → Yahoo (range, interval). Intraday tfs ask Yahoo
-      // for ~6 months @ 1h; daily/weekly/monthly tfs ask for the full year
-      // at the right granularity. Yahoo refuses some combos (e.g. 1m+1y),
-      // so we cap to safe pairs.
+      // Stocks: race Yahoo inline vs MarketData centralized
       const yfMap = {
-        '1m':  ['5d',  '1m'],  '5m':  ['1mo', '5m'],   '15m': ['1mo', '15m'],
-        '1h':  ['6mo', '60m'], '4h':  ['1y',  '60m'],
-        '1D':  ['1y',  '1d'],  '1W':  ['5y',  '1wk'],  '1M':  ['10y', '1mo'],
+        '1m':['5d','1m'],'5m':['1mo','5m'],'15m':['1mo','15m'],
+        '1h':['6mo','60m'],'4h':['1y','60m'],
+        '1D':['1y','1d'],'1W':['5y','1wk'],'1M':['10y','1mo'],
       };
       const [range, ivl] = yfMap[tf] || ['1y', '1d'];
-      try {
-        const raw = await fetchYahooBars(state.symbol, range, ivl);
-        bars = raw.map(b => ({ time: b.time, open: b.open, high: b.high, low: b.low, close: b.close }));
-      } catch (e) {
-        console.warn('fetchYahooBars failed for', state.symbol, e.message);
-        bars = [];
-      }
-      // Fallback: use MarketData.fetchChartHistory (separate proxy chain)
-      if ((!bars || !bars.length) && window.MarketData) {
-        try {
-          const isASX = state.symbol.endsWith('.AX');
-          const cleanSym = isASX ? state.symbol.replace('.AX', '') : state.symbol;
-          const mdBars = await window.MarketData.fetchChartHistory(cleanSym, isASX, tf);
-          bars = (mdBars || []).map(b => ({ time: b.time, open: b.open || b.o, high: b.high || b.h, low: b.low || b.l, close: b.close || b.c }));
-        } catch (e2) {
-          console.warn('MarketData.fetchChartHistory also failed for', state.symbol, e2.message);
-        }
+      // Source A: inline Yahoo fetch
+      barPromises.push(
+        fetchYahooBars(state.symbol, range, ivl)
+          .then(raw => normBars(raw))
+          .catch(() => [])
+      );
+      // Source B: MarketData centralized (separate proxy chain)
+      if (window.MarketData) {
+        const isASX = state.symbol.endsWith('.AX');
+        const cleanSym = isASX ? state.symbol.replace('.AX', '') : state.symbol;
+        barPromises.push(
+          window.MarketData.fetchChartHistory(cleanSym, isASX, tf)
+            .then(raw => normBars(raw))
+            .catch(() => [])
+        );
       }
     }
-    // Bail if the user navigated to another symbol/tf in the meantime.
+
+    // Race: first source with valid bars wins; if all fail, use synthetic.
+    let bars = [];
+    if (barPromises.length) {
+      // Promise.any resolves with the first fulfilled promise whose value
+      // passes the filter. We wrap each to reject if bars are empty.
+      try {
+        bars = await Promise.any(
+          barPromises.map(p => p.then(b => b.length ? b : Promise.reject('empty')))
+        );
+      } catch (_) {
+        // All sources returned empty — fall through to synthetic.
+        bars = [];
+      }
+    }
+
     if (reqId !== chartReqId) return;
     if (!bars || !bars.length) {
-      // All real bar sources failed — re-anchor synthetic to the best
-      // available price so at least the chart range is correct.
       console.warn('All bar sources failed for', state.symbol, '— using synthetic at', px);
       return;
     }
@@ -1140,7 +1132,6 @@ async function refreshChart() {
     chart.timeScale().fitContent();
     lastCandle = out[out.length - 1] || null;
   } catch (e) {
-    // Stick with the synthetic placeholder; surface in console for ops.
     console.warn('chart bars failed for', state.symbol, e.message);
   }
 }
@@ -1332,11 +1323,19 @@ async function placeOrder() {
 
   const submitBtn = document.getElementById('submitBtn');
   submitBtn.disabled = true; submitBtn.style.opacity = '.7';
-  // Insert directly into paper_trades (RLS policy: authenticated users can self-insert).
+  // Insert directly into paper_trades (RLS policy: owner_id = auth.uid()).
   // We keep status='open' and entry_price=px so the existing get_my_holdings()
   // SQL rollup works. Forex is mapped to 'us' market for storage compatibility.
+  // IMPORTANT: owner_id MUST be included — the column has no default, and the
+  // RLS WITH CHECK clause requires owner_id = auth.uid().
   const marketCol = def.market === 'forex' ? 'us' : def.market;
+  const { data: { user } } = await TArenaDB.auth.getUser();
+  if (!user || !user.id) {
+    submitBtn.disabled = false; submitBtn.style.opacity = '1';
+    return toast('Not signed in', 'Please sign in to trade', true);
+  }
   const { error } = await TArenaDB.from('paper_trades').insert({
+    owner_id:    user.id,
     symbol:      state.symbol,
     market:      marketCol,
     side:        state.side,
