@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  
+  <link rel="manifest" href="/manifest.json"/>
+  <meta name="theme-color" content="#c9a030"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="TradeArena"/>
+  <link rel="apple-touch-icon" href="/assets/icon-192.png"/>
+<title>TradeArena — Sign in</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <style>
+    .auth-wrap{flex:1;display:grid;grid-template-columns:440px 1fr;min-height:calc(100vh - 80px);}
+    .auth-left{background:var(--navy2);border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:center;padding:48px;position:relative;overflow:hidden;}
+    .auth-left::before{content:'';position:absolute;top:-100px;left:-100px;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(201,160,48,.08) 0%,transparent 70%);pointer-events:none;}
+    .auth-left > *{position:relative;z-index:1;}
+    .auth-headline{font-family:'Cinzel',serif;font-size:1.9rem;font-weight:600;letter-spacing:.02em;line-height:1.2;margin-bottom:14px;}
+    .auth-headline em{display:block;color:var(--gold2);font-style:italic;font-weight:400;}
+    .perk{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px;font-size:.92rem;color:var(--muted);line-height:1.5;}
+    .pico{width:34px;height:34px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;border-radius:8px;background:var(--navy3);color:var(--gold2);}
+    .perk strong{color:var(--cream);}
+
+    .auth-right{flex:1;display:flex;align-items:center;justify-content:center;padding:48px 32px;position:relative;}
+    .auth-right::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:600px;height:360px;background:radial-gradient(ellipse at top,rgba(201,160,48,.06) 0%,transparent 65%);pointer-events:none;}
+    .auth-card{position:relative;z-index:1;width:100%;max-width:420px;}
+
+    .tabbar{display:flex;background:var(--navy3);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:28px;}
+    .tabb{flex:1;padding:10px 12px;background:transparent;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-radius:9px;transition:all .2s;}
+    .tabb.on{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);}
+
+    .auth-card h1{font-family:'Cinzel',serif;font-size:1.6rem;font-weight:600;letter-spacing:.02em;line-height:1.2;margin-bottom:8px;}
+    .sub{font-size:.92rem;color:var(--muted);line-height:1.6;margin-bottom:20px;}
+
+    .field-row{display:flex;align-items:center;background:var(--navy3);border:1px solid var(--border);border-radius:10px;padding:0 14px;transition:border-color .2s;}
+    .field-row:focus-within{border-color:var(--gold);}
+    .field-row.err{border-color:var(--red);}
+    .field-row i.lead{color:var(--muted);font-size:14px;margin-right:10px;}
+    .field-row input{flex:1;background:transparent;border:none;outline:none;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:14px;padding:14px 0;}
+    /* Chrome / Safari autofill paints a white background and dark text
+       that ignores `background:transparent` — the long-shadow trick
+       repaints the field with our navy bg and cream text. */
+    .field-row input:-webkit-autofill,
+    .field-row input:-webkit-autofill:hover,
+    .field-row input:-webkit-autofill:focus,
+    .field-row input:-webkit-autofill:active{
+      -webkit-text-fill-color: var(--cream) !important;
+      -webkit-box-shadow: 0 0 0 1000px var(--navy2) inset !important;
+      caret-color: var(--cream);
+      transition: background-color 9999s ease-in-out 0s;
+    }
+    .field-row .toggle-pw{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:6px;}
+    .field-row .toggle-pw:hover{color:var(--gold2);}
+    .field-stack{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
+
+    .row-between{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin:6px 0 18px;}
+    .row-between a{color:var(--gold2);cursor:pointer;font-weight:500;}
+    .row-between a:hover{text-decoration:underline;}
+
+    .btn-prime{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);border:none;padding:14px;border-radius:10px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:14px;letter-spacing:.04em;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;justify-content:center;gap:10px;}
+    .btn-prime:hover{filter:brightness(1.06);transform:translateY(-1px);}
+    .btn-prime:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+
+    .toggle-row{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--border);margin-bottom:18px;border-radius:12px;overflow:hidden;background:var(--navy3);}
+    .tbtn{padding:14px 10px;text-align:center;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);background:transparent;border:none;transition:all .2s;border-bottom:2px solid transparent;}
+    .tbtn .ticon{display:block;font-size:18px;margin-bottom:4px;color:var(--muted);}
+    .tbtn .tsub{display:block;font-size:10.5px;font-weight:400;color:var(--muted);margin-top:3px;}
+    .tbtn.as{color:var(--gold2);border-bottom-color:var(--gold);background:rgba(201,160,48,.07);}
+    .tbtn.as .ticon{color:var(--gold2);}
+    .tbtn.ap{color:var(--blue);border-bottom-color:var(--blue);background:rgba(96,165,250,.07);}
+    .tbtn.ap .ticon{color:var(--blue);}
+
+    .otp-to{font-size:13px;color:var(--muted);text-align:center;margin-bottom:14px;line-height:1.6;}
+    .otp-to strong{color:var(--gold2);}
+    .orow{display:flex;gap:8px;justify-content:center;margin-bottom:12px;}
+    .obox{width:48px;height:58px;text-align:center;font-family:'Cinzel',serif;font-size:1.6rem;font-weight:700;background:var(--navy3);border:1px solid var(--border);color:var(--gold2);outline:none;caret-color:var(--gold);border-radius:10px;transition:all .15s;}
+    .obox:focus{border-color:var(--gold);background:var(--navy4);transform:scale(1.05);box-shadow:0 0 0 4px rgba(201,160,48,.12);}
+    .obox.filled{border-color:rgba(201,160,48,.55);background:rgba(201,160,48,.06);}
+    .obox.shk{border-color:var(--red);animation:shk .4s ease;}
+    @keyframes shk{0%,100%{transform:translateX(0);}25%,75%{transform:translateX(-6px);}50%{transform:translateX(6px);}}
+    .otimer{font-size:11px;letter-spacing:.06em;color:var(--muted);text-align:center;margin-bottom:14px;}
+    .otimer .tc{color:var(--gold);}
+    .otimer .exp{color:var(--red);}
+
+    .step{display:none;}
+    .step.on{display:block;}
+
+    .pw-meter{display:flex;gap:4px;margin-top:6px;}
+    .pw-bar{flex:1;height:3px;background:var(--bdl);border-radius:2px;}
+    .pw-bar.weak{background:var(--red);}
+    .pw-bar.med{background:var(--gold);}
+    .pw-bar.strong{background:var(--green);}
+    .pw-help{font-size:11px;color:var(--muted);margin-top:6px;}
+
+    .ustrip{margin-top:22px;padding-top:18px;border-top:1px solid var(--bdl);}
+    .ulbl{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;text-align:center;font-weight:600;}
+    .ubadges{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;}
+    .ubadge{font-size:10px;font-family:'DM Sans',sans-serif;padding:3px 10px;border:1px solid rgba(201,160,48,.18);color:var(--muted);border-radius:9999px;}
+
+    .info-card{margin-top:14px;font-size:12px;color:var(--muted);background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.18);border-radius:10px;padding:10px 14px;line-height:1.5;}
+    .info-card b{color:var(--blue);}
+
+    @media(max-width:780px){.auth-wrap{grid-template-columns:1fr;}.auth-left{display:none;}}
+  </style>
+</head>
+<body>
+
+<div id="tarena-nav"></div>
+
+<div class="auth-wrap">
+
+  <div class="auth-left">
+    <div class="auth-headline">Markets are<br><em>just the start.</em></div>
+    <p class="text-muted" style="font-size:.92rem;line-height:1.7;margin-bottom:28px;">Paper trade real ASX, US and crypto markets. Sharpen your edge before you risk a cent.</p>
+    <div class="perk"><div class="pico">$1</div><div><strong>Fractional trading</strong> from $1 — own any asset, any size.</div></div>
+    <div class="perk"><div class="pico">🏆</div><div><strong>Campus leagues</strong> — UNSW vs USYD, weekly competitions.</div></div>
+    <div class="perk"><div class="pico">🌍</div><div><strong>3 markets in one</strong> — ASX, US stocks &amp; crypto.</div></div>
+    <div class="perk"><div class="pico">$0</div><div><strong>Zero brokerage</strong> forever for the first 500 members.</div></div>
+  </div>
+
+  <div class="auth-right">
+    <div class="auth-card">
+
+      <div class="tabbar">
+        <button class="tabb on" id="tabLogin"  onclick="switchTab('login')">Log in</button>
+        <button class="tabb"    id="tabSignup" onclick="switchTab('signup')">Create account</button>
+      </div>
+
+      <!-- ========================== LOGIN ========================== -->
+      <div class="step on" id="loginStep">
+        <h1>Welcome back.</h1>
+        <p class="sub">Log in with your username or email and password.</p>
+        
+        <!-- CTO Fix: SSO Integrations for Reduced Friction -->
+        <div style="display:flex; gap:10px; margin-bottom:18px;">
+          <button type="button" class="btn-ghost" style="flex:1; display:flex; align-items:center; justify-content:center; gap:8px; min-height:44px;" onclick="showError('loginErr', 'SSO Backend integration required')"><i class="fa-brands fa-google"></i> Google</button>
+          <button type="button" class="btn-ghost" style="flex:1; display:flex; align-items:center; justify-content:center; gap:8px; min-height:44px;" onclick="showError('loginErr', 'SSO Backend integration required')"><i class="fa-brands fa-microsoft"></i> Microsoft</button>
+        </div>
+        <div style="text-align:center; color:var(--muted); font-size:12px; margin-bottom:18px; text-transform:uppercase; letter-spacing:0.05em; font-weight:600;">or log in with email</div>
+        <div class="error-box" id="loginErr"></div>
+        <div class="field-stack">
+          <div class="field-row">
+            <i class="fa-solid fa-user lead"></i>
+            <input type="text" id="loginId" placeholder="Username or email" autocomplete="username"/>
+          </div>
+          <div class="field-row">
+            <i class="fa-solid fa-lock lead"></i>
+            <input type="password" id="loginPw" placeholder="Password" autocomplete="current-password"/>
+            <button class="toggle-pw" type="button" onclick="togglePw('loginPw',this)"><i class="fa-solid fa-eye"></i></button>
+          </div>
+        </div>
+        <div class="row-between">
+          <span class="text-muted">Don't have an account? <a onclick="switchTab('signup')">Sign up</a></span>
+          <a onclick="switchTab('forgot')">Forgot password?</a>
+        </div>
+        <button class="btn-prime" id="loginBtn" onclick="doLogin()">Log in</button>
+      </div>
+
+      <!-- ========================== SIGN-UP STEP 1: email + type ========================== -->
+      <div class="step" id="signupStep1">
+        <h1>Create your account.</h1>
+        <p class="sub">We'll email you a 6-digit code to verify your address. After that you'll pick a username and password — and that's all you need to log in next time.</p>
+
+        
+        <!-- CTO Fix: SSO Integrations for Reduced Friction -->
+        <div style="display:flex; gap:10px; margin-bottom:18px;">
+          <button type="button" class="btn-ghost" style="flex:1; display:flex; align-items:center; justify-content:center; gap:8px; min-height:44px;" onclick="showError('signupErr1', 'SSO Backend integration required')"><i class="fa-brands fa-google"></i> Google</button>
+          <button type="button" class="btn-ghost" style="flex:1; display:flex; align-items:center; justify-content:center; gap:8px; min-height:44px;" onclick="showError('signupErr1', 'SSO Backend integration required')"><i class="fa-brands fa-microsoft"></i> Microsoft</button>
+        </div>
+        <div style="text-align:center; color:var(--muted); font-size:12px; margin-bottom:18px; text-transform:uppercase; letter-spacing:0.05em; font-weight:600;">or create account with email</div>
+        <div class="toggle-row">
+          <button class="tbtn as" id="btnS" onclick="setSignupType('student')">
+            <span class="ticon"><i class="fa-solid fa-graduation-cap"></i></span>Student<span class="tsub">.edu.au required</span>
+          </button>
+          <button class="tbtn" id="btnP" onclick="setSignupType('public')">
+            <span class="ticon"><i class="fa-solid fa-globe"></i></span>Public<span class="tsub">Any email</span>
+          </button>
+        </div>
+
+        <div class="error-box" id="signupErr1"></div>
+        <div class="field-row" style="margin-bottom:14px;">
+          <i class="fa-solid fa-envelope lead"></i>
+          <input type="email" id="signupEmail" placeholder="you@student.unsw.edu.au" autocomplete="email"/>
+        </div>
+        <button class="btn-prime" id="sendBtn" onclick="sendSignupOtp()">Send verification code</button>
+
+        <div class="row-between" style="justify-content:center;margin-top:18px;">
+          <span class="text-muted">Already have an account? <a onclick="switchTab('login')">Log in</a></span>
+        </div>
+
+        <div class="ustrip" id="ustrip">
+          <div class="ulbl">Accepted institutions</div>
+          <div class="ubadges">
+            <span class="ubadge">unsw.edu.au</span><span class="ubadge">usyd.edu.au</span>
+            <span class="ubadge">uts.edu.au</span><span class="ubadge">mq.edu.au</span>
+            <span class="ubadge">unimelb.edu.au</span><span class="ubadge">monash.edu</span>
+            <span class="ubadge">anu.edu.au</span><span class="ubadge">+ all .edu.au</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================== SIGN-UP STEP 2: OTP ========================== -->
+      <div class="step" id="signupStep2">
+        <h1>Verify your email.</h1>
+        <p class="otp-to">We just sent a 6-digit code to <strong id="sentTo">—</strong>. Check your inbox (and spam folder).</p>
+        <div class="error-box" id="signupErr2"></div>
+        <div class="orow">
+          <input class="obox" id="d1" maxlength="1" inputmode="numeric" autocomplete="one-time-code"/>
+          <input class="obox" id="d2" maxlength="1" inputmode="numeric"/>
+          <input class="obox" id="d3" maxlength="1" inputmode="numeric"/>
+          <input class="obox" id="d4" maxlength="1" inputmode="numeric"/>
+          <input class="obox" id="d5" maxlength="1" inputmode="numeric"/>
+          <input class="obox" id="d6" maxlength="1" inputmode="numeric"/>
+        </div>
+        <div class="otimer">Code expires in <span class="tc" id="tc">10:00</span></div>
+        <button class="btn-prime" id="vBtn" onclick="verifySignupOtp()">Verify code</button>
+        <div class="row-between" style="margin-top:14px;">
+          <a onclick="goBackToSignup1()">← Change email</a>
+          <a onclick="resendSignupOtp()">Resend code</a>
+        </div>
+      </div>
+
+      <!-- ========================== SIGN-UP STEP 3: username + password ========================== -->
+      <div class="step" id="signupStep3">
+        <h1>Set up your profile.</h1>
+        <p class="sub">Choose a username and password. You'll use these to log in from now on.</p>
+        <div class="error-box" id="signupErr3"></div>
+        <div class="field-stack">
+          <div class="field-row">
+            <i class="fa-solid fa-at lead"></i>
+            <input type="text" id="newUsername" placeholder="username" autocomplete="username" maxlength="20"/>
+          </div>
+          <div>
+            <div class="field-row">
+              <i class="fa-solid fa-lock lead"></i>
+              <input type="password" id="newPw" placeholder="Create password (6+ chars)" autocomplete="new-password"/>
+              <button class="toggle-pw" type="button" onclick="togglePw('newPw',this)"><i class="fa-solid fa-eye"></i></button>
+            </div>
+            <div class="pw-meter">
+              <div class="pw-bar" id="pw1"></div><div class="pw-bar" id="pw2"></div><div class="pw-bar" id="pw3"></div>
+            </div>
+            <div class="pw-help" id="pwHelp">Use at least 6 characters.</div>
+          </div>
+        </div>
+        <button class="btn-prime" id="finishBtn" onclick="finishSignup()">Create account &amp; log in</button>
+      </div>
+
+      <!-- ========================== FORGOT PASSWORD ========================== -->
+      <div class="step" id="forgotStep1">
+        <h1>Reset your password.</h1>
+        <p class="sub">Enter the email address you signed up with and we'll send a 6-digit code to reset your password.</p>
+        <div class="error-box" id="forgotErr1"></div>
+        <div class="field-row" style="margin-bottom:14px;">
+          <i class="fa-solid fa-envelope lead"></i>
+          <input type="email" id="forgotId" placeholder="you@example.com" autocomplete="email"/>
+        </div>
+        <button class="btn-prime" id="forgotBtn" onclick="sendResetOtp()">Send reset code</button>
+        <div class="row-between" style="justify-content:center;margin-top:18px;">
+          <span class="text-muted">Remembered it? <a onclick="switchTab('login')">Log in</a></span>
+        </div>
+      </div>
+
+      <div class="step" id="forgotStep2">
+        <h1>Verify reset code.</h1>
+        <p class="otp-to">We sent a 6-digit code to <strong id="resetSentTo">—</strong>. Check your inbox (and spam folder).</p>
+        <div class="error-box" id="forgotErr2"></div>
+        <div class="orow">
+          <input class="obox r" maxlength="1" inputmode="numeric"/>
+          <input class="obox r" maxlength="1" inputmode="numeric"/>
+          <input class="obox r" maxlength="1" inputmode="numeric"/>
+          <input class="obox r" maxlength="1" inputmode="numeric"/>
+          <input class="obox r" maxlength="1" inputmode="numeric"/>
+          <input class="obox r" maxlength="1" inputmode="numeric"/>
+        </div>
+        <button class="btn-prime" onclick="verifyResetOtpStep()">Verify code</button>
+      </div>
+
+      <div class="step" id="forgotStep3">
+        <h1>Set a new password.</h1>
+        <p class="sub">Choose a new password for your account.</p>
+        <div class="error-box" id="forgotErr3"></div>
+        <div class="field-stack">
+          <div class="field-row">
+            <i class="fa-solid fa-lock lead"></i>
+            <input type="password" id="resetNewPw" placeholder="New password (6+ chars)" autocomplete="new-password"/>
+            <button class="toggle-pw" type="button" onclick="togglePw('resetNewPw',this)"><i class="fa-solid fa-eye"></i></button>
+          </div>
+        </div>
+        <button class="btn-prime" onclick="finishReset()">Reset password &amp; log in</button>
+      </div>
+
+      <!-- Welcome step -->
+      <div class="step" id="welcomeStep">
+        <h1 style="color:var(--green);">You're in.</h1>
+        <p class="sub">Loading your account…</p>
+        <div style="text-align:center;padding:24px 0;">
+          <span class="spin" style="width:32px;height:32px;border-width:3px;border-color:rgba(201,160,48,.3);border-top-color:var(--gold);"></span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="assets/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="assets/supabase.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/market.js"></script>
+<script>
+  TArenaUI.renderNav('auth');
+
+  // If already signed in, jump straight to profile
+  (function () {
+    const s = TArenaAuth.getSession();
+    if (s) {
+      document.getElementById('loginStep').classList.remove('on');
+      document.getElementById('welcomeStep').classList.add('on');
+      setTimeout(() => window.location.href = 'profile.html', 600);
+    }
+  })();
+
+  let signupType = 'student';
+  let signupTimer = null;
+  const DS = ['d1','d2','d3','d4','d5','d6'];
+  const RS = Array.from(document.querySelectorAll('.obox.r'));
+
+  // ----- Tab switching -----
+  function switchTab(name) {
+    ['loginStep','signupStep1','signupStep2','signupStep3','forgotStep1','forgotStep2','forgotStep3','welcomeStep'].forEach(id =>
+      document.getElementById(id).classList.remove('on')
+    );
+    document.getElementById('tabLogin').classList.toggle('on', name === 'login');
+    document.getElementById('tabSignup').classList.toggle('on', name === 'signup');
+    if (name === 'login')        document.getElementById('loginStep').classList.add('on');
+    else if (name === 'signup')  document.getElementById('signupStep1').classList.add('on');
+    else if (name === 'forgot')  document.getElementById('forgotStep1').classList.add('on');
+  }
+  window.__switchTab = switchTab;
+
+  // ----- Signup type toggle -----
+  function setSignupType(t) {
+    signupType = t;
+    document.getElementById('btnS').className = 'tbtn' + (t === 'student' ? ' as' : '');
+    document.getElementById('btnP').className = 'tbtn' + (t === 'public' ? ' ap' : '');
+    document.getElementById('signupEmail').placeholder = t === 'student' ? 'you@student.unsw.edu.au' : 'you@gmail.com';
+    document.getElementById('ustrip').style.display = t === 'student' ? 'block' : 'none';
+    hideError('signupErr1');
+  }
+
+  // ----- Helpers -----
+  function showError(id, msg) {
+    const el = document.getElementById(id);
+    el.innerHTML = msg;
+    el.classList.add('show');
+  }
+  function hideError(id) { document.getElementById(id).classList.remove('show'); }
+  function togglePw(id, btn) {
+    const inp = document.getElementById(id);
+    const eye = btn.querySelector('i');
+    if (inp.type === 'password') { inp.type = 'text'; eye.className = 'fa-solid fa-eye-slash'; }
+    else { inp.type = 'password'; eye.className = 'fa-solid fa-eye'; }
+  }
+  function setBusy(btn, label) {
+    if (!btn._origLabel) btn._origLabel = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<span class="spin"></span>' + label;
+  }
+  function setIdle(btn) {
+    btn.disabled = false; if (btn._origLabel) { btn.innerHTML = btn._origLabel; btn._origLabel = null; }
+  }
+
+  // ----- LOGIN -----
+  async function doLogin() {
+    hideError('loginErr');
+    const id = document.getElementById('loginId').value.trim();
+    const pw = document.getElementById('loginPw').value;
+    const btn = document.getElementById('loginBtn');
+    setBusy(btn, 'Logging in…');
+    const r = await TArenaAuth.login(id, pw);
+    setIdle(btn);
+    if (!r.ok) { showError('loginErr', r.error); return; }
+    document.getElementById('loginStep').classList.remove('on');
+    document.getElementById('welcomeStep').classList.add('on');
+    setTimeout(() => window.location.href = 'profile.html', 500);
+  }
+
+  // ----- SIGNUP step 1: email -----
+  async function sendSignupOtp() {
+    hideError('signupErr1');
+    const email = document.getElementById('signupEmail').value.trim().toLowerCase();
+    const btn = document.getElementById('sendBtn');
+    setBusy(btn, 'Sending code…');
+    const r = await TArenaAuth.startSignup(email, signupType);
+    setIdle(btn);
+    if (!r.ok) { showError('signupErr1', r.error); return; }
+    document.getElementById('sentTo').textContent = r.email;
+    document.getElementById('signupStep1').classList.remove('on');
+    document.getElementById('signupStep2').classList.add('on');
+    DS.forEach(id => { document.getElementById(id).value = ''; document.getElementById(id).classList.remove('filled','shk'); });
+    startTimer(Date.now() + 10 * 60 * 1000);
+    setTimeout(() => document.getElementById('d1').focus(), 100);
+  }
+
+  // ----- SIGNUP step 2: OTP -----
+  function startTimer(expiresAt) {
+    if (signupTimer) clearInterval(signupTimer);
+    const tc = document.getElementById('tc');
+    function tick() {
+      const remain = Math.max(0, expiresAt - Date.now());
+      const m = Math.floor(remain / 60000);
+      const s = Math.floor((remain % 60000) / 1000);
+      tc.textContent = `${m}:${String(s).padStart(2,'0')}`;
+      if (remain <= 0) { clearInterval(signupTimer); tc.textContent = 'expired'; tc.className = 'exp'; }
+    }
+    tick();
+    signupTimer = setInterval(tick, 1000);
+  }
+
+  async function verifySignupOtp() {
+    hideError('signupErr2');
+    const code = DS.map(id => document.getElementById(id).value).join('');
+    if (code.length !== 6) { showError('signupErr2', 'Enter all 6 digits.'); return; }
+    const btn = document.getElementById('vBtn');
+    setBusy(btn, 'Verifying…');
+    const r = await TArenaAuth.verifySignupOtp(code);
+    setIdle(btn);
+    if (!r.ok) {
+      DS.forEach(id => document.getElementById(id).classList.add('shk'));
+      setTimeout(() => DS.forEach(id => document.getElementById(id).classList.remove('shk')), 400);
+      showError('signupErr2', r.error);
+      return;
+    }
+    document.getElementById('signupStep2').classList.remove('on');
+    document.getElementById('signupStep3').classList.add('on');
+    document.getElementById('newUsername').value = TArenaAuth.suggestUsername(r.email);
+    setTimeout(() => document.getElementById('newUsername').focus(), 100);
+  }
+
+  function goBackToSignup1() {
+    document.getElementById('signupStep2').classList.remove('on');
+    document.getElementById('signupStep1').classList.add('on');
+  }
+
+  async function resendSignupOtp() {
+    const email = document.getElementById('signupEmail').value.trim().toLowerCase();
+    if (!email) return;
+    const r = await TArenaAuth.startSignup(email, signupType);
+    if (r.ok) startTimer(Date.now() + 10 * 60 * 1000);
+    else showError('signupErr2', r.error);
+  }
+
+  // ----- SIGNUP step 3: username + password -----
+  document.getElementById('newPw').addEventListener('input', e => {
+    const v = e.target.value;
+    const score = (v.length >= 6) + (v.length >= 10) + (/[A-Z]/.test(v) || /\d/.test(v));
+    ['pw1','pw2','pw3'].forEach((id, i) => {
+      document.getElementById(id).className = 'pw-bar' + (i < score ? (score === 1 ? ' weak' : score === 2 ? ' med' : ' strong') : '');
+    });
+    document.getElementById('pwHelp').textContent =
+      score === 0 ? 'Use at least 6 characters.' :
+      score === 1 ? 'Weak — add more characters.' :
+      score === 2 ? 'Decent — mix in numbers or capitals.' : 'Strong password ✓';
+  });
+
+  async function finishSignup() {
+    hideError('signupErr3');
+    const u = document.getElementById('newUsername').value.trim().toLowerCase();
+    const p = document.getElementById('newPw').value;
+    const btn = document.getElementById('finishBtn');
+    setBusy(btn, 'Creating account…');
+    const r = await TArenaAuth.completeSignup(u, p);
+    setIdle(btn);
+    if (!r.ok) { showError('signupErr3', r.error); return; }
+    document.getElementById('signupStep3').classList.remove('on');
+    document.getElementById('welcomeStep').classList.add('on');
+    setTimeout(() => window.location.href = 'profile.html', 600);
+  }
+
+  // ----- FORGOT PASSWORD -----
+  async function sendResetOtp() {
+    hideError('forgotErr1');
+    const id = document.getElementById('forgotId').value.trim();
+    const btn = document.getElementById('forgotBtn');
+    setBusy(btn, 'Sending code…');
+    const r = await TArenaAuth.startReset(id);
+    setIdle(btn);
+    if (!r.ok) { showError('forgotErr1', r.error); return; }
+    document.getElementById('resetSentTo').textContent = r.email;
+    document.getElementById('forgotStep1').classList.remove('on');
+    document.getElementById('forgotStep2').classList.add('on');
+    RS.forEach(el => { el.value = ''; el.classList.remove('filled'); });
+    setTimeout(() => RS[0].focus(), 100);
+  }
+
+  async function verifyResetOtpStep() {
+    hideError('forgotErr2');
+    const code = RS.map(el => el.value).join('');
+    if (code.length !== 6) { showError('forgotErr2', 'Enter all 6 digits.'); return; }
+    const r = await TArenaAuth.verifyResetOtp(code);
+    if (!r.ok) { showError('forgotErr2', r.error); return; }
+    document.getElementById('forgotStep2').classList.remove('on');
+    document.getElementById('forgotStep3').classList.add('on');
+  }
+
+  async function finishReset() {
+    hideError('forgotErr3');
+    const p = document.getElementById('resetNewPw').value;
+    const r = await TArenaAuth.completeReset(p);
+    if (!r.ok) { showError('forgotErr3', r.error); return; }
+    document.getElementById('forgotStep3').classList.remove('on');
+    document.getElementById('welcomeStep').classList.add('on');
+    setTimeout(() => window.location.href = 'profile.html', 600);
+  }
+
+  // ----- OTP input handlers -----
+  function setupOtpInputs(ids, onComplete) {
+    ids.forEach((idOrEl, i) => {
+      const inp = typeof idOrEl === 'string' ? document.getElementById(idOrEl) : idOrEl;
+      inp.addEventListener('input', e => {
+        const v = e.target.value.replace(/\D/g, '').slice(-1);
+        e.target.value = v;
+        if (v) {
+          inp.classList.add('filled');
+          if (i < ids.length - 1) (typeof ids[i+1] === 'string' ? document.getElementById(ids[i+1]) : ids[i+1]).focus();
+          else if (ids.every(x => (typeof x === 'string' ? document.getElementById(x) : x).value.length === 1)) onComplete();
+        } else inp.classList.remove('filled');
+      });
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'Backspace' && !inp.value && i > 0) {
+          (typeof ids[i-1] === 'string' ? document.getElementById(ids[i-1]) : ids[i-1]).focus();
+        }
+      });
+      inp.addEventListener('paste', e => {
+        e.preventDefault();
+        const txt = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, ids.length);
+        if (!txt) return;
+        txt.split('').forEach((ch, idx) => {
+          if (idx < ids.length) {
+            const el = typeof ids[idx] === 'string' ? document.getElementById(ids[idx]) : ids[idx];
+            el.value = ch; el.classList.add('filled');
+          }
+        });
+        if (txt.length === ids.length) onComplete();
+        else (typeof ids[txt.length] === 'string' ? document.getElementById(ids[txt.length]) : ids[txt.length]).focus();
+      });
+    });
+  }
+  setupOtpInputs(DS, verifySignupOtp);
+  setupOtpInputs(RS, verifyResetOtpStep);
+
+  // Enter key handlers
+  document.getElementById('loginId').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPw').focus(); });
+  document.getElementById('loginPw').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+  document.getElementById('signupEmail').addEventListener('keydown', e => { if (e.key === 'Enter') sendSignupOtp(); });
+  document.getElementById('newPw').addEventListener('keydown', e => { if (e.key === 'Enter') finishSignup(); });
+  document.getElementById('resetNewPw').addEventListener('keydown', e => { if (e.key === 'Enter') finishReset(); });
+  document.getElementById('forgotId').addEventListener('keydown', e => { if (e.key === 'Enter') sendResetOtp(); });
+
+  window.switchTab = switchTab;
+  window.setSignupType = setSignupType;
+  window.sendSignupOtp = sendSignupOtp;
+  window.verifySignupOtp = verifySignupOtp;
+  window.resendSignupOtp = resendSignupOtp;
+  window.goBackToSignup1 = goBackToSignup1;
+  window.finishSignup = finishSignup;
+  window.doLogin = doLogin;
+  window.sendResetOtp = sendResetOtp;
+  window.verifyResetOtpStep = verifyResetOtpStep;
+  window.finishReset = finishReset;
+  window.togglePw = togglePw;
+
+  console.log('%cTradeArena · Auth ready (Supabase)', 'color:#e8c060;font-weight:700;');
+</script>
+<script>
+  // TradeArena · PWA service-worker registration
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/service-worker.js').catch(function (err) {
+        console.warn('[TradeArena] SW registration failed:', err);
+      });
+    });
+  }
+</script>
+</body>
+</html>

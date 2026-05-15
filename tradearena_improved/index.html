@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  
+  <link rel="manifest" href="/manifest.json"/>
+  <meta name="theme-color" content="#c9a030"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="TradeArena"/>
+  <link rel="apple-touch-icon" href="/assets/icon-192.png"/>
+<title>TradeArena — Australia's first campus trading arena</title>
+  <meta name="description" content="Paper trade real ASX, US stocks & crypto. Compete against every Australian uni. Free for students with a .edu.au email."/>
+  <!-- CTO Fix: SEO Open Graph Tags -->
+  <meta property="og:title" content="TradeArena — Australia's first campus trading arena" />
+  <meta property="og:description" content="Paper trade real ASX, US stocks & crypto. Compete against every Australian uni. Free for students with a .edu.au email." />
+  <meta property="og:image" content="https://www.tradearena.com.au/assets/icon-512.png" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;700&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/styles.css"/>
+  <style>
+    /* =========================================================
+       LANDING PAGE — Zerodha trust + WebVeda boldness
+       Uses the global :root tokens from assets/styles.css.
+       ========================================================= */
+    body{overflow-x:hidden;}
+    /* CTO Fix: Mobile PWA Touch Targets (Min 44px) */
+    button, a.btn-ghost, .ln-links a, .ln-burger, .f-tab { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+    .container{max-width:1200px;margin:0 auto;padding:0 5%;}
+    .h-cinzel{font-family:'Cinzel',serif;letter-spacing:.01em;}
+    .muted{color:var(--muted);}
+
+    /* ----- Sticky marketing nav -----
+       Sits 30px below the top so the global ticker strip (.ta-ticker)
+       can stick above it without overlap. */
+    .ln{position:sticky;top:30px;z-index:60;display:flex;align-items:center;justify-content:space-between;
+        padding:18px 5%;transition:background .2s,border-color .2s,backdrop-filter .2s,padding .2s;
+        border-bottom:1px solid transparent;}
+    .ln.scrolled{background:rgba(6,14,28,.85);-webkit-backdrop-filter:saturate(160%) blur(14px);
+        backdrop-filter:saturate(160%) blur(14px);border-bottom-color:rgba(201,160,48,.18);padding:12px 5%;}
+    .ln-logo{display:flex;align-items:center;gap:10px;font-family:'DM Sans',sans-serif;font-size:1.25rem;
+        font-weight:700;color:var(--gold2);}
+    .ln-logo span{color:var(--cream);}
+    .ln-links{display:flex;gap:6px;font-size:13.5px;font-weight:600;color:var(--muted);}
+    .ln-links a{padding:8px 14px;border-radius:9999px;transition:.15s;}
+    .ln-links a:hover{color:var(--cream);background:rgba(255,255,255,.04);}
+    .ln-cta{display:flex;align-items:center;gap:10px;}
+    .btn-ghost{background:transparent;border:1px solid var(--bdl);color:var(--cream);padding:9px 18px;
+        border-radius:9999px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;}
+    .btn-ghost:hover{border-color:var(--gold);color:var(--gold2);}
+    .btn-fill{background:linear-gradient(180deg,#e8c060,#c9a030);color:var(--navy);padding:9px 22px;
+        border-radius:9999px;font-size:13px;font-weight:700;cursor:pointer;border:none;
+        box-shadow:0 6px 18px -6px rgba(232,192,96,.55);transition:transform .15s, box-shadow .15s;}
+    .btn-fill:hover{transform:translateY(-1px);box-shadow:0 10px 24px -8px rgba(232,192,96,.7);}
+    .ln-burger{display:none;background:none;border:none;color:var(--cream);font-size:22px;cursor:pointer;}
+    @media(max-width:860px){
+      .ln-links,.ln-cta .btn-ghost{display:none;}
+      .ln-burger{display:block;}
+    }
+
+    /* Mobile menu drawer */
+    .mm{position:fixed;inset:0;background:rgba(6,14,28,.96);z-index:200;display:none;
+        flex-direction:column;padding:80px 8% 40px;gap:18px;}
+    .mm.open{display:flex;}
+    .mm a{font-size:22px;color:var(--cream);font-family:'Cinzel',serif;padding:12px 0;
+        border-bottom:1px solid var(--bdl);}
+    .mm-close{position:absolute;top:22px;right:24px;background:none;border:none;color:var(--gold2);
+        font-size:28px;cursor:pointer;}
+
+    /* ----- HERO ----- */
+    .hero{position:relative;padding:60px 5% 90px;min-height:calc(100vh - 80px);display:flex;align-items:center;
+        background:radial-gradient(900px 500px at 50% -10%,rgba(201,160,48,.16),transparent 60%),
+                  linear-gradient(180deg,#060e1c 0%,#091528 100%);overflow:hidden;}
+    .hero::before{content:'';position:absolute;inset:0;
+        background-image:repeating-linear-gradient(135deg,rgba(201,160,48,.025) 0 1px,transparent 1px 90px);
+        pointer-events:none;}
+    .hero-grid{position:relative;z-index:1;display:grid;grid-template-columns:1.1fr 1fr;gap:60px;
+        align-items:center;max-width:1280px;margin:0 auto;width:100%;}
+    .h-pill{display:inline-flex;align-items:center;gap:8px;background:rgba(248,113,113,.1);
+        border:1px solid rgba(248,113,113,.3);color:var(--cream);font-size:11.5px;font-weight:700;
+        padding:6px 12px;border-radius:9999px;letter-spacing:.06em;text-transform:uppercase;
+        animation:fadeUp .6s .05s both;}
+    .h-pill .live-dot{width:7px;height:7px;border-radius:50%;background:#f87171;
+        box-shadow:0 0 8px rgba(248,113,113,.7);animation:pulse 2s infinite;}
+    @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+    .h-headline{font-family:'Cinzel',serif;font-size:clamp(2.6rem,6vw,4.8rem);font-weight:700;
+        line-height:1.02;letter-spacing:-2px;margin:18px 0 22px;color:var(--cream);
+        animation:fadeUp .7s .15s both;}
+    .h-headline em{color:var(--gold2);font-style:normal;}
+    .h-sub{font-size:clamp(1rem,1.4vw,1.18rem);line-height:1.6;color:var(--muted);max-width:560px;
+        margin-bottom:32px;animation:fadeUp .7s .25s both;}
+    .h-ctas{display:flex;gap:14px;flex-wrap:wrap;animation:fadeUp .7s .35s both;}
+    .btn-lg{padding:15px 28px;font-size:14.5px;border-radius:9999px;font-weight:700;cursor:pointer;
+        display:inline-flex;align-items:center;gap:10px;transition:.15s;}
+    .btn-lg.gold{background:linear-gradient(180deg,#e8c060,#c9a030);color:var(--navy);border:none;
+        box-shadow:0 8px 26px -8px rgba(232,192,96,.6);position:relative;overflow:hidden;}
+    .btn-lg.gold::after{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;
+        background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);
+        animation:shimmer 3.5s infinite;}
+    @keyframes shimmer{to{left:200%;}}
+    .btn-lg.gold:hover{transform:translateY(-2px);box-shadow:0 14px 36px -10px rgba(232,192,96,.75);}
+    .btn-lg.ghost{background:transparent;border:1px solid var(--bdl);color:var(--cream);}
+    .btn-lg.ghost:hover{border-color:var(--gold);color:var(--gold2);}
+    .h-trust{margin-top:34px;display:flex;flex-wrap:wrap;gap:18px 26px;font-size:12.5px;color:var(--muted);
+        animation:fadeUp .7s .45s both;}
+    .h-trust span{display:inline-flex;align-items:center;gap:7px;}
+    .h-trust i{color:var(--green);font-size:11px;}
+
+    /* Hero mockup */
+    .h-mock{position:relative;animation:fadeUp .9s .35s both;}
+    .h-mock::before{content:'';position:absolute;inset:-40px;background:radial-gradient(closest-side,rgba(201,160,48,.18),transparent 70%);
+        z-index:-1;}
+    .mockup{background:linear-gradient(180deg,#091528,#0a1830);border:1px solid rgba(201,160,48,.25);
+        border-radius:18px;padding:18px;box-shadow:0 30px 80px -20px rgba(0,0,0,.6);}
+    .mk-head{display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;
+        border-bottom:1px solid var(--bdl);}
+    .mk-sym{font-weight:700;color:var(--cream);font-size:14px;}
+    .mk-sym .small{color:var(--muted);font-weight:500;font-size:11px;margin-left:6px;}
+    .mk-px{font-family:'DM Sans',sans-serif;font-weight:700;color:var(--green);font-variant-numeric:tabular-nums;}
+    .mk-px .pct{font-size:11px;font-weight:600;margin-left:6px;}
+    .mk-chart{height:200px;background:radial-gradient(ellipse at top right,rgba(201,160,48,.06),#060e1c 60%);border-radius:12px;margin:14px 0;position:relative;overflow:hidden;border:1px solid rgba(201,160,48,.08);}
+    .mk-chart canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+    /* Live indicator badge — pulsing green dot in the top-left of the chart. */
+    .mk-live{position:absolute;top:10px;left:12px;display:flex;align-items:center;gap:6px;
+      font-size:9.5px;font-weight:700;letter-spacing:.14em;color:#7fe3a4;text-transform:uppercase;
+      font-family:'DM Sans',sans-serif;z-index:2;pointer-events:none;text-shadow:0 0 8px rgba(127,227,164,.4);}
+    .mk-live::before{content:'';width:6px;height:6px;border-radius:50%;background:#7fe3a4;
+      box-shadow:0 0 0 0 rgba(127,227,164,.7);animation:mkLivePulse 1.6s ease-out infinite;}
+    @keyframes mkLivePulse{
+      0%   {box-shadow:0 0 0 0 rgba(127,227,164,.55);}
+      70%  {box-shadow:0 0 0 8px rgba(127,227,164,0);}
+      100% {box-shadow:0 0 0 0 rgba(127,227,164,0);}
+    }
+    /* Right-edge price label that floats with the latest candle close. */
+    .mk-lastpx{position:absolute;right:8px;top:50%;transform:translateY(-50%);
+      background:rgba(232,192,96,.16);border:1px solid rgba(232,192,96,.5);color:#e8c060;
+      font-family:'DM Sans',sans-serif;font-weight:700;font-size:10.5px;font-variant-numeric:tabular-nums;
+      padding:3px 7px;border-radius:5px;z-index:2;pointer-events:none;
+      transition:top .35s ease-out;box-shadow:0 4px 12px rgba(0,0,0,.35);}
+    .mk-lastpx::before{content:'';position:absolute;left:-6px;top:50%;transform:translateY(-50%);
+      width:0;height:0;border-style:solid;border-width:4px 6px 4px 0;
+      border-color:transparent rgba(232,192,96,.5) transparent transparent;}
+    /* Volume bar legend at the bottom-left. */
+    .mk-tag{position:absolute;bottom:8px;left:12px;display:flex;gap:10px;z-index:2;
+      font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+      font-family:'DM Sans',sans-serif;color:rgba(232,192,96,.55);pointer-events:none;}
+    .mk-tag b{color:rgba(232,192,96,.85);font-weight:700;}
+    .mk-wl{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px;}
+    .mk-wl-it{background:rgba(255,255,255,.03);border:1px solid var(--bdl);border-radius:10px;padding:8px 10px;
+        font-size:11px;}
+    .mk-wl-it .s{font-weight:700;color:var(--cream);}
+    .mk-wl-it .p{color:var(--muted);font-variant-numeric:tabular-nums;display:block;}
+    .mk-wl-it .c{font-weight:600;font-size:10.5px;}
+    .float-card{position:absolute;background:rgba(9,21,40,.92);-webkit-backdrop-filter:blur(8px);
+        backdrop-filter:blur(8px);border:1px solid var(--border);border-radius:12px;padding:10px 14px;
+        font-size:12px;display:flex;align-items:center;gap:10px;
+        box-shadow:0 14px 38px -12px rgba(0,0,0,.6);animation:floatY 4s ease-in-out infinite;}
+    .float-card i{color:var(--gold2);font-size:16px;}
+    .float-card strong{color:var(--cream);}
+    .fc-1{top:10%;left:-30px;animation-delay:0s;}
+    .fc-2{top:46%;right:-40px;animation-delay:.7s;}
+    .fc-3{bottom:8%;left:-10px;animation-delay:1.4s;}
+    @keyframes floatY{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:none;}}
+    @media(max-width:980px){
+      .hero-grid{grid-template-columns:1fr;}
+      .h-mock{margin-top:10px;}
+      .float-card{display:none;}
+    }
+
+    /* ----- Trust numbers ----- */
+    .trust{padding:60px 5%;background:var(--navy2);border-top:1px solid var(--bdl);
+        border-bottom:1px solid var(--bdl);}
+    .trust-grid{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);
+        gap:0;text-align:center;}
+    .trust-it{padding:16px 18px;border-right:1px solid var(--bdl);}
+    .trust-it:last-child{border-right:none;}
+    .trust-n{font-family:'Cinzel',serif;font-size:clamp(1.8rem,3.4vw,2.6rem);font-weight:700;color:var(--gold2);
+        font-variant-numeric:tabular-nums;}
+    .trust-l{color:var(--muted);font-size:12.5px;margin-top:6px;letter-spacing:.04em;text-transform:uppercase;
+        font-weight:600;}
+    @media(max-width:780px){.trust-grid{grid-template-columns:repeat(2,1fr);gap:24px;}
+      .trust-it{border-right:none;}}
+
+    /* ----- Section scaffold ----- */
+    section.sec{padding:90px 5%;}
+    .sec-head{text-align:center;max-width:760px;margin:0 auto 50px;}
+    .sec-head h2{font-family:'Cinzel',serif;font-size:clamp(1.8rem,3.4vw,2.6rem);font-weight:700;
+        line-height:1.2;color:var(--cream);margin-bottom:14px;}
+    .sec-head p{color:var(--muted);font-size:1.05rem;line-height:1.55;}
+
+    /* ----- Filter tabs ----- */
+    .filters{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:36px;}
+    .f-tab{background:transparent;border:1px solid var(--bdl);color:var(--muted);padding:8px 18px;
+        border-radius:9999px;font-size:12.5px;font-weight:600;cursor:pointer;transition:.15s;}
+    .f-tab:hover{color:var(--cream);border-color:var(--gold);}
+    .f-tab.on{background:rgba(201,160,48,.18);color:var(--gold2);border-color:rgba(201,160,48,.55);}
+
+    /* ----- Feature cards ----- */
+    .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;max-width:1180px;margin:0 auto;}
+    @media(max-width:920px){.feat-grid{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:620px){.feat-grid{grid-template-columns:1fr;}}
+    .feat{background:var(--navy3);border:1px solid var(--bdl);border-radius:18px;padding:30px 26px;
+        transition:transform .25s,border-color .25s,box-shadow .25s;position:relative;opacity:0;
+        transform:translateY(20px);}
+    .feat.in{opacity:1;transform:none;transition:opacity .6s, transform .6s;}
+    .feat:hover{transform:translateY(-6px);border-color:rgba(201,160,48,.55);
+        box-shadow:0 20px 40px -20px rgba(201,160,48,.25);}
+    .feat-icon{width:50px;height:50px;border-radius:14px;background:rgba(201,160,48,.12);
+        border:1px solid rgba(201,160,48,.3);display:inline-flex;align-items:center;justify-content:center;
+        color:var(--gold2);font-size:20px;margin-bottom:18px;}
+    .feat h3{font-family:'Cinzel',serif;font-size:1.25rem;font-weight:700;color:var(--cream);margin-bottom:10px;}
+    .feat p{color:var(--muted);font-size:13.5px;line-height:1.55;}
+    .feat-badge{position:absolute;top:18px;right:18px;font-size:9.5px;font-weight:700;letter-spacing:.08em;
+        padding:3px 8px;border-radius:9999px;text-transform:uppercase;}
+    .b-free{background:rgba(74,222,128,.15);color:var(--green);border:1px solid rgba(74,222,128,.3);}
+    .b-live{background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.3);}
+    .b-soon{background:rgba(168,193,219,.12);color:var(--muted);border:1px solid var(--bdl);}
+
+    /* ----- Steps ----- */
+    .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1100px;margin:0 auto;
+        position:relative;}
+    .steps::before{content:'';position:absolute;top:38px;left:14%;right:14%;height:1px;
+        background:linear-gradient(90deg,transparent,rgba(201,160,48,.4),transparent);}
+    @media(max-width:780px){.steps{grid-template-columns:1fr;}.steps::before{display:none;}}
+    .step{text-align:center;background:var(--navy2);border:1px solid var(--bdl);border-radius:18px;
+        padding:30px 24px;position:relative;}
+    .step-n{font-family:'Cinzel',serif;font-size:3rem;font-weight:700;color:var(--gold2);line-height:1;
+        margin-bottom:16px;}
+    .step h3{font-family:'Cinzel',serif;font-size:1.15rem;color:var(--cream);margin-bottom:10px;}
+    .step p{color:var(--muted);font-size:13.5px;line-height:1.6;}
+    .step i{color:var(--gold2);font-size:18px;margin-top:14px;}
+
+    /* ----- Leaderboard ----- */
+    .lb-wrap{max-width:980px;margin:0 auto;background:var(--navy2);border:1px solid var(--bdl);
+        border-radius:18px;overflow:hidden;}
+    .lb-table{width:100%;border-collapse:collapse;font-size:14px;}
+    .lb-table th{text-align:left;padding:18px 22px;font-size:11px;color:var(--muted);text-transform:uppercase;
+        letter-spacing:.08em;font-weight:700;border-bottom:1px solid var(--bdl);background:var(--navy3);}
+    .lb-table td{padding:18px 22px;border-bottom:1px solid var(--bdl);transition:background .15s;}
+    .lb-table tr:last-child td{border-bottom:none;}
+    .lb-table tbody tr:hover td{background:rgba(201,160,48,.05);}
+    .lb-table .rank{font-family:'Cinzel',serif;color:var(--gold2);font-weight:700;font-size:15px;}
+    .lb-table .uni{font-weight:600;color:var(--cream);}
+    .lb-table .ret{font-variant-numeric:tabular-nums;font-weight:700;color:var(--green);}
+    .lb-table .avg{font-variant-numeric:tabular-nums;color:var(--muted);}
+    .lb-status{font-size:10.5px;font-weight:700;letter-spacing:.06em;padding:3px 9px;border-radius:9999px;
+        text-transform:uppercase;display:inline-block;}
+    .lb-cta{text-align:center;margin-top:30px;}
+    @media(max-width:680px){.lb-table .col-avg{display:none;}.lb-table th,.lb-table td{padding:14px 12px;}}
+
+    /* ----- Testimonials ----- */
+    .test-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;max-width:1180px;margin:0 auto;}
+    @media(max-width:920px){.test-grid{grid-template-columns:1fr;}}
+    .test{background:var(--navy2);border:1px solid var(--bdl);border-left:3px solid var(--gold);
+        border-radius:14px;padding:26px;}
+    .test-stars{color:var(--gold2);font-size:13px;letter-spacing:2px;margin-bottom:14px;}
+    .test-q{font-size:14.5px;line-height:1.6;color:var(--cream);margin-bottom:18px;font-style:italic;}
+    .test-who{display:flex;align-items:center;gap:12px;}
+    .test-av{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#c9a030,#e8c060);
+        color:var(--navy);font-weight:700;display:inline-flex;align-items:center;justify-content:center;
+        font-family:'Cinzel',serif;font-size:14px;}
+    .test-meta{font-size:12.5px;color:var(--muted);}
+    .test-meta strong{display:block;color:var(--cream);font-weight:600;font-size:13px;}
+
+    /* ----- Modules (school preview) ----- */
+    .mods-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;max-width:1180px;margin:0 auto;}
+    @media(max-width:920px){.mods-grid{grid-template-columns:1fr;}}
+    .mod{background:var(--navy2);border:1px solid var(--bdl);border-radius:18px;overflow:hidden;
+        transition:transform .25s,border-color .25s;}
+    .mod:hover{transform:translateY(-4px);border-color:rgba(201,160,48,.55);}
+    .mod-img{height:140px;background:linear-gradient(135deg,#0d1e3a,#091528);display:flex;align-items:center;
+        justify-content:center;font-size:46px;color:var(--gold2);position:relative;}
+    .mod-img::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 30%,
+        rgba(201,160,48,.2),transparent 60%);}
+    .mod-body{padding:22px;}
+    .mod-diff{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+        padding:3px 9px;border-radius:9999px;margin-bottom:10px;}
+    .mod-diff.beg{background:rgba(74,222,128,.15);color:var(--green);}
+    .mod-diff.int{background:rgba(232,192,96,.15);color:var(--gold2);}
+    .mod-diff.adv{background:rgba(248,113,113,.15);color:var(--red);}
+    .mod h3{font-family:'Cinzel',serif;font-size:1.15rem;color:var(--cream);margin-bottom:8px;}
+    .mod p{color:var(--muted);font-size:13px;line-height:1.55;margin-bottom:12px;}
+    .mod-meta{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);
+        padding-top:14px;border-top:1px solid var(--bdl);}
+    .mod-meta .reward{color:var(--gold2);font-weight:700;}
+    .mod-link{display:inline-block;margin-top:12px;color:var(--gold2);font-weight:600;font-size:13px;}
+
+    /* ----- Bottom CTA ----- */
+    .cta-band{padding:90px 5%;text-align:center;background:radial-gradient(800px 400px at 50% 50%,
+        rgba(201,160,48,.18),transparent 70%),var(--navy2);}
+    .cta-band h2{font-family:'Cinzel',serif;font-size:clamp(1.8rem,3.6vw,2.8rem);color:var(--cream);
+        margin-bottom:14px;line-height:1.2;}
+    .cta-band p{color:var(--muted);font-size:1.05rem;margin-bottom:30px;max-width:640px;margin-left:auto;
+        margin-right:auto;line-height:1.55;}
+    .cta-form{max-width:520px;margin:0 auto;display:flex;gap:8px;background:var(--navy3);padding:6px;
+        border-radius:9999px;border:1px solid var(--border);}
+    .cta-form input{flex:1;background:transparent;border:none;color:var(--cream);padding:0 18px;
+        font-size:14px;outline:none;}
+    .cta-form input::placeholder{color:var(--muted);}
+    .cta-perks{margin-top:30px;display:flex;justify-content:center;gap:30px;flex-wrap:wrap;color:var(--muted);
+        font-size:13px;}
+    .cta-perks strong{color:var(--gold2);font-family:'Cinzel',serif;font-weight:700;font-size:15px;
+        display:block;}
+    .cta-fine{margin-top:24px;font-size:11.5px;color:var(--muted);}
+
+    /* ----- Footer ----- */
+    footer{background:var(--navy);border-top:1px solid var(--bdl);padding:60px 5% 30px;}
+    .ft-grid{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:40px;
+        margin-bottom:50px;}
+    @media(max-width:780px){.ft-grid{grid-template-columns:1fr 1fr;gap:34px;}}
+    .ft-h{font-size:11.5px;color:var(--gold2);font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+        margin-bottom:14px;}
+    .ft-col p{color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:18px;}
+    .ft-col a{display:block;color:var(--muted);font-size:13.5px;padding:5px 0;transition:color .15s;}
+    .ft-col a:hover{color:var(--gold2);}
+    .ft-social{display:flex;gap:10px;margin-top:14px;}
+    .ft-social a{width:36px;height:36px;border-radius:50%;background:var(--navy3);border:1px solid var(--bdl);
+        display:inline-flex;align-items:center;justify-content:center;padding:0;color:var(--cream);
+        transition:.15s;}
+    .ft-social a:hover{border-color:var(--gold);color:var(--gold2);background:rgba(201,160,48,.08);}
+    .ft-bar{max-width:1200px;margin:0 auto;border-top:1px solid var(--bdl);padding-top:24px;
+        display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--muted);}
+    .ft-bar-r a{color:var(--muted);margin-left:18px;}
+    .ft-disc{max-width:1200px;margin:24px auto 0;font-size:11px;color:var(--muted);line-height:1.55;
+        opacity:.75;}
+  </style>
+</head>
+<body>
+
+<!-- ============================================================
+     SECTION 3 — Live market ticker
+     Empty rails are filled by TArenaUI.repaintTicker() once
+     market.js + app.js have loaded. Refreshes every 4s.
+============================================================ -->
+<div class="ta-ticker" id="taTicker" aria-label="Live market ticker">
+  <div class="ta-ticker-track">
+    <div class="ta-ticker-row"></div>
+    <div class="ta-ticker-row" aria-hidden="true"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SECTION 1 — Marketing nav
+============================================================ -->
+<nav class="ln" id="lnNav">
+  <a href="index.html" class="ln-logo">
+    <svg width="28" height="32" viewBox="0 0 40 46" aria-hidden="true">
+      <path d="M20 2L36 9V22C36 31 29 39 20 43C11 39 4 31 4 22V9L20 2Z" fill="#091528" stroke="#c9a030" stroke-width="1.5"/>
+      <path d="M20 8L30 12.5V21C30 26.5 25.5 31.5 20 34C14.5 31.5 10 26.5 10 21V12.5L20 8Z" fill="none" stroke="#e8c060" stroke-width="0.75" opacity=".6"/>
+      <polyline points="12,24 17,19 20,22 28,13" fill="none" stroke="#c9a030" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    Trade<span>Arena</span>
+  </a>
+  <div class="ln-links">
+    <a href="#features">Products</a>
+    <a href="#pricing">Pricing</a>
+    <a href="schools.html">Schools</a>
+    <a href="#community">Community</a>
+    <a href="#blog">Blog</a>
+  </div>
+  <div class="ln-cta">
+    <button class="btn-ghost" onclick="goAuth('signin')">Sign In</button>
+    <button class="btn-fill" onclick="goAuth('signup')">Start Free</button>
+    <button class="ln-burger" id="burgerBtn" aria-label="Menu"><i class="fa-solid fa-bars"></i></button>
+  </div>
+</nav>
+
+<div class="mm" id="mobileMenu">
+  <button class="mm-close" id="mmClose" aria-label="Close menu"><i class="fa-solid fa-xmark"></i></button>
+  <a href="#features">Products</a>
+  <a href="#pricing">Pricing</a>
+  <a href="schools.html">Schools</a>
+  <a href="#community">Community</a>
+  <a href="#blog">Blog</a>
+  <button class="btn-fill" style="margin-top:14px;align-self:flex-start;" onclick="goAuth('signup')">Start Free →</button>
+</div>
+
+<!-- ============================================================
+     SECTION 2 — Hero
+============================================================ -->
+<section class="hero">
+  <div class="hero-grid">
+    <div>
+      <div class="h-pill"><span class="live-dot"></span> Sydney Beta · 347 students on waitlist</div>
+      <h1 class="h-headline">Trade. Battle.<br><em>Dominate.</em></h1>
+      <p class="h-sub">
+        Australia's first campus trading arena. Paper trade real stocks,
+        crypto &amp; forex. Compete against every uni in the country.
+      </p>
+      <div class="h-ctas">
+        <button class="btn-lg gold" onclick="goAuth('signup')">Start Trading Free <i class="fa-solid fa-arrow-right"></i></button>
+        <button class="btn-lg ghost" onclick="document.getElementById('howit').scrollIntoView({behavior:'smooth'})">
+          <i class="fa-solid fa-play"></i> Watch How It Works
+        </button>
+      </div>
+      <div class="h-trust">
+        <span><i class="fa-solid fa-check"></i> $0 brokerage</span>
+        <span><i class="fa-solid fa-check"></i> $1 min trade</span>
+        <span><i class="fa-solid fa-check"></i> ASIC regulated partners</span>
+        <span><i class="fa-solid fa-check"></i> .edu.au only</span>
+      </div>
+    </div>
+
+    <!-- Hero mockup of trade.html dashboard -->
+    <div class="h-mock">
+      <div class="float-card fc-1"><i class="fa-solid fa-arrow-trend-up"></i> <span><strong>BHP</strong> +2.27% today</span></div>
+      <div class="float-card fc-2"><i class="fa-solid fa-wallet"></i> <span>Your portfolio <strong style="color:var(--green);">+$124</strong></span></div>
+      <div class="float-card fc-3"><i class="fa-solid fa-trophy"></i> <span>Rank <strong>#3</strong> at UNSW</span></div>
+      <div class="mockup">
+        <div class="mk-head">
+          <div class="mk-sym">BHP.AX <span class="small">BHP Group · ASX</span></div>
+          <div class="mk-px" id="hMockPx"><span class="skeleton sk-lg" style="height:18px;"></span></div>
+        </div>
+        <div class="mk-chart">
+          <canvas id="hMockChart" aria-hidden="true"></canvas>
+          <div class="mk-live">Live · ASX</div>
+          <div class="mk-lastpx" id="hMockLastPx">$54.94</div>
+          <div class="mk-tag"><span><b>30</b> 1m candles</span><span><b>MA(8)</b></span></div>
+        </div>
+        <div class="mk-wl">
+          <div class="mk-wl-it"><span class="s">CBA</span><span class="p"><span class="skeleton sk-sm"></span></span><span class="c"><span class="skeleton sk-sm" style="width:32px;height:10px;"></span></span></div>
+          <div class="mk-wl-it"><span class="s">AAPL</span><span class="p"><span class="skeleton sk-sm"></span></span><span class="c"><span class="skeleton sk-sm" style="width:32px;height:10px;"></span></span></div>
+          <div class="mk-wl-it"><span class="s">BTC</span><span class="p"><span class="skeleton sk-sm"></span></span><span class="c"><span class="skeleton sk-sm" style="width:32px;height:10px;"></span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 4 — Trust numbers (counters)
+     (Section 3 — live ticker — is the global ticker injected by
+     TArenaUI.repaintTicker() above the marketing nav.)
+============================================================ -->
+<div class="trust">
+  <div class="trust-grid">
+    <div class="trust-it"><div class="trust-n" data-count="347" data-suffix="+">0</div><div class="trust-l">Students on waitlist</div></div>
+    <div class="trust-it"><div class="trust-n" data-prefix="$" data-count="1">$0</div><div class="trust-l">Minimum trade</div></div>
+    <div class="trust-it"><div class="trust-n" data-count="4">0</div><div class="trust-l">Universities in battle</div></div>
+    <div class="trust-it"><div class="trust-n" data-prefix="$" data-count="100">$0</div><div class="trust-l">Weekly prize pool</div></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SECTION 5 — Features
+============================================================ -->
+<section class="sec" id="features">
+  <div class="sec-head">
+    <h2>Everything you need to trade smart</h2>
+    <p>Six features built for Australian uni students. From your first paper trade to launching real money — we've got the rails.</p>
+  </div>
+  <div class="filters" id="featFilters">
+    <button class="f-tab on" data-cat="all">All</button>
+    <button class="f-tab" data-cat="trading">Trading</button>
+    <button class="f-tab" data-cat="learning">Learning</button>
+    <button class="f-tab" data-cat="competition">Competition</button>
+    <button class="f-tab" data-cat="community">Community</button>
+  </div>
+  <div class="feat-grid" id="featGrid">
+    <div class="feat" data-cat="trading">
+      <span class="feat-badge b-free">Free</span>
+      <div class="feat-icon"><i class="fa-solid fa-chart-line"></i></div>
+      <h3>Live Paper Trading</h3>
+      <p>Trade real ASX, US stocks &amp; crypto with $25,000 virtual cash.</p>
+    </div>
+    <div class="feat" data-cat="competition">
+      <span class="feat-badge b-live">Live</span>
+      <div class="feat-icon"><i class="fa-solid fa-trophy"></i></div>
+      <h3>Campus Battle Leagues</h3>
+      <p>USyd vs UNSW. Weekly $100 prize for the top trader on every campus.</p>
+    </div>
+    <div class="feat" data-cat="learning">
+      <span class="feat-badge b-free">Free</span>
+      <div class="feat-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+      <h3>School of Trading</h3>
+      <p>Six modules from the basics to advanced technical analysis.</p>
+    </div>
+    <div class="feat" data-cat="trading">
+      <span class="feat-badge b-live">Live</span>
+      <div class="feat-icon"><i class="fa-solid fa-tower-broadcast"></i></div>
+      <h3>Live Market Prices</h3>
+      <p>Real-time ASX, S&amp;P 500, crypto &amp; forex data via direct exchange feeds.</p>
+    </div>
+    <div class="feat" data-cat="community">
+      <span class="feat-badge b-soon">Coming Soon</span>
+      <div class="feat-icon"><i class="fa-solid fa-users"></i></div>
+      <h3>Social Portfolios</h3>
+      <p>Follow top traders. See exactly what USyd's best are buying right now.</p>
+    </div>
+    <div class="feat" data-cat="trading">
+      <span class="feat-badge b-soon">Coming Soon</span>
+      <div class="feat-icon"><i class="fa-solid fa-coins"></i></div>
+      <h3>Real Money Trading</h3>
+      <p>When you're ready — launch with $1 via our ASIC-regulated brokers.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 6 — How it works
+============================================================ -->
+<section class="sec" id="howit" style="background:var(--navy2);">
+  <div class="sec-head">
+    <h2>From zero to invested in 3 steps</h2>
+    <p>No paperwork. No deposit. Just your student email and a sense of humour.</p>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-n">01</div>
+      <h3>Sign up</h3>
+      <p>Verify with your <strong>.edu.au</strong> email. Instant access — no waiting list, no broker forms.</p>
+      <i class="fa-solid fa-envelope-circle-check"></i>
+    </div>
+    <div class="step">
+      <div class="step-n">02</div>
+      <h3>Get $25,000 paper cash</h3>
+      <p>Land in the Markets tab and start trading immediately. Real prices, zero risk.</p>
+      <i class="fa-solid fa-sack-dollar"></i>
+    </div>
+    <div class="step">
+      <div class="step-n">03</div>
+      <h3>Climb the leaderboard</h3>
+      <p>Outperform your campus, win <strong>real cash</strong> prizes weekly.</p>
+      <i class="fa-solid fa-medal"></i>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 7 — Leaderboard preview
+============================================================ -->
+<section class="sec">
+  <div class="sec-head">
+    <h2>Live Campus Rankings</h2>
+    <p>Updated in real-time. Where does your uni stand?</p>
+  </div>
+  <div class="lb-wrap">
+    <table class="lb-table">
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>University</th>
+          <th>Return</th>
+          <th class="col-avg">Avg Portfolio</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="rank">#1</span></td>
+          <td class="uni">UNSW</td>
+          <td class="ret">+18.4%</td>
+          <td class="avg col-avg">$28,640</td>
+          <td><span class="lb-status" style="background:rgba(248,113,113,.18);color:var(--red);">Live</span></td>
+        </tr>
+        <tr>
+          <td><span class="rank">#2</span></td>
+          <td class="uni">University of Sydney</td>
+          <td class="ret">+15.2%</td>
+          <td class="avg col-avg">$27,830</td>
+          <td><span class="lb-status" style="background:rgba(248,113,113,.18);color:var(--red);">Live</span></td>
+        </tr>
+        <tr>
+          <td><span class="rank">#3</span></td>
+          <td class="uni">UTS</td>
+          <td class="ret">+12.7%</td>
+          <td class="avg col-avg">$26,450</td>
+          <td><span class="lb-status" style="background:rgba(232,192,96,.18);color:var(--gold2);">Beta</span></td>
+        </tr>
+        <tr>
+          <td><span class="rank">#4</span></td>
+          <td class="uni">Macquarie</td>
+          <td class="ret">+9.8%</td>
+          <td class="avg col-avg">$25,720</td>
+          <td><span class="lb-status" style="background:rgba(232,192,96,.18);color:var(--gold2);">Beta</span></td>
+        </tr>
+        <tr>
+          <td><span class="rank">#5</span></td>
+          <td class="uni">Monash</td>
+          <td class="ret">—</td>
+          <td class="avg col-avg">—</td>
+          <td><span class="lb-status" style="background:rgba(168,193,219,.12);color:var(--muted);">Soon</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="lb-cta">
+    <button class="btn-lg gold" onclick="goAuth('signup')">Join the Arena <i class="fa-solid fa-arrow-right"></i></button>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 8 — Testimonials
+============================================================ -->
+<section class="sec" id="community" style="background:var(--navy2);">
+  <div class="sec-head">
+    <h2>What students are saying</h2>
+    <p>Beta testers across four Sydney universities, in their own words.</p>
+  </div>
+  <div class="test-grid">
+    <div class="test">
+      <div class="test-stars">★★★★★</div>
+      <p class="test-q">"Finally a trading app built for students, not Wall Street suits."</p>
+      <div class="test-who">
+        <div class="test-av">AP</div>
+        <div class="test-meta"><strong>Alex P.</strong>University of Sydney · Finance</div>
+      </div>
+    </div>
+    <div class="test">
+      <div class="test-stars">★★★★★</div>
+      <p class="test-q">"Made $340 in virtual gains my first week. The charts are actually professional."</p>
+      <div class="test-who">
+        <div class="test-av">SK</div>
+        <div class="test-meta"><strong>Sarah K.</strong>UNSW · Commerce</div>
+      </div>
+    </div>
+    <div class="test">
+      <div class="test-stars">★★★★★</div>
+      <p class="test-q">"The campus leaderboard is addictive. Our whole cohort is competing now."</p>
+      <div class="test-who">
+        <div class="test-av">ML</div>
+        <div class="test-meta"><strong>Mike L.</strong>UTS · Economics</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 9 — School preview
+============================================================ -->
+<section class="sec">
+  <div class="sec-head">
+    <h2>Learn to trade. Earn paper capital.</h2>
+    <p>Complete modules, unlock bonus cash, climb the leaderboard.</p>
+  </div>
+  <div class="mods-grid">
+    <div class="mod">
+      <div class="mod-img"><i class="fa-solid fa-book-open"></i></div>
+      <div class="mod-body">
+        <span class="mod-diff beg">Beginner</span>
+        <h3>Markets 101</h3>
+        <p>Order types, bid/ask spreads, ticker symbols, ASX basics. Start here.</p>
+        <div class="mod-meta"><span>0 / 8 lessons</span><span class="reward">+$500 paper</span></div>
+        <a class="mod-link" href="schools.html">Start Learning →</a>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="mod-img"><i class="fa-solid fa-chart-line"></i></div>
+      <div class="mod-body">
+        <span class="mod-diff int">Intermediate</span>
+        <h3>Technical Analysis</h3>
+        <p>Candlesticks, support &amp; resistance, EMAs and RSI in plain English.</p>
+        <div class="mod-meta"><span>0 / 12 lessons</span><span class="reward">+$1,000 paper</span></div>
+        <a class="mod-link" href="schools.html">Start Learning →</a>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="mod-img"><i class="fa-solid fa-shield-halved"></i></div>
+      <div class="mod-body">
+        <span class="mod-diff adv">Advanced</span>
+        <h3>Risk &amp; Position Sizing</h3>
+        <p>Kelly criterion, R-multiples, when to cut a loser. The unsexy stuff that keeps you alive.</p>
+        <div class="mod-meta"><span>0 / 10 lessons</span><span class="reward">+$2,000 paper</span></div>
+        <a class="mod-link" href="schools.html">Start Learning →</a>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:34px;">
+    <a href="schools.html" style="color:var(--gold2);font-weight:700;font-size:14px;">Browse all modules →</a>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 10 — Bottom CTA
+============================================================ -->
+<section class="cta-band" id="pricing">
+  <h2>The first 500 warriors trade free. Forever.</h2>
+  <p>Plus $10 bonus credit when live trading launches. No credit card. No catch. Just your student email.</p>
+  <form class="cta-form" id="ctaForm" onsubmit="enterArenaWithEmail(event)">
+    <label for="ctaEmail" class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">Student email address</label>
+    <input type="email" id="ctaEmail" placeholder="your@student.edu.au" required>
+    <button type="submit" class="btn-fill" style="padding:13px 22px;">Enter the Arena <i class="fa-solid fa-arrow-right"></i></button>
+  </form>
+  <div class="cta-perks">
+    <div><strong>$0</strong>Brokerage</div>
+    <div><strong>$10</strong>Signup Bonus</div>
+    <div><strong>$1</strong>Min Trade</div>
+  </div>
+  <div class="cta-fine">Paper trading available now · Live trading coming soon · ASIC regulated partners</div>
+</section>
+
+<!-- ============================================================
+     SECTION 11 — Footer
+============================================================ -->
+<footer id="blog">
+  <div class="ft-grid">
+    <div class="ft-col">
+      <a href="index.html" class="ln-logo" style="margin-bottom:14px;">
+        <svg width="26" height="30" viewBox="0 0 40 46" aria-hidden="true">
+          <path d="M20 2L36 9V22C36 31 29 39 20 43C11 39 4 31 4 22V9L20 2Z" fill="#091528" stroke="#c9a030" stroke-width="1.5"/>
+          <polyline points="12,24 17,19 20,22 28,13" fill="none" stroke="#c9a030" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        Trade<span>Arena</span>
+      </a>
+      <p>Strategy-first paper trading for Australian uni students. ASX, US &amp; crypto. Zero risk. Built in Sydney.</p>
+      <div class="ft-social">
+        <a href="https://x.com/tradearena07" target="_blank" rel="noopener" aria-label="Twitter / X"><i class="fa-brands fa-x-twitter"></i></a>
+        <a href="https://instagram.com/_tradearena_" target="_blank" rel="noopener" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+        <a href="mailto:tradearena07@gmail.com" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
+      </div>
+    </div>
+    <div class="ft-col">
+      <div class="ft-h">Product</div>
+      <a href="trade.html">Markets</a>
+      <a href="schools.html">Learn</a>
+      <a href="schools.html">School</a>
+      <a href="portfolio.html">Portfolio</a>
+      <a href="#">Leaderboard</a>
+    </div>
+    <div class="ft-col">
+      <div class="ft-h">Company</div>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a href="careers.html">Careers</a>
+      <a href="press.html">Press</a>
+      <a href="#">Blog</a>
+    </div>
+    <div class="ft-col">
+      <div class="ft-h">Legal</div>
+      <a href="terms.html">Terms of Use</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="risk.html">Risk Disclaimer</a>
+      <a href="cookies.html">Cookie Policy</a>
+    </div>
+  </div>
+  <div class="ft-bar">
+    <div>© 2026 TradeArena Pty Ltd · Made with care in Sydney, Australia</div>
+    <div class="ft-bar-r"><a href="#">Status</a><a href="#">Changelog</a><a href="#">Security</a></div>
+  </div>
+  <div class="ft-disc">
+    TradeArena is an educational paper-trading platform. All trades are simulated — no real money is at risk.
+    Nothing on this site constitutes financial product advice. Market data is provided by third-party sources
+    and may be delayed. TradeArena Pty Ltd is not an AFSL holder.
+  </div>
+</footer>
+
+<script src="assets/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="assets/supabase.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/market.js"></script>
+<script src="assets/js/market-data.js"></script>
+<script src="assets/js/price-cache.js"></script>
+<script>
+  /* ----- Scroll-aware nav ----- */
+  const lnNav = document.getElementById('lnNav');
+  window.addEventListener('scroll', () => {
+    lnNav.classList.toggle('scrolled', window.scrollY > 8);
+  });
+
+  /* ----- Mobile menu ----- */
+  const burger = document.getElementById('burgerBtn');
+  const mm     = document.getElementById('mobileMenu');
+  const mmCls  = document.getElementById('mmClose');
+  burger.addEventListener('click', () => mm.classList.add('open'));
+  mmCls .addEventListener('click', () => mm.classList.remove('open'));
+  mm.querySelectorAll('a').forEach(a => a.addEventListener('click', () => mm.classList.remove('open')));
+
+  /* ----- Smooth scroll for in-page anchors ----- */
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const id = a.getAttribute('href').slice(1);
+      const el = id && document.getElementById(id);
+      if (!el) return;
+      e.preventDefault();
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  /* ----- Auth routing -----
+     Logged-in users go straight to the trading app; new visitors hit
+     the auth page in the requested mode (sign-in vs sign-up). */
+  function goAuth(mode){
+    if (window.TArenaAuth?.getSession()) { window.location.href = 'trade.html'; return; }
+    window.location.href = mode === 'signin' ? 'auth.html?mode=signin' : 'auth.html?mode=signup';
+  }
+  function enterArenaWithEmail(ev){
+    ev.preventDefault();
+    const email = document.getElementById('ctaEmail').value.trim();
+    if (!email) return;
+    if (window.TArenaAuth?.getSession()) { window.location.href = 'trade.html'; return; }
+    // Stash the email so the auth page can pre-fill the sign-up form.
+    try { sessionStorage.setItem('ta_pending_email', email); } catch(_){}
+    window.location.href = 'auth.html?mode=signup&email=' + encodeURIComponent(email);
+  }
+
+  /* ----- Counter animation on scroll -----
+     Each .trust-n carries data-count (target), data-prefix and
+     data-suffix. Numbers animate over 1.4s once the trust band
+     enters view. */
+  function animateCount(el){
+    const target = +el.dataset.count;
+    const prefix = el.dataset.prefix || '';
+    const suffix = el.dataset.suffix || '';
+    const dur = 1400, t0 = performance.now();
+    function step(now){
+      const k = Math.min(1, (now - t0) / dur);
+      // ease-out cubic for a satisfying landing
+      const eased = 1 - Math.pow(1 - k, 3);
+      const v = Math.round(target * eased);
+      el.textContent = prefix + v.toLocaleString() + suffix;
+      if (k < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  const countObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        animateCount(e.target);
+        countObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: .4 });
+  document.querySelectorAll('.trust-n').forEach(el => countObs.observe(el));
+
+  /* ----- Feature stagger fade-in ----- */
+  const featObs = new IntersectionObserver(entries => {
+    entries.forEach((e,i) => {
+      if (e.isIntersecting) {
+        // Cards stagger in with a small delay multiplied by their position.
+        setTimeout(() => e.target.classList.add('in'),
+          [...document.querySelectorAll('.feat')].indexOf(e.target) * 80);
+        featObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: .15 });
+  document.querySelectorAll('.feat').forEach(el => featObs.observe(el));
+
+  /* ----- Feature category filter ----- */
+  document.querySelectorAll('#featFilters .f-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#featFilters .f-tab').forEach(b => b.classList.remove('on'));
+      btn.classList.add('on');
+      const cat = btn.dataset.cat;
+      document.querySelectorAll('#featGrid .feat').forEach(card => {
+        const show = cat === 'all' || card.dataset.cat === cat;
+        card.style.display = show ? '' : 'none';
+      });
+    });
+  });
+
+  /* ----- Skeleton CSS injection -----
+     Inject skeleton CSS immediately so shimmer bars render before
+     MarketData loads. Also restore cached prices from localStorage. */
+  if (window.PriceCache) {
+    PriceCache.injectCSS();
+    // Restore cached prices immediately for instant display
+    const cached = PriceCache.load();
+    if (cached && cached.prices) {
+      // Pre-fill hero BHP price from cache
+      const bhpKey = cached.prices['BHP'] || cached.prices['BHP.AX'];
+      if (bhpKey && bhpKey.price) {
+        const el = document.getElementById('hMockPx');
+        if (el) {
+          const up = bhpKey.change >= 0;
+          el.style.color = up ? 'var(--green)' : 'var(--red)';
+          el.innerHTML = '$' + bhpKey.price.toFixed(2) +
+            ' <span class="pct">' + (up ? '+' : '') + (bhpKey.change||0).toFixed(2) + '%</span>';
+        }
+      }
+      // Pre-fill watchlist cards from cache
+      const cards = document.querySelectorAll('.mk-wl-it');
+      const items = [
+        { sym: 'CBA',  data: cached.prices['CBA'] },
+        { sym: 'AAPL', data: cached.prices['AAPL'] },
+        { sym: 'BTC',  data: cached.prices['BTC'] },
+      ];
+      items.forEach(function(item, i){
+        if (!cards[i] || !item.data || !item.data.price) return;
+        const pEl = cards[i].querySelector('.p');
+        const cEl = cards[i].querySelector('.c');
+        if (pEl) pEl.textContent = item.data.price >= 1000
+          ? '$' + Math.round(item.data.price).toLocaleString('en-AU')
+          : '$' + item.data.price.toFixed(2);
+        if (cEl) {
+          const up = (item.data.change || 0) >= 0;
+          cEl.style.color = up ? 'var(--green)' : 'var(--red)';
+          cEl.textContent = (up ? '+' : '') + (item.data.change||0).toFixed(1) + '%';
+        }
+      });
+    }
+  }
+  /* ----- Hero mockup price ticker -----
+     Now powered by MarketData centralized engine. Falls back to
+     TArenaMarket if MarketData hasn't loaded yet. */
+  function refreshMockPrice(){
+    const md = window.marketData;
+    const el = document.getElementById('hMockPx');
+    if (!el) return;
+    // Try centralized MarketData first
+    if (md && md.stocks && md.stocks.BHP && md.stocks.BHP.price) {
+      const bhp = md.stocks.BHP;
+      const up = bhp.change >= 0;
+      el.style.color = up ? 'var(--green)' : 'var(--red)';
+      el.innerHTML = '$' + bhp.price.toFixed(2) +
+        ' <span class="pct">' + (up ? '+' : '') + bhp.change.toFixed(2) + '%</span>';
+      return;
+    }
+    // Fallback to TArenaMarket
+    if (!window.TArenaMarket) return;
+    const bhp = window.TArenaMarket.find('BHP.AX');
+    if (!bhp) return;
+    const up = bhp.change >= 0;
+    el.style.color = up ? 'var(--green)' : 'var(--red)';
+    el.innerHTML = '$' + bhp.price.toFixed(2) +
+      ' <span class="pct">' + (up ? '+' : '') + bhp.change.toFixed(2) + '%</span>';
+  }
+
+  /* ----- Hero watchlist mini-cards -----
+     Update the three mini cards (CBA, AAPL, BTC) with live data. */
+  function refreshMockWatchlist(){
+    const md = window.marketData;
+    if (!md) return;
+    const cards = document.querySelectorAll('.mk-wl-it');
+    const items = [
+      { sym: 'CBA', data: md.stocks && md.stocks.CBA },
+      { sym: 'AAPL', data: md.stocks && md.stocks.AAPL },
+      { sym: 'BTC',  data: md.crypto && md.crypto.BTC },
+    ];
+    items.forEach(function(item, i){
+      if (!cards[i] || !item.data || !item.data.price) return;
+      const pEl = cards[i].querySelector('.p');
+      const cEl = cards[i].querySelector('.c');
+      if (pEl) {
+        pEl.textContent = item.data.price >= 1000
+          ? '$' + Math.round(item.data.price).toLocaleString('en-AU')
+          : '$' + item.data.price.toFixed(2);
+      }
+      if (cEl) {
+        const up = item.data.change >= 0;
+        cEl.style.color = up ? 'var(--green)' : 'var(--red)';
+        cEl.textContent = (up ? '+' : '') + item.data.change.toFixed(1) + '%';
+      }
+    });
+  }
+
+  // Save prices to localStorage after each update
+  function savePriceCache(){
+    if (!window.PriceCache || !window.marketData) return;
+    const md = window.marketData;
+    const snapshot = {};
+    if (md.stocks) Object.assign(snapshot, md.stocks);
+    if (md.crypto) Object.assign(snapshot, md.crypto);
+    PriceCache.save(snapshot);
+  }
+  // Start the centralized market data engine
+  if (window.MarketData) {
+    window.MarketData.startMarketRefresh();
+  }
+
+  // Listen for centralized market data updates
+  window.addEventListener('marketDataUpdated', function(e){
+    refreshMockPrice();
+    refreshMockWatchlist();
+    savePriceCache();
+    // Update ticker bar with live data
+    if (window.MarketData) window.MarketData.updateTickerBar(e.detail);
+  });
+
+  // Initial paint (fallback to legacy)
+  refreshMockPrice();
+  // Keep legacy tick for immediate visual feedback while MarketData loads
+  setInterval(() => { window.TArenaMarket && window.TArenaMarket.tick(); refreshMockPrice(); }, 6000);
+
+  /* =================================================================
+     Hero animated candlestick chart
+     -----------------------------------------------------------------
+     Replaces the old static SVG sparkline with a live, ticking
+     candlestick chart so the hero feels like a real trading terminal
+     instead of a marketing illustration.
+
+     Behaviour:
+       * 30 candles, oldest on the left, newest on the right.
+       * The right-most candle is "live" and re-renders every animation
+         frame as price ticks within its 1-second window.
+       * A new candle rolls in every 1.0s — older candles slide left.
+       * Gold moving-average (MA8) line overlays the candles.
+       * A miniature order-book depth ladder hugs the right edge.
+       * Occasional buy / sell pulses ping at the live price.
+       * Pauses entirely when the tab is hidden or the canvas is off
+         screen, so the page idle cost is essentially zero.
+
+     Pure vanilla canvas — no deps. ~140 lines. Respects DPR for
+     crisp rendering on retina displays.
+  ============================================================== */
+  (function heroCandleChart(){
+    const cvs = document.getElementById('hMockChart');
+    const lastPxEl = document.getElementById('hMockLastPx');
+    if (!cvs || !cvs.getContext) return;
+    const ctx = cvs.getContext('2d');
+
+    const N = 30;            // total candles in view
+    const PAD_R = 60;        // reserve right strip for orderbook + label
+    const PAD_TOP = 14;
+    const PAD_BOT = 14;
+    const TICK_MS = 1000;    // new candle cadence
+    const MA_LEN = 8;
+
+    // ------- Seed candles -----------------------------------------
+    // OHLC values are in dollars centred around 54.5 (BHP-ish).
+    let price = 54.5;
+    const candles = [];
+    for (let i = 0; i < N; i++) {
+      const o = price;
+      const drift = (Math.random() - 0.45) * 0.4;
+      const c = +(o + drift).toFixed(2);
+      const h = +(Math.max(o, c) + Math.random() * 0.18).toFixed(2);
+      const l = +(Math.min(o, c) - Math.random() * 0.18).toFixed(2);
+      candles.push({ o, h, l, c });
+      price = c;
+    }
+
+    // ------- Pulse markers (transient buy/sell pings) --------------
+    const pulses = [];
+    function spawnPulse() {
+      const last = candles[candles.length - 1];
+      pulses.push({ side: last.c >= last.o ? 'buy' : 'sell', price: last.c, age: 0 });
+    }
+
+    // ------- Resize handling (DPR-aware) ---------------------------
+    let W = 0, H = 0, DPR = 1;
+    function resize() {
+      const r = cvs.getBoundingClientRect();
+      DPR = window.devicePixelRatio || 1;
+      W = Math.max(1, r.width);
+      H = Math.max(1, r.height);
+      cvs.width = Math.round(W * DPR);
+      cvs.height = Math.round(H * DPR);
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // ------- Per-frame tick of the live (rightmost) candle ---------
+    let liveStart = performance.now();
+    function tickLive(now) {
+      const live = candles[candles.length - 1];
+      // Tiny per-frame jitter to make the live candle visibly move.
+      const jitter = (Math.random() - 0.5) * 0.04;
+      live.c = +(live.c + jitter).toFixed(2);
+      if (live.c > live.h) live.h = live.c;
+      if (live.c < live.l) live.l = live.c;
+      // Roll a fresh candle every TICK_MS.
+      if (now - liveStart >= TICK_MS) {
+        liveStart = now;
+        const o = live.c;
+        const drift = (Math.random() - 0.48) * 0.45;
+        const c = +(o + drift).toFixed(2);
+        candles.push({ o, h: Math.max(o, c), l: Math.min(o, c), c });
+        candles.shift();
+        if (Math.random() < 0.35) spawnPulse();
+      }
+    }
+
+    // ------- Draw helpers ------------------------------------------
+    function priceRange() {
+      let lo = Infinity, hi = -Infinity;
+      for (const k of candles) { if (k.l < lo) lo = k.l; if (k.h > hi) hi = k.h; }
+      const pad = (hi - lo) * 0.18 || 0.5;
+      return { lo: lo - pad, hi: hi + pad };
+    }
+    function ma(i) {
+      const s = Math.max(0, i - MA_LEN + 1);
+      let sum = 0, n = 0;
+      for (let j = s; j <= i; j++) { sum += candles[j].c; n++; }
+      return sum / n;
+    }
+
+    function draw() {
+      const { lo, hi } = priceRange();
+      const chartW = W - PAD_R;
+      const chartH = H - PAD_TOP - PAD_BOT;
+      const yOf = (p) => PAD_TOP + (1 - (p - lo) / (hi - lo)) * chartH;
+      const slot = chartW / N;
+      const bodyW = Math.max(2, slot * 0.62);
+
+      ctx.clearRect(0, 0, W, H);
+
+      // Subtle horizontal grid.
+      ctx.strokeStyle = 'rgba(232,192,96,.06)';
+      ctx.lineWidth = 1;
+      for (let g = 1; g < 4; g++) {
+        const y = PAD_TOP + (chartH * g) / 4;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(chartW, y); ctx.stroke();
+      }
+
+      // Candles.
+      for (let i = 0; i < N; i++) {
+        const k = candles[i];
+        const cx = slot * i + slot / 2;
+        const up = k.c >= k.o;
+        const col = up ? '#3ed47e' : '#ef4f5e';
+        // Wick.
+        ctx.strokeStyle = col;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(cx, yOf(k.h));
+        ctx.lineTo(cx, yOf(k.l));
+        ctx.stroke();
+        // Body.
+        const yO = yOf(k.o), yC = yOf(k.c);
+        const top = Math.min(yO, yC);
+        const bh = Math.max(1.2, Math.abs(yC - yO));
+        ctx.fillStyle = col;
+        ctx.globalAlpha = (i === N - 1) ? 1 : 0.85;
+        ctx.fillRect(cx - bodyW / 2, top, bodyW, bh);
+        ctx.globalAlpha = 1;
+      }
+
+      // MA(8) line in gold.
+      ctx.strokeStyle = '#e8c060';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      for (let i = MA_LEN - 1; i < N; i++) {
+        const x = slot * i + slot / 2;
+        const y = yOf(ma(i));
+        if (i === MA_LEN - 1) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // Live price line (dashed gold) running across to the orderbook.
+      const last = candles[N - 1];
+      const yL = yOf(last.c);
+      ctx.setLineDash([3, 3]);
+      ctx.strokeStyle = 'rgba(232,192,96,.45)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(0, yL); ctx.lineTo(W, yL); ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Right-edge order-book depth ladder (15 rungs above + below).
+      const rungH = chartH / 30;
+      for (let r = 0; r < 30; r++) {
+        const y = PAD_TOP + r * rungH;
+        const aboveLive = (PAD_TOP + chartH / 2) > y;
+        const widthFrac = 0.25 + Math.random() * 0.7; // varied depth
+        const w = (PAD_R - 16) * widthFrac;
+        ctx.fillStyle = aboveLive
+          ? 'rgba(239,79,94,' + (0.08 + widthFrac * 0.18) + ')'
+          : 'rgba(62,212,126,' + (0.08 + widthFrac * 0.18) + ')';
+        ctx.fillRect(chartW + 4, y + 1, w, rungH - 2);
+      }
+
+      // Buy/sell pulses (expanding rings at the live price).
+      for (let i = pulses.length - 1; i >= 0; i--) {
+        const p = pulses[i];
+        p.age += 1;
+        const a = 1 - p.age / 35;
+        if (a <= 0) { pulses.splice(i, 1); continue; }
+        const radius = 4 + p.age * 1.4;
+        ctx.strokeStyle = p.side === 'buy'
+          ? 'rgba(62,212,126,' + a + ')'
+          : 'rgba(239,79,94,' + a + ')';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(slot * (N - 1) + slot / 2, yOf(p.price), radius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Update floating right-edge price tag.
+      if (lastPxEl) {
+        lastPxEl.textContent = '$' + last.c.toFixed(2);
+        lastPxEl.style.top = (yL / H * 100) + '%';
+      }
+    }
+
+    // ------- Animation loop (paused when off-screen / hidden) ------
+    let visible = true, running = true, raf = 0;
+    function loop(now) {
+      if (!running) return;
+      tickLive(now);
+      draw();
+      raf = requestAnimationFrame(loop);
+    }
+    document.addEventListener('visibilitychange', () => {
+      running = !document.hidden && visible;
+      if (running) { liveStart = performance.now(); raf = requestAnimationFrame(loop); }
+    });
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver((entries) => {
+        visible = entries[0].isIntersecting;
+        const want = visible && !document.hidden;
+        if (want && !running) { running = true; liveStart = performance.now(); raf = requestAnimationFrame(loop); }
+        else if (!want) { running = false; cancelAnimationFrame(raf); }
+      }, { threshold: 0.05 }).observe(cvs);
+    }
+    raf = requestAnimationFrame(loop);
+  })();
+
+  /* ----- Global ticker strip -----
+     Now powered by MarketData centralized engine. The ticker is
+     updated via the marketDataUpdated event above. Legacy repaint
+     kept as fallback for initial paint before MarketData loads. */
+  function paintTicker(){ window.TArenaUI?.repaintTicker && window.TArenaUI.repaintTicker(); }
+  paintTicker();
+
+  console.log('%cTradeArena · Welcome.', 'color:#e8c060;font-size:14px;font-weight:700;');
+</script>
+<script>
+  // TradeArena · PWA service-worker registration
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/service-worker.js').catch(function (err) {
+        console.warn('[TradeArena] SW registration failed:', err);
+      });
+    });
+  }
+</script>
+</body>
+</html>
